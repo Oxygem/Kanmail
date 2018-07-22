@@ -1,0 +1,21 @@
+<html>
+<head>
+    <title>Kanmail</title>
+</head>
+<body>
+    <div id="messages"></div>
+
+    {% block app_container %}{% endblock %}
+
+    <script type="text/javascript">
+        window.KANMAIL_VERSION = '{{ version }}';
+        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
+    </script>
+
+    {% if debug %}
+        <script type="text/javascript" src="http://localhost:4421/main.js"></script>
+    {% else %}
+        <script type="text/javascript" src="/static/dist/main.js"></script>
+    {% endif %}
+</body>
+</html>

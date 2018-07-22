@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+
+{% block app_container %}
+    <div data-send-app data-reply='{{ (reply or {})|tojson }}'></div>
+{% endblock %}
