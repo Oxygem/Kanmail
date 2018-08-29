@@ -1,7 +1,6 @@
 import sys
 
 from os import environ, path
-from queue import Queue
 
 from flask import Flask
 from flask.json import JSONEncoder
@@ -36,8 +35,6 @@ app.config['JSON_SORT_KEYS'] = False
 
 send_window_data = {}
 
-open_window_process_queue = Queue()
-
 
 def boot():
     logger.debug('App root is: {0}'.format(ROOT))
@@ -47,6 +44,6 @@ def boot():
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
         bootstrap_fake_imap()
 
-    from kanmail.server.views import error  # noqa
-    from kanmail.server.views import settings_api  # noqa
-    from kanmail.server.views import email_api  # noqa
+    from kanmail.server.views import error  # noqa: F401
+    from kanmail.server.views import settings_api  # noqa: F401
+    from kanmail.server.views import email_api  # noqa: F401

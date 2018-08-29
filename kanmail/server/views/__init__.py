@@ -1,45 +1,63 @@
 import webbrowser
 
-from os import environ
 from uuid import uuid4
 
 from flask import abort, render_template, request
 
 from kanmail import settings
 from kanmail.log import logger
-from kanmail.server.app import app, open_window_process_queue, send_window_data
+from kanmail.server.app import app, send_window_data
+from kanmail.server.mail.contacts import get_contacts
+from kanmail.server.util import get_or_400
 from kanmail.version import __version__
+from kanmail.window import create_window
 
 
 @app.route('/', methods=['GET'])
-def index():
+def get_index():
     return render_template(
         'index.html',
         version=__version__,
-        debug=not settings.FROZEN,
+        frozen=settings.FROZEN,
+        debug=settings.DEBUG,
+    )
+
+
+@app.route('/settings', methods=['GET'])
+def get_settings():
+    return render_template(
+        'settings.html',
+        frozen=settings.FROZEN,
+        debug=settings.DEBUG,
     )
 
 
 @app.route('/send', methods=['GET'])
-def send():
+def get_send():
     return render_template(
         'send.html',
-        debug=not settings.FROZEN,
+        contacts=get_contacts(),
+        frozen=settings.FROZEN,
+        debug=settings.DEBUG,
     )
 
 
 @app.route('/send/<uid>', methods=['GET'])
-def send_reply(uid):
-    try:
-        # TODO: pop if not debug!
+def get_send_reply(uid):
+    if settings.DEBUG:
         reply = send_window_data.get(uid)
-    except KeyError:
+    else:
+        reply = send_window_data.pop(uid, None)
+
+    if not reply:
         abort(404, 'Reply message not found!')
 
     return render_template(
         'send.html',
         reply=reply,
-        debug=not settings.FROZEN,
+        contacts=get_contacts(),
+        frozen=settings.FROZEN,
+        debug=settings.DEBUG,
     )
 
 
@@ -54,29 +72,37 @@ def open_link():
     return abort(500, 'Could not open link!')
 
 
-@app.route('/open-send', methods=['GET', 'POST'])
-def open_send():
-    link = 'http://localhost:4420/send'
+def _open_window(name, endpoint):
+    link = 'http://localhost:{0}{1}'.format(settings.SERVER_PORT, endpoint)
 
-    if request.method == 'POST':
-        data = request.get_json()
-        uid = str(uuid4())
-
-        send_window_data[uid] = data
-        link = 'http://localhost:4420/send/{0}'.format(uid)
-
-    if environ.get('KANMAIL_MODE') == 'server':
+    if settings.IS_APP:
+        create_window(name, endpoint)
+        return '', 204
+    else:
         if webbrowser.open(link):
             return '', 204
 
-    else:
-        open_window_process_queue.put((
-            'Kanmail: new email',
-            link,
-            {'debug': True},
-        ))
+    logger.critical('Failed to open {0} window!'.format(name))
+    return abort(500, 'Could not open {0} window!'.format(name))
 
-        return '', 204
 
-    logger.critical('Failed to open send window!')
-    return abort(500, 'Could not open send window!')
+@app.route('/open-settings', methods=['GET'])
+def open_settings():
+    return _open_window('settings', '/settings')
+
+
+@app.route('/open-send', methods=['GET', 'POST'])
+def open_send():
+    endpoint = '/send'
+
+    if request.method == 'POST':
+        data = request.get_json()
+        message_data = get_or_400(data, 'message')
+        message_data['reply_all'] = data.get('reply_all', False)
+
+        uid = str(uuid4())
+        send_window_data[uid] = message_data
+
+        endpoint = '/send/{0}'.format(uid)
+
+    return _open_window('new email', endpoint)
