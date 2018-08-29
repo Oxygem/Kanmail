@@ -18,18 +18,16 @@ function saveWindowPosition() {
 
     position.width = width;
     position.height = height;
-    position.left = left
+    position.left = left;
     position.top = top;
 
     if (changed) {
-        post('/api/window_settings', position).then((response) => {
-            console.log('RES', response);
-        });
+        post('/api/window_settings', position);
     }
 }
 
 
-window.addEventListener('load', () => {
+export default function createWindowPositionHandlers() {
     window.addEventListener('resize', saveWindowPosition);
     window.addEventListener('mouseover', saveWindowPosition);
-});
+}
