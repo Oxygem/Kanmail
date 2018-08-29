@@ -10,7 +10,9 @@ import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 
+import { get } from 'util/requests.js';
 import { capitalizeFirstLetter } from 'util/string.js';
+import { addMessage } from 'util/messages.js';
 
 
 @subscribe(filterStore, settingsStore)
@@ -31,13 +33,10 @@ export default class Filters extends React.Component {
             const iconName = ALIAS_TO_ICON[alias];
             const isActive = this.props.mainColumn === alias;
             const handleClick = () => {
-                // If this folder is already open, just sync it
-                if (this.props.mainColumn === alias) {
-                    mainEmailStore.syncFolderEmails(alias);
+                // Always sync when changing folders or re-clicking the active one
+                mainEmailStore.syncFolderEmails(alias);
 
-                // Otherwise switch the mainColumn, which will mount the new
-                // column triggering an email sync.
-                } else {
+                if (this.props.mainColumn !== alias) {
                     filterStore.setMainColumn(alias);
                 }
             }
