@@ -18,6 +18,8 @@ export default class BaseEmails {
     */
 
     constructor() {
+        this.active = false;
+
         this.folderLocks = {};
 
         // Map of account/messageId -> email message object
@@ -255,8 +257,6 @@ export default class BaseEmails {
         _.each(messageIds, messageId => {
             const email = this.emails[messageId];
 
-            console.log('EMAILLLL', email);
-
             if (!_.includes(email.flags, '\\Seen')) {
                 this.emails[messageId].flags.push('\\Seen');
             }
@@ -269,6 +269,10 @@ export default class BaseEmails {
             folders/columns, pushing updates to the relevant `ColumnStores` on
             changes.
         */
+
+        if (!this.active) {
+            return;
+        }
 
         const emails = _.values(this.emails);
 

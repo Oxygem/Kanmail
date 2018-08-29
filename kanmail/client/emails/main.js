@@ -10,6 +10,13 @@ import { addMessage, deleteMessage } from 'util/messages.js';
 
 
 class MainEmails extends BaseEmails {
+    constructor() {
+        super();
+
+        // We start with the main store active!
+        this.active = true;
+    }
+
     syncFolderEmails = (folderName, options={}) => {
         /*
             Get new emails for a folder and trigger any updates.

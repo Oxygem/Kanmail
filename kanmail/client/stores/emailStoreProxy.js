@@ -1,7 +1,6 @@
 import _ from 'lodash';
 
 import settingsStore from 'stores/settings.js';
-import filterStore from 'stores/filters.js';
 
 import mainEmailStore from 'emails/main.js';
 import searchEmailStore from 'emails/search.js';
@@ -20,15 +19,25 @@ class EmailStoreProxy {
         alter their data.
     */
 
+    constructor(...stores) {
+        this.stores = stores;
+        this.activeStore = stores[0];
+    }
+
+    setActiveStore(activeStore) {
+        this.activeStore = activeStore;
+
+        _.each(this.stores, store => {
+            store.active = store === activeStore;
+        });
+    }
+
     search(searchValue) {
         searchEmailStore.setSearchValue(searchValue);
 
         // Set the mode and (re)process everything
-        this.searchMode = true;
+        this.setActiveStore(searchEmailStore);
         searchEmailStore.processEmailChanges({forceUpdate: true});
-
-        // Switch to the archive
-        filterStore.setMainColumn('archive');
 
         // Kick off the search requests for columns first
         const requests = _.map(settingsStore.props.columns, folderName => (
@@ -42,25 +51,20 @@ class EmailStoreProxy {
     }
 
     stopSearching() {
+        this.setActiveStore(mainEmailStore);
+
         // As above; set the mode and (re)process everything
         this.searchMode = false;
         mainEmailStore.processEmailChanges({forceUpdate: true});
-
-        // Switch to the inbox
-        filterStore.setMainColumn('inbox');
     }
 
     getCurrentEmailStore() {
-        if (this.searchMode) {
-            return searchEmailStore;
-        }
-
-        return mainEmailStore;
+        return this.activeStore;
     }
 }
 
 
-const emailStoreProxy = new EmailStoreProxy();
+const emailStoreProxy = new EmailStoreProxy(mainEmailStore, searchEmailStore);
 export default emailStoreProxy;
 
 
