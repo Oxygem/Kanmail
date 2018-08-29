@@ -52,6 +52,7 @@ export default class EmailColumnThread extends React.Component {
         thread: PropTypes.array.isRequired,
         connectDragSource: PropTypes.func.isRequired,
         columnId: PropTypes.string.isRequired,
+        isLastThread: PropTypes.bool.isRequired,
 
         // Surrounding columns
         getColumnContainer: PropTypes.func.isRequired,
@@ -523,6 +524,14 @@ export default class EmailColumnThread extends React.Component {
         );
     }
 
+    renderBottomBorder() {
+        if (this.props.isLastThread) {
+            return;
+        }
+
+        return <hr />;
+    }
+
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
@@ -581,6 +590,8 @@ export default class EmailColumnThread extends React.Component {
                         {this.renderTrashButton()}
                     </span>
                 </div>
+
+                {this.renderBottomBorder()}
             </div>
         );
     }

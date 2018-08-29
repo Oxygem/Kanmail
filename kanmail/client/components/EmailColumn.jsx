@@ -184,7 +184,6 @@ class EmailColumn extends React.Component {
 
         // Build a list of our threads and references to each, such that each
         // thread can access the previous/next threads (keyboard shortcuts).
-        const threadElements = [];
         const threadRefs = [];
 
         const getThread = (id) => {
@@ -197,15 +196,18 @@ class EmailColumn extends React.Component {
             }
         }
 
-        _.each(threads, (thread, i) => {
+        const threadElements = _.map(threads, (thread, i) => {
             const getPreviousThread = () => getThread(i - 1);
             const getNextThread = () => getThread(i + 1);
 
-            threadElements.push(<EmailColumnThread
+            const isLastThread = i+1 == threads.length;
+
+            return <EmailColumnThread
                 key={thread.hash}
                 thread={thread}
                 threadRef={i}
                 columnId={this.props.id}
+                isLastThread={isLastThread}
 
                 // Surrounding columns
                 getColumnContainer={this.getColumnContainer}
@@ -216,22 +218,13 @@ class EmailColumn extends React.Component {
                 getPreviousThread={getPreviousThread}
                 getNextThread={getNextThread}
                 ref={ref => threadRefs[i] = ref}
-            />);
+            />;
         });
 
         // Attach the refs to the column instance for keyboard controls
         this.threadRefs = threadRefs;
 
-        // Now return our elements, injecting a <hr> between each
-        return _.reduce(threadElements, (memo, thread, i) => {
-            memo.push(thread);
-
-            if (i < threads.length - 1) {
-                memo.push(<hr key={`hr-${thread.key}`} />);
-            }
-
-            return memo;
-        }, []);
+        return threadElements;
     }
 
     renderMeta(threads) {
@@ -247,7 +240,7 @@ class EmailColumn extends React.Component {
             return memo;
         }, 0);
 
-        return `${totalEmails} emails in ${totalAccounts} accounts`;
+        return `${totalEmails} emails / ${totalAccounts} accounts`;
     }
 
     getFilteredEmailThreads() {
@@ -301,13 +294,15 @@ class EmailColumn extends React.Component {
                 className="column"
                 ref={(div) => {this.containerDiv = div;}}
             >
-                <h3>
-                    {this.renderName()}
+                <div className="header">
+                    <h3>
+                        {this.renderName()}
 
-                    <span className="meta">
-                        {this.renderMeta(threads)}
-                    </span>
-                </h3>
+                        <span className="meta">
+                            {this.renderMeta(threads)}
+                        </span>
+                    </h3>
+                </div>
 
                 <div className="emails">
                     {this.renderEmailThreads(threads)}
