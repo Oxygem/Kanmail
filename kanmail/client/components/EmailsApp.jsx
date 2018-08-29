@@ -4,14 +4,20 @@ import PropTypes from 'prop-types';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
-import Search from 'components/Search.jsx';
+import keyboard from 'keyboard.js';
+import createWindowPositionHandlers from 'window.js';
+import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
+
 import Filters from 'components/Filters.jsx';
 import EmailColumn from 'components/EmailColumn.jsx';
 import MainColumn from 'components/MainColumn.jsx';
 import AddNewColumnForm from 'components/AddNewColumnForm.jsx';
 import Thread from 'components/Thread.jsx';
+import Search from 'components/Search.jsx';
+import FooterStatus from 'components/FooterStatus.jsx';
 
 import mainEmailStore from 'emails/main.js';
+
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 
@@ -21,7 +27,7 @@ import { addMessage } from 'util/messages.js';
 
 @subscribe(settingsStore)
 @DragDropContext(HTML5Backend)
-export default class App extends React.Component {
+export default class EmailsApp extends React.Component {
     static propTypes = {
         columns: PropTypes.array.isRequired,
         accounts: PropTypes.object.isRequired,
@@ -31,21 +37,47 @@ export default class App extends React.Component {
     }
 
     componentDidMount() {
+        // Enable keyboard controls
+        keyboard.enable();
+        // Create resize/move window position saver handlers
+        createWindowPositionHandlers();
+
         const { initial_batches, batch_size } = this.props.systemSettings;
         const initialBatchSize = batch_size * initial_batches;
 
-        // Load up the archive, sent and trash folders - their columns aren't
-        // visible initially, but the emails are likely referenced in threads
-        // from the visible folders, so load them up (client side threading).
-        _.each(['archive', 'sent', 'trash'], folder => (
+        // Load all the alias folders (ie the main column)
+        _.each(ALWAYS_SYNC_FOLDERS, folder => (
             mainEmailStore.getFolderEmails(
                 folder,
                 {query: {
                     reset: true,
                     batch_size: initialBatchSize,
                 }},
-            )
+            ).then(mainEmailStore.syncFolderEmails(folder))
         ));
+
+        this.newAliasEmailCheck = setTimeout(
+            this.getNewAliasFolderEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
+    }
+
+    componentWillUnmount() {
+        clearTimeout(this.newAliasEmailCheck);
+    }
+
+    getNewAliasFolderEmails = () => {
+        const requests = _.map(
+            ALWAYS_SYNC_FOLDERS,
+            folder => mainEmailStore.syncFolderEmails(folder),
+        );
+
+        Promise.all(requests).then(() => {
+            this.newAliasEmailCheck = setTimeout(
+                this.getNewAliasFolderEmails,
+                CHECK_NEW_EMAIL_INTERVAL,
+            );
+        });
     }
 
     renderEmailColumn(column) {
@@ -84,6 +116,7 @@ export default class App extends React.Component {
             key="main"
             getNextColumn={() => getColumn(1)}
             getPreviousColumn={() => getColumn(-1)}
+            columnsCount={this.props.columns.length}
             ref={pushMainColumnRef}
         />);
 
@@ -128,26 +161,27 @@ export default class App extends React.Component {
     render() {
         return (
             <div className="wrapper">
-                <section id="folders">
+                <section id="sidebar">
                     <h1>
                         <span>K-</span>
                         <i className="logo fa fa-envelope-o"></i>
 
-                        <span className="right">
-                            <a
-                                onClick={() => get('/open-send').catch(() => {
-                                    addMessage('Could not open send window!', 'critical');
-                                })}
-                            >
-                                <i className="fa fa-pencil-square-o"></i>
-                            </a>
-                        </span>
+                        <a
+                            className="compose"
+                            onClick={() => get('/open-send').catch(() => {
+                                addMessage('Could not open send window!', 'critical');
+                            })}
+                        >
+                            <i className="fa fa-pencil-square-o"></i>
+                            New email
+                        </a>
                     </h1>
 
-                    <Search />
                     <Filters />
 
                     <footer>
+                        <FooterStatus />
+
                         <a onClick={() => get('/open-link', {url: 'https://github.com/Fizzadar/kanmail'})}>
                             Kanmail v{window.KANMAIL_VERSION}
                         </a>
@@ -156,6 +190,8 @@ export default class App extends React.Component {
                         Beta - <a href="#">unregistered</a>
                     </footer>
                 </section>
+
+                <Search columnsCount={this.props.columns.length} />
 
                 {this.renderColumnsSection()}
 
