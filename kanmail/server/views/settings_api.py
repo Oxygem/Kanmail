@@ -32,6 +32,17 @@ def api_update_settings():
 @app.route('/api/window_settings', methods=['POST'])
 def api_update_window_settings():
     request_data = request.get_json()
+
+    # Importing this before creating the initial main window isn't allowed
+    from webview.cocoa import BrowserView
+    top_bar_height = BrowserView.DragBar.default_height + 1
+
+    if 'height' in request_data:
+        request_data['height'] += top_bar_height
+
+    if 'top' in request_data:
+        request_data['top'] -= top_bar_height
+
     set_cached_window_settings(**request_data)
 
     return jsonify(saved=True)
