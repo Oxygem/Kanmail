@@ -35,6 +35,9 @@ function ensureInView(element, alignToTop) {
 
 class Keyboard {
     constructor() {
+        // Start disabled by default
+        this.disabled = true;
+
         this.currentComponent = null;
 
         window.addEventListener('keydown', this.handleKeyboardEvents);
