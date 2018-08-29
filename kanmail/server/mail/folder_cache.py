@@ -1,5 +1,20 @@
+'''
+Kanmail cache.
+
+Namespace/key/value based. The cache folder looks like so:
+
+- /cache
+    - /<namespace>
+        - /<folder-hash>
+            - <key>
+
+The cache keeps track of namespaces it's part of so it can bust itself. Data is
+serialized using pickle.
+'''
+
 import pickle
 
+from functools import wraps
 from hashlib import sha1
 from os import makedirs, path, remove
 from shutil import rmtree
@@ -24,6 +39,13 @@ def _hash_key(data):
     return hasher.hexdigest()
 
 
+def _trim(value):
+    value = '{0}'.format(value)
+    if len(value) > 80:
+        return '{0}...'.format(value[:77])
+    return value
+
+
 class FolderCache(object):
     def __init__(self, folder):
         self.folder = folder
@@ -34,69 +56,107 @@ class FolderCache(object):
         )
 
         self.name = name
-        self.make_cache_dir('headers')
+        self.namespaces = set()
 
-    def make_cache_dir(self, cache_type):
-        cache_dir = self.make_cache_dirname(cache_type)
+    def log(self, method, message):
+        func = getattr(logger, method)
+        func('[Folder cache: {0}]: {1}'.format(
+            self.name, message,
+        ))
 
-        with MAKE_DIRS:
-            if not path.exists(cache_dir):
-                makedirs(cache_dir)
+    # Cache implementation
+    #
 
-        logger.debug('Starting cache in directory: {0}'.format(cache_dir))
-
-    def make_cache_dirname(self, cache_type):
+    def make_cache_dirname(self, namespace):
         return path.join(
-            SETTINGS_DIR, 'cache', cache_type,
+            SETTINGS_DIR, 'cache', namespace,
             _hash_key(self.name),
         )
 
-    def make_cache_filename(self, cache_type, uid):
-        cache_dir = self.make_cache_dirname(cache_type)
+    def make_cache_filename(self, namespace, uid):
+        cache_dir = self.make_cache_dirname(namespace)
         uid = _hash_key(_make_uid_key(uid))
         return path.join(cache_dir, uid)
 
-    def set_uid_validity(self, uid_validity):
-        self.set_headers('_uid_validity', uid_validity)
-        logger.debug('[Cache/{0}] Set cache validity to: {1}'.format(self.name, uid_validity))
+    def ensure_cache_dir(self, namespace):
+        cache_dir = self.make_cache_dirname(namespace)
 
-    def get_uid_validity(self):
-        '''
-        Get the UID validity currently stored for this cache.
-        '''
+        with MAKE_DIRS:
+            if not path.exists(cache_dir):
+                self.log('debug', 'create namespace {0}'.format(namespace))
+                makedirs(cache_dir)
 
-        return self.get_headers('_uid_validity')
+    def populate_namespaces(func):
+        @wraps(func)
+        def decorated(self, namespace, *args, **kwargs):
+            self.namespaces.add(namespace)
+            return func(self, namespace, *args, **kwargs)
+        return decorated
 
-    def bust(self):
-        '''
-        Bust the cache by dropping all the JSON docs within it.
-        '''
+    @populate_namespaces
+    def delete(self, namespace, key):
+        filename = self.make_cache_filename(namespace, key)
+        if path.exists(filename):
+            self.log('debug', 'delete {0}/{1}'.format(namespace, key))
+            remove(filename)
 
-        logger.warning('[Cache/{0}] Busting cache'.format(self.name))
+    @populate_namespaces
+    def set(self, namespace, key, value):
+        self.ensure_cache_dir(namespace)
 
-        rmtree(self.make_cache_dirname('headers'))
-        self.make_cache_dir('headers')
+        filename = self.make_cache_filename(namespace, key)
 
-    def delete_headers(self, uid):
-        filename = self.make_cache_filename('headers', uid)
-        remove(filename)
-
-    def set_headers(self, uid, headers):
-        filename = self.make_cache_filename('headers', uid)
-
-        logger.debug('[Cache/{0}] Setting headers for: {1}'.format(self.name, uid))
+        self.log('debug', 'write {0}/{1}={2}'.format(namespace, key, _trim(value)))
 
         with open(filename, 'wb') as f:
-            f.write(pickle.dumps(headers))
+            f.write(pickle.dumps(value))
 
-    def get_headers(self, uid):
-        filename = self.make_cache_filename('headers', uid)
+    @populate_namespaces
+    def get(self, namespace, key):
+        filename = self.make_cache_filename(namespace, key)
 
         if not path.exists(filename):
             return None
 
         with open(filename, 'rb') as f:
-            return pickle.loads(f.read())
+            pickle_data = f.read()
+
+        data = pickle.loads(pickle_data)
+        self.log('debug', 'read {0}/{1}=({2}, {3})'.format(
+            namespace, key, type(data), _trim(data),
+        ))
+        return data
+
+    def bust(self):
+        self.log('warning', 'busting the cache!')
+
+        for namespace in self.namespaces:
+            self.log('debug', 'delete namespace {0}'.format(namespace))
+            rmtree(self.make_cache_dirname(namespace))
+
+    # Get/set shortcuts
+    #
+
+    def set_uid_validity(self, uid_validity):
+        self.set('meta', 'uid_validity', uid_validity)
+
+    def get_uid_validity(self):
+        return self.get('meta', 'uid_validity')
+
+    def set_uids(self, uids):
+        return self.set('meta', 'uids', uids)
+
+    def get_uids(self):
+        return self.get('meta', 'uids')
+
+    def set_headers(self, uid, headers):
+        return self.set('headers', uid, headers)
+
+    def get_headers(self, uid):
+        return self.get('headers', uid)
+
+    def delete_headers(self, uid):
+        return self.delete('headers', uid)
 
     def get_parts(self, uid):
-        return self.get_headers(uid)['parts']
+        return self.get('headers', uid)['parts']
