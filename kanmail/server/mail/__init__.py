@@ -1,13 +1,11 @@
 from collections import defaultdict
 from threading import Lock
 
-from markdown import markdown
-from mdx_linkify.mdx_linkify import LinkifyExtension
-
 from kanmail.server.util import execute_threaded
 from kanmail.settings import get_settings
 
 from .account import Account
+from .util import markdownify
 
 ACCOUNTS = {}
 GET_ACCOUNTS_LOCK = Lock()
@@ -122,7 +120,7 @@ def _get_folder_email_parts(account_key, folder_name, uid_parts):
     folder = account.get_folder(folder_name)
 
     def get_email_parts(uids, part):
-        email_parts = folder.fetch_email_parts(uids, part)
+        email_parts = folder.get_email_parts(uids, part)
         return email_parts
 
     items = execute_threaded(get_email_parts, [
@@ -153,8 +151,17 @@ def get_folder_email_texts(account_key, folder_name, uids):
     uid_parts = []
     plaintext_uids = []
 
+    uid_to_none = {}
+    uid_to_content_ids = {}
+
     for uid in uids:
         parts = folder.cache.get_parts(uid)
+
+        uid_to_content_ids[uid] = {
+            part['content_id']: part_id
+            for part_id, part in parts.items()
+            if isinstance(part, dict) and part.get('content_id')
+        }
 
         html = parts.get('html')
         text = parts.get('plain')
@@ -162,25 +169,31 @@ def get_folder_email_texts(account_key, folder_name, uids):
         if not html:
             plaintext_uids.append(uid)
 
-        part_number = html or text or '1'
+        part_number = html or text
 
-        uid_parts.append((uid, part_number))
+        if part_number:
+            uid_parts.append((uid, part_number))
+        # No text part? None!
+        else:
+            uid_to_none[uid] = None
 
     uid_part_data = _get_folder_email_parts(account_key, folder_name, uid_parts)
+    uid_part_data.update(uid_to_none)
 
-    # Convert any plaintext items to html w/markdown
+    uid_part_data_with_cids = {}
+
     for uid, data in uid_part_data.items():
+        # Convert any plaintext items to html w/markdown
         if uid in plaintext_uids:
-            html = markdown(data, extensions=[
-                'markdown.extensions.extra',
-                'markdown.extensions.nl2br',  # turn newlines into breaks
-                'markdown.extensions.sane_lists',
-                LinkifyExtension(),  # pass class for pyinstaller to bundle
-            ])
+            data = markdownify(data)
 
-            uid_part_data[uid] = html
+        part_data_with_cids = {
+            'html': data,
+            'cid_to_part': uid_to_content_ids[uid],
+        }
 
-    return uid_part_data
+        uid_part_data_with_cids[uid] = part_data_with_cids
+    return uid_part_data_with_cids
 
 
 def get_folder_email_part(account_key, folder_name, uid, part_number):
