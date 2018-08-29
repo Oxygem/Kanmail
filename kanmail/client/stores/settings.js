@@ -1,5 +1,6 @@
 import { BaseStore } from 'stores/base.jsx';
-import { get } from 'util/requests.js';
+
+import { get, post } from 'util/requests.js';
 
 
 class SettingsStore extends BaseStore {
@@ -22,9 +23,12 @@ class SettingsStore extends BaseStore {
     addColumn(newColumn) {
         this.props.columns.push(newColumn);
 
-        // TODO: PUSH column to settings on server FIRST
-
-        this.triggerUpdate();
+        // Save the new list of columns via the API before updating
+        return post('/api/settings', {
+            columns: this.props.columns,
+        }).then(() => {
+            this.triggerUpdate();
+        });
     }
 
     getSettings() {
@@ -33,7 +37,9 @@ class SettingsStore extends BaseStore {
             this.props.accounts = data.settings.accounts;
             this.props.systemSettings = data.settings.system;
             this.props.settingsFile = data.settings_file;
+
             this.triggerUpdate();
+            return this.props;
         });
     }
 }
