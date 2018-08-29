@@ -47,21 +47,21 @@ class MainEmails extends BaseEmails {
 
             let changed = false;
 
-            if (data.new_emails.length > 0) {
-                this.addEmailsToAccountFolder(
-                    accountKey,
-                    folderName,
-                    data.new_emails,
-                );
-
-                changed = true;
-            }
-
             if (data.deleted_uids.length > 0) {
                 this.deleteEmailsFromAccountFolder(
                     accountKey,
                     folderName,
                     data.deleted_uids,
+                );
+
+                changed = true;
+            }
+
+            if (data.new_emails.length > 0) {
+                this.addEmailsToAccountFolder(
+                    accountKey,
+                    folderName,
+                    data.new_emails,
                 );
 
                 changed = true;
