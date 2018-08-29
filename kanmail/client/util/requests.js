@@ -6,7 +6,7 @@ import { addMessage, deleteMessage } from 'util/messages.js';
 let currentCriticalRequestNonce = null;
 
 
-function handleReponse(response, criticalRequestNonce) {
+function handleReponse(response, criticalRequestNonce=false) {
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
         throw new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
     }
