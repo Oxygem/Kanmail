@@ -1,10 +1,13 @@
+import webview
+
 from flask import jsonify, request
 
+from kanmail import settings
 from kanmail.server.app import app
 from kanmail.settings import (
     get_settings,
     set_cached_window_settings,
-    SETTINGS_FILE,
+    update_settings,
 )
 
 
@@ -14,11 +17,9 @@ def api_get_settings():
     Get client settings.
     '''
 
-    settings = get_settings()
-
     return jsonify(
-        settings=settings,
-        settings_file=SETTINGS_FILE,
+        settings=get_settings(),
+        settings_file=settings.SETTINGS_FILE,
     )
 
 
@@ -27,6 +28,16 @@ def api_update_settings():
     '''
     Update client settings.
     '''
+
+    request_data = request.get_json()
+
+    update_settings(request_data)
+
+    # Reload the main window now we've updated the settings
+    if settings.IS_APP and request_data.pop('reload', None):
+        webview.evaluate_js('window.location.reload()')
+
+    return jsonify(saved=True)
 
 
 @app.route('/api/window_settings', methods=['POST'])
