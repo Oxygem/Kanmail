@@ -51,21 +51,6 @@ function makeFolderUidParts(thread) {
     return _.reduce(
         thread,
         (memo, message) => {
-            let textPlain;
-            let textHtml;
-
-            _.each(message.body_structure, structure => {
-                if (structure.type != 'TEXT') {
-                    return;
-                }
-
-                if (structure.subtype === 'HTML') {
-                    textHtml = structure.item;
-                } else if (structure.subtype === 'PLAIN') {
-                    textPlain = structure.item;
-                }
-            });
-
             const folderName = _.keys(message.folderUids)[0];
             const uid = message.folderUids[folderName];
 
@@ -74,7 +59,6 @@ function makeFolderUidParts(thread) {
             }
 
             memo[folderName].push({
-                part: textHtml || textPlain || 1,
                 uid,
                 message,
             });
@@ -127,7 +111,8 @@ class ThreadStore extends BaseStore {
         this.props.fetching = true;
 
         const requests = [];
-        const emailParts = {};
+        const emailBodyParts = {};
+        const emailContentIds = {};
 
         _.each(folderUidParts, (uidParts, folderName) => {
             const accountName = uidParts[0].message.account_name;
@@ -141,13 +126,14 @@ class ThreadStore extends BaseStore {
             const message = addMessage(`Fetching ${uidList.length} messages from ${folderName}...`);
 
             // Make the request
-            const request = get(
+            const request = requestStore.get(
                 `/api/emails/${accountName}/${folderName}/text`,
                 {uid: uidList},
                 criticalRequestNonce,
             ).then(data => {
                 _.each(data.emails, (email, uid) => {
-                    emailParts[uid] = email;
+                    emailBodyParts[uid] = email.html;
+                    emailContentIds[uid] = email.cid_to_part;
                 });
 
                 deleteMessage(message);
@@ -171,7 +157,8 @@ class ThreadStore extends BaseStore {
                 const uid = message.folderUids[folderName];
 
                 return {
-                    body: emailParts[uid],
+                    body: emailBodyParts[uid],
+                    contentIds: emailContentIds[uid],
                     ...message,
                 };
             });
