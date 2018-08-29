@@ -2,6 +2,7 @@ from kanmail.log import logger
 
 from .connection import ConnectionPool
 from .folder import Folder
+from .send import send_email
 
 
 class Account(object):
@@ -17,7 +18,7 @@ class Account(object):
 
         # Setup/wrap IMAP connection
         self.connection_pool = ConnectionPool(
-            **settings['connection']
+            **settings['imap_connection'],
         )
 
         # TODO: need this for anything?
@@ -77,3 +78,9 @@ class Account(object):
             folder.reset()
 
         return folder.name
+
+    def send_email(self, **send_kwargs):
+        return send_email(
+            **self.settings['smtp_connection'],
+            **send_kwargs,
+        )
