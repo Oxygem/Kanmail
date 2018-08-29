@@ -3,7 +3,11 @@ import React from 'react';
 import { PropTypes } from 'prop-types';
 import { DropTarget } from 'react-dnd';
 
-import { ALIAS_FOLDERS } from 'constants.js';
+import {
+    ALIAS_FOLDERS,
+    ALWAYS_SYNC_FOLDERS,
+    CHECK_NEW_EMAIL_INTERVAL,
+} from 'constants.js';
 
 import EmailColumnThread from 'components/EmailColumnThread.jsx';
 
@@ -14,8 +18,6 @@ import { subscribe } from 'stores/base.jsx';
 import { getColumnStore } from 'stores/columns.js';
 
 import { capitalizeFirstLetter } from 'util/string.js';
-
-const CHECK_NEW_EMAIL_INTERVAL = 60000;
 
 
 const columnTarget = {
@@ -102,7 +104,19 @@ class EmailColumn extends React.Component {
         getNextColumn: PropTypes.func.isRequired,
     }
 
+    constructor(props) {
+        super(props);
+
+        // Disable sync if this folder is in one of the always sync folders
+        this.shouldNotSync = _.includes(ALWAYS_SYNC_FOLDERS, props.id);
+    }
+
     componentDidMount() {
+        // Main column doesn't need to update itself
+        if (this.shouldNotSync) {
+            return;
+        }
+
         // If no threads, we've no state for this
         if (!this.props.threads) {
             const { initial_batches, batch_size } = this.props.systemSettings;
@@ -113,21 +127,27 @@ class EmailColumn extends React.Component {
                     reset: true,
                     batch_size: batch_size * initial_batches,
                 }},
-            );
-
-            // Kick off new email checking at the interval
-            this.newEmailCheck = setTimeout(
-                this.getNewEmails,
-                CHECK_NEW_EMAIL_INTERVAL,
-            );
+            // Once initially loaded - immediately sync any changes - initial load
+            // could be completely cached.
+            ).then(this.getNewEmails);
 
         // We have threads, so immeditely check for new emails
         } else {
             this.getNewEmails();
         }
+
+        // Kick off new email checking at the interval
+        this.newEmailCheck = setTimeout(
+            this.getNewEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
     }
 
     componentWillUnmount() {
+        if (this.shouldNotSync) {
+            return;
+        }
+
         // Remove any pending email check
         clearTimeout(this.newEmailCheck);
     }
