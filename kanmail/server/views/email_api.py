@@ -1,8 +1,14 @@
+from os import path
+
+import webview
+
 from flask import jsonify, make_response, request
 
+from kanmail import settings
 from kanmail.server.app import app
 from kanmail.server.mail import (
     copy_folder_emails,
+    get_account,
     get_all_folders,
     get_folder_email_part,
     get_folder_email_texts,
@@ -83,20 +89,52 @@ def api_get_account_email_texts(account, folder):
 @app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>')
 def api_get_account_email_part(account, folder, uid, part_number):
     '''
-    Get a specific part (attachment) of a single email by account/folder/UID.
+    Return a specific part of an email by account/folder/UID.
     '''
 
-    mime_type, data = get_folder_email_part(account, folder, uid, part_number)
+    mime_type, data = get_folder_email_part(
+        account, folder, uid, part_number,
+    )
 
     if mime_type is None:
-        response = jsonify(error='Could not find part: {0}'.format(part_number))
+        response = jsonify(error='Could not find part: {0}'.format(
+            part_number,
+        ))
         response.status_code = 404
         return response
 
     response = make_response(data)
     response.headers['Content-Type'] = mime_type
-
     return response
+
+
+@app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>/download')
+def api_download_account_email_part(account, folder, uid, part_number):
+    '''
+    Download a specific part of an email by account/folder/UID.
+    '''
+
+    # Get this now to trigger 400 if no filename
+    # TODO: ~/Downloads not portable
+    local_filename = path.expanduser(path.join(
+        '~', 'Downloads', request.args['filename'],
+    ))
+
+    mime_type, data = get_folder_email_part(
+        account, folder, uid, part_number,
+    )
+
+    if mime_type is None:
+        response = jsonify(error='Could not find part: {0}'.format(
+            part_number,
+        ))
+        response.status_code = 404
+        return response
+
+    with open(local_filename, 'wb') as f:
+        f.write(data)
+
+    return jsonify(saved_to_downloads=True)
 
 
 @app.route('/api/emails/<account>/<folder>/move', methods=['POST'])
