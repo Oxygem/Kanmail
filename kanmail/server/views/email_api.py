@@ -177,8 +177,28 @@ def api_unstar_account_emails(account, folder):
     return jsonify(unstarred=True)
 
 
-@app.route('/api/emails/<account>', methods=['POST'])
-def api_send_account_email():
+@app.route('/api/emails/<account_key>', methods=['POST'])
+def api_send_account_email(account_key):
     '''
     Create (send) emails from one of the accounts.
     '''
+
+    request_data = request.get_json()
+    account = get_account(account_key)
+
+    account.send_email(
+        # Replying to another message
+        reply_to_html=request_data.pop('replyToQuoteHtml', None),
+        reply_to_message_id=request_data.pop('replyToMessageId', None),
+        reply_to_message_references=request_data.pop(
+            'replyToMessageReferences', None,
+        ),
+        from_=request_data.pop('from', None),  # argname can't be from
+        **request_data,  # everything else
+    )
+
+    # Tell the main window to reload the sent folder
+    if settings.IS_APP:
+        webview.evaluate_js('mainEmailStore.syncEmails("{0}", "sent"')
+
+    return jsonify(sent=False)
