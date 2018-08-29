@@ -1,8 +1,9 @@
 import _ from 'lodash';
 import hash from 'object-hash';
 
+import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
-import { get } from 'util/requests.js';
+
 import { addMessage, deleteMessage } from 'util/messages.js';
 
 

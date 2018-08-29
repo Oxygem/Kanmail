@@ -3,11 +3,12 @@ import _ from 'lodash';
 import { ALIAS_FOLDERS } from 'constants.js';
 import { messageThreader } from 'threading.js';
 
+import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
+
 import { getColumnStore, getColumnStoreKeys } from 'stores/columns.js';
 
 import { addMessage, deleteMessage } from 'util/messages.js';
-import { post } from 'util/requests.js';
 
 
 export default class BaseEmails {
@@ -173,7 +174,7 @@ export default class BaseEmails {
         );
         const action = copyNotMove ? 'copy' : 'move';
 
-        return post(`/api/emails/${accountKey}/${oldColumn}/${action}`, {
+        return requestStore.post(`/api/emails/${accountKey}/${oldColumn}/${action}`, {
             message_uids: messageUids,
             new_folder: newColumn,
         }).then(() => {
@@ -200,7 +201,7 @@ export default class BaseEmails {
 
         const message = addMessage(`Starring messages in ${folderName}`);
 
-        return post(`/api/emails/${accountKey}/${folderName}/star`, {
+        return requestStore.post(`/api/emails/${accountKey}/${folderName}/star`, {
             message_uids: messageUids,
         }).then(() => {
             _.each(messageUids, uid => {
@@ -227,7 +228,7 @@ export default class BaseEmails {
 
         const message = addMessage(`Unstarring messages in ${folderName}`);
 
-        return post(`/api/emails/${accountKey}/${folderName}/unstar`, {
+        return requestStore.post(`/api/emails/${accountKey}/${folderName}/unstar`, {
             message_uids: messageUids,
         }).then(() => {
             _.each(messageUids, uid => {

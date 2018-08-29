@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
+import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
 import { getColumnStore } from 'stores/columns.js';
 
 import BaseEmails from 'emails/base.js';
 
-import { get } from 'util/requests.js';
 import { addMessage, deleteMessage } from 'util/messages.js';
 
 
@@ -42,7 +42,7 @@ class MainEmails extends BaseEmails {
         const url = `/api/emails/${accountKey}/${folderName}/sync`;
         const query = options.query || {};
 
-        get(url, query).then(data => {
+        requestStore.get(url, query).then(data => {
             const columnStore = getColumnStore(folderName);
 
             let changed = false;
@@ -104,7 +104,10 @@ class MainEmails extends BaseEmails {
         );
         const query = options.query || {};
 
-        return get(`/api/emails/${accountKey}/${folderName}`, query).then(data => {
+        return requestStore.get(
+            `/api/emails/${accountKey}/${folderName}`,
+            query,
+        ).then(data => {
             // Attach the email meta/counts to the column immediately
             const columnStore = getColumnStore(folderName);
             columnStore.setMeta(accountKey, data.meta);
