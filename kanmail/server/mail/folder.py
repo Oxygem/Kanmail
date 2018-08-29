@@ -3,15 +3,13 @@ from copy import copy
 
 import six
 
-from imapclient.exceptions import IMAPClientError
-
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_settings
 
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
-from .folder_util import decode_string, make_email_headers, parse_bodystructure
+from .util import decode_string, make_email_headers, parse_bodystructure
 
 
 class Folder(object):
@@ -51,12 +49,17 @@ class Folder(object):
         else:
             self.cache = FolderCache(self)
 
-        # Check/bust the cache before getting the UID list from the server
-        self.check_cache_validity()
-        self.get_email_uids()
+        # Fetch email UIDs (cached if possible)
+        self.email_uids = self.get_email_uids()
 
     def __len__(self):
         return len(self.email_uids)
+
+    def log(self, method, message):
+        func = getattr(logger, method)
+        func('[Account: {0}/{1}]: {2}'.format(
+            self.account.name, self.name, message,
+        ))
 
     @contextmanager
     def get_connection(self):
@@ -67,17 +70,6 @@ class Folder(object):
         with self.account.get_connection() as connection:
             connection.select_folder(self.name)
             yield connection
-
-    def reset(self):
-        # Already in a reset state?
-        if self.exists and self.offset == 0:
-            return
-
-        logger.info('Resetting folder: {0}/{1}'.format(
-            self.account.name, self.name,
-        ))
-
-        self.get_email_uids()
 
     def check_cache_validity(self):
         with self.account.get_connection() as connection:
@@ -91,6 +83,8 @@ class Folder(object):
         if uid_validity != cache_validity:
             self.cache.bust()
             self.cache.set_uid_validity(uid_validity)
+            return False
+        return True
 
     def add_cache_flags(self, uid, new_flag):
         headers = self.cache.get_headers(uid)
@@ -110,13 +104,13 @@ class Folder(object):
             headers['flags'] = tuple(flags)
             self.cache.set_headers(uid, headers)
 
-    def fetch_email_parts(self, email_uids, part):
+    def get_email_parts(self, email_uids, part):
         '''
         Fetch actual email body parts, where the part is the same for each email.
         '''
 
-        logger.info('Fetching {0} message parts ({1}) from {2}/{3}'.format(
-            len(email_uids), part, self.account.name, self.name,
+        self.log('debug', 'Fetching {0} message parts ({1})'.format(
+            len(email_uids), part,
         ))
 
         body_keyname = 'BODY[{0}]'.format(part)
@@ -132,8 +126,8 @@ class Folder(object):
         # Fix any dodgy UIDs
         email_parts = fix_email_uids(email_uids, email_parts)
 
-        logger.info('Fetched {0} email parts ({1}) from {2}/{3}'.format(
-            len(email_uids), part, self.account.name, self.name,
+        self.log('debug', 'Fetched {0} email parts ({1})'.format(
+            len(email_uids), part,
         ))
 
         emails = {}
@@ -159,7 +153,7 @@ class Folder(object):
 
         return emails
 
-    def fetch_email_headers(self, email_uids):
+    def get_email_headers(self, email_uids):
         '''
         Fetch email headers/meta information (to display in a folder list).
         '''
@@ -178,8 +172,8 @@ class Folder(object):
         for uid in got_email_uids:
             email_uids.remove(uid)
 
-        logger.info('Fetching {0} messages from {1}/{2} (+{3} from cached)'.format(
-            len(email_uids), self.account.name, self.name, len(emails),
+        self.log('debug', 'Fetching {0} messages (+{1} from cached)'.format(
+            len(email_uids), len(emails),
         ))
 
         if not email_uids:
@@ -215,24 +209,32 @@ class Folder(object):
 
         return emails
 
-    def fetch_email_uids(self):
+    def get_email_uids(self, use_cache=True):
+        # If we're not a query folder we can try for cached UIDs
+        if use_cache and not self.query:
+            cached_uids = self.cache.get_uids()
+            if cached_uids:
+                self.log(
+                    'debug',
+                    'Loaded {0} cached message IDs'.format(len(cached_uids)),
+                )
+                return cached_uids
+
         search_query = ['ALL']
 
         if isinstance(self.query, six.string_types):
             search_query = ['SUBJECT', self.query]
 
-        logger.debug('Fetching message IDs from {0}/{1}'.format(
-            self.account.name, self.name,
-        ))
+        self.log('debug', 'Fetching message IDs')
 
         with self.get_connection() as connection:
             message_uids = connection.search(search_query)
 
-        logger.info('Fetched {0} message UIDs from {1}/{2}'.format(
-            len(message_uids), self.account.name, self.name,
-        ))
+        self.log('debug', 'Fetched {0} message UIDs'.format(len(message_uids)))
 
-        return set(message_uids)
+        uids = set(message_uids)
+        self.cache.set_uids(uids)
+        return uids
 
     # Bits that fiddle with self.email_uids
     #
@@ -254,39 +256,6 @@ class Folder(object):
         self.offset -= uids_lower_than_offset
 
     @lock_class_method
-    def get_email_uids(self):
-        '''
-        Get all the UIDs for all the emails in the folder. Overwrites any
-        existing UIDs for this folder. Also checks UID validity, busting
-        the cache if needed.
-        '''
-
-        # Note how we don't use self.get_connection here, so we can detect a
-        # missing folder on __init__.
-        with self.account.get_connection() as connection:
-            try:
-                connection.select_folder(self.name)
-                # Set exists - this changes if we were just created and reset
-                self.exists = True
-
-            except IMAPClientError as e:
-                # Folder doesn't exist on the server; flag and return no email IDs
-                if 'NONEXISTENT' in e.args[0]:
-                    logger.warning((
-                        'Folder {0}/{1} does not exist on the server'
-                    ).format(self.account.name, self.name))
-
-                    self.exists = False
-                    self.email_uids = set()
-                    return
-
-                raise
-
-        # Fetch the UID list and set/initialise the offset at 0
-        self.email_uids = self.fetch_email_uids()
-        self.offset = 0
-
-    @lock_class_method
     def sync_emails(self, expected_uids=None):
         '''
         Get new emails for this folder and prepend them to our internal email
@@ -298,15 +267,22 @@ class Folder(object):
         if not self.exists:
             return [], []
 
-        message_uids = self.fetch_email_uids()
+        message_uids = self.get_email_uids(use_cache=False)
 
-        # Remove existing from new to get anything new
-        new_message_uids = message_uids - self.email_uids
+        # Check the folder UIDVALIDITY (busts the cache if needed)
+        uids_valid = self.check_cache_validity()
 
-        # Remove new from existing to get deleted
-        deleted_message_uids = self.email_uids - message_uids
+        if uids_valid:
+            # Remove existing from new to get anything new
+            new_message_uids = message_uids - self.email_uids
+            # Remove new from existing to get deleted
+            deleted_message_uids = self.email_uids - message_uids
+            self.fix_offset_before_removing_uids(deleted_message_uids)
+        else:
+            # All old uids invalid, so set all new and all old deleted
+            new_message_uids = message_uids
+            deleted_message_uids = self.email_uids
 
-        self.fix_offset_before_removing_uids(deleted_message_uids)
         self.email_uids = message_uids
 
         for uid in deleted_message_uids:
@@ -317,18 +293,15 @@ class Folder(object):
                 expected_uids, new_message_uids,
             )
 
-        logger.info((
-            'Fetched {0} new/{1} deleted message IDs from {2}/{3}'
-        ).format(
+        self.log('debug', 'Fetched {0} new/{1} deleted message IDs'.format(
             len(new_message_uids), len(deleted_message_uids),
-            self.account.name, self.name,
         ))
 
         new_emails = {}
 
         if new_message_uids:
             # Now actually fetch & return those emails
-            new_emails = self.fetch_email_headers(new_message_uids)
+            new_emails = self.get_email_headers(new_message_uids)
 
         # Return the enw emails & any deleted uids
         return new_emails, list(deleted_message_uids)
@@ -350,7 +323,8 @@ class Folder(object):
             return [], 0, 0
 
         if reset:
-            self.reset()
+            self.log('debug', 'Resetting folder (offset=0)')
+            self.offset = 0
 
         if not batch_size:
             batch_size = get_settings()['system']['batch_size']
@@ -366,7 +340,7 @@ class Folder(object):
             return [], self.offset, self.offset
 
         # Actually fetch the emails
-        emails = self.fetch_email_headers(email_uids)
+        emails = self.get_email_headers(email_uids)
 
         # Store the old offset as we need to return it
         offset = copy(self.offset)
@@ -382,8 +356,8 @@ class Folder(object):
         Flag emails as deleted within this folder.
         '''
 
-        logger.debug('Deleting {0} ({1}) emails in {2}'.format(
-            len(email_uids), email_uids, self.name,
+        self.log('debug', 'Deleting {0} ({1}) emails'.format(
+            len(email_uids), email_uids,
         ))
 
         with self.get_connection() as connection:
@@ -404,8 +378,8 @@ class Folder(object):
         # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
-        logger.info('Moving {0} ({1}) emails from {2} -> {3}'.format(
-            len(email_uids), email_uids, self.name, new_folder,
+        self.log('debug', 'Moving {0} ({1}) emails to -> {2}'.format(
+            len(email_uids), email_uids, new_folder,
         ))
 
         with self.get_connection() as connection:
@@ -429,8 +403,8 @@ class Folder(object):
         # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
-        logger.info('Copying {0} ({1}) emails from {2} -> {3}'.format(
-            len(email_uids), email_uids, self.name, new_folder,
+        self.log('debug', 'Copying {0} ({1}) emails to -> {2}'.format(
+            len(email_uids), email_uids, new_folder,
         ))
 
         with self.get_connection() as connection:
@@ -441,8 +415,8 @@ class Folder(object):
         Star/flag emails (by UID) in this folder.
         '''
 
-        logger.info('Starring {0} ({1}) emails in {2}'.format(
-            len(email_uids), email_uids, self.name,
+        self.log('debug', 'Starring {0} ({1}) emails'.format(
+            len(email_uids), email_uids,
         ))
 
         with self.get_connection() as connection:
@@ -456,8 +430,8 @@ class Folder(object):
         Unstar/unflag emails (by UID) in this folder.
         '''
 
-        logger.info('Unstarring {0} ({1}) emails in {2}'.format(
-            len(email_uids), email_uids, self.name,
+        self.log('debug', 'Unstarring {0} ({1}) emails'.format(
+            len(email_uids), email_uids,
         ))
 
         with self.get_connection() as connection:
