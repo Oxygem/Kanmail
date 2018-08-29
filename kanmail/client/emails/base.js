@@ -103,6 +103,7 @@ export default class BaseEmails {
                 };
 
                 // Fix references to have account name prefixed
+                email.originalReferences = email.references;
                 email.references = _.map(email.references, reference => (
                     `${accountKey}-${reference}`
                 ));
