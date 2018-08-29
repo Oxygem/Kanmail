@@ -73,6 +73,16 @@ export default class Filters extends React.Component {
                 </a></li>
                 {this.renderAccounts()}
             </ul>
+
+            <ul>
+                <li>
+                    <a onClick={() => get('/open-settings').catch(() => {
+                        addMessage('Could not open settings window!', 'critical');
+                    })}>
+                        <i className="fa fa-cog"></i> Settings
+                    </a>
+                </li>
+            </ul>
         </div>);
     }
 }
