@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 
+{% block page_title %}Send{% endblock %}
+
 {% block app_container %}
-    <div data-send-app data-reply='{{ (reply or {})|tojson }}'></div>
+    <div
+        data-send-app
+        data-contacts='{{ contacts|tojson }}'
+        data-reply='{{ (reply or None)|tojson }}'
+    ></div>
 {% endblock %}
