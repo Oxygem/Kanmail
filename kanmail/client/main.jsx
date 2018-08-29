@@ -1,13 +1,14 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 import 'static/fontawesome/css/font-awesome.css';
 import 'style.less';
 
-import 'window';
-
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from 'components/App.jsx';
+import EmailsApp from 'components/EmailsApp.jsx';
 import SendApp from 'components/SendApp.jsx'
+import SettingsApp from 'components/SettingsApp.jsx';
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
+
 import settingsStore from 'stores/settings.js';
 
 
@@ -18,7 +19,7 @@ if (appRoot) {
     settingsStore.getSettings().then(() => {
         console.debug('Settings loaded, bootstrapping app to DOM...');
         ReactDOM.render(<ErrorBoundary>
-            <App />
+            <EmailsApp />
         </ErrorBoundary>, appRoot);
     });
 }
@@ -27,9 +28,25 @@ if (appRoot) {
 const sendAppRoot = document.querySelector('div[data-send-app]');
 
 if (sendAppRoot) {
-    console.debug('Boostrapping send app to DOM...');
-    const reply = JSON.parse(sendAppRoot.getAttribute('data-reply'));
-    ReactDOM.render(<ErrorBoundary>
-        <SendApp message={reply.message} />
-    </ErrorBoundary>, sendAppRoot);
+    settingsStore.getSettings().then(() => {
+        console.debug('Boostrapping send app to DOM...');
+        const contacts = JSON.parse(sendAppRoot.getAttribute('data-contacts'));
+        const reply = JSON.parse(sendAppRoot.getAttribute('data-reply'));
+        ReactDOM.render(<ErrorBoundary>
+            <SendApp message={reply} contacts={contacts} />
+        </ErrorBoundary>, sendAppRoot);
+    });
+}
+
+
+const settingsAppRoot = document.querySelector('div[data-settings-app]');
+
+if (settingsAppRoot) {
+    // Load the settings *then* bootstrap the app into the DOM
+    settingsStore.getSettings().then(settings => {
+        console.debug('Settings loaded, bootstrapping settings app to DOM...');
+        ReactDOM.render(<ErrorBoundary>
+            <SettingsApp settings={settings} />
+        </ErrorBoundary>, settingsAppRoot);
+    });
 }
