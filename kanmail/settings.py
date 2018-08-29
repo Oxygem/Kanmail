@@ -1,7 +1,8 @@
 import json
+import pickle
 import sys
 
-from os import path
+from os import environ, path
 
 from click import get_app_dir
 from pydash import memoize
@@ -13,13 +14,22 @@ DEBUG = True
 setup_logging(debug=DEBUG)
 
 
+# Flag to tell us whether we're a frozen app (bundled)
 FROZEN = getattr(sys, 'frozen', False)
+
+# Flag to tell us whether we're running as an app (frozen or not)
+IS_APP = environ.get('KANMAIL_MODE', 'app') == 'app'
+
 
 SERVER_PORT = 4420
 
 SETTINGS = None
-SETTINGS_DIR = get_app_dir('kanmail')
+SETTINGS_DIR = get_app_dir('Kanmail')
 SETTINGS_FILE = path.join(SETTINGS_DIR, 'settings.json')
+
+CONTACTS_CACHE_FILE = path.join(SETTINGS_DIR, 'cache', '.contacts')
+
+DEVICE_ID_FILE = path.join(SETTINGS_DIR, 'cache', '.device_id')
 
 
 # Window settings
@@ -33,11 +43,11 @@ WINDOW_TOP = 0
 
 # Get any cached window settings
 if path.exists(WINDOW_CACHE_FILE):
-    with open(WINDOW_CACHE_FILE) as f:
-        data = json.loads(f.read())
-        logger.debug('Loaded window settings: {0}'.format(data))
-        for k, v in data.items():
-            locals()[k] = v
+    with open(WINDOW_CACHE_FILE, 'rb') as f:
+        data = pickle.loads(f.read())
+    logger.debug('Loaded window settings: {0}'.format(data))
+    for k, v in data.items():
+        locals()[k] = v
 
 
 # "App"/user settings
@@ -88,8 +98,11 @@ def get_settings():
 
 
 def update_settings(new_settings):
-    logger.debug('Writing settings: {0}'.format(new_settings))
-    json_data = json.dumps(new_settings, indent=4)
+    settings = get_settings()
+    _merge_settings(settings, new_settings)
+
+    logger.debug('Writing settings: {0}'.format(settings))
+    json_data = json.dumps(settings, indent=4)
 
     with open(SETTINGS_FILE, 'w') as file:
         file.write(json_data)
@@ -108,5 +121,5 @@ def set_cached_window_settings(width, height, left, top):
 
     logger.debug('Writing window settings: {0}'.format(window_settings))
 
-    with open(WINDOW_CACHE_FILE, 'w') as f:
-        f.write(json.dumps(window_settings))
+    with open(WINDOW_CACHE_FILE, 'wb') as f:
+        f.write(pickle.dumps(window_settings))
