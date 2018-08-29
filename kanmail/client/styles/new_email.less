@@ -1,0 +1,214 @@
+/*
+    New email (send app) form */
+
+section#new-email {
+    form {
+        margin: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+
+        label {
+            width: 55px;
+            text-align: right;
+            padding-right: 2px;
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+            position: absolute;
+            margin-top: 9px;
+        }
+
+        input {
+            padding: 4px;
+            margin: 2px;
+            font-size: 14px;
+            border: 1px solid @formBorderGrey;
+            width: 100%;
+            border-radius: @borderRadius;
+            outline: none;
+
+            &:hover {
+                border-color: @formBorderGreyHover;
+            }
+
+            &:focus {
+                border-color: @formBorderGreyActive;
+            }
+        }
+
+        input#subject {
+            height: 40px;
+        }
+
+        div.wide, div.wide, div.two-third, div.third, div.half {
+            margin-bottom: 5px;
+        }
+
+        div.wide {
+            width: 100%;
+        }
+
+        div.third {
+            width: 33%;
+        }
+
+        div.two-third {
+            width: 66%;
+        }
+
+        div.half {
+            width: 49%;
+        }
+
+        div#account, div#to, div#cc, div#bcc {
+            margin-left: 60px;
+        }
+
+        div#subject-wrapper {
+            margin-left: 58px;
+            margin-right: 2px;
+        }
+
+        label#message-label {
+            margin-top: 5px;
+        }
+
+        div#textarea-body {
+            position: absolute;
+            right: 20px;
+            bottom: 50px;
+            left: 80px;
+            top: 186px;
+
+            &.short {
+                bottom: 149px;
+            }
+
+            .editor {
+                position: absolute;
+                top: 33px;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                padding: 10px;
+                height: auto;
+                border: 1px solid @formBorderGrey;
+                border-radius: @borderRadius;
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+
+                .DraftEditor-root {
+                    margin-top: -18px;
+                    height: 100%;
+                }
+
+                &:hover {
+                    border-color: @formBorderGreyHover;
+                }
+            }
+
+            .editor-toolbar {
+                border-bottom: none;
+                border-bottom-left-radius: 0;
+                border-bottom-right-radius: 0;
+            }
+        }
+
+        blockquote#reply-quote {
+            margin: 0;
+            max-height: 100px;
+            right: 20px;
+            left: 80px;
+            overflow-y: auto;
+            background: #F7F7F7;
+            position: absolute;
+            bottom: 50px;
+            border: 1px solid #F1F1F1;
+        }
+
+        label#include_quote {
+            width: auto;
+        }
+        input#include_quote {
+            width: auto;
+            margin-left: 60px;
+        }
+
+        #include-quote {
+            position: absolute;
+            bottom: 0px;
+            left: 110px;
+            width: 200px;
+
+            label {
+                width: auto;
+            }
+            input {
+                height: 40px;
+            }
+        }
+
+        button {
+            left: 80px;
+            cursor: pointer;
+            padding: 5px 10px;
+            background: @blue;
+            color: white;
+            font-size: 16px;
+            border-radius: 2px;
+            border: none;
+            position: absolute;
+            bottom: 10px;
+        }
+
+
+        /*
+            React select overrides */
+
+        div.react-select__control {
+            background: transparent;
+            border-radius: @borderRadius;
+            border: 1px solid @formBorderGrey;
+            min-height: 0;
+            box-shadow: none;
+            font-size: 14px;
+
+            &:hover {
+                border-color: @formBorderGreyHover;
+            }
+        }
+
+        div.react-select__control--is-focused {
+            border-color: @formBorderGreyActive !important;
+        }
+
+        div.react-select__menu {
+            border-radius: 0;
+            border: 1px solid @formBorderGreyHover;
+            box-shadow: none;
+            margin: 0;
+        }
+
+        div.react-select__placeholder {
+            margin-left: 5px;
+        }
+
+        div.react-select__value-container, {
+            height: 40px;
+            overflow-y: auto;
+        }
+
+        div.react-select__value-container,
+        div.react-select__indicator,
+        div.react-select__option,
+        div.react-select__menu-notice {
+            padding: 0;
+        }
+
+        div.react-select__multi-value__label {
+            margin: 1px;
+            padding: 0;
+        }
+    }
+}

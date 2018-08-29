@@ -1,0 +1,114 @@
+/*
+    Threads overlay */
+
+section#thread {
+    z-index: 9;
+    background: white;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border: 1px solid #F7F7F7;
+    border-width: 0 1px;
+
+    h1 {
+        margin: 0 0 10px 0;
+        padding-top: 28px;
+        padding-left: 10px;
+        height: @topHeight;
+        font-size: 20px;
+        background: white;
+        border-bottom: 1px solid #E7E7E7;
+    }
+
+    section#content {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        top: @topHeight;
+        padding-top: 10px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        position: absolute;
+
+        .scrollbar;
+    }
+
+    a.show-all-messages {
+        font-size: 12px;
+        color: #666;
+    }
+
+    button.quote-toggle {
+        background: #F7F7F7;
+        padding: 3px;
+        font-size: 12px;
+        color: #666;
+        border: none;
+    }
+
+    div.message {
+        margin-bottom: 5px;
+        padding: 0 10px;
+
+        div.meta {
+            background: #F7F7F7;
+            padding: 5px;
+            font-size: 14px;
+            color: #666;
+            margin: 0 -5px;
+
+            .fa-star {
+                color: @blue;
+            }
+
+            span.right {
+                float: right;
+            }
+
+            .no-select;
+        }
+
+        div.extra-meta {
+            border-bottom: 1px solid #F7F7F7;
+            float: left;
+            width: 100%;
+            font-size: 12px;
+            color: #666;
+
+            .no-select;
+
+            span.right {
+                float: right;
+
+                i {
+                    color: #666;
+                    margin: 0 2px 0 5px;
+                }
+            }
+
+            span.tag {
+                background: #F7F7F7;
+                padding: 2px;
+                margin-left: 2px;
+            }
+        }
+
+        pre {
+            word-wrap: break-word;
+            background: #F7F7F7;
+        }
+
+        .attachment-link {
+            cursor: pointer;
+            background: #F7F7F7;
+            padding: 5px;
+            display: inline-block;
+
+            .attachment-meta {
+                display: block;
+                font-size: 12px;
+                color: #666;
+            }
+        }
+    }
+}

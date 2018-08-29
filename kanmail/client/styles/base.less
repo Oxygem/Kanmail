@@ -1,0 +1,92 @@
+/*
+    Variables */
+
+// Nicks: #5F42DA;
+@darkGrey: #343838;
+@blue: #4498C4;
+@orange: #EC4F3E;
+@green: #3EEC4F;
+@dragBarHeight: 22px;
+@topHeight: 85px;
+@sidebarWidth: 150px;
+@borderRadius: 2px;
+
+@formBorderGrey: #E7E7E7;
+@formBorderGreyHover: #D7D7D7;
+@formBorderGreyActive: #A7A7A7;
+
+
+/*
+    Custom scrollbar */
+
+.scrollbar {
+    overflow-y: scroll;
+}
+
+.no-select {
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+/*
+    Basics */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Roboto;
+    font-size: 16px;
+    line-height: 24px;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    color: #333;
+}
+
+a {
+    text-decoration: none;
+    color: @blue;
+    cursor: pointer;
+
+    &:hover {
+        color: darken(@blue, 10%);
+    }
+}
+
+h1, h2, h3 {
+    font-family: 'Roboto Slab';
+    font-weight: normal;
+}
+
+header {
+    height: @dragBarHeight;
+    background: #F7F7F7;
+    background: @darkGrey;
+    // background: @blue;
+    position: relative;
+    color: white;
+
+    h1#logo {
+        float: right;
+        line-height: 22px;
+        display: inline-block;
+        margin: 0;
+        padding: 0 5px 0 70px;
+        // background: @blue;
+        font-size: 16px;
+
+        span, i {
+            float: left;
+        }
+
+        i {
+            line-height: 22px;
+            font-size: 15px;
+        }
+    }
+}
