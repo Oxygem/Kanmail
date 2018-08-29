@@ -1,6 +1,6 @@
 <html>
 <head>
-    <title>Kanmail</title>
+    <title>Kanmail {% block page_title %}{% endblock %}</title>
 </head>
 <body>
     <div id="messages"></div>
@@ -12,10 +12,10 @@
         window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
     </script>
 
-    {% if debug %}
-        <script type="text/javascript" src="http://localhost:4421/main.js"></script>
-    {% else %}
+    {% if frozen %}
         <script type="text/javascript" src="/static/dist/main.js"></script>
+    {% else %}
+        <script type="text/javascript" src="http://localhost:4421/main.js"></script>
     {% endif %}
 </body>
 </html>
