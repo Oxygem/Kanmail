@@ -4,9 +4,24 @@ import re
 
 from base64 import b64decode
 
+from markdown import markdown
+from mdx_linkify.mdx_linkify import LinkifyExtension
+
+# Can't use as they refuse to Python3!
 # from flanker import mime
 
 from kanmail.log import logger
+
+from .contacts import add_contact
+
+
+def markdownify(text):
+    return markdown(text, extensions=[
+        'markdown.extensions.extra',
+        'markdown.extensions.nl2br',  # turn newlines into breaks
+        'markdown.extensions.sane_lists',
+        LinkifyExtension(),  # pass class for pyinstaller to bundle
+    ])
 
 
 def format_address(address):
@@ -21,17 +36,21 @@ def format_address(address):
     return '@'.join(bits)
 
 
-def make_addresses(addresses):
+def make_contact_tuple(address):
+    name = decode_header(address.name) if address.name else None
+    email = format_address(address)
+
+    contact = (name, email)
+
+    add_contact(contact)
+    return contact
+
+
+def make_contacts(addresses):
     if not addresses:
         return []
 
-    return [
-        (
-            decode_header(address.name) if address.name else None,
-            format_address(address),
-        )
-        for address in addresses
-    ]
+    return [make_contact_tuple(address) for address in addresses]
 
 
 def make_email_headers(account, folder, uid, data, parts):
@@ -80,18 +99,19 @@ def make_email_headers(account, folder, uid, data, parts):
         # Internal meta
         'account_name': account.name,
         'server_folder_name': folder.name,
+        'folder_name': folder.alias_name,
 
         # Envelope data
         'date': envelope.date.isoformat(),
         'subject': subject,
 
         # Address data
-        'from': make_addresses(envelope.from_),
-        'to': make_addresses(envelope.to),
-        'send': make_addresses(envelope.sender),
-        'cc': make_addresses(envelope.cc),
-        'bcc': make_addresses(envelope.bcc),
-        'reply_to': make_addresses(envelope.reply_to),
+        'from': make_contacts(envelope.from_),
+        'to': make_contacts(envelope.to),
+        'send': make_contacts(envelope.sender),
+        'cc': make_contacts(envelope.cc),
+        'bcc': make_contacts(envelope.bcc),
+        'reply_to': make_contacts(envelope.reply_to),
 
         # Threading
         'in_reply_to': envelope.in_reply_to,
@@ -191,7 +211,7 @@ def extract_excerpt(raw_body, raw_body_meta):
         )
 
     except Exception as e:
-        logger.critical('Could not extract excerpt: {0} (data={1}, meta={2})'.format(
+        logger.warning('Could not extract excerpt: {0} (data={1}, meta={2})'.format(
             e, raw_body, raw_body_meta,
         ))
 
@@ -207,6 +227,8 @@ def extract_headers(raw_message):
 
 
 def _parse_bodystructure(bodystructure, item_number=None):
+    # if item_number is None:
+        # print('BODY', bodystructure)
     items = {}
 
     type_or_bodies = bodystructure[0]
@@ -228,12 +250,17 @@ def _parse_bodystructure(bodystructure, item_number=None):
         encoding = bodystructure[5]
         size = bodystructure[6]
 
+        content_id = bodystructure[3]
+        if content_id:
+            content_id = content_id.decode()
+
         item_number = item_number or 1
 
         data = {
             'type': type_or_bodies.decode(),
             'subtype': subtype.decode(),
             'encoding': encoding.decode(),
+            'content_id': content_id,
             'size': size,
         }
 
@@ -255,7 +282,7 @@ def parse_bodystructure(bodystructure):
     try:
         items = _parse_bodystructure(bodystructure)
     except Exception as e:
-        logger.critical('Could not parse bodystructure: {0} (struct={1})'.format(
+        logger.warning('Could not parse bodystructure: {0} (struct={1})'.format(
             e, bodystructure,
         ))
 
@@ -265,15 +292,15 @@ def parse_bodystructure(bodystructure):
     items['attachments'] = []
 
     for number, part in list(items.items()):
-        if number in ('attachments', 'html', 'plain'):
+        if number == 'attachments':
             continue
 
         if part['type'] == 'TEXT':
-            if part['subtype'] == 'HTML':
+            if 'html' not in items and part['subtype'] == 'HTML':
                 items['html'] = number
                 continue
 
-            if part['subtype'] == 'PLAIN':
+            if 'plain' not in items and part['subtype'] == 'PLAIN':
                 items['plain'] = number
                 continue
 
