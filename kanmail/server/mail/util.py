@@ -63,6 +63,11 @@ def make_email_headers(account, folder, uid, data, parts):
     if references:
         references = references.split()
 
+        # This is a fix for some badly build email clients that join message ID
+        # references by comma, rather than the standard space *rolls eyes*.
+        if len(references) == 1 and '>,<' in references[0]:
+            references = references[0].split(',')
+
     body_meta = None
 
     if '1' in parts:
