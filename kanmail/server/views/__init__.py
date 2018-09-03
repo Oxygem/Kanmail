@@ -6,11 +6,14 @@ from flask import abort, render_template, request
 
 from kanmail import settings
 from kanmail.log import logger
-from kanmail.server.app import app, send_window_data
+from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
 from kanmail.version import __version__
 from kanmail.window import create_window
+
+
+send_window_data = {}
 
 
 @app.route('/', methods=['GET'])

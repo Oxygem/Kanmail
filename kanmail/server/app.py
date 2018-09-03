@@ -33,9 +33,6 @@ app.json_encoder = JsonEncoder
 app.config['JSON_SORT_KEYS'] = False
 
 
-send_window_data = {}
-
-
 def boot():
     logger.debug('App root is: {0}'.format(ROOT))
 
