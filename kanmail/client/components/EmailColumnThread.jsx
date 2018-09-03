@@ -5,6 +5,7 @@ import { DragSource } from 'react-dnd';
 
 import keyboard from 'keyboard.js';
 
+import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 
@@ -231,38 +232,49 @@ export default class EmailColumnThread extends React.Component {
             locked: true,
         });
 
-        const requests = [];
-
-        // Archive basically means move any messages in the inbox to the archive
-        // we leave other folders/labels alone.
-        const inboxMessageUids = getThreadFolderMessageIds(
-            'inbox',
-            this.props.thread,
-        );
-
-        // Get the active email store
-        const emailStore = getEmailStore();
-
-        // Move the inbox emails to the archive?
-        if (inboxMessageUids.length) {
-            requests.push(emailStore.moveEmails(
-                this.props.thread[0].account_name,
-                inboxMessageUids,
-                'inbox',
-                'archive',
-            ));
-        }
-
-        // After one/both complete, re-process
-        Promise.all(requests).then(() => {
-            emailStore.processEmailChanges();
-        }).catch(() => {
+        const undoArchive = () => {
             this.setState({
                 archiving: false,
                 locked: false,
-                error: true,
             });
-        });
+        };
+
+        const archiveThread = () => {
+            const requests = [];
+
+            // Archive basically means move any messages in the inbox to the archive
+            // we leave other folders/labels alone.
+            const inboxMessageUids = getThreadFolderMessageIds(
+                'inbox',
+                this.props.thread,
+            );
+
+            // Get the active email store
+            const emailStore = getEmailStore();
+
+            // Move the inbox emails to the archive?
+            if (inboxMessageUids.length) {
+                requests.push(emailStore.moveEmails(
+                    this.props.thread[0].account_name,
+                    inboxMessageUids,
+                    'inbox',
+                    'archive',
+                ));
+            }
+
+            // After one/both complete, re-process
+            Promise.all(requests).then(() => {
+                emailStore.processEmailChanges();
+            }).catch(() => {
+                this.setState({
+                    archiving: false,
+                    locked: false,
+                    error: true,
+                });
+            });
+        };
+
+        requestStore.addUndoable(archiveThread, undoArchive);
     }
 
     handleClickTrash = (ev) => {
@@ -292,44 +304,55 @@ export default class EmailColumnThread extends React.Component {
             locked: true,
         });
 
-        const allMessageFolderUids = _.reduce(
-            this.props.thread,
-            (memo, message) => {
-                _.each(message.folderUids, (uid, folderName) => {
-                    if (!memo[folderName]) {
-                        memo[folderName] = [];
-                    }
-
-                    memo[folderName].push(uid);
-                });
-
-                return memo;
-            },
-            {},
-        );
-
-        const emailStore = getEmailStore();
-
-        const requests = [];
-        _.each(allMessageFolderUids, (uids, folderName) => {
-            requests.push(emailStore.moveEmails(
-                this.props.thread[0].account_name,
-                uids,
-                folderName,
-                'trash',
-            ));
-        });
-
-        // After all trashings complete, re-process
-        Promise.all(requests).then(() => {
-            emailStore.processEmailChanges();
-        }).catch(() => {
+        const undoTrash = () => {
             this.setState({
                 trashing: false,
                 locked: false,
-                error: true,
             });
-        });
+        };
+
+        const trashThread = () => {
+            const allMessageFolderUids = _.reduce(
+                this.props.thread,
+                (memo, message) => {
+                    _.each(message.folderUids, (uid, folderName) => {
+                        if (!memo[folderName]) {
+                            memo[folderName] = [];
+                        }
+
+                        memo[folderName].push(uid);
+                    });
+
+                    return memo;
+                },
+                {},
+            );
+
+            const emailStore = getEmailStore();
+
+            const requests = [];
+            _.each(allMessageFolderUids, (uids, folderName) => {
+                requests.push(emailStore.moveEmails(
+                    this.props.thread[0].account_name,
+                    uids,
+                    folderName,
+                    'trash',
+                ));
+            });
+
+            // After all trashings complete, re-process
+            Promise.all(requests).then(() => {
+                emailStore.processEmailChanges();
+            }).catch(() => {
+                this.setState({
+                    trashing: false,
+                    locked: false,
+                    error: true,
+                });
+            });
+        };
+
+        requestStore.addUndoable(trashThread, undoTrash);
     }
 
     handleClickRestore = (ev) => {
@@ -402,7 +425,7 @@ export default class EmailColumnThread extends React.Component {
     getAddressList() {
         return _.uniq(_.reduce(this.props.thread, (memo, message) => {
             memo = _.concat(memo, _.map(message.from, address => (
-                formatAddress(address)
+                formatAddress(address, true)
             )));
             return memo;
         }, []));
