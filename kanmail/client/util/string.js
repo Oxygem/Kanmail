@@ -16,6 +16,14 @@ export function formatDate(date) {
 }
 
 
-export function formatAddress(address) {
-    return address[0] ? address[0] : address[1];
+export function formatAddress(address, short=false) {
+    if (short) {
+        return address[0] ? address[0] : address[1];
+    }
+
+    if (address[0]) {
+        return `${address[0]} (${address[1]})`;
+    }
+
+    return address[1];
 }
