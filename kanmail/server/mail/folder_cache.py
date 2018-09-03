@@ -12,16 +12,19 @@ The cache keeps track of namespaces it's part of so it can bust itself. Data is
 serialized using pickle.
 '''
 
-import pickle
-
 from functools import wraps
 from hashlib import sha1
 from os import makedirs, path, remove
+from pickle import (
+    dumps as pickle_dumps,
+    loads as pickle_loads,
+    UnpicklingError,
+)
 from shutil import rmtree
 from threading import Lock
 
 from kanmail.log import logger
-from kanmail.settings import SETTINGS_DIR
+from kanmail.settings import CACHE_ENABLED, SETTINGS_DIR
 
 MAKE_DIRS = Lock()
 
@@ -83,21 +86,24 @@ class FolderCache(object):
 
         with MAKE_DIRS:
             if not path.exists(cache_dir):
-                self.log('debug', 'create namespace {0}'.format(namespace))
+                self.log('debug', f'create namespace: {namespace}')
                 makedirs(cache_dir)
 
     def populate_namespaces(func):
         @wraps(func)
         def decorated(self, namespace, *args, **kwargs):
+            if not CACHE_ENABLED:
+                return
             self.namespaces.add(namespace)
             return func(self, namespace, *args, **kwargs)
         return decorated
 
     @populate_namespaces
     def delete(self, namespace, key):
+
         filename = self.make_cache_filename(namespace, key)
         if path.exists(filename):
-            self.log('debug', 'delete {0}/{1}'.format(namespace, key))
+            self.log('debug', f'delete: {namespace}/{key}')
             remove(filename)
 
     @populate_namespaces
@@ -106,10 +112,10 @@ class FolderCache(object):
 
         filename = self.make_cache_filename(namespace, key)
 
-        self.log('debug', 'write {0}/{1}={2}'.format(namespace, key, _trim(value)))
+        self.log('debug', f'write {namespace}/{key}={_trim(value)}')
 
         with open(filename, 'wb') as f:
-            f.write(pickle.dumps(value))
+            f.write(pickle_dumps(value))
 
     @populate_namespaces
     def get(self, namespace, key):
@@ -118,21 +124,29 @@ class FolderCache(object):
         if not path.exists(filename):
             return None
 
-        with open(filename, 'rb') as f:
-            pickle_data = f.read()
+        try:
+            with open(filename, 'rb') as f:
+                pickle_data = f.read()
+            data = pickle_loads(pickle_data)
 
-        data = pickle.loads(pickle_data)
-        self.log('debug', 'read {0}/{1}=({2}, {3})'.format(
-            namespace, key, type(data), _trim(data),
-        ))
+        except (EOFError, UnpicklingError) as e:
+            self.log('warning', f'{e.__class__.__name__} raised reading {namespace}/{key}: {e}')
+            return
+
+        self.log('debug', f'read {namespace}/{key}=({type(data)}, {_trim(data)})')
         return data
 
     def bust(self):
+        if not CACHE_ENABLED:
+            return
+
         self.log('warning', 'busting the cache!')
 
         for namespace in self.namespaces:
-            self.log('debug', 'delete namespace {0}'.format(namespace))
-            rmtree(self.make_cache_dirname(namespace))
+            folder_name = self.make_cache_dirname(namespace)
+            if path.exists(folder_name):
+                self.log('debug', f'delete namespace: {namespace}')
+                rmtree(folder_name)
 
     # Get/set shortcuts
     #
