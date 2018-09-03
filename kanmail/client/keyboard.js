@@ -1,17 +1,25 @@
 import _ from 'lodash';
 
 import threadStore from 'stores/thread.js';
+import requestStore from 'stores/request.js';
 
 const keys = {
+    // Letters
+    Z: 90,
+
+    // Special
     DELETE: 8,
     ENTER: 13,
     ESCAPE: 27,
     SPACE: 32,
+
+    // Arrows
     ARROW_LEFT: 37,
     ARROW_UP: 38,
     ARROW_RIGHT: 39,
     ARROW_DOWN: 40,
-}
+};
+const validKeyCodes = _.values(keys);
 
 
 function isInViewport(element) {
@@ -149,7 +157,6 @@ class Keyboard {
             return;
         }
 
-        const validKeyCodes = _.values(keys);
         const code = ev.keyCode;
 
         // Code we don't care about?
@@ -163,6 +170,11 @@ class Keyboard {
         // Escape
         if (code === keys.ESCAPE) {
             threadStore.close();
+            return;
+        }
+
+        if (code === keys.Z) {
+            requestStore.undo();
             return;
         }
 
