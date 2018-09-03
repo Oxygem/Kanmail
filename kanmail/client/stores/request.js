@@ -14,6 +14,7 @@ class RequestStore extends BaseStore {
         this.props = {
             fetchRequests: [],
             pushRequests: [],
+            pendingPushRequests: [],
         };
     }
 
@@ -51,18 +52,45 @@ class RequestStore extends BaseStore {
         return this.makeRequest(post, 'pushRequests', args);
     }
 
-    postWithUndo = (onUndo, ...args) => {
-        // Add to list of pending to-do requests
-        // Set timeout (according to settings) to issue this.makeRequest,
-        // and remove self from pending list
-        // Push (timeoutId, onUndo) to pending list
-        args;
+    addUndoable = (callback, onUndo) => {
+        const callbackUndoTuple = [callback, onUndo];
+
+        // Create a timeout to actually make the request
+        const requestTimeoutId = setTimeout(() => {
+            // Remove self from pending requests
+            this.props.pendingPushRequests = _.filter(
+                this.props.pendingPushRequests,
+                pendingRequest => pendingRequest[1] !== callbackUndoTuple,
+            );
+            this.triggerUpdate();
+
+            // Actually make the request
+            callback();
+        }, 5000);
+
+        // Push to pending requests
+        this.props.pendingPushRequests.push(
+            [requestTimeoutId, callbackUndoTuple],
+        );
+        this.triggerUpdate();
     }
 
     undo = () => {
-        // Pop latest item on pending list
-        // clearTimeout the timeoutId
-        // Call onUndo
+        if (this.props.pendingPushRequests.length <= 0) {
+            return;
+        }
+
+        // Pop the latest pending request off the list
+        const [requestTimeoutId, callbackUndoTuple] = (
+            this.props.pendingPushRequests.shift()
+        );
+
+        // Remove the pending timeout
+        clearTimeout(requestTimeoutId);
+        this.triggerUpdate();
+
+        // And run the undo function
+        callbackUndoTuple[1]();
     }
 }
 
