@@ -209,6 +209,9 @@ class Folder(object):
 
         return emails
 
+    def cache_uids(self):
+        self.cache.set_uids(self.email_uids)
+
     def get_email_uids(self, use_cache=True):
         # If we're not a query folder we can try for cached UIDs
         if use_cache and not self.query:
@@ -233,8 +236,18 @@ class Folder(object):
         self.log('debug', 'Fetched {0} message UIDs'.format(len(message_uids)))
 
         uids = set(message_uids)
-        self.cache.set_uids(uids)
+        self.cache_uids()
         return uids
+
+    def remove_uids(self, email_uids):
+        if not email_uids:
+            return
+
+        for uid in email_uids:
+            self.email_uids.remove(uid)
+            self.cache.delete_headers(uid)
+
+        self.cache_uids()
 
     # Bits that fiddle with self.email_uids
     #
@@ -284,6 +297,7 @@ class Folder(object):
             deleted_message_uids = self.email_uids
 
         self.email_uids = message_uids
+        self.cache_uids()
 
         for uid in deleted_message_uids:
             self.cache.delete_headers(uid)
@@ -364,10 +378,7 @@ class Folder(object):
             connection.delete_messages(email_uids)
 
         self.fix_offset_before_removing_uids(email_uids)
-
-        for uid in email_uids:
-            self.email_uids.remove(uid)
-            self.cache.delete_headers(uid)
+        self.remove_uids(email_uids)
 
     @lock_class_method
     def move_emails(self, email_uids, new_folder):
@@ -387,10 +398,7 @@ class Folder(object):
             connection.delete_messages(email_uids)
 
         self.fix_offset_before_removing_uids(email_uids)
-
-        for uid in email_uids:
-            self.email_uids.remove(uid)
-            self.cache.delete_headers(uid)
+        self.remove_uids(email_uids)
 
     # Functions that affect emails, but not any of the class internals
     #
