@@ -237,6 +237,6 @@ def api_send_account_email(account_key):
 
     # Tell the main window to reload the sent folder
     if settings.IS_APP:
-        webview.evaluate_js('mainEmailStore.syncEmails("{0}", "sent"')
+        webview.evaluate_js('window.mainEmailStore.syncFolderEmails("sent")')
 
     return jsonify(sent=False)
