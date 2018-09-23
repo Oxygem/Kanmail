@@ -8,8 +8,6 @@ import settingsStore from 'stores/settings.js';
 
 import { getColumnStore, getColumnStoreKeys } from 'stores/columns.js';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
-
 
 export default class BaseEmails {
     /*
@@ -165,8 +163,6 @@ export default class BaseEmails {
 "${accountKey}/${newColumn}"`
         );
 
-        const message = addMessage(`Moving emails to ${newColumn}`);
-
         // TODO: implement this as a setting (per account?)
         // Copy if we're moving FROM the inbox and NOT TO another alias folder
         const copyNotMove = (
@@ -185,11 +181,6 @@ export default class BaseEmails {
                     accountKey, oldColumn, messageUids,
                 );
             }
-
-            deleteMessage(message);
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 
@@ -199,8 +190,6 @@ export default class BaseEmails {
         */
 
         console.debug(`Starring ${messageUids.length} messages in ${accountKey}/${folderName}`);
-
-        const message = addMessage(`Starring messages in ${folderName}`);
 
         return requestStore.post(`/api/emails/${accountKey}/${folderName}/star`, {
             message_uids: messageUids,
@@ -212,11 +201,6 @@ export default class BaseEmails {
 
                 email.flags = _.without(email.flags, '\\Flagged');
             });
-
-            deleteMessage(message);
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 
@@ -226,8 +210,6 @@ export default class BaseEmails {
         */
 
         console.debug(`Unstarring ${messageUids.length} messages in ${accountKey}/${folderName}`);
-
-        const message = addMessage(`Unstarring messages in ${folderName}`);
 
         return requestStore.post(`/api/emails/${accountKey}/${folderName}/unstar`, {
             message_uids: messageUids,
@@ -241,11 +223,6 @@ export default class BaseEmails {
                     email.flags.push('\\Flagged');
                 }
             });
-
-            deleteMessage(message);
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 

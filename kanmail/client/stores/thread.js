@@ -4,8 +4,6 @@ import hash from 'object-hash';
 import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
-
 
 function makeDefaults() {
     return {
@@ -123,8 +121,6 @@ class ThreadStore extends BaseStore {
                 uidList.push(`${message.uid}`)
             ));
 
-            const message = addMessage(`Fetching ${uidList.length} messages from ${folderName}...`);
-
             // Make the request
             const request = requestStore.get(
                 `/api/emails/${accountName}/${folderName}/text`,
@@ -135,11 +131,6 @@ class ThreadStore extends BaseStore {
                     emailBodyParts[uid] = email.html;
                     emailContentIds[uid] = email.cid_to_part;
                 });
-
-                deleteMessage(message);
-            }).catch((e) => {
-                deleteMessage(message);
-                throw e; // re-raise
             });
 
             requests.push(request);

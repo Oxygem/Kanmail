@@ -6,8 +6,6 @@ import { getColumnStore } from 'stores/columns.js';
 
 import BaseEmails from 'emails/base.js';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
-
 
 class SearchEmails extends BaseEmails {
     setSearchValue(value) {
@@ -45,8 +43,6 @@ class SearchEmails extends BaseEmails {
     }
 
     searchEmails(accountKey, folderName, options={}) {
-        const message = addMessage(`Searching for emails matching ${this.searchValue} in ${accountKey}/${folderName}`);
-
         const url = `/api/emails/${accountKey}/${folderName}`;
         const query = options.query || {};
         query.query = this.searchValue;
@@ -70,13 +66,6 @@ class SearchEmails extends BaseEmails {
             if (changed || options.forceProcess) {
                 this.processEmailChanges();
             }
-
-            // Update and remove the message
-            deleteMessage(message);
-
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 }

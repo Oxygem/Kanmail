@@ -6,8 +6,6 @@ import { getColumnStore } from 'stores/columns.js';
 
 import BaseEmails from 'emails/base.js';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
-
 
 class MainEmails extends BaseEmails {
     constructor() {
@@ -35,10 +33,6 @@ class MainEmails extends BaseEmails {
     }
 
     syncEmails(accountKey, folderName, options={}) {
-        const message = addMessage(
-            `Checking for new emails in ${accountKey}/${folderName}`,
-        );
-
         const url = `/api/emails/${accountKey}/${folderName}/sync`;
         const query = options.query || {};
 
@@ -71,13 +65,6 @@ class MainEmails extends BaseEmails {
                 columnStore.setMeta(accountKey, data.meta);
                 this.processEmailChanges();
             }
-
-            // Update and remove the message
-            deleteMessage(message);
-
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 
@@ -99,9 +86,6 @@ class MainEmails extends BaseEmails {
     }
 
     getEmails(accountKey, folderName, options={}) {
-        const message = addMessage(
-            `Fetching emails in ${accountKey}/${folderName}...`,
-        );
         const query = options.query || {};
 
         return requestStore.get(
@@ -127,13 +111,6 @@ class MainEmails extends BaseEmails {
             if (changed || options.forceProcess) {
                 this.processEmailChanges();
             }
-
-            // Update and remove the message
-            deleteMessage(message);
-
-        }).catch((e) => {
-            deleteMessage(message);
-            throw e; // re-raise
         });
     }
 }

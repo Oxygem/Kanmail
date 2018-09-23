@@ -1,8 +1,6 @@
 import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
-
 
 class FolderStore extends BaseStore {
     /*
@@ -20,12 +18,9 @@ class FolderStore extends BaseStore {
     }
 
     getFolderNames() {
-        const message = addMessage('Fetching folders...');
-
         requestStore.get('/api/folders').then(data => {
             this.props.folders = data.folders;
             this.triggerUpdate();
-            deleteMessage(message);
         });
     }
 }

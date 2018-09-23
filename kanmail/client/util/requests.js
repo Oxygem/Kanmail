@@ -1,7 +1,6 @@
 import 'whatwg-fetch';
 import URI from 'urijs';
 
-import { addMessage, deleteMessage } from 'util/messages.js';
 
 let currentCriticalRequestNonce = null;
 
@@ -12,12 +11,6 @@ function handleReponse(response, criticalRequestNonce=false) {
     }
 
     if (response.status >= 300 || response.status < 200) {
-        const message = addMessage(
-            `Invalid API response GET ${response.url}: ${response.status}`,
-            'critical',
-        );
-
-        setTimeout(() => deleteMessage(message), 10000);
 
         throw new Error(response);
     }

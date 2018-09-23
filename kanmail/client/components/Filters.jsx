@@ -12,7 +12,6 @@ import { subscribe } from 'stores/base.jsx';
 
 import { get } from 'util/requests.js';
 import { capitalizeFirstLetter } from 'util/string.js';
-import { addMessage } from 'util/messages.js';
 
 
 @subscribe(filterStore, settingsStore)
@@ -75,9 +74,7 @@ export default class Filters extends React.Component {
 
             <ul>
                 <li>
-                    <a onClick={() => get('/open-settings').catch(() => {
-                        addMessage('Could not open settings window!', 'critical');
-                    })}>
+                    <a onClick={() => get('/open-settings')}>
                         <i className="fa fa-cog"></i> Settings
                     </a>
                 </li>

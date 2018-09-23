@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import requestStore from 'stores/request.js';
 
 import { cleanHtml } from 'util/html.js';
-import { addMessage } from 'util/messages.js';
 import { get, post } from 'util/requests.js';
 import { formatAddress, formatDate } from 'util/string.js';
 
@@ -135,9 +134,7 @@ export default class ThreadMessage extends React.Component {
                 ev.preventDefault();
                 get('/open-link', {
                     url: target,
-                }).catch(() => (
-                    addMessage(`Could not open: ${target}`, 'critical')
-                ));
+                });
             });
         });
 
@@ -189,18 +186,14 @@ export default class ThreadMessage extends React.Component {
     handleClickReply = () => {
         post('/open-send', {
             message: this.props.message,
-        }).catch(() => (
-            addMessage('Failed to open send window!', 'critical')
-        ));
+        });
     }
 
     handleClickReplyAll = () => {
         post('/open-send', {
             message: this.props.message,
             reply_all: true,
-        }).catch(() => (
-            addMessage('Failed to open send window!', 'critical')
-        ));
+        });
     }
 
     renderStar() {
