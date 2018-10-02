@@ -9,10 +9,40 @@ from pydash import memoize
 
 from kanmail.log import logger, setup_logging
 
-DEBUG = True
+APP_NAME = 'Kanmail'
+APP_VERSION = '0.0.1'
 
-setup_logging(debug=DEBUG)
+SERVER_PORT = 4420
 
+
+# App directory/filenames
+#
+
+# "App" directory for this user - settings/logs/cache go here
+APP_DIR = get_app_dir(APP_NAME)
+
+# Cache directory
+CACHE_DIR = path.join(APP_DIR, 'cache')
+
+# Contacts cache filename
+CONTACTS_CACHE_FILE = path.join(CACHE_DIR, '.contacts')
+# Device ID cache filename
+DEVICE_ID_FILE = path.join(CACHE_DIR, '.device_id')
+# Window settings/position cache filename
+WINDOW_CACHE_FILE = path.join(CACHE_DIR, '.window_position')
+
+# Settings JSON filename
+SETTINGS_FILE = path.join(APP_DIR, 'settings.json')
+
+# Log filename
+LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
+
+
+# Environment flags
+#
+
+# Flag to tell us whether we're running in debug mode
+DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
 
 # Flag to tell us whether we're a frozen app (bundled)
 FROZEN = getattr(sys, 'frozen', False)
@@ -20,22 +50,19 @@ FROZEN = getattr(sys, 'frozen', False)
 # Flag to tell us whether we're running as an app (frozen or not)
 IS_APP = environ.get('KANMAIL_MODE', 'app') == 'app'
 
+# Flag to tell us whether to disable the cache
+CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
 
-SERVER_PORT = 4420
 
-SETTINGS = None
-SETTINGS_DIR = get_app_dir('Kanmail')
-SETTINGS_FILE = path.join(SETTINGS_DIR, 'settings.json')
+# Bootstrap logging before we use logging!
+#
 
-CONTACTS_CACHE_FILE = path.join(SETTINGS_DIR, 'cache', '.contacts')
-
-DEVICE_ID_FILE = path.join(SETTINGS_DIR, 'cache', '.device_id')
+setup_logging(debug=DEBUG, log_file=LOG_FILE)
 
 
 # Window settings
 #
 
-WINDOW_CACHE_FILE = path.join(SETTINGS_DIR, 'cache', '.window_position')
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 800
 WINDOW_LEFT = 0
