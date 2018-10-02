@@ -8,20 +8,30 @@ from .contacts import get_contacts
 from .util import markdownify
 
 
-def make_address(obj):
+def _make_address(obj):
     if isinstance(obj, (tuple, list)):
         return '{0} <{1}>'.format(*obj)
     else:
         contacts = get_contacts()
         if obj in contacts:
-            return make_address((contacts[obj], obj))
+            return _make_address((contacts[obj], obj))
     return obj
+
+
+def _ensure_multiple(item):
+    if item is None:
+        return ()
+
+    if not isinstance(item, (tuple, list)):
+        return (item,)
+
+    return item
 
 
 def send_email(
     host, username, password, ssl,
-    from_, to,
-    cc=None, bcc=None,
+    from_,
+    to=None, cc=None, bcc=None,
     subject=None, text=None, html=None,
     # If replying to another message
     reply_to_message_id=None,
@@ -30,25 +40,22 @@ def send_email(
 ):
     text = text or ''
 
-    if not isinstance(to, (tuple, list)):
-        to = (to,)
+    to = _ensure_multiple(to)
+    cc = _ensure_multiple(cc)
+    bcc = _ensure_multiple(bcc)
 
-    if cc and not isinstance(cc, (tuple, list)):
-        cc = (cc,)
-
-    if bcc and not isinstance(bcc, (tuple, list)):
-        bcc = (bcc,)
+    to_addresses = to + cc + bcc
 
     message = MIMEMultipart('alternative')
 
-    message['From'] = make_address(from_)
-    message['To'] = ', '.join(make_address(a) for a in to)
+    message['From'] = _make_address(from_)
+    message['To'] = ', '.join(_make_address(a) for a in to)
 
     if cc:
-        message['Cc'] = ', '.join(make_address(a) for a in cc)
+        message['Cc'] = ', '.join(_make_address(a) for a in cc)
 
     if bcc:
-        message['Bcc'] = ', '.join(make_address(a) for a in bcc)
+        message['Bcc'] = ', '.join(_make_address(a) for a in bcc)
 
     if subject:
         message['Subject'] = subject
@@ -89,5 +96,5 @@ def send_email(
     smtp.login(username, password)
 
     logger.debug('Send email via SMTP/{0}: {1}'.format(host, subject))
-    smtp.sendmail(from_, to, message.as_string())
+    smtp.sendmail(from_, to_addresses, message.as_string())
     smtp.quit()
