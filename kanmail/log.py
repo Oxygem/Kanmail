@@ -4,14 +4,13 @@ import sys
 from datetime import datetime
 
 import click
-import six
-
 
 STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
 STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
 
+
 # Get the logger
-logger = logging.getLogger('kanmail')
+logger = logging.getLogger('Kanmail')
 # Don't push messages from this Process -> main
 logger.propagate = False
 
@@ -33,14 +32,7 @@ class LogFormatter(logging.Formatter):
     }
 
     def format(self, record):
-        message = record.msg
-
-        # If not a string, pass to standard Formatter
-        if not isinstance(message, six.string_types):
-            return super(LogFormatter, self).format(record)
-
-        if record.args:
-            message = record.msg % record.args
+        message = super(LogFormatter, self).format(record)
 
         if record.levelno in self.level_to_format:
             message = self.level_to_format[record.levelno](message)
@@ -50,7 +42,7 @@ class LogFormatter(logging.Formatter):
         return '{0} {1} {2}'.format(now, record.levelname, message)
 
 
-def setup_logging(debug):
+def setup_logging(debug, log_file):
     # Figure out the log level
     log_level = logging.WARNING
 
@@ -79,6 +71,11 @@ def setup_logging(debug):
     # Add the handlers
     logger.addHandler(stdout_handler)
     logger.addHandler(stderr_handler)
+
+    # Setup the file handler
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     logger.debug('Debug level set to: {0}'.format(log_level))
     return log_level
