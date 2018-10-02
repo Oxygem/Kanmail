@@ -9,6 +9,7 @@ import mainEmailStore from 'emails/main.js';
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
+import { getColumnMetaStore } from 'stores/columns.js';
 
 import { get } from 'util/requests.js';
 import { capitalizeFirstLetter } from 'util/string.js';
@@ -32,8 +33,12 @@ export default class Filters extends React.Component {
             const iconName = ALIAS_TO_ICON[alias];
             const isActive = this.props.mainColumn === alias;
             const handleClick = () => {
-                // Always sync when changing folders or re-clicking the active one
-                mainEmailStore.syncFolderEmails(alias);
+                const columnMetaStore = getColumnMetaStore(alias);
+
+                // Sync when changing folders or re-clicking the active one
+                if (!columnMetaStore.props.isSyncing) {
+                    mainEmailStore.syncFolderEmails(alias);
+                }
 
                 if (this.props.mainColumn !== alias) {
                     filterStore.setMainColumn(alias);

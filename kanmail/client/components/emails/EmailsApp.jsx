@@ -8,21 +8,17 @@ import keyboard from 'keyboard.js';
 import createWindowPositionHandlers from 'window.js';
 import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
 
-import Filters from 'components/Filters.jsx';
-import EmailColumn from 'components/EmailColumn.jsx';
-import MainColumn from 'components/MainColumn.jsx';
-import AddNewColumnForm from 'components/AddNewColumnForm.jsx';
-import Thread from 'components/Thread.jsx';
-import Search from 'components/Search.jsx';
-import FooterStatus from 'components/FooterStatus.jsx';
+import Thread from 'components/emails/Thread.jsx';
+import Search from 'components/emails/Search.jsx';
+import Sidebar from 'components/emails/Sidebar.jsx';
+import EmailColumn from 'components/emails/EmailColumn.jsx';
+import MainColumn from 'components/emails/MainColumn.jsx';
+import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 
 import mainEmailStore from 'emails/main.js';
 
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
-
-import { get } from 'util/requests.js';
-import { addMessage } from 'util/messages.js';
 
 
 @subscribe(settingsStore)
@@ -161,40 +157,9 @@ export default class EmailsApp extends React.Component {
     render() {
         return (
             <div className="wrapper">
-                <section id="sidebar">
-                    <h1>
-                        <span>K-</span>
-                        <i className="logo fa fa-envelope-o"></i>
-
-                        <a
-                            className="compose"
-                            onClick={() => get('/open-send').catch(() => {
-                                addMessage('Could not open send window!', 'critical');
-                            })}
-                        >
-                            <i className="fa fa-pencil-square-o"></i>
-                            New email
-                        </a>
-                    </h1>
-
-                    <Filters />
-
-                    <footer>
-                        <FooterStatus />
-
-                        <a onClick={() => get('/open-link', {url: 'https://github.com/Fizzadar/kanmail'})}>
-                            Kanmail v{window.KANMAIL_VERSION}
-                        </a>
-                        {window.KANMAIL_DEBUG && ' (debug)'}
-                        <br />
-                        Beta - <a href="#">unregistered</a>
-                    </footer>
-                </section>
-
+                <Sidebar />
                 <Search columnsCount={this.props.columns.length} />
-
                 {this.renderColumnsSection()}
-
                 <Thread />
             </div>
         );

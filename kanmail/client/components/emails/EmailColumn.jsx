@@ -3,21 +3,16 @@ import React from 'react';
 import { PropTypes } from 'prop-types';
 import { DropTarget } from 'react-dnd';
 
-import {
-    ALIAS_FOLDERS,
-    ALWAYS_SYNC_FOLDERS,
-    CHECK_NEW_EMAIL_INTERVAL,
-} from 'constants.js';
+import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
 
-import EmailColumnThread from 'components/EmailColumnThread.jsx';
+import EmailColumnHeader from 'components/emails/EmailColumnHeader.jsx';
+import EmailColumnThread from 'components/emails/EmailColumnThread.jsx';
 
-import { getEmailStore } from 'stores/emailStoreProxy.js';
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
+import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
-import { getColumnStore } from 'stores/columns.js';
-
-import { capitalizeFirstLetter } from 'util/string.js';
+import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 
 
 const columnTarget = {
@@ -59,7 +54,6 @@ function collect(connect, monitor) {
 export default class EmailColumnWrapper extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
-        mainColumn: PropTypes.bool,
     }
 
     getDecoratedComponentInstance() {
@@ -72,7 +66,7 @@ export default class EmailColumnWrapper extends React.Component {
         // Connect the EmailColumn to the store by passing in the path of the
         // folder we want to listen for changes on.
         const WrappedEmailColumn = subscribe(
-            getColumnStore(this.props.id, this.props.mainColumn),
+            getColumnStore(this.props.id),
             filterStore,
             settingsStore,
         )(EmailColumn);
@@ -95,7 +89,7 @@ class EmailColumn extends React.Component {
         counts: PropTypes.object.isRequired,
         threads: PropTypes.array,
         accountName: PropTypes.string,
-        mainColumn: PropTypes.string,
+        mainColumn: PropTypes.string, // name of the *current* main column
         isMainColumn: PropTypes.bool,
         systemSettings: PropTypes.object.isRequired,
 
@@ -137,10 +131,7 @@ class EmailColumn extends React.Component {
         }
 
         // Kick off new email checking at the interval
-        this.newEmailCheck = setTimeout(
-            this.getNewEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
-        );
+        this.createGetNewEmailsTimeout();
     }
 
     componentWillUnmount() {
@@ -153,26 +144,29 @@ class EmailColumn extends React.Component {
     }
 
     getNewEmails = () => {
+        // Check if we're already syncing - note we don't subscribe the whole
+        // column to the meta store to avoid unnecessary renders.
+        const columnMetaStore = getColumnMetaStore(this.props.id);
+        if (columnMetaStore.props.isSyncing) {
+            console.debug(`Not syncing ${this.props.id} as we are already syncing!`);
+            this.createGetNewEmailsTimeout();
+            return;
+        }
+
         getEmailStore().syncFolderEmails(this.props.id).then(() => {
-            this.newEmailCheck = setTimeout(
-                this.getNewEmails,
-                CHECK_NEW_EMAIL_INTERVAL,
-            );
+            this.createGetNewEmailsTimeout();
         });
+    }
+
+    createGetNewEmailsTimeout = () => {
+        this.newEmailCheck = setTimeout(
+            this.getNewEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
     }
 
     getColumnContainer = () => {
         return this.containerDiv;
-    }
-
-    renderName() {
-        const column = this.props.id;
-
-        // If we're an alias folder - capitalize it
-        return (
-            _.includes(ALIAS_FOLDERS, column) ?
-            capitalizeFirstLetter(column) : column
-        );
     }
 
     renderEmailThreads(threads) {
@@ -227,22 +221,6 @@ class EmailColumn extends React.Component {
         return threadElements;
     }
 
-    renderMeta(threads) {
-        if (!threads) {
-            return;
-        }
-
-        const totalAccounts = _.size(this.props.counts);
-
-        // const totalEmails = _.sum(_.map(threads, thread => thread.length));
-        const totalEmails = _.reduce(this.props.counts, (memo, value) => {
-            memo += value;
-            return memo;
-        }, 0);
-
-        return `${totalEmails} emails / ${totalAccounts} accounts`;
-    }
-
     getFilteredEmailThreads() {
         return _.filter(
             this.props.threads,
@@ -294,15 +272,7 @@ class EmailColumn extends React.Component {
                 className="column"
                 ref={(div) => {this.containerDiv = div;}}
             >
-                <div className="header">
-                    <h3>
-                        {this.renderName()}
-
-                        <span className="meta">
-                            {this.renderMeta(threads)}
-                        </span>
-                    </h3>
-                </div>
+                <EmailColumnHeader id={this.props.id} />
 
                 <div className="emails">
                     {this.renderEmailThreads(threads)}

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import ThreadMessage from 'components/ThreadMessage.jsx';
+import ThreadMessage from 'components/emails/ThreadMessage.jsx';
 
 import threadStore from 'stores/thread.js';
 import { subscribe } from 'stores/base.jsx';

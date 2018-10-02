@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import EmailColumn from 'components/EmailColumn.jsx';
+import EmailColumn from 'components/emails/EmailColumn.jsx';
 
 import filterStore from 'stores/filters.js';
 import { subscribe } from 'stores/base.jsx';
