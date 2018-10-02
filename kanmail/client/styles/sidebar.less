@@ -10,45 +10,61 @@ section#sidebar {
 
     .no-select;
 
-    h1 {
+    header {
         background: @blue;
-        margin: 0;
-        height: @topHeight;
-        padding-left: 10px;
-        padding-top: 18px;
-        font-size: 16px;
-        line-height: 40px;
+        height: (@topHeight - 1);
 
-        span, i {
-            float: left;
-        }
-
-        i {
-            line-height: 40px;
-            font-size: 15px;
-            color: white;
-        }
-
-        span.right {
-            float: right;
-            margin-right: 10px;
+        h1 {
+            margin: 0;
+            padding-left: 10px;
+            padding-top: 18px;
+            font-size: 16px;
+            line-height: 38px;
 
             i {
-                line-height: 42px;
-                font-size: 16px;
+                line-height: 38px;
+                font-size: 15px;
+                color: white;
             }
         }
 
         a.compose {
-            float: left;
-            width: 100%;
             color: white;
             font-size: 14px;
             font-family: Roboto;
-            margin-top: -10px;
+            margin-left: 10px;
 
             i {
                 margin-right: 5px;
+            }
+        }
+
+        div.errors {
+            float: right;
+            margin-right: 10px;
+
+            i {
+                color: @orange;
+            }
+
+            div.error-contents {
+                display: none;
+                position: absolute;
+                width: 600px;
+                pointer-events: none;
+                background: white;
+                padding: 5px;
+                z-index: 9;
+                color: black;
+                margin-left: 40px;
+
+                p {
+                    margin: 0;
+                }
+            }
+
+            &:hover div.error-contents {
+                display: block;
             }
         }
     }
@@ -114,13 +130,18 @@ section#sidebar {
         font-size: 10px;
         color: #666;
         line-height: 16px;
-        margin: 0 0 10px 10px;
+        padding: 20px 0 10px 10px;
+        width: @sidebarWidth;
 
         a {
             color: #A7A7A7;
         }
 
         div#footer-status {
+            margin-top: 10px;
+            position: relative;
+            width: 100%;
+
             span {
                 opacity: 0.5;
                 display: inline-block;
@@ -141,6 +162,37 @@ section#sidebar {
 
             span.yellow {
                 color: @yellow;
+            }
+
+            span.toggle {
+                width: 16px;
+                float: right;
+                margin: 0 5px 0 0;
+
+                i {
+                    cursor: pointer;
+                    font-size: 14px;
+                    line-height: 14px;
+                }
+            }
+        }
+
+        section#status {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: @sidebarWidth;
+            height: 100px;
+            background: @lightGrey;
+            border-top: 5px solid #D7D7D7;
+            z-index: 9999;
+            display: flex;
+            justify-content: space-between;
+
+            div {
+                width: 32%;
+                padding: 5px;
+                overflow-y: auto;
             }
         }
     }
