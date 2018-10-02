@@ -1,2 +1,2 @@
-server: KANMAIL_MODE=app python boot.py
+server: sleep 1 && python main.py
 client: yarn run dev
