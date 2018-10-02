@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
-import { getColumnStore } from 'stores/columns.js';
+import { getColumnMetaStore } from 'stores/columns.js';
 
 import BaseEmails from 'emails/base.js';
 
@@ -20,15 +20,18 @@ class MainEmails extends BaseEmails {
             Get new emails for a folder and trigger any updates.
         */
 
-        return this.runFolderLockedFunction(folderName, () => {
-            const requests = [];
+        const columnMetaStore = getColumnMetaStore(folderName);
+        columnMetaStore.setSyncing(true);
 
-            // For each account, fetch the emails
-            _.each(_.keys(settingsStore.props.accounts), accountKey => (
-                requests.push(this.syncEmails(accountKey, folderName, options))
-            ));
+        const requests = [];
 
-            return Promise.all(requests);
+        // For each account, fetch the emails
+        _.each(_.keys(settingsStore.props.accounts), accountKey => (
+            requests.push(this.syncEmails(accountKey, folderName, options))
+        ));
+
+        return Promise.all(requests).then(() => {
+            columnMetaStore.setSyncing(false);
         });
     }
 
@@ -36,9 +39,10 @@ class MainEmails extends BaseEmails {
         const url = `/api/emails/${accountKey}/${folderName}/sync`;
         const query = options.query || {};
 
-        requestStore.get(url, query).then(data => {
-            const columnStore = getColumnStore(folderName);
-
+        return requestStore.get(
+            `Sync emails in ${accountKey}/${folderName}`,
+            url, query,
+        ).then(data => {
             let changed = false;
 
             if (data.deleted_uids.length > 0) {
@@ -62,7 +66,8 @@ class MainEmails extends BaseEmails {
             }
 
             if (changed || options.forceProcess) {
-                columnStore.setMeta(accountKey, data.meta);
+                const columnMetaStore = getColumnMetaStore(folderName);
+                columnMetaStore.setMeta(accountKey, data.meta);
                 this.processEmailChanges();
             }
         });
@@ -73,29 +78,29 @@ class MainEmails extends BaseEmails {
             Get (more) emails for a given folder and trigger updates.
         */
 
-        // return this.runFolderLockedFunction(folderName, () => {
-            const requests = [];
+        const columnMetaStore = getColumnMetaStore(folderName);
+        columnMetaStore.setLoading(true);
 
-            // For each account, fetch the emails
-            _.each(_.keys(settingsStore.props.accounts), accountKey => (
-                requests.push(this.getEmails(accountKey, folderName, options))
-            ));
+        const requests = [];
 
-            return Promise.all(requests);
-        // });
+        // For each account, fetch the emails
+        _.each(_.keys(settingsStore.props.accounts), accountKey => (
+            requests.push(this.getEmails(accountKey, folderName, options))
+        ));
+
+        return Promise.all(requests).then(() => {
+            columnMetaStore.setLoading(false);
+        });
     }
 
     getEmails(accountKey, folderName, options={}) {
         const query = options.query || {};
 
         return requestStore.get(
+            `Get emais in ${accountKey}/${folderName}`,
             `/api/emails/${accountKey}/${folderName}`,
             query,
         ).then(data => {
-            // Attach the email meta/counts to the column immediately
-            const columnStore = getColumnStore(folderName);
-            columnStore.setMeta(accountKey, data.meta);
-
             let changed = false;
 
             if (data.emails.length >= 0) {
@@ -109,6 +114,8 @@ class MainEmails extends BaseEmails {
             }
 
             if (changed || options.forceProcess) {
+                const columnMetaStore = getColumnMetaStore(folderName);
+                columnMetaStore.setMeta(accountKey, data.meta);
                 this.processEmailChanges();
             }
         });

@@ -48,30 +48,6 @@ export default class BaseEmails {
         this.emails = {};
     }
 
-    runFolderLockedFunction(folderName, func) {
-        if (_.isUndefined(this.folderLocks[folderName])) {
-            this.folderLocks[folderName] = false;
-        }
-
-        if (this.folderLocks[folderName]) {
-            console.debug(
-                `Not fetching emails for ${folderName} as it's locked!`,
-            );
-            return;
-        }
-
-        // Lock it!
-        this.folderLocks[folderName] = true;
-
-        // After the function completes, unlock and return
-        return func().then(() => {
-            this.folderLocks[folderName] = false;
-        }).catch((e) => {
-            this.folderLocks[folderName] = false;
-            throw e; // re-raise
-        });
-    }
-
     addEmailsToAccountFolder(accountKey, folderName, emails) {
         console.debug(
             `Adding ${emails.length} emails to ${accountKey}/${folderName}`,
@@ -171,10 +147,14 @@ export default class BaseEmails {
         );
         const action = copyNotMove ? 'copy' : 'move';
 
-        return requestStore.post(`/api/emails/${accountKey}/${oldColumn}/${action}`, {
-            message_uids: messageUids,
-            new_folder: newColumn,
-        }).then(() => {
+        return requestStore.post(
+            `Move emails from ${oldColumn} -> ${newColumn}`,
+            `/api/emails/${accountKey}/${oldColumn}/${action}`,
+            {
+                message_uids: messageUids,
+                new_folder: newColumn,
+            },
+        ).then(() => {
             // If not copying, remove the emails from the old column
             if (!copyNotMove) {
                 this.deleteEmailsFromAccountFolder(
@@ -191,9 +171,11 @@ export default class BaseEmails {
 
         console.debug(`Starring ${messageUids.length} messages in ${accountKey}/${folderName}`);
 
-        return requestStore.post(`/api/emails/${accountKey}/${folderName}/star`, {
-            message_uids: messageUids,
-        }).then(() => {
+        return requestStore.post(
+            `Star ${messageUids.length} emails in ${folderName}`,
+            `/api/emails/${accountKey}/${folderName}/star`,
+            {message_uids: messageUids},
+        ).then(() => {
             _.each(messageUids, uid => {
                 const email = this.getEmailFromAccountFolder(
                     accountKey, folderName, uid,
@@ -211,9 +193,11 @@ export default class BaseEmails {
 
         console.debug(`Unstarring ${messageUids.length} messages in ${accountKey}/${folderName}`);
 
-        return requestStore.post(`/api/emails/${accountKey}/${folderName}/unstar`, {
-            message_uids: messageUids,
-        }).then(() => {
+        return requestStore.post(
+            `Unstar ${messageUids.length} emails in ${folderName}`,
+            `/api/emails/${accountKey}/${folderName}/unstar`,
+            {message_uids: messageUids},
+        ).then(() => {
             _.each(messageUids, uid => {
                 const email = this.getEmailFromAccountFolder(
                     accountKey, folderName, uid,

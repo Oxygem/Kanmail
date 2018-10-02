@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
-import { getColumnStore } from 'stores/columns.js';
+import { getColumnMetaStore } from 'stores/columns.js';
 
 import BaseEmails from 'emails/base.js';
 
@@ -30,16 +30,14 @@ class SearchEmails extends BaseEmails {
     }
 
     getFolderEmails = (folderName, options={}) => {
-        return this.runFolderLockedFunction(folderName, () => {
-            const requests = [];
+        const requests = [];
 
-            // For each account, search for matching emails
-            _.each(_.keys(settingsStore.props.accounts), accountKey => {
-                requests.push(this.searchEmails(accountKey, folderName, options))
-            });
-
-            return Promise.all(requests);
+        // For each account, search for matching emails
+        _.each(_.keys(settingsStore.props.accounts), accountKey => {
+            requests.push(this.searchEmails(accountKey, folderName, options))
         });
+
+        return Promise.all(requests);
     }
 
     searchEmails(accountKey, folderName, options={}) {
@@ -48,8 +46,8 @@ class SearchEmails extends BaseEmails {
         query.query = this.searchValue;
 
         requestStore.get(url, query).then(data => {
-            const columnStore = getColumnStore(folderName);
-            columnStore.setMeta(accountKey, data.meta);
+            const columnMetaStore = getColumnMetaStore(folderName);
+            columnMetaStore.setMeta(accountKey, data.meta);
 
             let changed = false;
 
