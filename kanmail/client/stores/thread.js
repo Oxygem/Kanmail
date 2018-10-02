@@ -123,6 +123,7 @@ class ThreadStore extends BaseStore {
 
             // Make the request
             const request = requestStore.get(
+                `Get email text from ${accountName}/${folderName}`,
                 `/api/emails/${accountName}/${folderName}/text`,
                 {uid: uidList},
                 criticalRequestNonce,
