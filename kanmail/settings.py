@@ -92,8 +92,9 @@ DEFAULT_SETTINGS = {
         # Number of batches to sync initially, per column
         'initial_batches': 3,
 
-        # Number of days of emails to sync everywhere
-        # 'days_to_sync': 90,
+        # Number of ms to hold archive/trash actions before executing them - during
+        # which you can undo them.
+        'undo_ms': 2000,
     },
 }
 
