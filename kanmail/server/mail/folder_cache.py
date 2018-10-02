@@ -24,9 +24,9 @@ from shutil import rmtree
 from threading import Lock
 
 from kanmail.log import logger
-from kanmail.settings import CACHE_ENABLED, SETTINGS_DIR
+from kanmail.settings import CACHE_DIR, CACHE_ENABLED
 
-MAKE_DIRS = Lock()
+MAKE_DIRS_LOCK = Lock()
 
 
 def _make_uid_key(uid):
@@ -71,10 +71,7 @@ class FolderCache(object):
     #
 
     def make_cache_dirname(self, namespace):
-        return path.join(
-            SETTINGS_DIR, 'cache', namespace,
-            _hash_key(self.name),
-        )
+        return path.join(CACHE_DIR, namespace, _hash_key(self.name))
 
     def make_cache_filename(self, namespace, uid):
         cache_dir = self.make_cache_dirname(namespace)
@@ -84,7 +81,7 @@ class FolderCache(object):
     def ensure_cache_dir(self, namespace):
         cache_dir = self.make_cache_dirname(namespace)
 
-        with MAKE_DIRS:
+        with MAKE_DIRS_LOCK:
             if not path.exists(cache_dir):
                 self.log('debug', f'create namespace: {namespace}')
                 makedirs(cache_dir)
