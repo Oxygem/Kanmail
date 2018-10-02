@@ -1,6 +1,7 @@
 import _ from 'lodash';
 
 import { BaseStore } from 'stores/base.jsx';
+import settingsStore from 'stores/settings.js';
 
 import { get, post } from 'util/requests.js';
 
@@ -12,22 +13,32 @@ class RequestStore extends BaseStore {
         super();
 
         this.props = {
+            // Actual requests
             fetchRequests: [],
             pushRequests: [],
             pendingPushRequests: [],
+            // Request error "log"
+            requestErrors: [],
         };
     }
 
-    makeRequest = (method, requestsPropKey, args) => {
+    addError = (errorData) => {
+        this.props.requestErrors.push(errorData);
+        this.triggerUpdate();
+    }
+
+    makeRequest = (method, requestsPropKey, message, args) => {
         const request = method(...args);
 
-        this.props[requestsPropKey].push(request);
+        const requestMessageTuple = [request, message];
+        this.props[requestsPropKey].push(requestMessageTuple);
         this.triggerUpdate();
 
         const removeRequest = () => {
-            this.props[requestsPropKey] = _.without(
+            // Remove self
+            this.props[requestsPropKey] = _.filter(
                 this.props[requestsPropKey],
-                request,
+                requestItem => requestItem[0] !== request,
             );
             this.triggerUpdate();
         }
@@ -44,12 +55,12 @@ class RequestStore extends BaseStore {
         return request;
     }
 
-    get = (...args) => {
-        return this.makeRequest(get, 'fetchRequests', args);
+    get = (message, ...args) => {
+        return this.makeRequest(get, 'fetchRequests', message, args);
     }
 
-    post = (...args) => {
-        return this.makeRequest(post, 'pushRequests', args);
+    post = (message, ...args) => {
+        return this.makeRequest(post, 'pushRequests', message, args);
     }
 
     addUndoable = (callback, onUndo) => {
@@ -66,7 +77,7 @@ class RequestStore extends BaseStore {
 
             // Actually make the request
             callback();
-        }, 5000);
+        }, settingsStore.props.systemSettings.undo_ms);
 
         // Push to pending requests
         this.props.pendingPushRequests.push(
@@ -82,7 +93,7 @@ class RequestStore extends BaseStore {
 
         // Pop the latest pending request off the list
         const [requestTimeoutId, callbackUndoTuple] = (
-            this.props.pendingPushRequests.shift()
+            this.props.pendingPushRequests.pop()
         );
 
         // Remove the pending timeout
@@ -95,4 +106,6 @@ class RequestStore extends BaseStore {
 }
 
 const requestStore = new RequestStore();
+
+window.requestStore = requestStore;
 export default requestStore;
