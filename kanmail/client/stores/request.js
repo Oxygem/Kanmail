@@ -23,6 +23,7 @@ class RequestStore extends BaseStore {
     }
 
     addError = (errorData) => {
+        console.error(errorData);
         this.props.requestErrors.push(errorData);
         this.triggerUpdate();
     }
