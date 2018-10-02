@@ -4,10 +4,10 @@ import ReactDOM from 'react-dom';
 import 'static/fontawesome/css/font-awesome.css';
 import 'style.less';
 
-import EmailsApp from 'components/EmailsApp.jsx';
-import SendApp from 'components/SendApp.jsx'
-import SettingsApp from 'components/SettingsApp.jsx';
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
+import EmailsApp from 'components/emails/EmailsApp.jsx';
+import SendApp from 'components/send/SendApp.jsx'
+import SettingsApp from 'components/settings/SettingsApp.jsx';
 
 import settingsStore from 'stores/settings.js';
 
