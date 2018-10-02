@@ -13,7 +13,7 @@ from kanmail.version import __version__
 from kanmail.window import create_window
 
 
-send_window_data = {}
+SEND_WINDOW_DATA = {}
 
 
 @app.route('/', methods=['GET'])
@@ -48,9 +48,9 @@ def get_send():
 @app.route('/send/<uid>', methods=['GET'])
 def get_send_reply(uid):
     if settings.DEBUG:
-        reply = send_window_data.get(uid)
+        reply = SEND_WINDOW_DATA.get(uid)
     else:
-        reply = send_window_data.pop(uid, None)
+        reply = SEND_WINDOW_DATA.pop(uid, None)
 
     if not reply:
         abort(404, 'Reply message not found!')
@@ -104,7 +104,7 @@ def open_send():
         message_data['reply_all'] = data.get('reply_all', False)
 
         uid = str(uuid4())
-        send_window_data[uid] = message_data
+        SEND_WINDOW_DATA[uid] = message_data
 
         endpoint = '/send/{0}'.format(uid)
 
