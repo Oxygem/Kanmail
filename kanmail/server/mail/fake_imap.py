@@ -4,6 +4,7 @@ A horrible hacky fake IMAP client - useful for dev on planes :)
 
 from datetime import datetime
 from random import choice
+from time import sleep
 from unittest.mock import patch
 
 from imapclient.response_types import Address, Envelope
@@ -26,6 +27,10 @@ FAKE_ADDRESSES = (
     Address(b'Nick', None, b'nick', b'oxygem.com'),
     Address(b'Fizzadar', None, b'fizzadar', b'github.com'),
 )
+
+
+def random_sleep():
+    sleep(choice((1, 2)))
 
 
 def make_fake_addresses():
@@ -91,18 +96,20 @@ class FakeIMAPClient(object):
         logger.debug('Creating fake IMAP: ({0}, {1})'.format(args, kwargs))
 
     def login(self, username, password):
-        pass
+        random_sleep()
 
     def select_folder(self, folder_name):
         self._current_folder = folder_name
 
-    def search(self, query):
-        return FAKE_IMAPCLIENT_UIDS
-
     def folder_status(self, folder_name, keys):
         return FAKE_IMAPCLIENT_FOLDER_STATUS
 
+    def search(self, query):
+        random_sleep()
+        return FAKE_IMAPCLIENT_UIDS
+
     def fetch(self, uids, keys):
+        random_sleep()
         keys.append('SEQ')  # TODO: more crap!
         keys = [make_key(key) for key in keys]
         responses = {}
