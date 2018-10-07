@@ -260,7 +260,25 @@ class EmailColumn extends React.Component {
                 return true;
             }
         );
+    }
 
+    handleScroll = () => {
+        const columnMetaStore = getColumnMetaStore(this.props.id);
+        if (columnMetaStore.props.isLoading) {
+            console.debug(`Not loading more ${this.props.id} as we are already loading!`);
+            return;
+        }
+
+        const { scrollTop, scrollHeight, clientHeight } = this.emailsContainer;
+
+        if (scrollTop + clientHeight >= scrollHeight) {
+            getEmailStore().getFolderEmails(
+                this.props.id,
+                {query: {
+                    batch_size: this.props.systemSettings.batch_size,
+                }},
+            );
+        }
     }
 
     render() {
@@ -274,7 +292,11 @@ class EmailColumn extends React.Component {
             >
                 <EmailColumnHeader id={this.props.id} />
 
-                <div className="emails">
+                <div
+                    className="emails"
+                    onScroll={this.handleScroll}
+                    ref={ref => this.emailsContainer = ref}
+                >
                     {this.renderEmailThreads(threads)}
                 </div>
             </div>
