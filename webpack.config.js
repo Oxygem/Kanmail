@@ -1,9 +1,25 @@
 const path = require('path');
-const home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
-const modulesDirectory = 'node_modules';
+const webpack = require('webpack');
 
+
+const plugins = [];
+
+if (process.env.NODE_ENV == 'production') {
+    plugins.push(
+        new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify('production'),
+            },
+        }),
+    );
+    plugins.push(new webpack.optimize.OccurrenceOrderPlugin());
+    plugins.push(new webpack.optimize.UglifyJsPlugin());
+}
+
+const modulesDirectory = path.join(__dirname, 'node_modules');
 
 module.exports = {
+    plugins: plugins,
     entry: path.join(__dirname, 'kanmail', 'client', 'main.jsx'),
     output: {
         path: path.join(__dirname, 'dist'),
@@ -16,7 +32,6 @@ module.exports = {
         modules: [
             path.join(__dirname, 'kanmail', 'client'),
             modulesDirectory,
-            // path.join(__dirname, 'node_modules'),
         ],
     },
     resolveLoader: {
