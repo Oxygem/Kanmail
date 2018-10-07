@@ -1,19 +1,11 @@
-import sys
 
 from os import environ, path
 
 from flask import Flask
 from flask.json import JSONEncoder
 
-from kanmail import settings
 from kanmail.log import logger
-
-
-# Get the root directory - if we're frozen (by pyinstaller) this is relative
-# to the executable, otherwise ../client.
-ROOT = path.abspath(path.join(path.dirname(__file__), '..', 'client'))
-if settings.FROZEN:
-    ROOT = sys._MEIPASS
+from kanmail.settings import CLIENT_ROOT
 
 
 class JsonEncoder(JSONEncoder):
@@ -26,15 +18,15 @@ class JsonEncoder(JSONEncoder):
 
 app = Flask(
     'kanmail',
-    static_folder=path.join(ROOT, 'static'),
-    template_folder=path.join(ROOT, 'templates'),
+    static_folder=path.join(CLIENT_ROOT, 'static'),
+    template_folder=path.join(CLIENT_ROOT, 'templates'),
 )
 app.json_encoder = JsonEncoder
 app.config['JSON_SORT_KEYS'] = False
 
 
 def boot():
-    logger.debug('App root is: {0}'.format(ROOT))
+    logger.debug('App client root is: {0}'.format(CLIENT_ROOT))
 
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')
