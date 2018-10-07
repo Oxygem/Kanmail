@@ -10,7 +10,6 @@ from pydash import memoize
 from kanmail.log import logger, setup_logging
 
 APP_NAME = 'Kanmail'
-APP_VERSION = '0.0.1'
 
 SERVER_PORT = 4420
 

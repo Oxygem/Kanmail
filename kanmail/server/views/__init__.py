@@ -9,7 +9,7 @@ from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
-from kanmail.version import __version__
+from kanmail.version import get_version
 from kanmail.window import create_window
 
 
@@ -20,7 +20,7 @@ SEND_WINDOW_DATA = {}
 def get_index():
     return render_template(
         'index.html',
-        version=__version__,
+        version=get_version(),
         frozen=settings.FROZEN,
         debug=settings.DEBUG,
     )
