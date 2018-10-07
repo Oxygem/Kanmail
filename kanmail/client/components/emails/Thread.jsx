@@ -59,7 +59,7 @@ class Thread extends React.Component {
 
         if (messages.length === 0) {
             return <div className="loader">
-                <img src="http://localhost:4421/loader.gif" />
+                <i className="fa fa-spin fa-refresh"></i>
             </div>;
         }
 

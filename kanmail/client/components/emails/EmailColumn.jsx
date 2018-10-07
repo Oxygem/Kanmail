@@ -172,7 +172,7 @@ class EmailColumn extends React.Component {
     renderEmailThreads(threads) {
         if (!threads) {
             return <div className="loader">
-                <img src="http://localhost:4421/loader.gif" />
+                <i className="fa fa-spin fa-refresh"></i>
             </div>;
         }
 
