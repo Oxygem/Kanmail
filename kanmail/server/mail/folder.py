@@ -219,7 +219,7 @@ class Folder(object):
             if cached_uids:
                 self.log(
                     'debug',
-                    'Loaded {0} cached message IDs'.format(len(cached_uids)),
+                    f'Loaded {len(cached_uids)} cached message IDs',
                 )
                 return cached_uids
 
@@ -233,10 +233,9 @@ class Folder(object):
         with self.get_connection() as connection:
             message_uids = connection.search(search_query)
 
-        self.log('debug', 'Fetched {0} message UIDs'.format(len(message_uids)))
+        self.log('debug', f'Fetched {len(message_uids)} message UIDs')
 
         uids = set(message_uids)
-        self.cache_uids()
         return uids
 
     def remove_uids(self, email_uids):

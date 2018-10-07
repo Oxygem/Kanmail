@@ -55,7 +55,7 @@ def fix_email_uids(email_uids, emails):
         error = ValueError((
             'Incorrect UIDs returned by server, '
             'requested {0} but got {1}, missing={2}'
-        ).format(len(email_uids), len(returned_uids)), missing_uids)
+        ).format(len(email_uids), len(returned_uids), missing_uids))
 
         # If not the same length, something really went wrong
         if len(returned_uids) != len(email_uids):
