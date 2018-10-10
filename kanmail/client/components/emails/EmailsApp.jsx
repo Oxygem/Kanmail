@@ -18,6 +18,7 @@ import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 import mainEmailStore from 'emails/main.js';
 
 import settingsStore from 'stores/settings.js';
+import { getColumnStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
 
@@ -42,15 +43,18 @@ export default class EmailsApp extends React.Component {
         const initialBatchSize = batch_size * initial_batches;
 
         // Load all the alias folders (ie the main column)
-        _.each(ALWAYS_SYNC_FOLDERS, folder => (
+        _.each(ALWAYS_SYNC_FOLDERS, folder => {
+            // Call this to ensure the column store is populated
+            getColumnStore(folder);
+
             mainEmailStore.getFolderEmails(
                 folder,
                 {query: {
                     reset: true,
                     batch_size: initialBatchSize,
                 }},
-            ).then(mainEmailStore.syncFolderEmails(folder))
-        ));
+            ).then(mainEmailStore.syncFolderEmails(folder));
+        });
 
         this.newAliasEmailCheck = setTimeout(
             this.getNewAliasFolderEmails,
