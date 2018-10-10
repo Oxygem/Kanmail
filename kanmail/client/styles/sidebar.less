@@ -51,19 +51,21 @@ section#sidebar {
                 display: none;
                 position: absolute;
                 width: 600px;
-                pointer-events: none;
+                border: 5px solid @orange;
+                max-height: 500px;
+                overflow-y: auto;
                 background: white;
                 padding: 5px;
-                z-index: 9;
+                z-index: 999;
                 color: black;
-                margin-left: 40px;
+                margin-left: 0px;
 
                 p {
                     margin: 0;
                 }
             }
 
-            &:hover div.error-contents {
+            &:hover div.error-contents, div.error-contents:hover {
                 display: block;
             }
         }
