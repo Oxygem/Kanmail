@@ -30,9 +30,9 @@ def fix_missing_uids(expected_uids, uids):
         for i in range(diff):
             uids.append(lowest_uid - (i + 1))
 
-        logger.warning('Corrected {0} missing UIDs {1} -> {2}'.format(
-            uid_count, expected_uids, uids,
-        ))
+        logger.warning(
+            f'Corrected {uid_count} missing UIDs {expected_uids} -> {uids}',
+        )
 
     return uids
 
@@ -54,8 +54,9 @@ def fix_email_uids(email_uids, emails):
     if missing_uids:
         error = ValueError((
             'Incorrect UIDs returned by server, '
-            'requested {0} but got {1}, missing={2}'
-        ).format(len(email_uids), len(returned_uids), missing_uids))
+            f'requested {len(email_uids)} but got {len(returned_uids)}, '
+            f'missing={missing_uids}'
+        ))
 
         # If not the same length, something really went wrong
         if len(returned_uids) != len(email_uids):
@@ -78,9 +79,7 @@ def fix_email_uids(email_uids, emails):
         for i, uid in enumerate(email_uids):
             corrected_uid_map[returned_uids[i]] = uid
 
-        logger.warning('Corrected broken server UIDs: {0}'.format(
-            corrected_uid_map,
-        ))
+        logger.warning(f'Corrected broken server UIDs: {corrected_uid_map}')
 
         # Overwrite our returned UID -> email map with our corrected UIDs
         emails = {

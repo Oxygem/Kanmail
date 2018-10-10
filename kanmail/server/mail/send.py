@@ -76,13 +76,13 @@ def send_email(
         html = markdownify(text)
 
     if reply_to_html:
-        html = '{0}<blockquote>{1}</blockquote>'.format(html, reply_to_html)
+        html = f'{html}<blockquote>{reply_to_html}</blockquote>'
 
     html_part = MIMEText(html, 'html')
     message.attach(html_part)
 
     # Send the email!
-    logger.debug('Connecting to SMTP: {0}'.format(host))
+    logger.debug(f'Connecting to SMTP: {host}')
     smtp = SMTP(host, 587)
     # smtp.set_debuglevel(1)
     smtp.connect(host, 587)
@@ -90,11 +90,9 @@ def send_email(
     if ssl:
         smtp.starttls()
 
-    logger.debug('Logging into SMTP/{0} with {1}:{2}'.format(
-        host, username, password,
-    ))
+    logger.debug(f'Logging into SMTP/{host} with {username}:{password}')
     smtp.login(username, password)
 
-    logger.debug('Send email via SMTP/{0}: {1}'.format(host, subject))
+    logger.debug(f'Send email via SMTP/{host}: {subject} => {to_addresses}')
     smtp.sendmail(from_, to_addresses, message.as_string())
     smtp.quit()

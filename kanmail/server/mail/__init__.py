@@ -217,7 +217,7 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
     part_struct = parts[part_number]
 
     return (
-        '{0}/{1}'.format(part_struct['type'], part_struct['subtype']).lower(),
+        f'{part_struct["type"]}/{part_struct["subtype"]}'.lower(),
         uid_part_data[uid],
     )
 

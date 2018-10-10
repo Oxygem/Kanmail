@@ -78,7 +78,7 @@ WINDOW_TOP = 0
 if path.exists(WINDOW_CACHE_FILE):
     with open(WINDOW_CACHE_FILE, 'rb') as f:
         data = pickle.loads(f.read())
-    logger.debug('Loaded window settings: {0}'.format(data))
+    logger.debug(f'Loaded window settings: {data}')
     for k, v in data.items():
         locals()[k] = v
 
@@ -123,7 +123,7 @@ def get_settings():
             data = file.read()
 
         user_settings = json.loads(data)
-        logger.debug('Loaded settings: {0}'.format(user_settings))
+        logger.debug(f'Loaded settings: {user_settings}')
 
         # Merge the user settings ontop of the defaults
         _merge_settings(settings, user_settings)
@@ -135,7 +135,7 @@ def update_settings(new_settings):
     settings = get_settings()
     _merge_settings(settings, new_settings)
 
-    logger.debug('Writing settings: {0}'.format(settings))
+    logger.debug(f'Writing settings: {settings}')
     json_data = json.dumps(settings, indent=4)
 
     with open(SETTINGS_FILE, 'w') as file:
@@ -153,7 +153,7 @@ def set_cached_window_settings(width, height, left, top):
         'WINDOW_TOP': top,
     }
 
-    logger.debug('Writing window settings: {0}'.format(window_settings))
+    logger.debug(f'Writing window settings: {window_settings}')
 
     with open(WINDOW_CACHE_FILE, 'wb') as f:
         f.write(pickle.dumps(window_settings))

@@ -30,7 +30,7 @@ MAKE_DIRS_LOCK = Lock()
 
 
 def _make_uid_key(uid):
-    return '{0}'.format(uid)
+    return f'{uid}'
 
 
 def _hash_key(data):
@@ -43,9 +43,9 @@ def _hash_key(data):
 
 
 def _trim(value):
-    value = '{0}'.format(value)
+    value = f'{value}'
     if len(value) > 80:
-        return '{0}...'.format(value[:77])
+        return f'{value[:77]}...'
     return value
 
 
@@ -53,19 +53,14 @@ class FolderCache(object):
     def __init__(self, folder):
         self.folder = folder
 
-        name = '{0}-{1}'.format(
-            self.folder.account.name,
-            self.folder.name,
-        )
+        name = f'{self.folder.account.name}-{self.folder.name}'
 
         self.name = name
         self.namespaces = set()
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func('[Folder cache: {0}]: {1}'.format(
-            self.name, message,
-        ))
+        func(f'[Folder cache: {self.name}]: {message}')
 
     # Cache implementation
     #
@@ -127,10 +122,12 @@ class FolderCache(object):
             data = pickle_loads(pickle_data)
 
         except (EOFError, UnpicklingError) as e:
-            self.log('warning', f'{e.__class__.__name__} raised reading {namespace}/{key}: {e}')
+            self.log(
+                'warning',
+                f'{e.__class__.__name__} raised reading {namespace}/{key}: {e}',
+            )
             return
 
-        self.log('debug', f'read {namespace}/{key}=({type(data)}, {_trim(data)})')
         return data
 
     def bust(self):

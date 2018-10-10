@@ -4,11 +4,11 @@ from uuid import uuid4
 
 from flask import abort, render_template, request
 
-from kanmail import settings
 from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
+from kanmail.settings import DEBUG, FROZEN, IS_APP, SERVER_PORT
 from kanmail.version import get_version
 from kanmail.window import create_window
 
@@ -21,8 +21,8 @@ def get_index():
     return render_template(
         'index.html',
         version=get_version(),
-        frozen=settings.FROZEN,
-        debug=settings.DEBUG,
+        frozen=FROZEN,
+        debug=DEBUG,
     )
 
 
@@ -30,8 +30,8 @@ def get_index():
 def get_settings():
     return render_template(
         'settings.html',
-        frozen=settings.FROZEN,
-        debug=settings.DEBUG,
+        frozen=FROZEN,
+        debug=DEBUG,
     )
 
 
@@ -40,14 +40,14 @@ def get_send():
     return render_template(
         'send.html',
         contacts=get_contacts(),
-        frozen=settings.FROZEN,
-        debug=settings.DEBUG,
+        frozen=FROZEN,
+        debug=DEBUG,
     )
 
 
 @app.route('/send/<uid>', methods=['GET'])
 def get_send_reply(uid):
-    if settings.DEBUG:
+    if DEBUG:
         reply = SEND_WINDOW_DATA.get(uid)
     else:
         reply = SEND_WINDOW_DATA.pop(uid, None)
@@ -59,8 +59,8 @@ def get_send_reply(uid):
         'send.html',
         reply=reply,
         contacts=get_contacts(),
-        frozen=settings.FROZEN,
-        debug=settings.DEBUG,
+        frozen=FROZEN,
+        debug=DEBUG,
     )
 
 
@@ -71,22 +71,22 @@ def open_link():
     if webbrowser.open(link):
         return '', 204
 
-    logger.critical('Failed to open browser link: {0}!'.format(link))
+    logger.critical(f'Failed to open browser link: {link}!')
     return abort(500, 'Could not open link!')
 
 
 def _open_window(name, endpoint):
-    link = 'http://localhost:{0}{1}'.format(settings.SERVER_PORT, endpoint)
+    link = f'http://localhost:{SERVER_PORT}{endpoint}'
 
-    if settings.IS_APP:
+    if IS_APP:
         create_window(name, endpoint)
         return '', 204
     else:
         if webbrowser.open(link):
             return '', 204
 
-    logger.critical('Failed to open {0} window!'.format(name))
-    return abort(500, 'Could not open {0} window!'.format(name))
+    logger.critical(f'Failed to open {name} window!')
+    return abort(500, f'Could not open {name} window!')
 
 
 @app.route('/open-settings', methods=['GET'])
@@ -106,6 +106,6 @@ def open_send():
         uid = str(uuid4())
         SEND_WINDOW_DATA[uid] = message_data
 
-        endpoint = '/send/{0}'.format(uid)
+        endpoint = f'/send/{uid}'
 
     return _open_window('new email', endpoint)

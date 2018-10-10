@@ -216,8 +216,9 @@ def extract_excerpt(raw_body, raw_body_meta):
         )
 
     except Exception as e:
-        logger.warning('Could not extract excerpt: {0} (data={1}, meta={2})'.format(
-            e, raw_body, raw_body_meta,
+        logger.warning((
+            'Could not extract excerpt: '
+            f'{e} (data={raw_body}, meta={raw_body_meta})'
         ))
 
 
@@ -241,9 +242,9 @@ def _parse_bodystructure(bodystructure, item_number=None):
     if isinstance(type_or_bodies, list):
         for i, body in enumerate(type_or_bodies, 1):
             if item_number:
-                nested_item_number = '{0}.{1}'.format(item_number, i)
+                nested_item_number = f'{item_number}.{i}'
             else:
-                nested_item_number = '{0}'.format(i)
+                nested_item_number = f'{i}'
 
             items.update(_parse_bodystructure(
                 body,
@@ -287,9 +288,7 @@ def parse_bodystructure(bodystructure):
     try:
         items = _parse_bodystructure(bodystructure)
     except Exception as e:
-        logger.warning('Could not parse bodystructure: {0} (struct={1})'.format(
-            e, bodystructure,
-        ))
+        logger.warning(f'Could not parse bodystructure: {e} (struct={bodystructure})')
 
         raise
 

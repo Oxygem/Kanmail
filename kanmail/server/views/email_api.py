@@ -97,9 +97,7 @@ def api_get_account_email_part(account, folder, uid, part_number):
     )
 
     if mime_type is None:
-        response = jsonify(error='Could not find part: {0}'.format(
-            part_number,
-        ))
+        response = jsonify(error=f'Could not find part: {part_number}')
         response.status_code = 404
         return response
 
@@ -125,9 +123,7 @@ def api_download_account_email_part(account, folder, uid, part_number):
     )
 
     if mime_type is None:
-        response = jsonify(error='Could not find part: {0}'.format(
-            part_number,
-        ))
+        response = jsonify(error=f'Could not find part: {part_number}')
         response.status_code = 404
         return response
 

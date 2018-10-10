@@ -26,7 +26,7 @@ app.config['JSON_SORT_KEYS'] = False
 
 
 def boot():
-    logger.debug('App client root is: {0}'.format(CLIENT_ROOT))
+    logger.debug(f'App client root is: {CLIENT_ROOT}')
 
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')

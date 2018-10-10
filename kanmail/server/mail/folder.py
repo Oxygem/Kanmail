@@ -57,9 +57,7 @@ class Folder(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func('[Account: {0}/{1}]: {2}'.format(
-            self.account.name, self.name, message,
-        ))
+        func('[Account: {self.account.name}/{self.name}]: {message}')
 
     @contextmanager
     def get_connection(self):
@@ -109,11 +107,9 @@ class Folder(object):
         Fetch actual email body parts, where the part is the same for each email.
         '''
 
-        self.log('debug', 'Fetching {0} message parts ({1})'.format(
-            len(email_uids), part,
-        ))
+        self.log('debug', f'Fetching {len(email_uids)} message parts ({part})')
 
-        body_keyname = 'BODY[{0}]'.format(part)
+        body_keyname = f'BODY[{part}]'
 
         # Fetch the email headers/details
         with self.get_connection() as connection:
@@ -126,9 +122,7 @@ class Folder(object):
         # Fix any dodgy UIDs
         email_parts = fix_email_uids(email_uids, email_parts)
 
-        self.log('debug', 'Fetched {0} email parts ({1})'.format(
-            len(email_uids), part,
-        ))
+        self.log('debug', f'Fetched {len(email_uids)} email parts ({part})')
 
         emails = {}
 
@@ -172,9 +166,10 @@ class Folder(object):
         for uid in got_email_uids:
             email_uids.remove(uid)
 
-        self.log('debug', 'Fetching {0} messages (+{1} from cached)'.format(
-            len(email_uids), len(emails),
-        ))
+        self.log(
+            'debug',
+            f'Fetching {len(email_uids)} messages (+{len(emails)} from cached)',
+        )
 
         if not email_uids:
             return emails
@@ -306,8 +301,9 @@ class Folder(object):
                 expected_uids, new_message_uids,
             )
 
-        self.log('debug', 'Fetched {0} new/{1} deleted message IDs'.format(
-            len(new_message_uids), len(deleted_message_uids),
+        self.log('debug', (
+            f'Fetched {len(new_message_uids)} new'
+            f'/{len(deleted_message_uids)} deleted message IDs'
         ))
 
         new_emails = {}
@@ -369,9 +365,7 @@ class Folder(object):
         Flag emails as deleted within this folder.
         '''
 
-        self.log('debug', 'Deleting {0} ({1}) emails'.format(
-            len(email_uids), email_uids,
-        ))
+        self.log('debug', f'Deleting {len(email_uids)} ({email_uids}) emails')
 
         with self.get_connection() as connection:
             connection.delete_messages(email_uids)
@@ -388,9 +382,10 @@ class Folder(object):
         # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
-        self.log('debug', 'Moving {0} ({1}) emails to -> {2}'.format(
-            len(email_uids), email_uids, new_folder,
-        ))
+        self.log(
+            'debug',
+            f'Moving {len(email_uids)} ({email_uids}) emails to -> {new_folder}',
+        )
 
         with self.get_connection() as connection:
             connection.copy(email_uids, new_folder)
@@ -410,9 +405,10 @@ class Folder(object):
         # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
-        self.log('debug', 'Copying {0} ({1}) emails to -> {2}'.format(
-            len(email_uids), email_uids, new_folder,
-        ))
+        self.log(
+            'debug',
+            f'Copying {len(email_uids)} ({email_uids}) emails to -> {new_folder}',
+        )
 
         with self.get_connection() as connection:
             connection.copy(email_uids, new_folder)
@@ -422,9 +418,7 @@ class Folder(object):
         Star/flag emails (by UID) in this folder.
         '''
 
-        self.log('debug', 'Starring {0} ({1}) emails'.format(
-            len(email_uids), email_uids,
-        ))
+        self.log('debug', f'Starring {len(email_uids)} ({email_uids}) emails')
 
         with self.get_connection() as connection:
             connection.add_flags(email_uids, [b'\\Flagged'])
@@ -437,9 +431,7 @@ class Folder(object):
         Unstar/unflag emails (by UID) in this folder.
         '''
 
-        self.log('debug', 'Unstarring {0} ({1}) emails'.format(
-            len(email_uids), email_uids,
-        ))
+        self.log('debug', f'Unstarring {len(email_uids)} ({email_uids}) emails')
 
         with self.get_connection() as connection:
             connection.remove_flags(email_uids, [b'\\Flagged'])

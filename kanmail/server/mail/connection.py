@@ -43,8 +43,9 @@ class ConnectionWrapper(object):
                     ret = func(*args, **kwargs)
 
                     took = (time() - start) * 1000
-                    logger.debug('Completed IMAP action: {0}({1}, {2}) in {3}ms'.format(
-                        key, args, kwargs, took,
+                    logger.debug((
+                        f'Completed IMAP action: '
+                        f'{key}({args}, {kwargs}) in {took}ms'
                     ))
 
                     return ret
@@ -52,28 +53,22 @@ class ConnectionWrapper(object):
                 # Network issues/IMAP aborts - both should fixed by reconnect
                 except (IMAPClientAbortError, socket_error) as e:
                     attempts += 1
-                    logger.critical('IMAP error ({0}/{1}: {2}'.format(
-                        attempts, MAX_ATTEMPTS, e,
-                    ))
+                    logger.critical(f'IMAP error {attempts}/{MAX_ATTEMPTS}: {e}')
                     self.make_imap()
                     func = getattr(self._imap, key)
 
         return wrapper
 
     def make_imap(self):
-        logger.debug('Connecting to server: {0}:{1}@{2}'.format(
-            self.username, self.password, self.host,
-        ))
+        server_string = f'{self.username}:{self.password}@{self.host}'
+        logger.debug(f'Connecting to server: {server_string}')
 
         imap = IMAPClient(self.host, ssl=self.ssl, use_uid=True)
         imap.login(self.username, self.password)
         imap.normalise_times = False
 
         self._imap = imap
-
-        logger.info('Connected to server: {0}:{1}@{2}'.format(
-            self.username, self.password, self.host,
-        ))
+        logger.info(f'Connected to server: {server_string}')
 
 
 class ConnectionPool(object):
@@ -104,15 +99,11 @@ class ConnectionPool(object):
     @contextmanager
     def get_connection(self):
         connection = self.pool.get()
-        logger.debug('Got connection from pool: {0} (-1)'.format(
-            self.pool.qsize(),
-        ))
+        logger.debug(f'Got connection from pool: {self.pool.qsize()} (-1)')
 
         try:
             yield connection
 
         finally:
             self.pool.put(connection)
-            logger.debug('Returned connection to pool: {0} (+1)'.format(
-                self.pool.qsize(),
-            ))
+            logger.debug(f'Returned connection to pool: {self.pool.qsize()} (+1)')

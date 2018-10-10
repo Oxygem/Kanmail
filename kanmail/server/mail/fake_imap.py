@@ -53,14 +53,14 @@ def make_fake_fetch_item(folder, uid, keys):
     }
 
     message_id_folder = choice(ALIAS_FOLDERS + [folder])
-    message_id = '{0}_{1}'.format(message_id_folder, uid)
+    message_id = f'{message_id_folder}_{uid}'
 
     from_addresses = make_fake_addresses()
 
     fake_data[b'SEQ'] = uid
     fake_data[b'ENVELOPE'] = Envelope(
         datetime.utcnow(),
-        'This is a subject (uid={0})'.format(uid),
+        f'This is a subject (uid={uid})',
         from_addresses,  # from
         from_addresses,  # sender
         from_addresses,  # reply to
@@ -93,7 +93,7 @@ class FakeIMAPClient(object):
     _current_folder = None
 
     def __init__(self, *args, **kwargs):
-        logger.debug('Creating fake IMAP: ({0}, {1})'.format(args, kwargs))
+        logger.debug(f'Creating fake IMAP: ({args}, {kwargs})')
 
     def login(self, username, password):
         random_sleep()

@@ -67,9 +67,7 @@ class Account(object):
         folder = self.get_folder(folder)
 
         if not folder.exists:
-            logger.debug('Creating folder {0}/{1}'.format(
-                self.name, folder.name,
-            ))
+            logger.debug(f'Creating folder {self.name}/{folder.name}')
 
             with self.get_connection() as connection:
                 connection.create_folder(folder.name)

@@ -39,7 +39,7 @@ class LogFormatter(logging.Formatter):
 
         now = datetime.now().replace(microsecond=0).isoformat()
 
-        return '{0} {1} {2}'.format(now, record.levelname, message)
+        return f'{now} {record.levelname} {message}'
 
 
 def setup_logging(debug, log_file):
@@ -77,5 +77,5 @@ def setup_logging(debug, log_file):
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-    logger.debug('Debug level set to: {0}'.format(log_level))
+    logger.debug(f'Debug level set to: {log_level}')
     return log_level
