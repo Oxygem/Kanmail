@@ -110,3 +110,14 @@ const requestStore = new RequestStore();
 
 window.requestStore = requestStore;
 export default requestStore;
+
+
+// Pass global JS errors to the requestStore
+window.onerror = (message, source, lineno, colno, e) => {
+    requestStore.addError({
+        errorName: `JS error: ${e.name}`,
+        errorMessage: e.message,
+    });
+
+    return false;
+}
