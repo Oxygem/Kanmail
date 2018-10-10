@@ -139,7 +139,7 @@ const columnMetaStores = {};
 export function getColumnMetaStore(name) {
     if (!columnMetaStores[name]) {
         console.debug(
-            `Creating new column store: ${name}.`,
+            `Creating new column meta store: ${name}.`,
         );
 
         columnMetaStores[name] = new ColumnMetaStore(name);
