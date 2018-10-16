@@ -153,9 +153,9 @@ class EmailColumn extends React.Component {
             return;
         }
 
-        getEmailStore().syncFolderEmails(this.props.id).then(() => {
-            this.createGetNewEmailsTimeout();
-        });
+        getEmailStore().syncFolderEmails(this.props.id)
+            .then(() => this.createGetNewEmailsTimeout)
+            .catch(() => this.createGetNewEmailsTimeout);
     }
 
     createGetNewEmailsTimeout = () => {

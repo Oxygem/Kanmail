@@ -56,14 +56,18 @@ export default class EmailsApp extends React.Component {
             ).then(mainEmailStore.syncFolderEmails(folder));
         });
 
-        this.newAliasEmailCheck = setTimeout(
-            this.getNewAliasFolderEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
-        );
+        this.createGetNewAliasEmailsTimeout();
     }
 
     componentWillUnmount() {
         clearTimeout(this.newAliasEmailCheck);
+    }
+
+    createGetNewAliasEmailsTimeout = () => {
+        this.newAliasEmailCheck = setTimeout(
+            this.getNewAliasFolderEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
     }
 
     getNewAliasFolderEmails = () => {
@@ -72,12 +76,11 @@ export default class EmailsApp extends React.Component {
             folder => mainEmailStore.syncFolderEmails(folder),
         );
 
-        Promise.all(requests).then(() => {
-            this.newAliasEmailCheck = setTimeout(
-                this.getNewAliasFolderEmails,
-                CHECK_NEW_EMAIL_INTERVAL,
-            );
-        });
+        Promise.all(requests)
+            .then(() => {
+                this.createGetNewAliasEmailsTimeout()
+            })
+            .catch(() => this.createGetNewAliasEmailsTimeout);
     }
 
     renderEmailColumn(column) {
