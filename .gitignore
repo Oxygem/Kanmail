@@ -3,7 +3,7 @@
 
 node_modules
 
+# Build stuff
 dist/
-build/
-
-Kanmail.spec
+pyu-data/
+.pyupdater/

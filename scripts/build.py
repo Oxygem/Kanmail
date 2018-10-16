@@ -14,12 +14,13 @@ from jinja2 import Template
 
 
 MAJOR_VERSION = 1
-DATE_VERSION = datetime.now().strftime('%y%m%H%M')
+DATE_VERSION = datetime.now().strftime('%y%m%d%H%M')
 NOW_VERSION = f'{MAJOR_VERSION}.{DATE_VERSION}'
 
 ROOT_DIRNAME = path.normpath(path.join(path.abspath(path.dirname(__file__)), '..'))
 MAKE_DIRNAME = path.join(ROOT_DIRNAME, 'make')
 DIST_DIRNAME = path.join(ROOT_DIRNAME, 'dist')
+VERSION_FILENAME = path.join(DIST_DIRNAME, 'version.json')
 
 TEMP_SPEC_FILENAME = path.join(DIST_DIRNAME, '.spec')
 
@@ -28,23 +29,20 @@ def get_pyupdater_package_dir():
     return path.dirname(pyupdater.__file__)
 
 
-def get_and_write_version(release_channel):
-    version = f'{NOW_VERSION}.dev'
+def get_version(is_release):
+    return f'{NOW_VERSION}' if is_release else f'{NOW_VERSION}alpha'
 
-    if release_channel == 'alpha':
-        version = f'{NOW_VERSION}alpha'
 
-    if release_channel == 'beta':
-        version = f'{NOW_VERSION}beta'
-
-    if release_channel == 'stable':
-        version = f'{NOW_VERSION}'
+def write_version(is_release):
+    version = get_version(is_release)
+    channel = 'stable' if is_release else 'alpha'
 
     # Write the version to the dist directory to be injected into the bundle
     version_data = json.dumps({
         'version': version,
+        'channel': channel,
     })
-    with open(path.join(DIST_DIRNAME, 'version.json'), 'w') as f:
+    with open(VERSION_FILENAME, 'w') as f:
         f.write(version_data)
 
     return version
@@ -74,32 +72,40 @@ def generate_spec(version):
     return TEMP_SPEC_FILENAME
 
 
+def print_and_run(command):
+    click.echo(f'--> {command}')
+    run(command)
+
+
 @click.command()
-@click.option('--alpha', 'release_channel', flag_value='alpha')
-@click.option('--beta', 'release_channel', flag_value='beta')
-@click.option('--stable', 'release_channel', flag_value='stable')
-def build(release_channel):
+@click.option('--release', 'is_release', is_flag=True, default=False)
+def build(is_release):
     # Get the version
-    version = get_and_write_version(release_channel)
+    version = get_version(is_release)
+    click.echo(f'\n### Build{" + Release" if is_release else ""} Kanmail {version}\n')
 
-    click.echo(f'\n### Build Kanmail {version}\n')
-
-    # Build the clientside JS bundle
-    click.echo('--> yarn run build')
-    run(('yarn', 'run', 'build'))
+    click.echo(f'--> generate {VERSION_FILENAME}')
+    write_version(is_release)
 
     # Generate specfile for platform
+    click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = generate_spec(version)
 
+    # Build the clientside JS bundle
+    print_and_run(('yarn', 'run', 'build'))
+
     # Execute pyupdater
-    command = (
+    print_and_run((
         'pyupdater', 'build',
         '--windowed',
         '--app-version', version,
         '--name', 'Kanmail',
         specfile,
-    )
-    run(command)
+    ))
+
+    # Process & sign the build
+    if is_release:
+        print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
 
 
 if __name__ == '__main__':

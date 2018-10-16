@@ -2,7 +2,6 @@ a = Analysis(  # noqa: F821
     ['{{ root_dir }}/main.py'],
     pathex=[
         '{{ root_dir }}',
-        '{{ root_dir }}/.pyupdater/spec',
     ],
     binaries=[],
     datas=[
