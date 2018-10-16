@@ -45,8 +45,9 @@ def api_update_window_settings():
     request_data = request.get_json()
 
     # Importing this before creating the initial main window isn't allowed
-    from webview.cocoa import BrowserView
-    top_bar_height = BrowserView.DragBar.default_height + 1
+    # from webview.cocoa import BrowserView
+    # top_bar_height = BrowserView.DragBar.default_height + 1
+    top_bar_height = 23
 
     if 'height' in request_data:
         request_data['height'] += top_bar_height

@@ -9,7 +9,7 @@ def create_window(title='Kanmail', endpoint='/', **kwargs):
     return webview.create_window(
         title, link,
         debug=DEBUG,
-        # frameless=True,
+        frameless=True,
         text_select=True,
         **kwargs,
     )

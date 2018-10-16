@@ -1,5 +1,7 @@
 # Client
-pywebview==2.0.3
+git+https://github.com/r0x0r/pywebview@2b8b9d4e33716fa04db96f432103cef7ac0010f7
+
+requests==2.19.1
 
 # Server
 click==6.7
