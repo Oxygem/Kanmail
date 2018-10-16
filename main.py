@@ -4,9 +4,10 @@ from time import sleep
 import webview
 
 from kanmail import settings
-from kanmail.device import register_or_ping_device, update_device
+from kanmail.device import register_or_ping_device
 from kanmail.log import logger
 from kanmail.server.app import app, boot
+from kanmail.version import get_version
 from kanmail.window import create_window
 
 
@@ -22,28 +23,37 @@ def run_server():
         )
 
     except Exception as e:
-        logger.exception('Exception in server thread!: {0}'.format(e))
+        logger.exception(f'Exception in server thread!: {e}')
 
 
 def monitor_threads(*threads):
     while True:
         for thread in threads:
             if not thread.is_alive():
-                logger.critical('Thread: {0} died, exiting!'.format(thread))
+                logger.critical(f'Thread: {thread} died, exiting!')
                 webview.destroy_window()
         else:
             sleep(0.5)
 
 
-def register_and_update_device():
-    try:
-        register_or_ping_device()
-        update_device()
-    except Exception as e:
-        logger.exception('Exception in register & update thread!: {0}'.format(e))
+def run_thread(target):
+    def wrapper(thread_name):
+        try:
+            target()
+        except Exception as e:
+            logger.exception(f'Unexpected exception in thread {thread_name}!: {e}')
+
+    thread = Thread(
+        target=wrapper,
+        args=(target.__name__,)
+    )
+    thread.daemon = True
+    thread.start()
 
 
 def main():
+    logger.info(f'\n#\n# Booting Kanmail {get_version()}\n#')
+
     server_thread = Thread(name='Server', target=run_server)
     server_thread.daemon = True
     server_thread.start()
@@ -57,14 +67,8 @@ def main():
     monitor_thread.daemon = True
     monitor_thread.start()
 
-    # Register & attempt update immediately - we don't kill the whole app if
-    # this fails as it's non-essential stuff.
-    register_update_thread = Thread(
-        name='Register & check for updates',
-        target=register_and_update_device,
-    )
-    register_update_thread.daemon = True
-    register_update_thread.start()
+    # Register/ping immediately - without caring if it fails
+    run_thread(register_or_ping_device)
 
     # First/main call to webview, blocking - when this is quit the threads will
     # all be killed off (daemon=True).

@@ -18,6 +18,7 @@ import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 import mainEmailStore from 'emails/main.js';
 
 import settingsStore from 'stores/settings.js';
+import updateStore from 'stores/update.js';
 import { getColumnStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
@@ -57,6 +58,7 @@ export default class EmailsApp extends React.Component {
         });
 
         this.createGetNewAliasEmailsTimeout();
+        updateStore.checkUpdate();
     }
 
     componentWillUnmount() {

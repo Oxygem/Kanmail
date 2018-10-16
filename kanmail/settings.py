@@ -83,6 +83,24 @@ if path.exists(WINDOW_CACHE_FILE):
         locals()[k] = v
 
 
+# Server settings
+#
+
+UPDATE_SERVER = 'https://updates.kanmamil.io'
+LICENSE_SERVER = 'https://license.kanmail.io'
+
+if DEBUG:
+    UPDATE_SERVER = 'http://localhost:5000/updates'
+    LICENSE_SERVER = 'http://localhost:5000'
+
+class PyUpdaterConfig(object):  # noqa: E302
+    PUBLIC_KEY = 'Yzf2hqO/Hbj3FR/MVxQYYSB7/2gBRTP2aELwuaV3taw'
+    COMPANY_NAME = 'Oxygem'
+    APP_NAME = APP_NAME
+    UPDATE_URLS = [UPDATE_SERVER]
+    MAX_DOWNLOAD_RETRIES = 3
+
+
 # "App"/user settings
 #
 

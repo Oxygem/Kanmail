@@ -8,6 +8,7 @@ import mainEmailStore from 'emails/main.js';
 
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
+import updateStore from 'stores/update.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 
@@ -15,13 +16,14 @@ import { get } from 'util/requests.js';
 import { capitalizeFirstLetter } from 'util/string.js';
 
 
-@subscribe(filterStore, settingsStore)
+@subscribe(filterStore, settingsStore, updateStore)
 export default class Filters extends React.Component {
     static propTypes = {
         mainColumn: PropTypes.string.isRequired,
         filterStore: PropTypes.object.isRequired,
         accounts: PropTypes.object.isRequired,
         accountName: PropTypes.string,
+        updateVersion: PropTypes.string,
     }
 
     setAccountFilter = (accountName) => {
@@ -65,6 +67,23 @@ export default class Filters extends React.Component {
         ));
     }
 
+    renderUpdateLink() {
+        if (!this.props.updateVersion) {
+            return;
+        }
+
+        return (
+            <ul>
+                <li>
+                    <a onClick={() => updateStore.doUpdate()}>
+                        <i className="fa fa-refresh"></i> Update & restart
+                        <span>new: v1.02429492</span>
+                    </a>
+                </li>
+            </ul>
+        );
+    }
+
     render() {
         return (<div>
             <ul>{this.renderAliases()}</ul>
@@ -84,6 +103,8 @@ export default class Filters extends React.Component {
                     </a>
                 </li>
             </ul>
+
+            {this.renderUpdateLink()}
         </div>);
     }
 }

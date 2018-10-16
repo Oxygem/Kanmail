@@ -36,3 +36,4 @@ def boot():
     from kanmail.server.views import error  # noqa: F401
     from kanmail.server.views import settings_api  # noqa: F401
     from kanmail.server.views import email_api  # noqa: F401
+    from kanmail.server.views import update_api  # noqa: F401
