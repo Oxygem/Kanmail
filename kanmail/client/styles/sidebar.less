@@ -39,15 +39,23 @@ section#sidebar {
             }
         }
 
-        div.errors {
+        div.sidebar-header {
             float: right;
-            margin-right: 10px;
+            text-align: right;
 
             i {
-                color: @orange;
+                line-height: 16px;
+
+                &.error {
+                    color: @orange;
+                }
             }
 
-            div.error-contents {
+            div.icon-wrapper {
+                padding-right: 10px;
+            }
+
+            div.icon-contents {
                 display: none;
                 position: absolute;
                 width: 600px;
@@ -58,14 +66,16 @@ section#sidebar {
                 padding: 5px;
                 z-index: 999;
                 color: black;
-                margin-left: 0px;
+                margin-left: 40px;
+                text-align: left;
 
                 p {
                     margin: 0;
                 }
             }
 
-            &:hover div.error-contents, div.error-contents:hover {
+            div.icon-contents:hover,
+            div.icon-wrapper:hover div.icon-contents {
                 display: block;
             }
         }
@@ -108,6 +118,10 @@ section#sidebar {
                 &:hover {
                     background: #232727;
                     color: white;
+                }
+
+                span {
+                    display: block;
                 }
             }
 
