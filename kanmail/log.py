@@ -34,11 +34,19 @@ class LogFormatter(logging.Formatter):
     def format(self, record):
         message = super(LogFormatter, self).format(record)
 
+        # Add path/module info for debug
+        if record.levelno is logging.DEBUG:
+            path_start = record.pathname.rfind('kanmail')
+
+            if path_start:
+                pyinfra_path = record.pathname[path_start:-3]  # -3 removes `.py`
+                module_name = pyinfra_path.replace('/', '.')
+                message = f'[{module_name}] {message}'
+
         if record.levelno in self.level_to_format:
             message = self.level_to_format[record.levelno](message)
 
         now = datetime.now().replace(microsecond=0).isoformat()
-
         return f'{now} {record.levelname} {message}'
 
 
