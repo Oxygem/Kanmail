@@ -131,7 +131,10 @@ class EmailColumn extends React.Component {
         }
 
         // Kick off new email checking at the interval
-        this.createGetNewEmailsTimeout();
+        this.newEmailCheck = setInterval(
+            this.getNewEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
     }
 
     componentWillUnmount() {
@@ -140,7 +143,7 @@ class EmailColumn extends React.Component {
         }
 
         // Remove any pending email check
-        clearTimeout(this.newEmailCheck);
+        clearInterval(this.newEmailCheck);
     }
 
     getNewEmails = () => {
@@ -149,20 +152,10 @@ class EmailColumn extends React.Component {
         const columnMetaStore = getColumnMetaStore(this.props.id);
         if (columnMetaStore.props.isSyncing) {
             console.debug(`Not syncing ${this.props.id} as we are already syncing!`);
-            this.createGetNewEmailsTimeout();
             return;
         }
 
-        getEmailStore().syncFolderEmails(this.props.id)
-            .then(() => this.createGetNewEmailsTimeout)
-            .catch(() => this.createGetNewEmailsTimeout);
-    }
-
-    createGetNewEmailsTimeout = () => {
-        this.newEmailCheck = setTimeout(
-            this.getNewEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
-        );
+        getEmailStore().syncFolderEmails(this.props.id);
     }
 
     getColumnContainer = () => {

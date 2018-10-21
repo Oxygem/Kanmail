@@ -19,7 +19,7 @@ import mainEmailStore from 'emails/main.js';
 
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
-import { getColumnStore } from 'stores/columns.js';
+import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
 
@@ -57,32 +57,30 @@ export default class EmailsApp extends React.Component {
             ).then(mainEmailStore.syncFolderEmails(folder));
         });
 
-        this.createGetNewAliasEmailsTimeout();
+        this.newAliasEmailCheck = setInterval(
+            this.getNewAliasFolderEmails,
+            CHECK_NEW_EMAIL_INTERVAL,
+        );
         updateStore.checkUpdate();
     }
 
     componentWillUnmount() {
-        clearTimeout(this.newAliasEmailCheck);
-    }
-
-    createGetNewAliasEmailsTimeout = () => {
-        this.newAliasEmailCheck = setTimeout(
-            this.getNewAliasFolderEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
-        );
+        clearInterval(this.newAliasEmailCheck);
     }
 
     getNewAliasFolderEmails = () => {
-        const requests = _.map(
+        _.map(
             ALWAYS_SYNC_FOLDERS,
-            folder => mainEmailStore.syncFolderEmails(folder),
-        );
+            folder => {
+                const columnMetaStore = getColumnMetaStore(folder);
+                if (columnMetaStore.props.isSyncing) {
+                    console.debug(`Not syncing ${folder} as we are already syncing!`);
+                    return;
+                }
 
-        Promise.all(requests)
-            .then(() => {
-                this.createGetNewAliasEmailsTimeout()
-            })
-            .catch(() => this.createGetNewAliasEmailsTimeout);
+                mainEmailStore.syncFolderEmails(folder)
+            },
+        );
     }
 
     renderEmailColumn(column) {
