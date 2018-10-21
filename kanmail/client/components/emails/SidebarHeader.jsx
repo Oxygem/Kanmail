@@ -17,8 +17,8 @@ export default class SidebarHeader extends Component {
             return null;
         }
 
-        const errors = _.map(this.props.requestErrors, error => (
-            <p>{error.errorName}: {error.errorMessage}</p>
+        const errors = _.map(this.props.requestErrors, (error, i) => (
+            <p key={i}>{error.errorName}: {error.errorMessage}</p>
         ));
 
         return (
