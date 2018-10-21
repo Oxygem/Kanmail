@@ -83,14 +83,6 @@ export default class EmailsApp extends React.Component {
         );
     }
 
-    renderEmailColumn(column) {
-        return <EmailColumn
-            key={column}
-            id={column}
-            name={column}
-        />;
-    }
-
     renderColumns() {
         const columnElements = [];
         const columnRefs = [];
@@ -105,22 +97,11 @@ export default class EmailsApp extends React.Component {
             }
         }
 
-        const pushMainColumnRef = (ref) => {
-            if (!ref) {
-                return;
-            }
-
-            columnRefs[0] = ref
-                .wrappedComponent
-                .getDecoratedComponentInstance();
-        }
-
         columnElements.push(<MainColumn
             key="main"
             getNextColumn={() => getColumn(1)}
             getPreviousColumn={() => getColumn(-1)}
-            columnsCount={this.props.columns.length}
-            ref={pushMainColumnRef}
+            ref={ref => columnRefs[0] = ref.wrappedComponent}
         />);
 
         _.each(this.props.columns, (columnName, i) => {

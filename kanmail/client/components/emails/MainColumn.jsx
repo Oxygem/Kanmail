@@ -15,11 +15,10 @@ export default class MainColumn extends React.Component {
         filterStore: PropTypes.object.isRequired,
         getPreviousColumn: PropTypes.func.isRequired,
         getNextColumn: PropTypes.func.isRequired,
-        columnsCount: PropTypes.number.isRequired,
     }
 
     getDecoratedComponentInstance() {
-        return this.emailColumn;
+        return this.emailColumn.getDecoratedComponentInstance();
     }
 
     render() {
