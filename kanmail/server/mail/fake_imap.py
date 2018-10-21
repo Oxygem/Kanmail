@@ -28,6 +28,14 @@ FAKE_ADDRESSES = (
     Address(b'Fizzadar', None, b'fizzadar', b'github.com'),
 )
 
+FAKE_SUBJECTS = (
+    'This is a subject',
+)
+
+FAKE_BODIES = (
+    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.',
+)
+
 
 def random_sleep():
     sleep(choice((1, 2)))
@@ -43,11 +51,13 @@ def make_fake_addresses():
 
 
 def make_fake_fetch_item(folder, uid, keys):
+    body_text = choice(FAKE_BODIES)
+
     fake_data = {
         b'FLAGS': ['\\Seen'],
         b'BODYSTRUCTURE': (b'TEXT', b'PLAIN', None, None, None, b'UTF-8', 100),
-        b'BODY[1]<0>': 'This is some text',
-        b'BODY[1]': 'This is some text in the full email body',
+        b'BODY[1]<0>': f'{body_text[:500]}',
+        b'BODY[1]': body_text,
         b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]': '',
         b'RFC822.SIZE': 100,
     }
@@ -60,7 +70,7 @@ def make_fake_fetch_item(folder, uid, keys):
     fake_data[b'SEQ'] = uid
     fake_data[b'ENVELOPE'] = Envelope(
         datetime.utcnow(),
-        f'This is a subject (uid={uid})',
+        f'{choice(FAKE_SUBJECTS)} (uid={uid})',
         from_addresses,  # from
         from_addresses,  # sender
         from_addresses,  # reply to
