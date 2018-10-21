@@ -46,7 +46,7 @@ if (settingsAppRoot) {
     settingsStore.getSettings().then(settings => {
         console.debug('Settings loaded, bootstrapping settings app to DOM...');
         ReactDOM.render(<ErrorBoundary>
-            <SettingsApp settings={settings} />
+            <SettingsApp settings={settings.originalSettings} />
         </ErrorBoundary>, settingsAppRoot);
     });
 }
