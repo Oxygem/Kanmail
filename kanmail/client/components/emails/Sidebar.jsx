@@ -52,7 +52,7 @@ export default class Sidebar extends React.Component {
                     </a>
                     {window.KANMAIL_DEBUG && ' (debug)'}
                     <br />
-                    Beta - <a href="#">unregistered</a>
+                    Beta
 
                     <FooterStatus />
                 </footer>
