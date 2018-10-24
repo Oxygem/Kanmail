@@ -94,7 +94,7 @@ if DEBUG:
     LICENSE_SERVER = 'http://localhost:5000'
 
 class PyUpdaterConfig(object):  # noqa: E302
-    PUBLIC_KEY = 'Yzf2hqO/Hbj3FR/MVxQYYSB7/2gBRTP2aELwuaV3taw'
+    PUBLIC_KEY = 'c++zSv15DkOJItm9YoUvIbUBXZZaVWF8YheJlMoU0HU'
     COMPANY_NAME = 'Oxygem'
     APP_NAME = APP_NAME
     UPDATE_URLS = [UPDATE_SERVER]
