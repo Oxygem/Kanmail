@@ -1,3 +1,7 @@
+# v1.1810242041
+
++ Correct the public key for updates!
+
 # v1.1810242036
 
 + Initial release!
