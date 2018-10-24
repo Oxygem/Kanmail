@@ -132,9 +132,10 @@ def build(is_release):
     build_command.extend(('--windowed', '--name', 'Kanmail', specfile))
     print_and_run(build_command)
 
-    # Process & sign the build with pyupdater
+    # Process, sign & upload the build with pyupdater
     if is_release:
         print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
+        print_and_run(('pyupdater', 'upload', '--service', 's3'))
 
 
 if __name__ == '__main__':
