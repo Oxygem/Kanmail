@@ -4,6 +4,7 @@
 node_modules
 
 # Build stuff
+build/
 dist/
 pyu-data/
 .pyupdater/

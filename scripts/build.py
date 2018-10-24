@@ -4,7 +4,7 @@ import json
 import platform
 
 from datetime import datetime
-from os import path
+from os import makedirs, path
 from subprocess import run
 
 import click
@@ -29,6 +29,11 @@ def get_pyupdater_package_dir():
     return path.dirname(pyupdater.__file__)
 
 
+def print_and_run(command):
+    click.echo(f'--> {command}')
+    run(command)
+
+
 def get_version(is_release):
     return f'{NOW_VERSION}' if is_release else f'{NOW_VERSION}alpha'
 
@@ -48,7 +53,7 @@ def write_version(is_release):
     return version
 
 
-def generate_spec(version):
+def generate_spec(version, is_release):
     system_type = platform.system()
 
     template_filename = None
@@ -66,44 +71,68 @@ def generate_spec(version):
         f.write(template.render({
             'root_dir': ROOT_DIRNAME,
             'version': version,
+            'is_release': is_release,
             'pyupdater_package_dir': get_pyupdater_package_dir(),
         }))
 
     return TEMP_SPEC_FILENAME
 
 
-def print_and_run(command):
-    click.echo(f'--> {command}')
-    run(command)
+def update_changelog_git_release(version):
+    # Edit/create the changelog
+    with open('CHANGELOG.md', 'r') as f:
+        changelog_data = f.read()
+
+    changelog_data = f'# v{version}\n\n\n{changelog_data}'
+    new_changelog = click.edit(changelog_data)
+    if not new_changelog:
+        raise click.BadParameter('Invalid changelog!')
+
+    with open('CHANGELOG.md', 'w') as f:
+        f.write(new_changelog)
+
+    # Git commit the changelog/tag/push
+    print_and_run(('git', 'add', 'CHANGELOG.md'))
+    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}'))
+    print_and_run(('git', 'tag', '-a', f'v{version}', '-m', f'v{version}'))
+    print_and_run(('git', 'push'))
+    print_and_run(('git', 'push', '--tags'))
 
 
 @click.command()
 @click.option('--release', 'is_release', is_flag=True, default=False)
 def build(is_release):
+    if not path.exists(DIST_DIRNAME):
+        makedirs(DIST_DIRNAME)
+
     # Get the version
     version = get_version(is_release)
     click.echo(f'\n### Build{" + Release" if is_release else ""} Kanmail {version}\n')
+
+    if is_release:
+        update_changelog_git_release(version)
 
     click.echo(f'--> generate {VERSION_FILENAME}')
     write_version(is_release)
 
     # Generate specfile for platform
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
-    specfile = generate_spec(version)
+    specfile = generate_spec(version, is_release=is_release)
 
     # Build the clientside JS bundle
     print_and_run(('yarn', 'run', 'build'))
 
-    # Execute pyupdater
-    print_and_run((
-        'pyupdater', 'build',
-        '--windowed',
-        '--app-version', version,
-        '--name', 'Kanmail',
-        specfile,
-    ))
+    # Do the build with pyinstaller or pyupdater if releasing
+    build_command = []
+    if is_release:
+        build_command.extend(('pyupdater', 'build', f'--app-version={version}'))
+    else:
+        build_command.append('pyinstaller')
 
-    # Process & sign the build
+    build_command.extend(('--windowed', '--name', 'Kanmail', specfile))
+    print_and_run(build_command)
+
+    # Process & sign the build with pyupdater
     if is_release:
         print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
 
