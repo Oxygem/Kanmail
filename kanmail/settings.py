@@ -90,8 +90,14 @@ UPDATE_SERVER = 'https://updates.kanmail.io'
 LICENSE_SERVER = 'https://license.kanmail.io'
 
 if DEBUG:
-    UPDATE_SERVER = 'http://localhost:5000/updates'
-    LICENSE_SERVER = 'http://localhost:5000'
+    UPDATE_SERVER = environ.get(
+        'KANMAIL_UPDATE_SERVER',
+        'http://localhost:5000/updates',
+    )
+    LICENSE_SERVER = environ.get(
+        'KANMAIL_LICENSE_SERVER',
+        'http://localhost:5000',
+    )
 
 class PyUpdaterConfig(object):  # noqa: E302
     PUBLIC_KEY = 'c++zSv15DkOJItm9YoUvIbUBXZZaVWF8YheJlMoU0HU'
