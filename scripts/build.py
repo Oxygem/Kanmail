@@ -97,7 +97,7 @@ def update_changelog_git_release(version):
 
     # Git commit the changelog/tag/push
     print_and_run(('git', 'add', 'CHANGELOG.md'))
-    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}'))
+    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}.'))
     print_and_run(('git', 'tag', '-a', f'v{version}', '-m', f'v{version}'))
     print_and_run(('git', 'push'))
     print_and_run(('git', 'push', '--tags'))
