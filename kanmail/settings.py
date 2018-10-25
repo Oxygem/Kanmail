@@ -86,7 +86,7 @@ if path.exists(WINDOW_CACHE_FILE):
 # Server settings
 #
 
-UPDATE_SERVER = 'https://updates.kanmamil.io'
+UPDATE_SERVER = 'https://updates.kanmail.io'
 LICENSE_SERVER = 'https://license.kanmail.io'
 
 if DEBUG:
