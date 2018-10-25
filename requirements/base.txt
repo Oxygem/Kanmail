@@ -5,7 +5,7 @@ requests==2.19.1
 
 # Server
 click==6.7
-flask==0.12.2
+flask==1.0.2
 pydash==4.2.1
 six==1.11.0
 markdown==2.6.9
