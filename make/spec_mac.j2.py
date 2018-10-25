@@ -51,7 +51,7 @@ coll = COLLECT(  # noqa: F821
 
 app = BUNDLE(  # noqa: F821
     coll,
-    name='{% if is_release %}mac.app{% else %}Kanmail.app{% endif %}',
+    name='mac.app',
     icon='{{ root_dir }}/make/Kanmail.icns',
     bundle_identifier=None,
     info_plist={

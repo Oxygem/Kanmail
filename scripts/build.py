@@ -35,12 +35,16 @@ def print_and_run(command):
 
 
 def get_version(is_release):
-    return f'{NOW_VERSION}' if is_release else f'{NOW_VERSION}alpha'
+    return NOW_VERSION
+    # TODO? Multi channel
+    # return NOW_VERSION if is_release else f'{NOW_VERSION}alpha'
 
 
 def write_version(is_release):
     version = get_version(is_release)
-    channel = 'stable' if is_release else 'alpha'
+    channel = 'stable'
+    # TODO? Multi channel
+    # channel = 'stable' if is_release else 'alpha'
 
     # Write the version to the dist directory to be injected into the bundle
     version_data = json.dumps({
@@ -123,14 +127,15 @@ def build(is_release):
     print_and_run(('yarn', 'run', 'build'))
 
     # Do the build with pyinstaller or pyupdater if releasing
-    build_command = []
-    if is_release:
-        build_command.extend(('pyupdater', 'build', f'--app-version={version}'))
-    else:
-        build_command.append('pyinstaller')
-
-    build_command.extend(('--windowed', '--name', 'Kanmail', specfile))
-    print_and_run(build_command)
+    print_and_run((
+        'pyupdater',
+        'build',
+        f'--app-version={version}',
+        '--windowed',
+        '--name',
+        'Kanmail',
+        specfile,
+    ))
 
     # Process, sign & upload the build with pyupdater
     if is_release:
