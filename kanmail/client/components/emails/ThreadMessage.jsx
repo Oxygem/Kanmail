@@ -35,6 +35,7 @@ class ThreadMessageAttachment extends React.Component {
         });
 
         requestStore.get(
+            `Fetch message part in ${account_name}/${folder_name}: ${uid}/${partId}`,
             `/api/emails/${account_name}/${folder_name}/${uid}/${partId}/download`,
             {filename: part.name || 'unknown'},
         ).then(() => {
