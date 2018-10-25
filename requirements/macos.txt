@@ -1,2 +1,2 @@
--r base.pip
+-r base.txt
 pyobjc
