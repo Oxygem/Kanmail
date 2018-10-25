@@ -1,3 +1,7 @@
+# v1.1810251916
+
++ Better logging when searching for updates
+
 # v1.1810251821
 
 + Update test
