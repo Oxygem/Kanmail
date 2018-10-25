@@ -76,7 +76,10 @@ def check_device_update():
     version_data = get_version_data()
     client = get_pyupdater_client()
 
-    logger.info(f'Checking for updates (channel={version_data["channel"]})...')
+    logger.info((
+        f'Checking for updates (channel={version_data["channel"]}, '
+        f'currentVersion={version_data["version"]})...'
+    ))
     client.refresh()
 
     update = client.update_check(
