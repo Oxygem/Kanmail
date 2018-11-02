@@ -1,3 +1,16 @@
+# v1.1811021323
+
+Changes:
+
+- Update changelog for v1.1810251920.
+- Update changelog for v1.1810251916.
+- Better logging when version checking.
+- Full stop changelog message.
+- Update build script to always use `pyupdater`.
+- Accept `KANMAIL_UPDATE_SERVER` and `KANMAIL_LICENSE_SERVER` envars in debug.
+- Default loggers to WARN.
+
+
 # v1.1810251920
 
 + Test release
