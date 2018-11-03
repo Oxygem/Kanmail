@@ -9,13 +9,13 @@ from kanmail.settings import CLIENT_ROOT, FROZEN
 
 @memoize
 def get_version_data():
-    if not FROZEN:
+    version_filename = path.join(CLIENT_ROOT, 'static', 'dist', 'version.json')
+
+    if not FROZEN or not path.exists(version_filename):
         return {
             'version': '0.0.0dev',
             'channel': 'alpha',
         }
-
-    version_filename = path.join(CLIENT_ROOT, 'static', 'dist', 'version.json')
 
     with open(version_filename, 'r') as f:
         version_data = f.read()
