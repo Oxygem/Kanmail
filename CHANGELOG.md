@@ -1,3 +1,11 @@
+# v1.1811031602
+
+Changes:
+
+- Don't assume the version file exists (non-release builds).
+- Finish up release script and add new build/clean shortcut scripts.
+
+
 # v1.1811031221
 
 + Another test release!
