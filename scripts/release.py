@@ -119,7 +119,7 @@ def _macos_codesign(version):
     new_builds_dir = path.join('pyu-data', 'new')
 
     filename = path.join(new_builds_dir, f'Kanmail-mac-{version}.tar.gz')
-    _print_and_run(('tar', '-C', new_builds_dir, '-xzf', filename))
+    _print_and_run(('gtar', '-C', new_builds_dir, '-xzf', filename))
 
     # "Fix" invalid files/symlinks from pyupdater
     # See: https://github.com/JMSwag/PyUpdater/issues/139
@@ -156,7 +156,7 @@ def _macos_codesign(version):
 
     # Sign it and re-tar!
     _print_and_run(('codesign', '-s', CODESIGN_KEY_NAME, '--deep', app_dir))
-    _print_and_run(('tar', '-C', new_builds_dir, '-zcf', filename, app_name))
+    _print_and_run(('gtar', '-C', new_builds_dir, '-zcf', filename, app_name))
 
     # Remove the app now we've tar-ed it up
     rmtree(app_dir)
