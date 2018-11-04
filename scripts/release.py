@@ -82,7 +82,7 @@ def _generate_spec(version):
     return TEMP_SPEC_FILENAME
 
 
-def _update_changelog(version):
+def _get_git_changes():
     previous_tag = _print_and_check_output((
         'git', 'describe', '--abbrev=0', '--tags',
     )).strip().decode()
@@ -90,13 +90,16 @@ def _update_changelog(version):
     git_changes = _print_and_check_output((
         'git', 'log', '--oneline', '--pretty=%s', f'{previous_tag}..HEAD',
     )).strip().decode().split('\n')
-    git_changes = '\n'.join([f'- {change}' for change in git_changes])
 
+    return '\n'.join([f'- {change}' for change in git_changes])
+
+
+def _update_changelog(version, git_changes):
     # Edit/create the changelog
     with open('CHANGELOG.md', 'r') as f:
         changelog_data = f.read()
 
-    changelog_data = f'# v{version}\n\nChanges:\n\n{git_changes}\n\n{changelog_data}'
+    changelog_data = f'# v{version}\n\nChanges:\n{git_changes}\n\n{changelog_data}'
     new_changelog = click.edit(changelog_data)
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
@@ -164,14 +167,15 @@ def _macos_codesign(version):
 
 def prepare_release():
     version = _generate_version()
+    git_changes = _get_git_changes()
 
-    if not click.confirm(f'Are you SURE you wish to start releasing v{version}?'):
+    if not click.confirm(f'\nGit Changes:\n{git_changes}\n\nAre you SURE you wish to start releasing v{version}?'):
         raise click.ClickException('User is not sure!')
 
     click.echo(f'--> preparing v{version} release')
 
     click.echo('--> update changelog')
-    _update_changelog(version)
+    _update_changelog(version, git_changes)
 
     if not path.isdir(DIST_DIRNAME):
         makedirs(DIST_DIRNAME)
