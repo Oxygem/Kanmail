@@ -2,6 +2,8 @@
 
 An email client that functions like a kanban board. [Download the latest release here](https://github.com/Fizzadar/Kanmail/releases/latest) (MacOS only, for now).
 
+![](./screenshot.png)
+
 ## Setting Up
 
 Until the settings page is complete you'll need to start by creating a settings file by hand, similar to below.
