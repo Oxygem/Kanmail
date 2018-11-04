@@ -96,7 +96,7 @@ def _update_changelog(version):
     with open('CHANGELOG.md', 'r') as f:
         changelog_data = f.read()
 
-    changelog_data = f'# v{version}\n\nChanges:\n\n{git_changes}\n\n\n{changelog_data}'
+    changelog_data = f'# v{version}\n\nChanges:\n\n{git_changes}\n\n{changelog_data}'
     new_changelog = click.edit(changelog_data)
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
