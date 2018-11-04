@@ -33,11 +33,11 @@ class SettingsStore extends BaseStore {
 
     getSettings() {
         return get('/api/settings').then(data => {
-            this.props.columns = data.settings.columns;
-            this.props.accounts = data.settings.accounts;
+            this.props.columns = data.settings.columns || [];
+            this.props.accounts = data.settings.accounts || {};
 
-            this.props.systemSettings = data.settings.system;
-            this.props.styleSettings = data.settings.style;
+            this.props.systemSettings = data.settings.system || {};
+            this.props.styleSettings = data.settings.style || {};
             this.props.settingsFile = data.settings_file;
 
             // Store the original for the settings "app"
