@@ -21,7 +21,7 @@ from kanmail.settings import (
     LICENSE_SERVER,
     PyUpdaterConfig,
 )
-from kanmail.version import get_version_data
+from kanmail.version import get_version, get_version_data
 
 
 @memoize
@@ -46,9 +46,10 @@ def register_or_ping_device():
 
     try:
         if existing_device_id:
-            response = requests.get(
-                f'{LICENSE_SERVER}/api/v1/ping/{existing_device_id}',
-            )
+            response = requests.post(f'{LICENSE_SERVER}/api/v1/ping', data={
+                'device_id': existing_device_id,
+                'version': get_version(),
+            })
         else:
             response = requests.post(f'{LICENSE_SERVER}/api/v1/register')
     except ConnectionError as e:
