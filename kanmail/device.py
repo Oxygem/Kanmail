@@ -116,11 +116,3 @@ def update_device(update):
 
     logger.debug(f'Download complete, extracting & restarting')
     update.extract_restart()
-
-
-def restart_device():
-    '''
-    Restarts the app, hopefully loading the latest version.
-    '''
-
-    print(sys.argv)
