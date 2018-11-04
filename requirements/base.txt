@@ -14,6 +14,7 @@ IMAPClient==2.1.0
 
 # Dev
 honcho==1.0.1
+Faker==0.9.2
 
 # Build
 pyinstaller==3.4

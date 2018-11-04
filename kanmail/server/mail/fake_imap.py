@@ -3,10 +3,12 @@ A horrible hacky fake IMAP client - useful for dev on planes :)
 '''
 
 from datetime import datetime
+from os import environ
 from random import choice
 from time import sleep
 from unittest.mock import patch
 
+from faker import Faker
 from imapclient.response_types import Address, Envelope
 
 from kanmail.log import logger
@@ -19,39 +21,35 @@ FAKE_IMAPCLIENT_FOLDER_STATUS = {
     b'UIDVALIDITY': choice(FAKE_IMAPCLIENT_UIDS),
 }
 
-FAKE_ADDRESSES = (
-    Address(b'Nick Fizzadar', None, b'nick', b'gmail.com'),
-    Address(b'Laughing Robot', None, b'robot', b'oxygem.com'),
-    Address(b'pyinfra Docs', None, b'pyinfra', b'pyinfra.readthedocs.io'),
-    Address(b'Hello Oxygem', None, b'hello', b'oxygem.com'),
-    Address(b'Nick', None, b'nick', b'oxygem.com'),
-    Address(b'Fizzadar', None, b'fizzadar', b'github.com'),
-)
 
-FAKE_SUBJECTS = (
-    'This is a subject',
-)
-
-FAKE_BODIES = (
-    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.',
-)
+fake = Faker()
 
 
 def random_sleep():
-    sleep(choice((1, 2)))
+    if environ.get('KANMAIL_FAKE_SLEEP') == 'on':
+        sleep(choice((1, 2)))
+
+
+def make_fake_address():
+    name = fake.name()
+    bits = name.split()
+    first_name = bits[0]
+    last_name = bits[1] if len(bits) > 1 else bits[0]
+
+    return Address(name.encode(), None, first_name.encode(), last_name.encode())
 
 
 def make_fake_addresses():
     n_addresses = choice((1, 1, 1, 1, 2, 3))
 
     return tuple([
-        choice(FAKE_ADDRESSES)
+        make_fake_address()
         for _ in range(n_addresses)
     ])
 
 
 def make_fake_fetch_item(folder, uid, keys):
-    body_text = choice(FAKE_BODIES)
+    body_text = fake.paragraphs(choice((1, 2, 3)))
 
     fake_data = {
         b'FLAGS': ['\\Seen'],
@@ -66,11 +64,12 @@ def make_fake_fetch_item(folder, uid, keys):
     message_id = f'{message_id_folder}_{uid}'
 
     from_addresses = make_fake_addresses()
+    subject = fake.text()
 
     fake_data[b'SEQ'] = uid
     fake_data[b'ENVELOPE'] = Envelope(
         datetime.utcnow(),
-        f'{choice(FAKE_SUBJECTS)} (uid={uid})',
+        subject,
         from_addresses,  # from
         from_addresses,  # sender
         from_addresses,  # reply to
