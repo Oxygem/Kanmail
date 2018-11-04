@@ -1,20 +1,20 @@
 # Client
 git+https://github.com/r0x0r/pywebview@2b8b9d4e33716fa04db96f432103cef7ac0010f7
 
-requests==2.19.1
+requests==2.20.0
 
 # Server
-click==6.7
+click==7.0
 flask==1.0.2
-pydash==4.2.1
+pydash==4.7.3
 six==1.11.0
 markdown==2.6.9
 mdx-linkify==1.0
-IMAPClient==2.0.0
+IMAPClient==2.1.0
 
 # Dev
 honcho==1.0.1
 
 # Build
-pyinstaller==3.3.1
+pyinstaller==3.4
 pyupdater==2.5.3
