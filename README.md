@@ -1,6 +1,44 @@
 # Kanmail
 
-An email client that functions like a kanban board.
+An email client that functions like a kanban board. [Download the latest release here](https://github.com/Fizzadar/Kanmail/releases/latest) (MacOS only, for now).
+
+## Setting Up
+
+Until the settings page is complete you'll need to start by creating a settings file by hand, similar to below.
+
+**Note for gmail**: you should first generate an [app password](https://security.google.com/settings/security/apppasswords) to use for the IMAP/SMTP settings.
+
+```json
+{
+    "accounts": {
+        "<NAME>": {
+            "addresses": [
+                ["Nick Barrett", "<EMAIL>"]
+            ],
+            "folders": {
+                "inbox": "INBOX",
+                "sent": "[Google Mail]/Sent Mail",
+                "drafts": "[Google Mail]/Drafts",
+                "archive": "[Google Mail]/All Mail",
+                "trash": "[Google Mail]/Trash",
+                "spam": "[Google Mail]/Spam"
+            },
+            "imap_connection": {
+                "host": "imap.gmail.com",
+                "username": "<EMAIL>",
+                "password": "<PASSWORD>",
+                "ssl": true
+            },
+            "smtp_connection": {
+                "host": "smtp.gmail.com",
+                "username": "<EMAIL>",
+                "password": "<PASSWORD>",
+                "ssl": true
+            }
+        }
+    }
+}
+```
 
 
 ## Development
