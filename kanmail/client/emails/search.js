@@ -45,7 +45,10 @@ class SearchEmails extends BaseEmails {
         const query = options.query || {};
         query.query = this.searchValue;
 
-        requestStore.get(url, query).then(data => {
+        requestStore.get(
+            `Fetch emails from ${accountKey}/${folderName}`,
+            url, query,
+        ).then(data => {
             const columnMetaStore = getColumnMetaStore(folderName);
             columnMetaStore.setMeta(accountKey, data.meta);
 
