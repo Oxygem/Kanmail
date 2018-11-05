@@ -1,11 +1,12 @@
 from contextlib import contextmanager
 from copy import copy
+from datetime import date, timedelta
 
 import six
 
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
-from kanmail.settings import get_settings
+from kanmail.settings import get_system_setting
 
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
@@ -218,7 +219,12 @@ class Folder(object):
                 )
                 return cached_uids
 
-        search_query = ['ALL']
+        sync_days = get_system_setting('sync_days')
+        if sync_days:
+            days_ago = date.today() - timedelta(days=sync_days)
+            search_query = ['SINCE', days_ago]
+        else:
+            search_query = ['ALL']
 
         if isinstance(self.query, six.string_types):
             search_query = ['SUBJECT', self.query]
@@ -336,7 +342,7 @@ class Folder(object):
             self.offset = 0
 
         if not batch_size:
-            batch_size = get_settings()['system']['batch_size']
+            batch_size = get_system_setting('batch_size')
 
         sorted_email_uids = sorted(self.email_uids, reverse=True)
 

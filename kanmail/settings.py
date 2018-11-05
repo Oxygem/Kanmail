@@ -155,6 +155,14 @@ def get_settings():
     return settings
 
 
+def get_system_setting(key, default=None):
+    return get_settings()['system'].get(key, default)
+
+
+def get_style_setting(key, default=None):
+    return get_settings()['style'].get(key, default)
+
+
 def update_settings(new_settings):
     settings = get_settings()
     _merge_settings(settings, new_settings)
