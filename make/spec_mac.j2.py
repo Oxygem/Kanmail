@@ -5,8 +5,8 @@ a = Analysis(  # noqa: F821
     ],
     binaries=[],
     datas=[
-        ('{{ root_dir }}/LICENSE.md', ''),
-        ('{{ root_dir }}/CHANGELOG.md', ''),
+        ('{{ root_dir }}/LICENSE.md', '.'),
+        ('{{ root_dir }}/CHANGELOG.md', '.'),
 
         ('{{ root_dir }}/kanmail/client/static', 'static'),
         ('{{ root_dir }}/kanmail/client/templates', 'templates'),
