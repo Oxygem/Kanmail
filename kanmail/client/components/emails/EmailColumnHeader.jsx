@@ -62,7 +62,7 @@ class EmailColumnHeader extends React.Component {
             return memo;
         }, 0);
 
-        return `${totalEmails} emails / ${totalAccounts} accounts`;
+        return `${totalEmails.toLocaleString()} emails / ${totalAccounts} accounts`;
     }
 
     render() {
