@@ -86,7 +86,6 @@ class EmailColumn extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
         connectDropTarget: PropTypes.func.isRequired,
-        counts: PropTypes.object.isRequired,
         threads: PropTypes.array,
         accountName: PropTypes.string,
         mainColumn: PropTypes.string, // name of the *current* main column
