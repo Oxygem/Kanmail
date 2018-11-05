@@ -101,7 +101,7 @@ export default class EmailsApp extends React.Component {
             key="main"
             getNextColumn={() => getColumn(1)}
             getPreviousColumn={() => getColumn(-1)}
-            ref={ref => columnRefs[0] = ref.wrappedComponent}
+            ref={ref => columnRefs[0] = ref ? ref.wrappedComponent : null}
         />);
 
         _.each(this.props.columns, (columnName, i) => {
