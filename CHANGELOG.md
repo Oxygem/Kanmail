@@ -1,3 +1,21 @@
+# v1.1811052202
+
+Changes:
+- Make the add column button usable.
+- Handle null ref on the main column.
+- Remove old prop type.
+- Settings defaults.
+- Add a screenshot!
+- Use `Faker` for the fake imap.
+- Remove unused function.
+- Add settings docs and link to latest release.
+- Improve release script changelog handling.
+- Tidy up changelog/versions.
+- Bump package versions.
+- POST device ID & version to license server.
+- Debug log when opening windows.
+- Use `gnu-tar` rather than MacOS `tar` to avoid bundling extended attribute files.
+
 # v1.1811031602
 
 Changes:
