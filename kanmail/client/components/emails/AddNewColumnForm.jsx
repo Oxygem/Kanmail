@@ -54,21 +54,29 @@ export default class AddNewColumnForm extends React.Component {
 
     renderForm() {
         if (!this.state.addingColumn) {
-            return <a onClick={this.handleShowInputClick}>
-                <i className="fa fa-plus-square-o"></i>
-            </a>;
+            return (
+                <div>
+                    <a onClick={this.handleShowInputClick}>
+                        <i className="fa fa-plus"></i>
+                    </a>
+                </div>
+            );
         }
 
         return (
-            <div>
+            <div className="form">
                 <input
                     type="text"
                     onChange={this.handleInputChange}
                     onFocus={keyboard.disable}
                     onBlur={keyboard.enable}
                     value={this.state.addColumnInput || ''}
+                    placeholder="Column name..."
+                    ref={ref => ref ? ref.focus() : null}
                 />
-                <a onClick={this.handleHideInputClick}>X</a>
+                <a onClick={this.handleHideInputClick}>
+                    <i className="fa fa-times"></i>
+                </a>
             </div>
         );
     }
