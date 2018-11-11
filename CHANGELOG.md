@@ -1,3 +1,22 @@
+# v1.1811111817
+
+This version brings a full settings UI so there's no need to manually edit the JSON file.
+
+Changes:
+- Add flake8 and autoconfigure requirements.
+- Formatting.
+- Add `put` function and expand error handling to pass any data back from the server.
+- Only allow one settings window open at once.
+- Implement the settings app w/account add/remove and autoconfiguration!
+- Add autoconf module to attempt to autoconfigure IMAP/SMTP settings.
+- Add SMTP connection wrapper similar to the IMAP wrapper.
+- Don't cache query folder UIDs.
+- Don't alter account name.
+- Add `sync_days` system setting.
+- Format the folder message count.
+- Set proper destination for changelog/license bundling.
+- Fix search.
+
 # v1.1811052202
 
 Changes:
