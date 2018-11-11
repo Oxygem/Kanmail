@@ -62,7 +62,7 @@ export default class Filters extends React.Component {
         return _.map(_.keys(this.props.accounts), key => (
             <li key={key} className={this.props.accountName === key ? 'active': ''}><a
                 onClick={_.partial(this.setAccountFilter, key)}>
-                <i className="fa fa-google"></i> {_.capitalize(key)}
+                <i className="fa fa-google"></i> {key}
             </a></li>
         ));
     }
