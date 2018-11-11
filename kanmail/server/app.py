@@ -33,6 +33,7 @@ def boot():
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
         bootstrap_fake_imap()
 
+    from kanmail.server.views import accounts_api  # noqa: F401
     from kanmail.server.views import error  # noqa: F401
     from kanmail.server.views import settings_api  # noqa: F401
     from kanmail.server.views import email_api  # noqa: F401

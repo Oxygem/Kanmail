@@ -1,0 +1,167 @@
+
+
+/*
+    Settings */
+
+section#settings {
+    height: 100%;
+    overflow-y: auto;
+
+    button {
+        padding: 5px;
+        font-weight: bold;
+        background: @blue;
+        font-size: 14px;
+        border: none;
+        border-radius: @borderRadius;
+        color: white;
+        cursor: pointer;
+
+        &:hover {
+            background: darken(@blue, 10%);
+        }
+
+        &.cancel {
+            background: @orange;
+
+            &:hover {
+                background: darken(@orange, 10%);
+            }
+        }
+
+        &.submit {
+            background: @green;
+
+            &:hover {
+                background: darken(@green, 10%);
+            }
+        }
+
+        &.disabled {
+            background: @lightGrey;
+        }
+    }
+
+    input {
+        width: 100%;
+        border-radius: @borderRadius;
+        padding: 5px;
+        border: 1px solid #E7E7E7;
+        font-size: 16px;
+
+        input:hover, input:focus {
+            border-color: #D7D7D7;
+        }
+        &:hover, &:focus {
+            border-color: #D7D7D7;
+        }
+    }
+
+    div.error {
+        color: @orange;
+    }
+
+    button.main-button {
+        padding: 15px;
+        margin-left: 10px;
+        font-size: 16px;
+        margin-bottom: 50px;
+    }
+
+    div.settings {
+        label {
+            width: 30%;
+            display: inline-block;
+
+            small {
+                display: block;
+                color: #777;
+            }
+        }
+    }
+
+    div#add-account {
+        padding: 10px;
+
+        form.new-account div {
+            width: 300px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin-right: 5px;
+        }
+    }
+
+    div#style, div#system {
+        padding: 0 10px;
+
+        input {
+            width: 70%;
+            display: inline-block;
+            margin-bottom: 30px;
+        }
+    }
+
+    div#accounts {
+        margin-bottom: 30px;
+
+        h2 {
+            margin-left: 10px;
+            margin-bottom: 0;
+        }
+
+        small {
+            display: block;
+            margin-left: 10px;
+        }
+    }
+
+    .account {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        width: 100%;
+        background: #F7F7F7;
+        padding: 10px;
+        margin: 0;
+
+        &.active {
+            background: #E7E7E7;
+        }
+
+        &.new {
+            background: transparent;
+        }
+
+        i {
+            float: right;
+        }
+
+        label {
+            display: block;
+        }
+
+        button {
+            margin-left: 5px;
+        }
+
+        div.wide {
+            width: 100%;
+        }
+
+        div.third {
+            width: 32%;
+        }
+
+        div.right {
+            float: right;
+            text-align: right;
+            width: 20%;
+        }
+
+        input#name {
+            width: 300px;
+        }
+    }
+}

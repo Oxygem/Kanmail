@@ -7,40 +7,42 @@ from kanmail.server.app import app
 from kanmail.settings import (
     get_settings,
     set_cached_window_settings,
+    set_settings,
     update_settings,
 )
 
 
-@app.route('/api/settings', methods=['GET'])
+@app.route('/api/settings', methods=('GET',))
 def api_get_settings():
-    '''
-    Get client settings.
-    '''
-
     return jsonify(
         settings=get_settings(),
         settings_file=settings.SETTINGS_FILE,
     )
 
 
-@app.route('/api/settings', methods=['POST'])
-def api_update_settings():
-    '''
-    Update client settings.
-    '''
-
+@app.route('/api/settings', methods=('POST',))
+def api_set_settings():
     request_data = request.get_json()
 
-    update_settings(request_data)
+    set_settings(request_data)
 
     # Reload the main window now we've updated the settings
-    if settings.IS_APP and request_data.pop('reload', None):
+    if settings.IS_APP:
         webview.evaluate_js('window.location.reload()')
 
     return jsonify(saved=True)
 
 
-@app.route('/api/window_settings', methods=['POST'])
+@app.route('/api/settings', methods=('PUT',))
+def api_update_settings():
+    request_data = request.get_json()
+
+    update_settings(request_data)
+
+    return jsonify(saved=True)
+
+
+@app.route('/api/settings/window', methods=('POST',))
 def api_update_window_settings():
     request_data = request.get_json()
 

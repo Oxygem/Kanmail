@@ -19,6 +19,7 @@ import mainEmailStore from 'emails/main.js';
 
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
+import { get } from 'util/requests.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
@@ -125,15 +126,6 @@ export default class EmailsApp extends React.Component {
     }
 
     renderColumnsSection() {
-        if (_.isEmpty(this.props.accounts)) {
-            return (
-                <div>
-                    No accounts configured! Please modify:<br />
-                    <code>{this.props.settingsFile}</code>
-                </div>
-            );
-        }
-
         return (
             <section id="columns">
                 {this.renderColumns()}
@@ -143,6 +135,14 @@ export default class EmailsApp extends React.Component {
     }
 
     render() {
+        if (_.isEmpty(this.props.accounts)) {
+            return (
+                <div style={{marginTop: '20px', marginLeft: '10px'}}>
+                    No accounts configured! Please <a onClick={() => get('/open-settings')}>open settings to get started</a>.
+                </div>
+            );
+        }
+
         return (
             <div className="wrapper">
                 <Sidebar />

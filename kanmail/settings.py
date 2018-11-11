@@ -110,23 +110,24 @@ class PyUpdaterConfig(object):  # noqa: E302
 # "App"/user settings
 #
 
-DEFAULT_SETTINGS = {
-    # Account key -> account details
-    'accounts': {},
-    # Columns (IMAP folders) to show in the UI
-    'columns': [],
-    # System/sync settings
-    'system': {
-        # Number of emails to download at once for non-inbox/columns
-        'batch_size': 50,
-        # Number of batches to sync initially, per column
-        'initial_batches': 3,
+def get_default_settings():
+    return {
+        # Account key -> account details
+        'accounts': {},
+        # Columns (IMAP folders) to show in the UI
+        'columns': [],
+        # System/sync settings
+        'system': {
+            # Number of emails to download at once for non-inbox/columns
+            'batch_size': 50,
+            # Number of batches to sync initially, per column
+            'initial_batches': 3,
 
-        # Number of ms to hold archive/trash actions before executing them - during
-        # which you can undo them.
-        'undo_ms': 2000,
-    },
-}
+            # Number of ms to hold archive/trash actions before executing them - during
+            # which you can undo them.
+            'undo_ms': 2000,
+        },
+    }
 
 
 def _merge_settings(base_config, new_config):
@@ -140,7 +141,7 @@ def _merge_settings(base_config, new_config):
 
 @memoize
 def get_settings():
-    settings = DEFAULT_SETTINGS
+    settings = get_default_settings()
 
     if path.exists(SETTINGS_FILE):
         with open(SETTINGS_FILE, 'r') as file:
@@ -163,12 +164,15 @@ def get_style_setting(key, default=None):
     return get_settings()['style'].get(key, default)
 
 
-def update_settings(new_settings):
+def update_settings(settings_updates):
     settings = get_settings()
-    _merge_settings(settings, new_settings)
+    _merge_settings(settings, settings_updates)
+    set_settings(settings)
 
-    logger.debug(f'Writing settings: {settings}')
-    json_data = json.dumps(settings, indent=4)
+
+def set_settings(new_settings):
+    logger.debug(f'Writing new settings: {new_settings}')
+    json_data = json.dumps(new_settings, indent=4)
 
     with open(SETTINGS_FILE, 'w') as file:
         file.write(json_data)
