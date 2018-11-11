@@ -133,7 +133,7 @@ def api_download_account_email_part(account, folder, uid, part_number):
     return jsonify(saved_to_downloads=True)
 
 
-@app.route('/api/emails/<account>/<folder>/move', methods=['POST'])
+@app.route('/api/emails/<account>/<folder>/move', methods=('POST',))
 def api_move_account_emails(account, folder):
     '''
     Move emails from one folder to another within a given account.
@@ -148,7 +148,7 @@ def api_move_account_emails(account, folder):
     return jsonify(moved=True)
 
 
-@app.route('/api/emails/<account>/<folder>/copy', methods=['POST'])
+@app.route('/api/emails/<account>/<folder>/copy', methods=('POST',))
 def api_copy_account_emails(account, folder):
     '''
     Copy emails from one folder to another within a given account.
@@ -163,7 +163,7 @@ def api_copy_account_emails(account, folder):
     return jsonify(copied=True)
 
 
-# @app.route('/api/emails/<account>/<folder>/delete', methods=['POST'])
+# @app.route('/api/emails/<account>/<folder>/delete', methods=('POST',))
 # def api_delete_account_emails(account, folder):
 #     '''
 #     Delete emails from a folder in a given account.
@@ -183,7 +183,7 @@ def api_copy_account_emails(account, folder):
 #     return jsonify(deleted=True)
 
 
-@app.route('/api/emails/<account>/<folder>/star', methods=['POST'])
+@app.route('/api/emails/<account>/<folder>/star', methods=('POST',))
 def api_star_account_emails(account, folder):
     '''
     Star emails in a given account/folder.
@@ -197,7 +197,7 @@ def api_star_account_emails(account, folder):
     return jsonify(starred=True)
 
 
-@app.route('/api/emails/<account>/<folder>/unstar', methods=['POST'])
+@app.route('/api/emails/<account>/<folder>/unstar', methods=('POST',))
 def api_unstar_account_emails(account, folder):
     '''
     Unstar emails in a given account/folder.
@@ -211,7 +211,7 @@ def api_unstar_account_emails(account, folder):
     return jsonify(unstarred=True)
 
 
-@app.route('/api/emails/<account_key>', methods=['POST'])
+@app.route('/api/emails/<account_key>', methods=('POST',))
 def api_send_account_email(account_key):
     '''
     Create (send) emails from one of the accounts.
