@@ -206,7 +206,10 @@ class Folder(object):
         return emails
 
     def cache_uids(self):
-        self.cache.set_uids(self.email_uids)
+        # If we're a query folder don't save the UIDs as we use the base, non-query
+        # cache object to share header/part cache, but the UID lists differ.
+        if not self.query:
+            self.cache.set_uids(self.email_uids)
 
     def get_email_uids(self, use_cache=True):
         # If we're not a query folder we can try for cached UIDs
