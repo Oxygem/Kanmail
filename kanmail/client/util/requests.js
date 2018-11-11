@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import 'whatwg-fetch';
 import URI from 'urijs';
 
@@ -14,7 +15,7 @@ function handleReponse(response, criticalRequestNonce=false) {
 
     if (!response.ok) {
         // Read the body and pass to the requestStore
-        response.text().then(body => {
+        return response.text().then(body => {
             let data = {
                 url: response.url,
                 errorName: 'unknown',
@@ -32,9 +33,10 @@ function handleReponse(response, criticalRequestNonce=false) {
             }
 
             requestStore.addError(data);
+            const error = new Error(`Error fetching: ${response.url}`);
+            error.data = body;
+            throw error;
         });
-
-        throw new Error(`Error fetching: ${response.url}`);
     }
 
     if (response.status == 204) {
@@ -64,8 +66,8 @@ export function get(url, query={}, criticalRequestNonce=false) {
 }
 
 
-export function post(url, data, criticalRequestNonce=false) {
-    console.debug(`Requesting: POST ${url} with: `, data, criticalRequestNonce);
+function post_or_put(type, url, data, criticalRequestNonce=false) {
+    console.debug(`Requesting: ${type} ${url} with: `, data, criticalRequestNonce);
 
     const uri = URI(url);
 
@@ -75,15 +77,19 @@ export function post(url, data, criticalRequestNonce=false) {
 
     return (
         fetch(uri, {
-            method: 'POST',
+            method: type,
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json',
             },
         })
         .then(response => {
-            console.debug(`Response to POST ${url}`, response);
+            console.debug(`Response to ${type} ${url}`, response);
             return handleReponse(response, criticalRequestNonce);
         })
     );
 }
+
+
+export const post = _.partial(post_or_put, 'POST');
+export const put = _.partial(post_or_put, 'PUT');
