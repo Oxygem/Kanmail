@@ -1,6 +1,6 @@
 from kanmail.log import logger
 
-from .connection import ConnectionPool
+from .connection import ImapConnectionPool, SmtpConnection
 from .folder import Folder
 from .send import send_email
 
@@ -17,16 +17,24 @@ class Account(object):
         self.settings = settings
 
         # Setup/wrap IMAP connection
-        self.connection_pool = ConnectionPool(
+        self.connection_pool = ImapConnectionPool(
             **settings['imap_connection'],
+        )
+
+        # Prepare SMTP connection getter
+        self.smtp_connection = SmtpConnection(
+            **settings['smtp_connection'],
         )
 
         # TODO: need this for anything?
         # with self.get_connection() as connection:
         #     self.capabilities = connection.capabilities()
 
-    def get_connection(self):
+    def get_imap_connection(self):
         return self.connection_pool.get_connection()
+
+    def get_smtp_connection(self):
+        return self.smtp_connection.get_connection()
 
     def get_folders(self):
         '''
@@ -35,7 +43,7 @@ class Account(object):
 
         folder_names = []
 
-        with self.get_connection() as connection:
+        with self.get_imap_connection() as connection:
             for flags, delimeter, name in connection.list_folders():
                 folder_names.append(name)
 
@@ -78,7 +86,4 @@ class Account(object):
         return folder.name
 
     def send_email(self, **send_kwargs):
-        return send_email(
-            **self.settings['smtp_connection'],
-            **send_kwargs,
-        )
+        return send_email(self.smtp_connection, **send_kwargs)

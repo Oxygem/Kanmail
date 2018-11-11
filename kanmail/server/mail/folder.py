@@ -58,7 +58,7 @@ class Folder(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func('[Account: {self.account.name}/{self.name}]: {message}')
+        func(f'[Account: {self.account.name}/{self.name}]: {message}')
 
     @contextmanager
     def get_connection(self):
@@ -66,12 +66,14 @@ class Folder(object):
         Shortcut to getting a connection and selecting our folder with it.
         '''
 
-        with self.account.get_connection() as connection:
+        with self.account.get_imap_connection() as connection:
             connection.select_folder(self.name)
             yield connection
 
     def check_cache_validity(self):
-        with self.account.get_connection() as connection:
+        # Note we don't use self.get_connection because we don't want to actually
+        # *select* the folder.
+        with self.account.get_imap_connection() as connection:
             status = connection.folder_status(self.name, [b'UIDVALIDITY'])
 
         uid_validity = status[b'UIDVALIDITY']

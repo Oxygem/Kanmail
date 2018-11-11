@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from contextlib import contextmanager
+from smtplib import SMTP, SMTP_SSL
 from socket import error as socket_error
 from time import time
 
@@ -14,11 +15,12 @@ MAX_ATTEMPTS = 10
 MAX_CONNECTIONS = 10
 
 
-class ConnectionWrapper(object):
+class ImapConnectionWrapper(object):
     _imap = None
 
-    def __init__(self, host, username, password, ssl=True):
+    def __init__(self, host, port, username, password, ssl=True):
         self.host = host
+        self.port = port
         self.username = username
         self.password = password
         self.ssl = ssl
@@ -63,7 +65,7 @@ class ConnectionWrapper(object):
         server_string = f'{self.username}:{self.password}@{self.host}'
         logger.debug(f'Connecting to server: {server_string}')
 
-        imap = IMAPClient(self.host, ssl=self.ssl, use_uid=True)
+        imap = IMAPClient(self.host, port=self.port, ssl=self.ssl, use_uid=True)
         imap.login(self.username, self.password)
         imap.normalise_times = False
 
@@ -71,13 +73,14 @@ class ConnectionWrapper(object):
         logger.info(f'Connected to server: {server_string}')
 
 
-class ConnectionPool(object):
+class ImapConnectionPool(object):
     def __init__(
-        self, host, username, password,
+        self, host, port, username, password,
         ssl=True,
         max_connections=MAX_CONNECTIONS,
     ):
         self.host = host
+        self.port = port
         self.username = username
         self.password = password
         self.ssl = ssl
@@ -89,8 +92,8 @@ class ConnectionPool(object):
             self.pool.put(self.create_connection())
 
     def create_connection(self):
-        connection = ConnectionWrapper(
-            self.host, self.username, self.password,
+        connection = ImapConnectionWrapper(
+            self.host, self.port, self.username, self.password,
             ssl=self.ssl,
         )
 
@@ -107,3 +110,36 @@ class ConnectionPool(object):
         finally:
             self.pool.put(connection)
             logger.debug(f'Returned connection to pool: {self.pool.qsize()} (+1)')
+
+
+class SmtpConnection(object):
+    def __init__(self, host, port, username, password, ssl=True, tls=False):
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.ssl = ssl
+        self.tls = tls
+
+    def __str__(self):
+        return f'{self.host}:{self.port}'
+
+    @contextmanager
+    def get_connection(self):
+        logger.debug(f'Connecting to SMTP: {self}')
+
+        cls = SMTP_SSL if self.ssl else SMTP
+
+        smtp = cls(self.host, self.port)
+        # smtp.set_debuglevel(1)
+        smtp.connect(self.host, self.port)
+
+        if self.tls:
+            smtp.starttls()
+
+        logger.debug(f'Logging into SMTP/{self} with {self.username}:{self.password}')
+        smtp.login(self.username, self.password)
+
+        yield smtp
+
+        smtp.quit()

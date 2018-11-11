@@ -1,6 +1,5 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from smtplib import SMTP
 
 from kanmail.log import logger
 
@@ -29,7 +28,7 @@ def _ensure_multiple(item):
 
 
 def send_email(
-    host, username, password, ssl,
+    smtp_connection,
     from_,
     to=None, cc=None, bcc=None,
     subject=None, text=None, html=None,
@@ -82,17 +81,6 @@ def send_email(
     message.attach(html_part)
 
     # Send the email!
-    logger.debug(f'Connecting to SMTP: {host}')
-    smtp = SMTP(host, 587)
-    # smtp.set_debuglevel(1)
-    smtp.connect(host, 587)
-
-    if ssl:
-        smtp.starttls()
-
-    logger.debug(f'Logging into SMTP/{host} with {username}:{password}')
-    smtp.login(username, password)
-
-    logger.debug(f'Send email via SMTP/{host}: {subject} => {to_addresses}')
-    smtp.sendmail(from_, to_addresses, message.as_string())
-    smtp.quit()
+    with smtp_connection.get_connection() as smtp:
+        logger.debug(f'Send email via SMTP/{smtp_connection}: {subject} => {to_addresses}')
+        smtp.sendmail(from_, to_addresses, message.as_string())
