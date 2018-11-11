@@ -75,11 +75,11 @@ def open_link():
     return abort(500, 'Could not open link!')
 
 
-def _open_window(name, endpoint):
+def _open_window(name, endpoint, **kwargs):
     link = f'http://localhost:{SERVER_PORT}{endpoint}'
 
     if IS_APP:
-        create_window(name, endpoint)
+        create_window(name, endpoint, **kwargs)
         return '', 204
     else:
         if webbrowser.open(link):
@@ -91,7 +91,7 @@ def _open_window(name, endpoint):
 
 @app.route('/open-settings', methods=['GET'])
 def open_settings():
-    return _open_window('settings', '/settings')
+    return _open_window('settings', '/settings', width=800, unique=True)
 
 
 @app.route('/open-send', methods=['GET', 'POST'])

@@ -22,7 +22,7 @@ function saveWindowPosition() {
     position.top = top;
 
     if (changed) {
-        post('/api/window_settings', position);
+        post('/api/settings/window', position);
     }
 }
 
