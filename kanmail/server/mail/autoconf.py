@@ -58,7 +58,7 @@ def get_mx_record_domain(domain):
 
     try:
         for answer in resolver.query(domain, 'MX'):
-            name = get_fld(answer.exchange.rstrip('.'), fix_protocol=True)
+            name = get_fld(f'{answer.exchange}'.rstrip('.'), fix_protocol=True)
             name_to_preference[name] = answer.preference
             names.add(name)
     except (resolver.NoAnswer, resolver.NXDOMAIN):
