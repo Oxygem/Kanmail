@@ -14,6 +14,9 @@ a = Analysis(  # noqa: F821
         # Generated at build time
         ('{{ root_dir }}/dist/main.js', 'static/dist'),
         ('{{ root_dir }}/dist/version.json', 'static/dist'),
+
+        # TLD names
+        ('{{ tld_package_dir }}/res/effective_tld_names.dat.txt', 'tld/res'),
     ],
     hiddenimports=[],
     hookspath=[

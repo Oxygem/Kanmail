@@ -10,6 +10,7 @@ from subprocess import check_output, run
 
 import click
 import pyupdater
+import tld
 
 from jinja2 import Template
 
@@ -39,6 +40,10 @@ def _print_and_check_output(command):
 
 def _get_pyupdater_package_dir():
     return path.dirname(pyupdater.__file__)
+
+
+def _get_tld_package_dir():
+    return path.dirname(tld.__file__)
 
 
 def _generate_version():
@@ -77,6 +82,7 @@ def _generate_spec(version):
             'root_dir': ROOT_DIRNAME,
             'version': version,
             'pyupdater_package_dir': _get_pyupdater_package_dir(),
+            'tld_package_dir': _get_tld_package_dir(),
         }))
 
     return TEMP_SPEC_FILENAME
