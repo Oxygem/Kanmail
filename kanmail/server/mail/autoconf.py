@@ -4,10 +4,14 @@ from defusedxml.ElementTree import fromstring as parse_xml
 from dns import resolver
 from tld import get_fld
 
+from kanmail.log import logger
+
 ISPDB_URL = 'https://autoconfig.thunderbird.net/v1.1/'
 
 
 def get_ispdb_confg(domain):
+    logger.debug(f'Looking up thunderbird autoconfig for {domain}')
+
     response = requests.get(f'{ISPDB_URL}/{domain}')
     if response.status_code == 200:
         imap_settings = {}
@@ -47,15 +51,22 @@ def get_ispdb_confg(domain):
 
 
 def get_mx_record_domain(domain):
-    answers = sorted([
-        (answer.preference, f'{answer.exchange}'.rstrip('.'))
-        for answer in resolver.query(domain, 'MX')
-    ])
+    logger.debug(f'Fetching MX records for {domain}')
 
-    return set(
-        get_fld(answer[1], fix_protocol=True)
-        for answer in answers
-        if answer[1]
+    name_to_preference = {}
+    names = set()
+
+    try:
+        for answer in resolver.query(domain, 'MX'):
+            name = get_fld(answer.exchange.rstrip('.'), fix_protocol=True)
+            name_to_preference[name] = answer.preference
+            names.add(name)
+    except (resolver.NoAnswer, resolver.NXDOMAIN):
+        return []
+
+    return sorted(
+        list(names),
+        key=lambda name: name_to_preference[name],
     )
 
 
