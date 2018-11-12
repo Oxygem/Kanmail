@@ -33,8 +33,8 @@ export default class ErrorBoundary extends React.Component {
         return (
             <div>
                 <h1>Something broke!</h1>
-                <p><a href="/">Click here to reload!</a></p>
-                <p>So this is embarrassing - something broke: <strong>{this.state.error.message}</strong></p>
+                <p><a onClick={() => window.location.reload()}>Click here to reload!</a></p>
+                <p>So this is embarrassing - something broke!</p>
                 <pre><code>{this.state.errorInfo.componentStack}</code></pre>
             </div>
         );
