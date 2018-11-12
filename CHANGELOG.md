@@ -1,3 +1,9 @@
+# v1.1811122107
+
+Changes:
+- Handle DNS failures properly in autoconf.
+- Simplify the error page (message is useless).
+
 # v1.1811111817
 
 This version brings a full settings UI so there's no need to manually edit the JSON file.
