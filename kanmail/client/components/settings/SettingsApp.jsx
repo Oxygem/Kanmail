@@ -144,8 +144,11 @@ export default class SettingsApp extends React.Component {
     }
 
     handleSettingUpdate = (stateKey, key, ev) => {
+        let value = ev.target.value;
+        if (value && ev.target.type === 'number') value = parseInt(value);
+
         const settings = this.state[stateKey];
-        settings[key] = ev.target.value;
+        settings[key] = value;
 
         this.setState({
             [stateKey]: settings,
@@ -301,6 +304,7 @@ export default class SettingsApp extends React.Component {
                             <small>number of emails to fetch at once</small>
                         </label>
                         <input
+                            required
                             type="number"
                             id="batch_size"
                             value={this.state.systemSettings.batch_size}
@@ -315,6 +319,7 @@ export default class SettingsApp extends React.Component {
                             <small>initial number of batches to fetch</small>
                         </label>
                         <input
+                            required
                             type="number"
                             id="initial_batches"
                             value={this.state.systemSettings.initial_batches}
