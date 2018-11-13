@@ -7,7 +7,7 @@ import Account from 'components/settings/Account.jsx';
 
 import keyboard from 'keyboard.js';
 
-import { post } from 'util/requests.js';
+import { get, post } from 'util/requests.js';
 
 
 const newAccountState = {
@@ -205,46 +205,49 @@ export default class SettingsApp extends React.Component {
         // <button>Add Gmail Account</button>
         // <button>Add Outlook Account</button>
 
-        return <form className="new-account">
-            <h3>New Account</h3>
-            <div className="error">{this.state.newAccountError}</div>
-            <div>
-                <label htmlFor="name">Account Name</label>
-                <input
-                    id="name"
-                    value={this.state.newAccountName}
-                    onChange={_.partial(this.handleUpdate, 'newAccountName')}
-                />
-            </div>
-            <div>
-                <label htmlFor="username">Email</label>
-                <input
-                    id="username"
-                    value={this.state.newAccountUsername}
-                    onChange={_.partial(this.handleUpdate, 'newAccountUsername')}
-                />
-            </div>
+        return <div className="new-account">
+            <form>
+                <h3>New Account</h3>
+                <div className="error">{this.state.newAccountError}</div>
+                <div>
+                    <label htmlFor="name">Account Name</label>
+                    <input
+                        id="name"
+                        value={this.state.newAccountName}
+                        onChange={_.partial(this.handleUpdate, 'newAccountName')}
+                    />
+                </div>
+                <div>
+                    <label htmlFor="username">Email</label>
+                    <input
+                        id="username"
+                        value={this.state.newAccountUsername}
+                        onChange={_.partial(this.handleUpdate, 'newAccountUsername')}
+                    />
+                </div>
 
-            <div>
-                <label htmlFor="password">Password</label>
-                <input
-                    id="password"
-                    type="password"
-                    value={this.state.newAccountPassword}
-                    onChange={_.partial(this.handleUpdate, 'newAccountPassword')}
-                />
-            </div>
+                <div>
+                    <label htmlFor="password">Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        value={this.state.newAccountPassword}
+                        onChange={_.partial(this.handleUpdate, 'newAccountPassword')}
+                    />
+                </div>
 
-            <button
-                type="submit"
-                className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
-                onClick={this.handleAddAccount}
-            >Add Account</button>
+                <button
+                    type="submit"
+                    className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
+                    onClick={this.handleAddAccount}
+                >Add Account</button>
 
-            <button className="cancel" onClick={this.toggleAddAccount}>
-                <i className="fa fa-times"></i>
-            </button>
-        </form>;
+                <button className="cancel" onClick={this.toggleAddAccount}>
+                    <i className="fa fa-times"></i>
+                </button>
+            </form>
+            <p><strong>Gmail users:</strong> you will need to <a onClick={() => get('/open-link', {url: 'https://myaccount.google.com/apppasswords'})}>create an app password</a> to use with Kanmail.</p>
+        </div>;
     }
 
     render() {
