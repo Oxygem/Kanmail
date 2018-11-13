@@ -1,3 +1,13 @@
+# v1.1811131854
+
+Changes:
+- Add gmail app password info.
+- Fix password input on account.
+- Delete columns, icon on header meta hover.
+- Validate settings values.
+- Remove sync days from frontend as it's slower that fetching all, add danger zone icon/text to sync settings area.
+- Fix sending emails by using SMTP username as from address (until accounts have addresses).
+
 # v1.1811122107
 
 Changes:
