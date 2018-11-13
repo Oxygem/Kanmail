@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { BaseStore } from 'stores/base.jsx';
 
 import { get, put } from 'util/requests.js';
@@ -19,10 +21,20 @@ class SettingsStore extends BaseStore {
         };
     }
 
-    addColumn(newColumn) {
-        this.props.columns.push(newColumn);
+    addColumn(name) {
+        this.props.columns.push(name);
 
         // Save the new list of columns via the API before updating
+        return put('/api/settings', {
+            columns: this.props.columns,
+        }).then(() => {
+            this.triggerUpdate();
+        });
+    }
+
+    removeColumn(name) {
+        this.props.columns = _.without(this.props.columns, name);
+
         return put('/api/settings', {
             columns: this.props.columns,
         }).then(() => {

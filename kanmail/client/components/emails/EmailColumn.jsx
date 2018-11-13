@@ -282,7 +282,10 @@ class EmailColumn extends React.Component {
                 className="column"
                 ref={(div) => {this.containerDiv = div;}}
             >
-                <EmailColumnHeader id={this.props.id} />
+                <EmailColumnHeader
+                    id={this.props.id}
+                    isMainColumn={this.props.isMainColumn}
+                />
 
                 <div
                     className="emails"

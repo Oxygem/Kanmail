@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import { ALIAS_FOLDERS } from 'constants.js';
 
+import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 
@@ -34,6 +35,11 @@ class EmailColumnHeader extends React.Component {
         counts: PropTypes.object.isRequired,
         isLoading: PropTypes.bool.isRequired,
         isSyncing: PropTypes.bool.isRequired,
+        isMainColumn: PropTypes.bool.isRequired,
+    }
+
+    handleClickDelete = () => {
+        settingsStore.removeColumn(this.props.id);
     }
 
     renderName() {
@@ -47,11 +53,18 @@ class EmailColumnHeader extends React.Component {
     }
 
     renderLoadingIcon() {
-        if (!this.props.isLoading && !this.props.isSyncing) {
-            return;
-        }
+        if (!this.props.isLoading && !this.props.isSyncing) return;
 
         return <i className="loading fa fa-refresh fa-spin"></i>;
+    }
+
+    renderDeleteIcon() {
+        if (this.props.isMainColumn) return null;
+
+        return <i
+            className="close red fa fa-times"
+            onClick={this.handleClickDelete}
+        ></i>;
     }
 
     renderMeta() {
@@ -74,6 +87,7 @@ class EmailColumnHeader extends React.Component {
 
                     <span className="meta">
                         {this.renderMeta()}
+                        {this.renderDeleteIcon()}
                     </span>
                 </h3>
             </div>
