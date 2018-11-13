@@ -118,9 +118,7 @@ export default class Account extends React.Component {
         const placeholder = options.placeholder || null;
 
         let value = '';
-        if (type !== 'password') {
-            value = this.state[settingsKey][key];
-        }
+        value = this.state[settingsKey][key];
 
         const attributes = {};
         let handler = _.partial(this.handleUpdate, settingsKey, key);
@@ -145,7 +143,7 @@ export default class Account extends React.Component {
 
     renderFolderSettings() {
         return _.map(ALIAS_FOLDERS, folder => (
-            <div>
+            <div key={folder}>
                 <label htmlFor={`folderSettings-${folder}`}>{folder}</label>
                 {this.renderInput('folderSettings', folder)}
             </div>
