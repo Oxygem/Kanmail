@@ -291,21 +291,11 @@ export default class SettingsApp extends React.Component {
                     </div>
 
                     <div className="settings" id="system">
-                        <h2>Sync</h2>
-                        <label htmlFor="sync_days">
-                            Sync days
-                            <small>number of days emails to sync</small>
-                        </label>
-                        <input
-                            type="number"
-                            id="sync_days"
-                            value={this.state.systemSettings.sync_days}
-                            onChange={_.partial(
-                                this.handleSettingUpdate,
-                                'systemSettings', 'sync_days',
-                            )}
-                        />
-
+                        <h2>
+                            Sync <small>
+                                <i className="red fa fa-exclamation-triangle"></i> danger zone
+                            </small>
+                        </h2>
                         <label htmlFor="batch_size">
                             Batch size
                             <small>number of emails to fetch at once</small>
