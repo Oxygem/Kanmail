@@ -151,7 +151,8 @@ export default class SendApp extends React.Component {
         emailData.html = stateToHTML(content);
 
         const accountName = this.state.account.value;
-        emailData.from = this.props.accounts[accountName].addresses[0];
+        // TODO: let people specify their addresses per account!
+        emailData.from = this.props.accounts[accountName].smtp_connection.username;
 
         _.each(['to', 'cc', 'bcc'], key => {
             const value = this.state[key];
