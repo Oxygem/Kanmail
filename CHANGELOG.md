@@ -1,3 +1,12 @@
+# v1.1811151944
+
+Changes:
+- Update dev docs.
+- Add `--onefile` to build script.
+- Make search useful:
+- Link the alert icon to reload when we encounter JS/backend errors.
+- Update docs.
+
 # v1.1811131854
 
 Changes:
