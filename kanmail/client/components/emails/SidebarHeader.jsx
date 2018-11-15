@@ -23,9 +23,12 @@ export default class SidebarHeader extends Component {
 
         return (
             <div className="icon-wrapper">
-                <i className="error fa fa-exclamation-triangle"></i>&nbsp;
-                {this.props.requestErrors.length}
-                <div className="icon-contents">{errors}</div>
+                <div className="icon-contents">
+                    <strong>Kanmail encountered a serious sync or UI error, click to reload</strong> {errors}
+                </div>
+                <a onClick={() => window.location.reload()}>
+                    <i className="error fa fa-exclamation-triangle"></i> {this.props.requestErrors.length}
+                </a>
             </div>
         );
     }
