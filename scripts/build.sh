@@ -7,6 +7,7 @@ TLD_PACKAGE_DIR=`python -c 'from os import path;import tld;print(path.dirname(tl
 yarn run build
 
 pyinstaller main.py \
+    --onefile \
     --windowed \
     --name Kanmail \
     --icon make/Kanmail.icns \
