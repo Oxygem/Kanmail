@@ -224,15 +224,24 @@ class Folder(object):
                 )
                 return cached_uids
 
-        sync_days = get_system_setting('sync_days')
-        if sync_days:
-            days_ago = date.today() - timedelta(days=sync_days)
-            search_query = ['SINCE', days_ago]
-        else:
-            search_query = ['ALL']
-
+        # Searching
         if isinstance(self.query, six.string_types):
-            search_query = ['SUBJECT', self.query]
+            # Use Gmails X-GM-RAW search extension if available - supports full
+            # Gmail style search queries.
+            if b'X-GM-EXT-1' in self.account.capabilities:
+                search_query = ['X-GM-RAW', self.query]
+            else:
+                # IMAP uses polish notation (operator on the left)
+                search_query = ['OR', 'SUBJECT', self.query, 'BODY', self.query]
+
+        # Syncing
+        else:
+            sync_days = get_system_setting('sync_days')
+            if sync_days:
+                days_ago = date.today() - timedelta(days=sync_days)
+                search_query = ['SINCE', days_ago]
+            else:
+                search_query = ['ALL']
 
         self.log('debug', 'Fetching message IDs')
 

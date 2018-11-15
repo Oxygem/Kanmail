@@ -26,9 +26,9 @@ class Account(object):
             **settings['smtp_connection'],
         )
 
-        # TODO: need this for anything?
-        # with self.get_connection() as connection:
-        #     self.capabilities = connection.capabilities()
+        with self.connection_pool.get_connection() as connection:
+            self.capabilities = connection.capabilities()
+            logger.debug(f'Connected to {self.name}, capabilities: {self.capabilities}')
 
     def get_imap_connection(self):
         return self.connection_pool.get_connection()
