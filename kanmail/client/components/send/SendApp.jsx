@@ -5,8 +5,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Select, { AsyncCreatable } from 'react-select';
 import ReactQuill from 'react-quill';
-import { stateToHTML } from 'draft-js-export-html';
-import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
 import HeaderBar from 'components/HeaderBar.jsx';
 
@@ -144,11 +142,13 @@ export default class SendApp extends React.Component {
             'replyToQuoteHtml',
         ]);
 
-        const { editorState } = this.state;
-        const content = editorState.getCurrentContent();
+        const html = this.state.body;
+        emailData.html = html;
 
-        emailData.text = content.getPlainText();
-        emailData.html = stateToHTML(content);
+        // HTML -> plain text
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        emailData.text = div.textContent;
 
         const accountName = this.state.account.value;
         // TODO: let people specify their addresses per account!
