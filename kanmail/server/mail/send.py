@@ -53,9 +53,6 @@ def send_email(
     if cc:
         message['Cc'] = ', '.join(_make_address(a) for a in cc)
 
-    if bcc:
-        message['Bcc'] = ', '.join(_make_address(a) for a in bcc)
-
     if subject:
         message['Subject'] = subject
 
