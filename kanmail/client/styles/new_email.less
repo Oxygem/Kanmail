@@ -19,7 +19,7 @@ section#new-email {
             margin-top: 9px;
         }
 
-        input {
+        div input {
             padding: 4px;
             margin: 2px;
             font-size: 14px;
@@ -77,41 +77,30 @@ section#new-email {
         div#textarea-body {
             position: absolute;
             right: 20px;
-            bottom: 50px;
+            bottom: 90px;
             left: 80px;
             top: 186px;
 
             &.short {
-                bottom: 149px;
+                bottom: 200px;
             }
 
-            .editor {
-                position: absolute;
-                top: 33px;
-                left: 0;
-                bottom: 0;
-                right: 0;
-                padding: 10px;
-                height: auto;
-                border: 1px solid @formBorderGrey;
-                border-radius: @borderRadius;
-                border-top-left-radius: 0;
-                border-top-right-radius: 0;
+            .ql-container {
+                font-size: 14px;
 
-                .DraftEditor-root {
-                    margin-top: -18px;
-                    height: 100%;
+                &.ql-snow {
+                    border-color: @formBorderGrey;
                 }
+            }
 
-                &:hover {
+            .ql-toolbar.ql-snow {
+                border-color: @formBorderGrey;
+            }
+
+            &.active {
+                .ql-container.ql-snow, .ql-toolbar.ql-snow {
                     border-color: @formBorderGreyHover;
                 }
-            }
-
-            .editor-toolbar {
-                border-bottom: none;
-                border-bottom-left-radius: 0;
-                border-bottom-right-radius: 0;
             }
         }
 
@@ -149,7 +138,7 @@ section#new-email {
             }
         }
 
-        button {
+        > button {
             left: 80px;
             cursor: pointer;
             padding: 5px 10px;

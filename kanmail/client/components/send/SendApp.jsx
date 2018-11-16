@@ -1,9 +1,10 @@
+import 'react-quill/dist/quill.snow.css';
+
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Select, { AsyncCreatable } from 'react-select';
-import { EditorState } from 'draft-js';
-import { Editor } from 'react-draft-wysiwyg';
+import ReactQuill from 'react-quill';
 import { stateToHTML } from 'draft-js-export-html';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 
@@ -51,8 +52,7 @@ export default class SendApp extends React.Component {
             bcc: [],
 
             subject: '',
-
-            editorState: EditorState.createEmpty(),
+            body: '',
 
             // "Hidden"/uneditable fields
             replyToMessageId: null,
@@ -118,9 +118,9 @@ export default class SendApp extends React.Component {
         })
     }
 
-    handleEditorStateChange = (editorState) => {
+    handleEditorStateChange = (value) => {
         this.setState({
-            editorState,
+            body: value,
         });
     }
 
@@ -255,6 +255,25 @@ export default class SendApp extends React.Component {
             }
         ));
 
+        const modules = {
+            toolbar: [
+                [
+                    'bold', 'italic', 'underline', 'blockquote', 'link',
+                    {'list': 'ordered'}, {'list': 'bullet'},
+                ],
+            ],
+        };
+
+        const formats = [
+            'bold', 'italic', 'underline', 'blockquote', 'link',
+            'list', 'bullet',
+        ];
+
+        const editorClasses = [];
+
+        if (this.state.editorActive) editorClasses.push('active');
+        if (this.props.message && this.state.includeQuote) editorClasses.push('short');
+
         return (
             <section id="new-email">
                 <HeaderBar />
@@ -304,20 +323,16 @@ export default class SendApp extends React.Component {
                         <label htmlFor="body" id="message-label">Message</label>
                         <div
                             id="textarea-body"
-                            className={this.props.message && this.state.includeQuote ? 'short': ''}
+                            className={editorClasses.join(' ')}
                         >
-                            <Editor
-                                editorClassName="editor"
-                                toolbarClassName="editor-toolbar"
-                                wrapperClassName="editor-wrapper"
-                                onEditorStateChange={this.handleEditorStateChange}
-                                toolbar={{
-                                    options: ['inline', 'link', 'emoji'],
-                                    inline: {
-                                        options: ['bold', 'italic', 'underline'],
-                                    },
-                                }}
-                                editorState={this.state.editorState}
+                            <ReactQuill
+                                value={this.state.body}
+                                onChange={this.handleEditorStateChange}
+                                modules={modules}
+                                formats={formats}
+                                placeholder="Write something..."
+                                onFocus={() => this.setState({editorActive: true})}
+                                onBlur={() => this.setState({editorActive: false})}
                             />
                         </div>
                     </div>
