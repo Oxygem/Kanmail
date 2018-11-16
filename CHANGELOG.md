@@ -1,3 +1,11 @@
+# v1.1811162231
+
+Changes:
+- Finish setting up the new editor.
+- Update yarn lock.
+- Switch out `react-wysiwyg` for `react-quill`.
+- You don't actually put the Bcc list in the email!
+
 # v1.1811151944
 
 Changes:
