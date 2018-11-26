@@ -51,6 +51,7 @@ export default class SendApp extends React.Component {
 
             subject: '',
             body: '',
+            textBody: '',
 
             // "Hidden"/uneditable fields
             replyToMessageId: null,
@@ -116,9 +117,10 @@ export default class SendApp extends React.Component {
         })
     }
 
-    handleEditorStateChange = (value) => {
+    handleEditorStateChange = (value, delta, source, editor) => {
         this.setState({
             body: value,
+            textBody: editor.getText(),
         });
     }
 
@@ -142,13 +144,9 @@ export default class SendApp extends React.Component {
             'replyToQuoteHtml',
         ]);
 
-        const html = this.state.body;
-        emailData.html = html;
-
-        // HTML -> plain text
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        emailData.text = div.textContent;
+        // Attach the HTML + plaintext copy
+        emailData.html = this.state.body;
+        emailData.text = this.state.textBody;
 
         const accountName = this.state.account.value;
         // TODO: let people specify their addresses per account!
