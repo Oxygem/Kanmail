@@ -1,3 +1,8 @@
+# v1.1811271504
+
+Changes:
+- Properly handle plain text email content.
+
 # v1.1811162231
 
 Changes:
