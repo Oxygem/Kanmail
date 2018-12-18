@@ -268,6 +268,7 @@ export default class ThreadMessage extends React.Component {
         });
 
         return <div
+            className="content"
             dangerouslySetInnerHTML={{
                 __html: doc.innerHTML,
             }}
