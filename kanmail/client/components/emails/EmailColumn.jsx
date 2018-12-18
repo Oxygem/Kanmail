@@ -18,6 +18,11 @@ import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 const columnTarget = {
     drop(props, monitor) {
         const { messageUids, oldColumn, accountName } = monitor.getItem();
+
+        if (oldColumn === props.id) {
+            return;
+        }
+
         const emailStore = getEmailStore();
 
         emailStore.moveEmails(
