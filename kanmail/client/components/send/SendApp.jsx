@@ -64,8 +64,13 @@ export default class SendApp extends React.Component {
         if (props.message) {
             const replyToEmails = [];
 
+            let subject = props.message.subject;
+            if (!subject.startsWith('Re') && !subject.startsWith('RE')) {
+                subject = `Re: ${subject}`;
+            }
+
             this.state = _.extend(this.state, {
-                subject: `Re: ${props.message.subject}`,
+                subject: subject,
                 from: props.message.to[1],
 
                 account: {
