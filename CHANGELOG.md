@@ -1,3 +1,10 @@
+# v1.1812191114
+
+Changes:
+- Noop when drag + drop to the same column.
+- Better wrapper for email content.
+- Don't prepend `Re:` if the email subject already starts.
+
 # v1.1811271504
 
 Changes:
