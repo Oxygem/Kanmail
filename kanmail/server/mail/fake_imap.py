@@ -54,7 +54,7 @@ def make_fake_fetch_item(folder, uid, keys):
     fake_data = {
         b'FLAGS': ['\\Seen'],
         b'BODYSTRUCTURE': (b'TEXT', b'PLAIN', None, None, None, b'UTF-8', 100),
-        b'BODY[1]<0>': f'{body_text[:500]}',
+        b'BODY[1]<0>': f'{body_text[0][:500]}',
         b'BODY[1]': body_text,
         b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]': '',
         b'RFC822.SIZE': 100,
