@@ -1,3 +1,11 @@
+# v1.1902071755
+
+Changes:
+- Open the previous thread if there's no next thread.
+- Make `get_parts` on the folder cache work if the headers don't exist.
+- Handle/ignore dodgy contacts cache.
+- Add hover state to threads w/error.
+
 # v1.1812191114
 
 Changes:
