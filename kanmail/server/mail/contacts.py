@@ -17,7 +17,10 @@ def get_contacts():
 
     with CONTACTS_CACHE_LOCK:
         with open(CONTACTS_CACHE_FILE, 'rb') as f:
-            return pickle.loads(f.read())
+            try:
+                return pickle.loads(f.read())
+            except EOFError:
+                return {}
 
 
 def set_contacts(contacts):
