@@ -104,6 +104,9 @@ class FakeIMAPClient(object):
     def __init__(self, *args, **kwargs):
         logger.debug(f'Creating fake IMAP: ({args}, {kwargs})')
 
+    def capabilities(self):
+        return []
+
     def login(self, username, password):
         random_sleep()
 
