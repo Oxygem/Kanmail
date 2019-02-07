@@ -167,4 +167,6 @@ class FolderCache(object):
         return self.delete('headers', uid)
 
     def get_parts(self, uid):
-        return self.get('headers', uid)['parts']
+        headers = self.get('headers', uid)
+        if headers:
+            return headers['parts']
