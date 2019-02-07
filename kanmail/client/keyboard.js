@@ -101,6 +101,8 @@ class Keyboard {
             if (threadStore.isOpen) {
                 nextThread.handleClick();
             }
+
+            return true;
         }
     }
 
@@ -129,6 +131,8 @@ class Keyboard {
             if (threadStore.isOpen) {
                 previousThread.handleClick();
             }
+
+            return true;
         }
     }
 
@@ -186,30 +190,16 @@ class Keyboard {
 
             // Delete -> trash
             else if (code === keys.DELETE) {
-                const wasOpen = threadStore.isOpen;
-                threadStore.close();
-
                 const component = this.currentComponent;
-                this.selectNextThread();
+                this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickTrash(ev);
-
-                if (wasOpen) {
-                    this.currentComponent.handleClick();
-                }
             }
 
             // Enter -> archive
             else if (code === keys.ENTER) {
-                const wasOpen = threadStore.isOpen;
-                threadStore.close();
-
                 const component = this.currentComponent;
-                this.selectNextThread();
+                this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickArchive(ev);
-
-                if (wasOpen) {
-                    this.currentComponent.handleClick();
-                }
             }
 
             // Arrow up -> previous thread
