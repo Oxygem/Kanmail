@@ -344,8 +344,8 @@ export default class SendApp extends React.Component {
                         {this.renderQuote()}
                     </div>
 
-                    <button type="submit">
-                        <i className={`fa fa-envelope ${this.state.sending ? 'fa-spin' : ''}`}></i> Send
+                    <button type="submit" className={this.state.sending ? 'sending': ''}>
+                        <i className={`fa ${this.state.sending ? 'fa-spin fa-refresh' : 'fa-envelope'}`}></i> {this.state.sending ? 'Sending...' : 'Send'}
                     </button>
                 </form>
             </section>

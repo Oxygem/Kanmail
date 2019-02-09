@@ -20,7 +20,7 @@ section#new-email {
         }
 
         div input {
-            padding: 4px;
+            padding: 4px 9px;
             margin: 2px;
             font-size: 14px;
             border: 1px solid @formBorderGrey;
@@ -84,24 +84,6 @@ section#new-email {
             &.short {
                 bottom: 200px;
             }
-
-            .ql-container {
-                font-size: 14px;
-
-                &.ql-snow {
-                    border-color: @formBorderGrey;
-                }
-            }
-
-            .ql-toolbar.ql-snow {
-                border-color: @formBorderGrey;
-            }
-
-            &.active {
-                .ql-container.ql-snow, .ql-toolbar.ql-snow {
-                    border-color: @formBorderGreyHover;
-                }
-            }
         }
 
         blockquote#reply-quote {
@@ -149,6 +131,10 @@ section#new-email {
             border: none;
             position: absolute;
             bottom: 10px;
+
+            &.sending {
+                background: @lightGrey;
+            }
         }
 
 
@@ -162,6 +148,7 @@ section#new-email {
             min-height: 0;
             box-shadow: none;
             font-size: 14px;
+            padding: 0 7px;
 
             &:hover {
                 border-color: @formBorderGreyHover;
@@ -172,18 +159,24 @@ section#new-email {
             border-color: @formBorderGreyActive !important;
         }
 
+        span.react-select__indicator-separator {
+            margin-right: 5px;
+            background: @formBorderGrey;
+        }
+
         div.react-select__menu {
             border-radius: 0;
             border: 1px solid @formBorderGreyHover;
             box-shadow: none;
             margin: 0;
+            padding: 0 8px;
         }
 
-        div.react-select__placeholder {
-            margin-left: 5px;
+        div.react-select__input {
+            margin-left: -2px;
         }
 
-        div.react-select__value-container, {
+        div.react-select__value-container {
             height: 40px;
             overflow-y: auto;
         }
@@ -198,6 +191,39 @@ section#new-email {
         div.react-select__multi-value__label {
             margin: 1px;
             padding: 0;
+        }
+
+
+        /*
+            Quill editor overrides */
+
+        div#textarea-body {
+            .ql-editor {
+                padding: 8px 8px;
+            }
+
+            .ql-toolbar.ql-snow {
+                padding: 8px 1px;
+            }
+
+            .ql-container {
+                font-size: 14px;
+                font-family: Roboto;
+
+                &.ql-snow {
+                    border-color: @formBorderGrey;
+                }
+            }
+
+            .ql-toolbar.ql-snow {
+                border-color: @formBorderGrey;
+            }
+
+            &.active {
+                .ql-container.ql-snow, .ql-toolbar.ql-snow {
+                    border-color: @formBorderGreyHover;
+                }
+            }
         }
     }
 }
