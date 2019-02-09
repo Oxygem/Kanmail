@@ -59,6 +59,8 @@ export default class SendApp extends React.Component {
             replyToQuoteHtml: null,
 
             sending: false,
+            errorName: null,
+            errorMessage: null,
         }
 
         if (props.message) {
@@ -171,6 +173,21 @@ export default class SendApp extends React.Component {
 
         post(`/api/emails/${accountName}`, emailData).then(() => {
             window.close();
+        }).catch((e) => {
+            const errorData = e.data;
+
+            if (errorData) {
+                this.setState({
+                    sending: false,
+                    errorName: errorData.error_name,
+                    errorMessage: errorData.error_message,
+                });
+            } else {
+                this.setState({
+                    errorName: 'Unknown',
+                    errorMessage: 'Unexpected error, plese reload Kanmail!',
+                })
+            }
         });
     }
 
@@ -247,6 +264,26 @@ export default class SendApp extends React.Component {
                 this.handleSelectChange, dataKey,
             )}
         />;
+    }
+
+    renderSendButton() {
+        const buttonClasses = [];
+        let buttonText = this.state.sending ? 'Sending...' : 'Send';
+
+        if (this.state.errorName || this.state.errorMessage) {
+            buttonText = `${this.state.errorName}: ${this.state.errorMessage}`;
+            buttonClasses.push('error');
+        }
+
+        if (this.state.sending) {
+            buttonClasses.push('sending');
+        }
+
+        return (
+            <button type="submit" className={buttonClasses.join(' ')}>
+                <i className={`fa ${this.state.sending ? 'fa-spin fa-refresh' : 'fa-envelope'}`}></i> {buttonText}
+            </button>
+        );
     }
 
     render() {
@@ -349,9 +386,7 @@ export default class SendApp extends React.Component {
                         {this.renderQuote()}
                     </div>
 
-                    <button type="submit" className={this.state.sending ? 'sending': ''}>
-                        <i className={`fa ${this.state.sending ? 'fa-spin fa-refresh' : 'fa-envelope'}`}></i> {this.state.sending ? 'Sending...' : 'Send'}
-                    </button>
+                    {this.renderSendButton()}
                 </form>
             </section>
         );
