@@ -214,20 +214,23 @@ export default class SendApp extends React.Component {
 
     renderAddressBookSelect(contactOptions, dataKey) {
         function delayedOptionLoad(inputValue) {
-            inputValue = inputValue.toLowerCase();
+            let filteredOptions = [];
 
-            const filteredOptions = _.filter(
-                contactOptions,
-                option => option.label.toLowerCase().includes(inputValue),
-            );
+            if (inputValue.length > 2) {
+                inputValue = inputValue.toLowerCase();
+
+                filteredOptions = _.filter(
+                    contactOptions,
+                    option => option.lowercaseLabel.includes(inputValue),
+                );
+
+                if (filteredOptions.length > 100) {
+                    filteredOptions = filteredOptions.slice(0, 100);
+                }
+            }
 
             return new Promise(resolve => {
-                if (inputValue.length <= 1) {
-                    resolve();
-                    return;
-                }
-
-                setTimeout(() => resolve(filteredOptions), 50);
+                setTimeout(() => resolve(filteredOptions), 0);
             });
         }
 
@@ -251,12 +254,14 @@ export default class SendApp extends React.Component {
             {value: accountName, label: accountName}
         ));
 
-        const contactOptions = _.map(this.props.contacts, (name, email) => (
-            {
+        const contactOptions = _.map(this.props.contacts, (name, email) => {
+            const label = makeContactLabel([name, email]);
+            return {
+                label,
                 value: email,
-                label: makeContactLabel([name, email]),
+                lowercaseLabel: label.toLowerCase(),
             }
-        ));
+        });
 
         const modules = {
             toolbar: [
