@@ -1,3 +1,10 @@
+# v1.1902101127
+
+Changes:
+- Add error state to the send window/button.
+- Improve performance of the contact multi-selects.
+- Improve send window styles/consistency.
+
 # v1.1902071755
 
 Changes:
