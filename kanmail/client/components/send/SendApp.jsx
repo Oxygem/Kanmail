@@ -23,6 +23,16 @@ function makeContactLabel(contactTuple) {
     return `${contactTuple[0]} (${contactTuple[1]})`;
 }
 
+function makeAccountContactOption(accountName, contactTuple) {
+    const name = contactTuple[0]
+    const email = contactTuple[1];
+
+    return {
+        value: [accountName, name, email],
+        label: `${name} (${email})`,
+    };
+}
+
 
 @subscribe(settingsStore)
 export default class SendApp extends React.Component {
@@ -35,15 +45,23 @@ export default class SendApp extends React.Component {
     constructor(props) {
         super(props);
 
-        const firstAccount  = _.keys(props.accounts)[0]
-        const includeQuote = this.props.message ? true : false
+        let defaultAccount;
+        const firstAccount  = _.keys(props.accounts)[0];
+        const firstAccountContacts = this.props.accounts[firstAccount].contacts;
+
+        if (firstAccountContacts && firstAccountContacts.length > 0) {
+            defaultAccount = makeAccountContactOption(
+                firstAccount, firstAccountContacts[0],
+            );
+        } else {
+            defaultAccount = this.getDefaultAccount(firstAccount);
+        }
+
+        const includeQuote = this.props.message ? true : false;
 
         this.state = {
             includeQuote: includeQuote,
-            account: {
-                value: firstAccount,
-                label: firstAccount,
-            },
+            accountContact: defaultAccount,
 
             to: [],
             cc: [],
@@ -71,14 +89,21 @@ export default class SendApp extends React.Component {
                 subject = `Re: ${subject}`;
             }
 
+            let replyAccount;
+            const accountName = props.message.account_name;
+            const accountContacts = this.props.accounts[accountName].contacts;
+
+            if (accountContacts && accountContacts.length > 0) {
+                replyAccount = makeAccountContactOption(
+                    firstAccount, accountContacts[0],
+                );
+            } else {
+                replyAccount = this.getDefaultAccount(accountName);
+            }
+
             this.state = _.extend(this.state, {
                 subject: subject,
-                from: props.message.to[1],
-
-                account: {
-                    value: props.message.account_name,
-                    label: props.message.account_name,
-                },
+                accountContact: replyAccount,
 
                 to: _.map(props.message.reply_to, contactTuple => {
                     replyToEmails.push(contactTuple[1]);
@@ -118,6 +143,17 @@ export default class SendApp extends React.Component {
         }
     }
 
+    getDefaultAccount = (accountName) => {
+        const smtpUsername = (
+            this.props.accounts[accountName].smtp_connection.username
+        );
+
+        return makeAccountContactOption(
+            accountName,
+            [smtpUsername, smtpUsername],
+        );
+    }
+
     handleInputChange = (field, ev) => {
         this.setState({
             [field]: ev.target.value,
@@ -145,7 +181,7 @@ export default class SendApp extends React.Component {
         }
 
         const emailData = _.pick(this.state, [
-            'from', 'subject',
+            'subject',
             'replyToMessageId',
             'replyToMessageReferences',
             'replyToQuoteHtml',
@@ -155,10 +191,6 @@ export default class SendApp extends React.Component {
         emailData.html = this.state.body;
         emailData.text = this.state.textBody;
 
-        const accountName = this.state.account.value;
-        // TODO: let people specify their addresses per account!
-        emailData.from = this.props.accounts[accountName].smtp_connection.username;
-
         _.each(['to', 'cc', 'bcc'], key => {
             const value = this.state[key];
             if (!value) {
@@ -167,11 +199,14 @@ export default class SendApp extends React.Component {
             emailData[key] = _.map(value, item => item.value);
         });
 
+        const accountTuple = this.state.accountContact.value;
+        emailData.from = [accountTuple[1], accountTuple[2]];
+
         this.setState({
             sending: true,
         });
 
-        post(`/api/emails/${accountName}`, emailData).then(() => {
+        post(`/api/emails/${accountTuple[0]}`, emailData).then(() => {
             window.close();
         }).catch((e) => {
             const errorData = e.data;
@@ -287,9 +322,25 @@ export default class SendApp extends React.Component {
     }
 
     render() {
-        const accountOptions = _.map(this.props.accounts, (_, accountName) => (
-            {value: accountName, label: accountName}
-        ));
+        const accountOptions = _.reduce(
+            this.props.accounts,
+            (memo, key, accountName) => {
+                const accountContacts = this.props.accounts[accountName].contacts;
+                if (accountContacts && accountContacts.length > 0) {
+                    return _.concat(memo, _.map(
+                        accountContacts,
+                        nameEmail => makeAccountContactOption(
+                            accountName, nameEmail,
+                        ),
+                    ));
+                }
+                memo.push(this.getDefaultAccount(accountName));
+                return memo;
+            },
+            [],
+        );
+
+        console.log('OPTS', accountOptions)
 
         const contactOptions = _.map(this.props.contacts, (name, email) => {
             const label = makeContactLabel([name, email]);
@@ -330,9 +381,9 @@ export default class SendApp extends React.Component {
                             id="account"
                             classNamePrefix="react-select"
                             options={accountOptions}
-                            value={this.state.account}
+                            value={this.state.accountContact}
                             onChange={_.partial(
-                                this.handleSelectChange, 'account',
+                                this.handleSelectChange, 'accountContact',
                             )}
                         />
                     </div>
