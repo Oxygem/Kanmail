@@ -130,13 +130,18 @@ export default class Account extends React.Component {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
         }).then(() => {
+            const filteredContacts = _.filter(
+                this.state.contactSettings,
+                contactTuple => contactTuple[0].length && contactTuple[1].length,
+            );
+
             this.props.updateAccount(
                 this.props.accountId,
                 {
                     imap_connection: this.state.imapSettings,
                     smtp_connection: this.state.smtpSettings,
                     folders: this.state.folderSettings,
-                    contacts: this.state.contactSettings,
+                    contacts: filteredContacts,
                 },
             );
             if (!this.state.alwaysEditing) {
