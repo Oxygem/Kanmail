@@ -1,3 +1,14 @@
+# v1.1902212035
+
+This version brings aliases/addresses in the account settings.
+
+Changes:
+- Filter out empty contacts.
+- Add address/contact management to the settings app.
+- Formatting.
+- De-dupe wide/half/quarter/etc styles.
+- Add proper support for contacts in settings.
+
 # v1.1902101127
 
 Changes:
