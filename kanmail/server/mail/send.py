@@ -79,5 +79,8 @@ def send_email(
 
     # Send the email!
     with smtp_connection.get_connection() as smtp:
-        logger.debug(f'Send email via SMTP/{smtp_connection}: {subject} => {to_addresses}')
+        logger.debug((
+            f'Send email via SMTP/{smtp_connection}: '
+            f'{subject}, from {from_} => {to_addresses}'
+        ))
         smtp.sendmail(from_, to_addresses, message.as_string())
