@@ -18,7 +18,44 @@ const getInitialState = (props) => {
         imapSettings: _.clone(props.accountSettings.imap_connection) || {},
         smtpSettings: _.clone(props.accountSettings.smtp_connection) || {},
         folderSettings: _.clone(props.accountSettings.folders) || {},
+        contactSettings: _.clone(props.accountSettings.contacts) || [],
     };
+}
+
+
+class AccountAddress extends React.Component {
+    static propTypes = {
+        updateName: PropTypes.func.isRequired,
+        updateEmail: PropTypes.func.isRequired,
+        deleteAddress: PropTypes.func.isRequired,
+        contactTuple: PropTypes.array.isRequired,
+    }
+
+    render() {
+        const { contactTuple } = this.props;
+
+        return (
+            <div>
+                <label>name</label>
+                <input
+                    type="text"
+                    value={contactTuple[0]}
+                    onChange={this.props.updateName}
+                />
+                <label>email</label>
+                <input
+                    type="text"
+                    value={contactTuple[1]}
+                    onChange={this.props.updateEmail}
+                />
+                <button
+                    type="submit"
+                    className="cancel"
+                    onClick={this.props.deleteAddress}
+                ><i className="fa fa-times"></i></button>
+            </div>
+        );
+    }
 }
 
 
@@ -89,8 +126,7 @@ export default class Account extends React.Component {
     handleTestConnection = (ev) => {
         ev.preventDefault();
 
-        post('/api/settings/account', {
-            name: this.props.accountId,
+        post('/api/settings/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
         }).then(() => {
@@ -100,6 +136,7 @@ export default class Account extends React.Component {
                     imap_connection: this.state.imapSettings,
                     smtp_connection: this.state.smtpSettings,
                     folders: this.state.folderSettings,
+                    contacts: this.state.contactSettings,
                 },
             );
             if (!this.state.alwaysEditing) {
@@ -110,6 +147,16 @@ export default class Account extends React.Component {
                 error: error.data.error_message,
                 errorType: error.data.error_type,
             });
+        });
+    }
+
+    handleAddAddress = (ev) => {
+        ev.preventDefault();
+
+        const { contactSettings } = this.state;
+        contactSettings.push(['', '']);
+        this.setState({
+            contactSettings,
         });
     }
 
@@ -127,7 +174,6 @@ export default class Account extends React.Component {
             attributes.checked = value;
             handler = _.partial(this.handleCheckboxUpdate, settingsKey, key);
         }
-
 
         return (
             <input
@@ -148,6 +194,46 @@ export default class Account extends React.Component {
                 {this.renderInput('folderSettings', folder)}
             </div>
         ));
+    }
+
+    renderAddresses() {
+        return _.map(this.state.contactSettings, (contactTuple, i) => {
+            const updateName = (ev) => {
+                const { contactSettings } = this.state;
+                contactSettings[i][0] = ev.target.value;
+                this.setState({
+                    contactSettings,
+                });
+            }
+
+            const updateEmail = (ev) => {
+                const { contactSettings } = this.state;
+                contactSettings[i][1] = ev.target.value;
+                this.setState({
+                    contactSettings,
+                });
+            }
+
+            const deleteAddress = (ev) => {
+                ev.preventDefault();
+
+                const { contactSettings } = this.state;
+                contactSettings.splice(i, 1);
+                this.setState({
+                    contactSettings,
+                });
+            }
+
+            return (
+                <AccountAddress
+                    contactTuple={contactTuple}
+                    updateName={updateName}
+                    updateEmail={updateEmail}
+                    deleteAddress={deleteAddress}
+                    key={i}
+                />
+            );
+        });
     }
 
     render() {
@@ -178,8 +264,6 @@ export default class Account extends React.Component {
         return (
             <form className={classes.join(' ')}>
                 <div className="wide">
-                    <strong>{this.props.accountId}</strong>
-                    <div className="error">{!this.state.errorType && this.state.error}</div>
                     <div className="right">
                         <button
                             type="submit"
@@ -192,9 +276,19 @@ export default class Account extends React.Component {
                             onClick={this.props.alwaysEditing ? this.props.deleteAccount : this.toggleSettings}
                         ><i className="fa fa-times"></i></button>
                     </div>
+                    <strong>{this.props.accountId}</strong>
+                    <div className="error">{!this.state.errorType && this.state.error}</div>
                 </div>
 
-                <div className="third">
+                <div className="quarter">
+                    <h3>Addresses</h3>
+                    {this.renderAddresses()}
+                    <button className="submit" onClick={this.handleAddAddress}>
+                        Add Address
+                    </button>
+                </div>
+
+                <div className="quarter">
                     <h3>IMAP Settings</h3>
                     <div className="error">{this.state.errorType === 'imap' && this.state.error}</div>
                     <label htmlFor="imapSettings-host">host</label>
@@ -214,7 +308,7 @@ export default class Account extends React.Component {
                     })}
                 </div>
 
-                <div className="third">
+                <div className="quarter">
                     <h3>SMTP Settings</h3>
                     <div className="error">{this.state.errorType === 'smtp' && this.state.error}</div>
                     <label htmlFor="smtpSettings-host">host</label>
@@ -234,7 +328,7 @@ export default class Account extends React.Component {
                     })}
                 </div>
 
-                <div className="third">
+                <div className="quarter">
                     <h3>Folder Settings</h3>
                     {this.renderFolderSettings()}
                 </div>

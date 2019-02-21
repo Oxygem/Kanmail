@@ -77,7 +77,7 @@ def _test_account_settings(account_settings, get_folders=False):
     return True, None
 
 
-@app.route('/api/settings/account', methods=('POST',))
+@app.route('/api/settings/account/test', methods=('POST',))
 def api_test_account_settings():
     request_data = request.get_json()
 
