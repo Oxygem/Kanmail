@@ -1,3 +1,8 @@
+# v1.1902221908
+
+Changes:
+- Ensure threads in the folder columns do not appear in the main column.
+
 # v1.1902212035
 
 This version brings aliases/addresses in the account settings.
