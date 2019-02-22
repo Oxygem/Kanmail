@@ -96,6 +96,7 @@ class EmailColumn extends React.Component {
         mainColumn: PropTypes.string, // name of the *current* main column
         isMainColumn: PropTypes.bool,
         systemSettings: PropTypes.object.isRequired,
+        columns: PropTypes.array.isRequired,
 
         // Surrounding columns
         getPreviousColumn: PropTypes.func.isRequired,
@@ -230,9 +231,15 @@ class EmailColumn extends React.Component {
                     return false;
                 }
 
-                // Always show main column emails (unless filtered by account)
-                if (this.props.isMainColumn) {
-                    return true;
+                // If we're the main column and this thread is being shown in
+                // another column, ignore.
+                if (this.props.isMainColumn && _.some(
+                    thread.allFolderNames,
+                    folderName => (
+                        _.includes(this.props.columns, folderName)
+                    ),
+                )) {
+                    return false;
                 }
 
                 // If this thread is only in this folder and the main column

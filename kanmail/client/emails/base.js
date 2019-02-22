@@ -253,8 +253,6 @@ export default class BaseEmails {
         // TODO: make this work but not group messages w/same top-level subject
         // threader.groupBySubject(rootThread);
 
-        const columnFolders = settingsStore.props.columns;
-
         // Map of folder name -> emails (list of threads)
         const folderEmails = {};
 
@@ -303,22 +301,8 @@ export default class BaseEmails {
             // thread.hash = `${messages[0].subject}-${messages[0].date}`;
             thread.hash = messages[0].accountMessageId;
 
-            let targetFolders;
-
-            // If the messages is in the inbox: only show in our columns
-            if (_.includes(allFolderNames, 'inbox')) {
-                targetFolders = _.filter(allFolderNames, folderName => (
-                    _.includes(columnFolders, folderName)
-                ));
-            }
-
-            // Not in any columns? Just set everywhere
-            if (_.isUndefined(targetFolders) || targetFolders.length === 0) {
-                targetFolders = allFolderNames;
-            }
-
             // Push the sorted messages (the thread) into the folder/column list
-            _.each(targetFolders, folderName => {
+            _.each(allFolderNames, folderName => {
                 if (!folderEmails[folderName]) {
                     folderEmails[folderName] = [];
                 }
@@ -341,7 +325,13 @@ export default class BaseEmails {
                 return date;
             }, 'desc');
 
-            store.setThreads(threads, options.forceUpdate);
+            // Always update the main column
+            const forceUpdate = (
+                options.forceUpdate
+                || _.includes(ALIAS_FOLDERS, columnName)
+            );
+
+            store.setThreads(threads, forceUpdate);
         });
 
         const renderTaken = (performance.now() - renderStart).toFixed(2);
