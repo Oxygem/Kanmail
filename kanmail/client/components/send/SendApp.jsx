@@ -95,7 +95,7 @@ export default class SendApp extends React.Component {
 
             if (accountContacts && accountContacts.length > 0) {
                 replyAccount = makeAccountContactOption(
-                    firstAccount, accountContacts[0],
+                    accountName, accountContacts[0],
                 );
             } else {
                 replyAccount = this.getDefaultAccount(accountName);
