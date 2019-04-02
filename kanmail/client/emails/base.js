@@ -4,7 +4,6 @@ import { ALIAS_FOLDERS } from 'constants.js';
 import { messageThreader } from 'threading.js';
 
 import requestStore from 'stores/request.js';
-import settingsStore from 'stores/settings.js';
 
 import { getColumnStore, getColumnStoreKeys } from 'stores/columns.js';
 
@@ -139,28 +138,17 @@ export default class BaseEmails {
 "${accountKey}/${newColumn}"`
         );
 
-        // TODO: implement this as a setting (per account?)
-        // Copy if we're moving FROM the inbox and NOT TO another alias folder
-        const copyNotMove = (
-            oldColumn == 'inbox'
-            && !_.includes(ALIAS_FOLDERS, newColumn)
-        );
-        const action = copyNotMove ? 'copy' : 'move';
-
         return requestStore.post(
             `Move emails from ${oldColumn} -> ${newColumn}`,
-            `/api/emails/${accountKey}/${oldColumn}/${action}`,
+            `/api/emails/${accountKey}/${oldColumn}/move`,
             {
                 message_uids: messageUids,
                 new_folder: newColumn,
             },
         ).then(() => {
-            // If not copying, remove the emails from the old column
-            if (!copyNotMove) {
-                this.deleteEmailsFromAccountFolder(
-                    accountKey, oldColumn, messageUids,
-                );
-            }
+            this.deleteEmailsFromAccountFolder(
+                accountKey, oldColumn, messageUids,
+            );
         });
     }
 
