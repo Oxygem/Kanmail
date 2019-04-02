@@ -242,25 +242,6 @@ class EmailColumn extends React.Component {
                     return false;
                 }
 
-                // If this thread is only in this folder and the main column
-                // is archive, show it. This is because the email is probably
-                // in the archive folder, but not in the first `batch_size`.
-                // Showing the email when archive is selected is a reasonable
-                // default (assume archived).
-                if (
-                    thread.allFolderNames.length === 1
-                    && this.props.mainColumn === 'archive'
-                ) {
-                    return true;
-                }
-
-                // If this thread isn't in the selected mainColumn, ignore
-                if (!_.includes(
-                    thread.allFolderNames, this.props.mainColumn,
-                )) {
-                    return false;
-                }
-
                 return true;
             }
         );
