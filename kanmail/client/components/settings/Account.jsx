@@ -331,6 +331,10 @@ export default class Account extends React.Component {
                     {this.renderInput('smtpSettings', 'ssl', {
                         type: 'checkbox',
                     })}
+                    <label htmlFor="smtpSettings-tls">tls?</label>
+                    {this.renderInput('smtpSettings', 'tls', {
+                        type: 'checkbox',
+                    })}
                 </div>
 
                 <div className="quarter">
