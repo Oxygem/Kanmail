@@ -27,9 +27,7 @@ def get_ispdb_confg(domain):
 
             imap_settings['host'] = incoming.find('hostname').text
             imap_settings['port'] = incoming.find('port').text
-
-            if incoming.find('socketType').text == 'SSL':
-                imap_settings['ssl'] = True
+            imap_settings['ssl'] = incoming.find('socketType').text == 'SSL'
             break
 
         for outgoing in provider.findall('outgoingServer'):
@@ -40,13 +38,14 @@ def get_ispdb_confg(domain):
             smtp_settings['port'] = outgoing.find('port').text
 
             socket_type = outgoing.find('socketType').text
-            if socket_type == 'SSL':
-                smtp_settings['ssl'] = True
-            elif socket_type == 'STARTTLS':
-                smtp_settings['tls'] = True
-
+            smtp_settings['ssl'] = socket_type == 'SSL'
+            smtp_settings['tls'] = socket_type == 'STARTTLS'
             break
 
+        logger.debug((
+            f'Autoconf settings for {domain}: '
+            f'imap={imap_settings}, smtp={smtp_settings}'
+        ))
         return imap_settings, smtp_settings
 
 
