@@ -62,15 +62,17 @@ class ImapConnectionWrapper(object):
         return wrapper
 
     def make_imap(self):
-        server_string = f'{self.username}:{self.password}@{self.host}'
-        logger.debug(f'Connecting to server: {server_string}')
+        server_string = (
+            f'{self.username}@{self.host}:{self.port} (ssl={self.ssl})'
+        )
+        logger.debug(f'Connecting to IMAP server: {server_string}')
 
         imap = IMAPClient(self.host, port=self.port, ssl=self.ssl, use_uid=True)
         imap.login(self.username, self.password)
         imap.normalise_times = False
 
         self._imap = imap
-        logger.info(f'Connected to server: {server_string}')
+        logger.info(f'Connected to IMAP server: {server_string}')
 
 
 class ImapConnectionPool(object):
@@ -126,7 +128,10 @@ class SmtpConnection(object):
 
     @contextmanager
     def get_connection(self):
-        logger.debug(f'Connecting to SMTP: {self}')
+        server_string = (
+            f'{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})'
+        )
+        logger.debug(f'Connecting to SMTP server: {server_string}')
 
         cls = SMTP_SSL if self.ssl else SMTP
 
@@ -137,7 +142,6 @@ class SmtpConnection(object):
         if self.tls:
             smtp.starttls()
 
-        logger.debug(f'Logging into SMTP/{self} with {self.username}:{self.password}')
         smtp.login(self.username, self.password)
 
         yield smtp
