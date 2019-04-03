@@ -4,6 +4,8 @@ from datetime import date, timedelta
 
 import six
 
+from imapclient.exceptions import IMAPClientError
+
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
@@ -50,11 +52,22 @@ class Folder(object):
         else:
             self.cache = FolderCache(self)
 
+        self.reset()
+
+    def reset(self):
         # Fetch email UIDs (cached if possible)
-        self.email_uids = self.get_email_uids()
+        try:
+            self.email_uids = self.get_email_uids()
+        except IMAPClientError as e:
+            # The folder doesn't (yet) exist on the server
+            if "doesn't exist" not in e.args[0]:
+                raise
+            self.exists = False
 
     def __len__(self):
-        return len(self.email_uids)
+        if self.exists:
+            return len(self.email_uids)
+        return 0
 
     def log(self, method, message):
         func = getattr(logger, method)
