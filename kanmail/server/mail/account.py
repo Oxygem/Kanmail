@@ -77,7 +77,7 @@ class Account(object):
         if not folder.exists:
             logger.debug(f'Creating folder {self.name}/{folder.name}')
 
-            with self.get_connection() as connection:
+            with self.get_imap_connection() as connection:
                 connection.create_folder(folder.name)
 
             # Reload the folder
