@@ -81,7 +81,7 @@ class Account(object):
                 connection.create_folder(folder.name)
 
             # Reload the folder
-            folder.reset()
+            folder.refresh()
 
         return folder.name
 

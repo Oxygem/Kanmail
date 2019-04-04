@@ -81,6 +81,7 @@ def get_folder_emails(
         'count': len(folder),
         'from': from_offset,
         'to': to_offset,
+        'exists': folder.exists,
     }
 
     return emails, meta
@@ -98,6 +99,7 @@ def sync_folder_emails(account_key, folder_name, query=None):
 
     meta = {
         'count': len(folder),
+        'exists': folder.exists,
     }
 
     return emails, deleted_uids, meta
@@ -142,7 +144,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
     HTML then TEXT parts for each UID. Any text will be processed as markdown
     into HTML.
 
-    Returns a dcit of uid -> HTML data.
+    Returns a dict of uid -> HTML data.
     '''
 
     account = get_account(account_key)
@@ -155,7 +157,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
     uid_to_content_ids = {}
 
     for uid in uids:
-        parts = folder.cache.get_parts(uid)
+        parts = folder.get_email_header_parts(uid)
 
         uid_to_content_ids[uid] = {
             part['content_id']: part_id
@@ -185,7 +187,8 @@ def get_folder_email_texts(account_key, folder_name, uids):
     for uid, data in uid_part_data.items():
         # Convert any plaintext items to html w/markdown
         if uid in plaintext_uids:
-            data = markdownify(data)
+            if data:
+                data = markdownify(data)
 
         part_data_with_cids = {
             'html': data,
@@ -204,8 +207,7 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
     account = get_account(account_key)
     folder = account.get_folder(folder_name)
 
-    parts = folder.cache.get_parts(uid)
-
+    parts = folder.get_email_header_parts(uid)
     if part_number not in parts:
         return None, None
 

@@ -52,17 +52,19 @@ class Folder(object):
         else:
             self.cache = FolderCache(self)
 
-        self.reset()
+        self.refresh()
 
-    def reset(self):
+    def refresh(self):
         # Fetch email UIDs (cached if possible)
         try:
             self.email_uids = self.get_email_uids()
+            self.exists = True
         except IMAPClientError as e:
             # The folder doesn't (yet) exist on the server
             if "doesn't exist" not in e.args[0]:
                 raise
             self.exists = False
+        return self.exists
 
     def __len__(self):
         if self.exists:
@@ -103,7 +105,7 @@ class Folder(object):
     def add_cache_flags(self, uid, new_flag):
         headers = self.cache.get_headers(uid)
 
-        if new_flag not in headers['flags']:
+        if headers and new_flag not in headers['flags']:
             flags = list(headers['flags'])
             flags.append(new_flag)
             headers['flags'] = tuple(flags)
@@ -112,7 +114,7 @@ class Folder(object):
     def remove_cache_flags(self, uid, remove_flag):
         headers = self.cache.get_headers(uid)
 
-        if remove_flag in headers['flags']:
+        if headers and remove_flag in headers['flags']:
             flags = list(headers['flags'])
             flags.remove(remove_flag)
             headers['flags'] = tuple(flags)
@@ -143,9 +145,7 @@ class Folder(object):
         emails = {}
 
         for uid, data in email_parts.items():
-            headers = self.cache.get_headers(uid)
-            parts = headers['parts']
-
+            parts = self.get_email_header_parts(uid)
             data_meta = parts.get(part)
 
             if not data_meta:
@@ -219,6 +219,12 @@ class Folder(object):
             emails.append(headers)
 
         return emails
+
+    def get_email_header_parts(self, uid):
+        emails = self.get_email_headers([uid])
+        if not emails:
+            return
+        return emails[0]['parts']
 
     def cache_uids(self):
         # If we're a query folder don't save the UIDs as we use the base, non-query
@@ -303,9 +309,10 @@ class Folder(object):
         the number of new emails, meaning we don't jump back when ``get_emails``.
         '''
 
-        # If we don't exist, we have nothing
+        # If we don't exist, try again or we have nothing
         if not self.exists:
-            return [], []
+            if not self.refresh():
+                return [], []
 
         message_uids = self.get_email_uids(use_cache=False)
 
