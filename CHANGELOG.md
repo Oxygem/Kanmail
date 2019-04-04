@@ -1,3 +1,21 @@
+# v1.1904042139
+
+This version is the first to be tested with Outlook, and includes a number of related fixes.
+
+Additionally emails are now moved between folders as you would expect, rather than a mix of copy & move.
+
+Changes:
+- Better handle different mail servers when parsing bodystructure.
+- Fix folder refresh and running w/o cache.
+- Correct call to get IMAP connection.
+- Reimplement `Folder.reset` and handling `Folder.exists`.
+- Add tls checkbox to the account settings component.
+- Always set ssl/tls during autoconf.
+- Improve the connection debug logs.
+- Change to *move* emails between columns.
+- Always move emails, don't copy between folders.
+- Remove the link between main column and others.
+
 # v1.1903011133
 
 Changes:
