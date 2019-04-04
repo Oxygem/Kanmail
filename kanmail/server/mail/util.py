@@ -233,8 +233,6 @@ def extract_headers(raw_message):
 
 
 def _parse_bodystructure(bodystructure, item_number=None):
-    # if item_number is None:
-        # print('BODY', bodystructure)
     items = {}
 
     type_or_bodies = bodystructure[0]
@@ -252,20 +250,18 @@ def _parse_bodystructure(bodystructure, item_number=None):
             ))
 
     else:
-        subtype = bodystructure[1]
-        encoding = bodystructure[5]
+        subtype = bodystructure[1].decode()
+        encoding = bodystructure[5].decode()
         size = bodystructure[6]
 
         content_id = bodystructure[3]
         if content_id:
             content_id = content_id.decode()
 
-        item_number = item_number or 1
-
         data = {
             'type': type_or_bodies.decode(),
-            'subtype': subtype.decode(),
-            'encoding': encoding.decode(),
+            'subtype': subtype,
+            'encoding': encoding,
             'content_id': content_id,
             'size': size,
         }
@@ -274,11 +270,12 @@ def _parse_bodystructure(bodystructure, item_number=None):
 
         if charset_or_name:
             charset_or_name_key, charset_or_name = bodystructure[2][:2]
-            if charset_or_name_key == b'NAME':
+            if charset_or_name_key.upper() == b'NAME':
                 data['name'] = charset_or_name
             else:
                 data['charset'] = charset_or_name
 
+        item_number = item_number or 1
         items[item_number] = data
 
     return items
@@ -299,12 +296,14 @@ def parse_bodystructure(bodystructure):
         if number == 'attachments':
             continue
 
-        if part['type'] == 'TEXT':
-            if 'html' not in items and part['subtype'] == 'HTML':
+        if part['type'].upper() == 'TEXT':
+            subtype = part['subtype'].upper()
+
+            if 'html' not in items and subtype == 'HTML':
                 items['html'] = number
                 continue
 
-            if 'plain' not in items and part['subtype'] == 'PLAIN':
+            if 'plain' not in items and subtype == 'PLAIN':
                 items['plain'] = number
                 continue
 
