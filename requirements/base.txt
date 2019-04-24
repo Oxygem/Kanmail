@@ -26,4 +26,7 @@ flake8-import-order==0.18
 
 # Build
 pyinstaller==3.4
+
+# Pinned for pyupdater issue - https://github.com/JMSwag/PyUpdater/issues/166
+dsdev-utils==0.9.6
 pyupdater==2.5.3
