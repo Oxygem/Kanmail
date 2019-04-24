@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import 'static/fontawesome/css/font-awesome.css';
+import 'fonts/fontawesome/css/font-awesome.css';
 import 'style.less';
 
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
