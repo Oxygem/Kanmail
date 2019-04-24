@@ -1,8 +1,6 @@
 # Client
 git+https://github.com/r0x0r/pywebview@2b8b9d4e33716fa04db96f432103cef7ac0010f7
 
-requests==2.20.0
-
 # Server
 click==7.0
 flask==1.0.2
@@ -13,8 +11,9 @@ mdx-linkify==1.0
 dnspython==1.15.0
 defusedxml==0.5.0
 tld==0.9.1
+requests==2.20.0
 
-#IMAPClient==2.1.0 - pending 2.2.0
+# IMAPClient==2.1.0 - pending 2.2.0
 git+https://github.com/mjs/imapclient@580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87
 
 # Dev
