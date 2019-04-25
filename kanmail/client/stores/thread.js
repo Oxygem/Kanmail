@@ -18,7 +18,7 @@ function makeDefaults() {
 function calculateContainerWidth(columnContainer) {
     const columnWidth = columnContainer.offsetWidth;
     const columnLeft = columnContainer.offsetLeft + 150;
-    const windowWidth = window.outerWidth;
+    const windowWidth = window.innerWidth;
 
     // Max width is 3x column (also ideal width)
     const maxWidth = 3 * columnWidth;
