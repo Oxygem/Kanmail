@@ -1,5 +1,8 @@
 # Client
-git+https://github.com/r0x0r/pywebview@2b8b9d4e33716fa04db96f432103cef7ac0010f7
+# The official pywebview has some serious flaws:
+# https://github.com/r0x0r/pywebview/issues/315
+# https://github.com/r0x0r/pywebview/pull/332
+git+https://github.com/Fizzadar/pywebview@frameless-2.4
 
 # Server
 click==7.0
