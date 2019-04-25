@@ -45,7 +45,7 @@ def run_thread(target):
 
     thread = Thread(
         target=wrapper,
-        args=(target.__name__,)
+        args=(target.__name__,),
     )
     thread.daemon = True
     thread.start()
