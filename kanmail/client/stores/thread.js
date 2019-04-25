@@ -37,7 +37,7 @@ function calculateContainerWidth(columnContainer) {
         containerLeft = 150;
 
         if (spaceLeft < maxWidth) {
-            containerLeft = 0;
+            containerWidth -= 150;
         }
     }
 
