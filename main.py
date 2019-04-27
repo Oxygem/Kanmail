@@ -1,3 +1,5 @@
+import sys
+
 from threading import Thread
 from time import sleep
 
@@ -76,6 +78,9 @@ def main():
         width=settings.WINDOW_WIDTH,
         height=settings.WINDOW_HEIGHT,
     )
+
+    # Main window closed, cleanup/exit
+    sys.exit()
 
 
 if __name__ == '__main__':
