@@ -16,7 +16,7 @@ from kanmail.window import create_window
 SEND_WINDOW_DATA = {}
 
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=('GET',))
 def get_index():
     return render_template(
         'index.html',
@@ -26,7 +26,7 @@ def get_index():
     )
 
 
-@app.route('/settings', methods=['GET'])
+@app.route('/settings', methods=('GET',))
 def get_settings():
     return render_template(
         'settings.html',
@@ -35,7 +35,7 @@ def get_settings():
     )
 
 
-@app.route('/send', methods=['GET'])
+@app.route('/send', methods=('GET',))
 def get_send():
     return render_template(
         'send.html',
@@ -45,7 +45,7 @@ def get_send():
     )
 
 
-@app.route('/send/<uid>', methods=['GET'])
+@app.route('/send/<uid>', methods=('GET',))
 def get_send_reply(uid):
     if DEBUG:
         reply = SEND_WINDOW_DATA.get(uid)
@@ -64,7 +64,7 @@ def get_send_reply(uid):
     )
 
 
-@app.route('/open-link', methods=['GET'])
+@app.route('/open-link', methods=('GET',))
 def open_link():
     link = request.args['url']
 
@@ -89,12 +89,12 @@ def _open_window(name, endpoint, **kwargs):
     return abort(500, f'Could not open {name} window!')
 
 
-@app.route('/open-settings', methods=['GET'])
+@app.route('/open-settings', methods=('GET',))
 def open_settings():
     return _open_window('settings', '/settings', width=800, unique=True)
 
 
-@app.route('/open-send', methods=['GET', 'POST'])
+@app.route('/open-send', methods=('GET', 'POST'))
 def open_send():
     endpoint = '/send'
 
