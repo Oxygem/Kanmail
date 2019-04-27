@@ -11,6 +11,8 @@ import HeaderBar from 'components/HeaderBar.jsx';
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
 
+import { closeWindow } from 'window.js';
+
 import { cleanHtml } from 'util/html.js'
 import { post } from 'util/requests.js'
 
@@ -207,7 +209,7 @@ export default class SendApp extends React.Component {
         });
 
         post(`/api/emails/${accountTuple[0]}`, emailData).then(() => {
-            window.close();
+            closeWindow();
         }).catch((e) => {
             const errorData = e.data;
 

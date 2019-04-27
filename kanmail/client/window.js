@@ -1,4 +1,4 @@
-import { post } from 'util/requests';
+import { get, post } from 'util/requests';
 
 
 const position = {};
@@ -27,7 +27,14 @@ function saveWindowPosition() {
 }
 
 
-export default function createWindowPositionHandlers() {
+export function createWindowPositionHandlers() {
     window.addEventListener('resize', saveWindowPosition);
     window.addEventListener('mouseover', saveWindowPosition);
+}
+
+
+export function closeWindow() {
+    const url = new URL(window.location.href);
+    const windowId = url.searchParams.get('window_id');
+    get('/close-window', {window_id: windowId});
 }

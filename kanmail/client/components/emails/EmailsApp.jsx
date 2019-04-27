@@ -5,7 +5,7 @@ import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import keyboard from 'keyboard.js';
-import createWindowPositionHandlers from 'window.js';
+import { createWindowPositionHandlers } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
 
 import Thread from 'components/emails/Thread.jsx';

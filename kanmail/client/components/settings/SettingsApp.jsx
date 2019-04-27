@@ -6,6 +6,7 @@ import HeaderBar from 'components/HeaderBar.jsx';
 import Account from 'components/settings/Account.jsx';
 
 import keyboard from 'keyboard.js';
+import { closeWindow } from 'window.js';
 
 import { get, post } from 'util/requests.js';
 
@@ -166,7 +167,7 @@ export default class SettingsApp extends React.Component {
         };
 
         post('/api/settings', newSettings)
-            .then(() => window.close())
+            .then(() => closeWindow())
             .catch(err => console.log('SETTING ERROR', err));
     }
 
