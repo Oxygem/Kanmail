@@ -10,7 +10,7 @@ from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
 from kanmail.settings import DEBUG, FROZEN, IS_APP, SERVER_PORT
 from kanmail.version import get_version
-from kanmail.window import create_window
+from kanmail.window import create_window, destroy_window
 
 
 SEND_WINDOW_DATA = {}
@@ -109,3 +109,9 @@ def open_send():
         endpoint = f'/send/{uid}'
 
     return _open_window('new email', endpoint)
+
+
+@app.route('/close-window', methods=('GET',))
+def close_window():
+    internal_id = request.args['window_id']
+    destroy_window(internal_id)
