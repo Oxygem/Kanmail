@@ -1,3 +1,20 @@
+# v1.1904292053
+
+Changes:
+- Use the new close window API instead of `window.close`.
+- Run `sys.exit` after main window close.
+- Implement close window API (`window.close` no longer works).
+- Add development requirements.
+- Tuples > lists.
+- Linting.
+- Upgrade to pywebview 2.4 (ish).
+- Don't render threads over the sidebar.
+- Fix window width variable (new webkit changes).
+- Tidy up/sort base requirements.
+- Fix pyupdater broken dependency.
+- Add missing fonts: `roboto` and `roboto-slab`.
+- Move `static` -> `fonts`.
+
 # v1.1904042139
 
 This version is the first to be tested with Outlook, and includes a number of related fixes.
