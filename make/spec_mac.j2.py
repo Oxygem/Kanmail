@@ -8,7 +8,6 @@ a = Analysis(  # noqa: F821
         ('{{ root_dir }}/LICENSE.md', '.'),
         ('{{ root_dir }}/CHANGELOG.md', '.'),
 
-        ('{{ root_dir }}/kanmail/client/static', 'static'),
         ('{{ root_dir }}/kanmail/client/templates', 'templates'),
 
         # Generated at build time
@@ -39,6 +38,7 @@ exe = EXE(  # noqa: F821
     exclude_binaries=True,
     name='mac',
     debug=False,
+    bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     console=False,
