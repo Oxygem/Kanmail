@@ -126,6 +126,8 @@ def get_default_settings():
             'batch_size': 50,
             # Number of batches to sync initially, per column
             'initial_batches': 3,
+            # Number of days email to sync (0=all)
+            'sync_days': 0,
 
             # Number of ms to hold archive/trash actions before executing them - during
             # which you can undo them.

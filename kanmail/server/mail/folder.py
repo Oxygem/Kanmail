@@ -256,7 +256,7 @@ class Folder(object):
         # Syncing
         else:
             sync_days = get_system_setting('sync_days')
-            if sync_days:
+            if sync_days and sync_days > 0:
                 days_ago = date.today() - timedelta(days=sync_days)
                 search_query = ['SINCE', days_ago]
             else:
