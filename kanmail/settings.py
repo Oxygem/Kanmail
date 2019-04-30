@@ -2,7 +2,7 @@ import json
 import pickle
 import sys
 
-from os import environ, path
+from os import environ, makedirs, path
 
 from click import get_app_dir
 from pydash import memoize
@@ -62,6 +62,10 @@ if FROZEN:
 
 # Bootstrap logging before we use logging!
 #
+
+for needed_dir in (APP_DIR, CACHE_DIR):
+    if not path.exists(needed_dir):
+        makedirs(needed_dir)
 
 setup_logging(debug=DEBUG, log_file=LOG_FILE)
 
