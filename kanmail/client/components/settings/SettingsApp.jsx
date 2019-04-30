@@ -332,6 +332,24 @@ export default class SettingsApp extends React.Component {
                                 'systemSettings', 'initial_batches',
                             )}
                         />
+
+                        <label htmlFor="sync_days">
+                            Sync days
+                            <small>
+                                days of email to sync (0 = all)<br />
+                                note: this does not affect search
+                            </small>
+                        </label>
+                        <input
+                            required
+                            type="number"
+                            id="sync_days"
+                            value={this.state.systemSettings.sync_days}
+                            onChange={_.partial(
+                                this.handleSettingUpdate,
+                                'systemSettings', 'sync_days',
+                            )}
+                        />
                     </div>
 
                     <button
