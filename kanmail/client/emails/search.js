@@ -30,6 +30,9 @@ class SearchEmails extends BaseEmails {
     }
 
     getFolderEmails = (folderName, options={}) => {
+        const columnMetaStore = getColumnMetaStore(folderName);
+        columnMetaStore.setLoading(true);
+
         const requests = [];
 
         // For each account, search for matching emails
@@ -37,7 +40,9 @@ class SearchEmails extends BaseEmails {
             requests.push(this.searchEmails(accountKey, folderName, options))
         });
 
-        return Promise.all(requests);
+        return Promise.all(requests)
+            .then(() => columnMetaStore.setLoading(false))
+            .catch(() => columnMetaStore.setLoading(false));
     }
 
     searchEmails(accountKey, folderName, options={}) {
@@ -49,8 +54,7 @@ class SearchEmails extends BaseEmails {
             `Fetch emails from ${accountKey}/${folderName}`,
             url, query,
         ).then(data => {
-            const columnMetaStore = getColumnMetaStore(folderName);
-            columnMetaStore.setMeta(accountKey, data.meta);
+            this.setMetaForAccountFolder(accountKey, folderName, data.meta);
 
             let changed = false;
 

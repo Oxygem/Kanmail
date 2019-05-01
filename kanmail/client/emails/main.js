@@ -43,6 +43,8 @@ class MainEmails extends BaseEmails {
             `Sync emails in ${accountKey}/${folderName}`,
             url, query,
         ).then(data => {
+            this.setMetaForAccountFolder(accountKey, folderName, data.meta);
+
             let changed = false;
 
             if (data.deleted_uids.length > 0) {
@@ -66,8 +68,6 @@ class MainEmails extends BaseEmails {
             }
 
             if (changed || options.forceProcess) {
-                const columnMetaStore = getColumnMetaStore(folderName);
-                columnMetaStore.setMeta(accountKey, data.meta);
                 this.processEmailChanges();
             }
         });
@@ -101,6 +101,8 @@ class MainEmails extends BaseEmails {
             `/api/emails/${accountKey}/${folderName}`,
             query,
         ).then(data => {
+            this.setMetaForAccountFolder(accountKey, folderName, data.meta);
+
             let changed = false;
 
             if (data.emails.length >= 0) {
@@ -114,8 +116,6 @@ class MainEmails extends BaseEmails {
             }
 
             if (changed || options.forceProcess) {
-                const columnMetaStore = getColumnMetaStore(folderName);
-                columnMetaStore.setMeta(accountKey, data.meta);
                 this.processEmailChanges();
             }
         });

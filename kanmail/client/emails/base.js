@@ -5,7 +5,11 @@ import { messageThreader } from 'threading.js';
 
 import requestStore from 'stores/request.js';
 
-import { getColumnStore, getColumnStoreKeys } from 'stores/columns.js';
+import {
+    getColumnStore,
+    getColumnStoreKeys,
+    getColumnMetaStore,
+ } from 'stores/columns.js';
 
 
 export default class BaseEmails {
@@ -17,11 +21,10 @@ export default class BaseEmails {
 
     constructor() {
         this.active = false;
-
         this.folderLocks = {};
 
-        // Map of account/messageId -> email message object
-        this.emails = {};
+        // Initialise emails/meta objects
+        this.reset()
 
         // Map of acocunt/folder/uid -> email message object
         this.accountFolderUidToEmail = {};
@@ -44,7 +47,18 @@ export default class BaseEmails {
     */
 
     reset() {
+        // Map of account/messageId -> email message object
         this.emails = {};
+        // Map of folder -> account -> meta
+        this.meta = {};
+    }
+
+    setMetaForAccountFolder(accountKey, folderName, meta) {
+        if (!this.meta[folderName]) {
+            this.meta[folderName] = {};
+        }
+
+        this.meta[folderName][accountKey] = meta;
     }
 
     addEmailsToAccountFolder(accountKey, folderName, emails) {
@@ -305,6 +319,7 @@ export default class BaseEmails {
 
         _.each(getColumnStoreKeys(), columnName => {
             const store = getColumnStore(columnName);
+            const metaStore = getColumnMetaStore(columnName);
 
             let threads = folderEmails[columnName] || [];
             threads = _.orderBy(threads, emails => {
@@ -319,7 +334,12 @@ export default class BaseEmails {
                 || _.includes(ALIAS_FOLDERS, columnName)
             );
 
+            // Push to the column and meta stores
             store.setThreads(threads, forceUpdate);
+            _.each(
+                this.meta[columnName],
+                (meta, accountKey) => metaStore.setAccountMeta(accountKey, meta),
+            );
         });
 
         const renderTaken = (performance.now() - renderStart).toFixed(2);

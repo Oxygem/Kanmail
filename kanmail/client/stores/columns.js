@@ -18,7 +18,7 @@ class ColumnMetaStore extends BaseStore {
         };
     }
 
-    setMeta(accountKey, meta) {
+    setAccountMeta(accountKey, meta) {
         this.props.counts[accountKey] = meta.count;
         // const counts = _.reduce(meta, (memo, data, accountKey) => {
         //     memo[accountKey] = data.count;
