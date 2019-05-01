@@ -9,9 +9,8 @@ class Account(object):
     def __init__(self, name, settings):
         self.name = name
 
-        # Map of folder name -> Folder object
-        self.folders = {}
-        self.query_folders = {}
+        # Create folder map dicts
+        self.reset()
 
         # Set the settings
         self.settings = settings
@@ -35,6 +34,11 @@ class Account(object):
 
     def get_smtp_connection(self):
         return self.smtp_connection.get_connection()
+
+    def reset(self):
+        # Map of folder name -> Folder object
+        self.folders = {}
+        self.query_folders = {}
 
     def get_folders(self):
         '''

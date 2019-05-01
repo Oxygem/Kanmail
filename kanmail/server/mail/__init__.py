@@ -40,6 +40,11 @@ def get_account(key):
     return ACCOUNTS[key]
 
 
+def reset_account_folders():
+    for account in ACCOUNTS.values():
+        account.reset()
+
+
 def get_all_folders():
     def get_folders(account):
         return account.name, account.get_folders()
