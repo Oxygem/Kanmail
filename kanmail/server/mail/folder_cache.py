@@ -28,6 +28,9 @@ from kanmail.settings import CACHE_DIR, CACHE_ENABLED
 
 MAKE_DIRS_LOCK = Lock()
 
+UID_VALIDITY_NAMESPACE = 'uidvalidity'  # uid validity flags
+UIDS_NAMESPACE = 'uids'  # uid lists
+HEADERS_NAMESPACE = 'headers'  # email headers
 
 def _make_uid_key(uid):
     return f'{uid}'
@@ -146,27 +149,27 @@ class FolderCache(object):
     #
 
     def set_uid_validity(self, uid_validity):
-        self.set('meta', 'uid_validity', uid_validity)
+        self.set(UID_VALIDITY_NAMESPACE, 'uid_validity', uid_validity)
 
     def get_uid_validity(self):
-        return self.get('meta', 'uid_validity')
+        return self.get(UID_VALIDITY_NAMESPACE, 'uid_validity')
 
     def set_uids(self, uids):
-        return self.set('meta', 'uids', uids)
+        return self.set(UIDS_NAMESPACE, 'uids', uids)
 
     def get_uids(self):
-        return self.get('meta', 'uids')
+        return self.get(UIDS_NAMESPACE, 'uids')
 
     def set_headers(self, uid, headers):
-        return self.set('headers', uid, headers)
+        return self.set(HEADERS_NAMESPACE, uid, headers)
 
     def get_headers(self, uid):
-        return self.get('headers', uid)
+        return self.get(HEADERS_NAMESPACE, uid)
 
     def delete_headers(self, uid):
-        return self.delete('headers', uid)
+        return self.delete(HEADERS_NAMESPACE, uid)
 
     def get_parts(self, uid):
-        headers = self.get('headers', uid)
+        headers = self.get(HEADERS_NAMESPACE, uid)
         if headers:
             return headers['parts']
