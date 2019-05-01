@@ -105,3 +105,5 @@ def open_send():
 def close_window():
     internal_id = request.args['window_id']
     destroy_window(internal_id)
+
+    return '', 204
