@@ -1,15 +1,15 @@
-import webview
-
 from flask import jsonify, request
 
 from kanmail import settings
 from kanmail.server.app import app
+from kanmail.server.mail import reset_account_folders
+from kanmail.server.mail.folder_cache import bust_all_cached_uids
 from kanmail.settings import (
     get_settings,
     set_cached_window_settings,
-    set_settings,
     update_settings,
 )
+from kanmail.window import reload_main_window
 
 
 @app.route('/api/settings', methods=('GET',))
@@ -24,11 +24,14 @@ def api_get_settings():
 def api_set_settings():
     request_data = request.get_json()
 
-    set_settings(request_data)
+    changed_keys = update_settings(request_data)
 
-    # Reload the main window now we've updated the settings
-    if settings.IS_APP:
-        webview.evaluate_js('window.location.reload()')
+    # If sync days changes we need to nuke the caches
+    if 'system.sync_days' in changed_keys:
+        reset_account_folders()  # un-cache accounts/folders
+        bust_all_cached_uids()  # nuke the on-disk UID list caches
+
+    reload_main_window()
 
     return jsonify(saved=True)
 
