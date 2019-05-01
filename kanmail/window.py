@@ -52,3 +52,8 @@ def destroy_window(internal_id):
         webview.destroy_window(uid=window_uid)
     else:
         logger.warning(f'Tried to destroy non-existant window: {internal_id}')
+
+
+def reload_main_window():
+    if IS_APP:
+        webview.evaluate_js('window.location.reload()')
