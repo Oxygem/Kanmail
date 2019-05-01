@@ -197,6 +197,13 @@ export default class ThreadMessage extends React.Component {
         });
     }
 
+    handleClickForward = () => {
+        post('/open-send', {
+            message: this.props.message,
+            forward: true,
+        });
+    }
+
     renderStar() {
         const { message } = this.props;
         const starred = _.includes(message.flags, '\\Flagged');
@@ -227,7 +234,7 @@ export default class ThreadMessage extends React.Component {
                     {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
                     {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
                     <span className="right">
-                        <a>
+                        <a onClick={this.handleClickForward}>
                             <i className="fa fa-send"></i>
                             Forward
                         </a>

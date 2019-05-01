@@ -90,6 +90,7 @@ def open_send():
         data = request.get_json()
         message_data = get_or_400(data, 'message')
         message_data['reply_all'] = data.get('reply_all', False)
+        message_data['forward'] = data.get('forward', False)
 
         uid = str(uuid4())
         SEND_WINDOW_DATA[uid] = message_data

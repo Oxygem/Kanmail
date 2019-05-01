@@ -35,6 +35,17 @@ function makeAccountContactOption(accountName, contactTuple) {
     };
 }
 
+function prependIfNotPresent(prependTo, prependString) {
+    if (
+        prependTo.startsWith(prependString)
+        || prependTo.startsWith(prependString.toLowerCase())
+        || prependTo.startsWith(prependString.toUpperCase())
+    ) {
+        return prependTo;
+    }
+    return `${prependString}: ${prependTo}`;
+}
+
 
 @subscribe(settingsStore)
 export default class SendApp extends React.Component {
@@ -87,8 +98,10 @@ export default class SendApp extends React.Component {
             const replyToEmails = [];
 
             let subject = props.message.subject;
-            if (!subject.startsWith('Re') && !subject.startsWith('RE')) {
-                subject = `Re: ${subject}`;
+            if (props.message.forward) {
+                subject = prependIfNotPresent(subject, 'Fwd');
+            } else {
+                subject = prependIfNotPresent(subject, 'Re')
             }
 
             let replyAccount;
@@ -103,17 +116,20 @@ export default class SendApp extends React.Component {
                 replyAccount = this.getDefaultAccount(accountName);
             }
 
-            this.state = _.extend(this.state, {
-                subject: subject,
-                accountContact: replyAccount,
-
-                to: _.map(props.message.reply_to, contactTuple => {
+            let to = [];
+            if (!props.message.forward) {
+                to = _.map(props.message.reply_to, contactTuple => {
                     replyToEmails.push(contactTuple[1]);
                     return {
                         value: contactTuple[1],
                         label: makeContactLabel(contactTuple),
                     };
-                }),
+                });
+            }
+
+            this.state = _.extend(this.state, {
+                subject, to,
+                accountContact: replyAccount,
 
                 replyToMessageId: props.message.message_id,
                 replyToMessageReferences: props.message.originalReferences,
