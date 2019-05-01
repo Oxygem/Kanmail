@@ -85,23 +85,6 @@ class Folder(object):
             connection.select_folder(self.name)
             yield connection
 
-    def check_cache_validity(self):
-        # Note we don't use self.get_connection because we don't want to actually
-        # *select* the folder.
-        with self.account.get_imap_connection() as connection:
-            status = connection.folder_status(self.name, [b'UIDVALIDITY'])
-
-        uid_validity = status[b'UIDVALIDITY']
-        cache_validity = self.cache.get_uid_validity()
-
-        # TODO: this needs to be handled in the frontend somehow (since it's
-        # extremely rare just force a "click here to reload).
-        if uid_validity != cache_validity:
-            self.cache.bust()
-            self.cache.set_uid_validity(uid_validity)
-            return False
-        return True
-
     def add_cache_flags(self, uid, new_flag):
         headers = self.cache.get_headers(uid)
 
@@ -226,6 +209,9 @@ class Folder(object):
             return
         return emails[0]['parts']
 
+    # UID handling
+    #
+
     def cache_uids(self):
         # If we're a query folder don't save the UIDs as we use the base, non-query
         # cache object to share header/part cache, but the UID lists differ.
@@ -282,9 +268,6 @@ class Folder(object):
 
         self.cache_uids()
 
-    # Bits that fiddle with self.email_uids
-    #
-
     def fix_offset_before_removing_uids(self, uids):
         if not self.email_uids or self.offset >= len(self.email_uids):
             return
@@ -300,6 +283,28 @@ class Folder(object):
         ])
 
         self.offset -= uids_lower_than_offset
+
+    def check_cache_validity(self):
+        '''
+        Checks if our cached UID validity matches the server.
+        '''
+
+        # Note we don't use self.get_connection because we don't want to actually
+        # *select* the folder.
+        with self.account.get_imap_connection() as connection:
+            status = connection.folder_status(self.name, [b'UIDVALIDITY'])
+
+        uid_validity = status[b'UIDVALIDITY']
+        cache_validity = self.cache.get_uid_validity()
+
+        if uid_validity != cache_validity:
+            self.cache.bust()
+            self.cache.set_uid_validity(uid_validity)
+            return False
+        return True
+
+    # Bits that fiddle with self.email_uids
+    #
 
     @lock_class_method
     def sync_emails(self, expected_uids=None):
