@@ -1,3 +1,28 @@
+# v1.1905012055
+
+Changes:
+- Improve how column meta is handled by the email stores.
+- Throttle onscroll loading of more emails.
+- Implement message forwarding.
+- When UID validity changes - don't fetch all messages at once!
+- Return both HTML and plaintext when fetching email texts.
+- Improve order of methods on `Folder`.
+- On changing `system.sync_days` setting, bust UID list caches and account folders.
+- Add `reload_main_window` function to window module.
+- Add `reset` method to `Account` and function to reset all accounts.
+- Add function to bust all UID list caches.
+- Add missing return on close window view.
+- Move all `IS_APP` window controls to the window module.
+- Separate UID validity caching from UID lists.
+- Return a list of changed keys when updating settings.
+- Add sync days to settings.
+- Add default `sync_days` value (0 for all).
+- Ensure the app/cache directories exist before setting up logging.
+- Remove old static directory data from build script.
+- Include pyupdater s3 extras.
+- Pass signals to the executable not bootloader.
+- Update dev requirements.
+
 # v1.1904292053
 
 Changes:
