@@ -128,17 +128,18 @@ def _get_folder_email_parts(account_key, folder_name, uid_parts):
 
     def get_email_parts(uids, part):
         email_parts = folder.get_email_parts(uids, part)
-        return email_parts
+        return (part, email_parts)
 
     items = execute_threaded(get_email_parts, [
         (uids, part)
         for part, uids in part_to_uid.items()
     ])
 
-    emails = {}
+    emails = defaultdict(dict)
 
-    for item in items:
-        emails.update(item)
+    for part, email_parts in items:
+        for uid, data in email_parts.items():
+            emails[uid][part] = data
 
     return emails
 
@@ -156,10 +157,11 @@ def get_folder_email_texts(account_key, folder_name, uids):
     folder = account.get_folder(folder_name)
 
     uid_parts = []
-    plaintext_uids = []
 
-    uid_to_none = {}
     uid_to_content_ids = {}
+
+    uid_to_text_part_number = {}
+    uid_to_html_part_number = {}
 
     for uid in uids:
         parts = folder.get_email_header_parts(uid)
@@ -173,34 +175,36 @@ def get_folder_email_texts(account_key, folder_name, uids):
         html = parts.get('html')
         text = parts.get('plain')
 
-        if not html:
-            plaintext_uids.append(uid)
-
-        part_number = html or text
-
-        if part_number:
-            uid_parts.append((uid, part_number))
-        # No text part? None!
-        else:
-            uid_to_none[uid] = None
+        # Try to fetch both plain and html
+        if html or text:
+            if html:
+                uid_parts.append((uid, html))
+                uid_to_html_part_number[uid] = html
+            if text:
+                uid_parts.append((uid, text))
+                uid_to_text_part_number[uid] = text
 
     uid_part_data = _get_folder_email_parts(account_key, folder_name, uid_parts)
-    uid_part_data.update(uid_to_none)
 
+    # Build the output object
     uid_part_data_with_cids = {}
+    for uid, part_data in uid_part_data.items():
+        text_data = html_data = None
 
-    for uid, data in uid_part_data.items():
-        # Convert any plaintext items to html w/markdown
-        if uid in plaintext_uids:
-            if data:
-                data = markdownify(data)
+        if uid in uid_to_html_part_number:
+            html_data = uid_part_data[uid][uid_to_html_part_number[uid]]
 
-        part_data_with_cids = {
-            'html': data,
+        if uid in uid_to_text_part_number:
+            text_data = uid_part_data[uid][uid_to_text_part_number[uid]]
+
+            if html_data is None:
+                html_data = markdownify(html_data)
+
+        uid_part_data_with_cids[uid] = {
             'cid_to_part': uid_to_content_ids[uid],
+            'text': text_data,
+            'html': html_data,
         }
-
-        uid_part_data_with_cids[uid] = part_data_with_cids
     return uid_part_data_with_cids
 
 
@@ -225,7 +229,7 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
 
     return (
         f'{part_struct["type"]}/{part_struct["subtype"]}'.lower(),
-        uid_part_data[uid],
+        uid_part_data[uid][part_number],
     )
 
 
