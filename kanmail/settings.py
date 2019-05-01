@@ -136,13 +136,25 @@ def get_default_settings():
     }
 
 
-def _merge_settings(base_config, new_config):
+def _merge_settings(base_config, new_config, key_prefix=None):
+    changed_keys = []
+
     for key, value in new_config.items():
         # If this key is a dict in the old config, merge those
         if key in base_config and isinstance(value, dict):
-            _merge_settings(base_config[key], new_config[key])
+            changed_keys.extend(_merge_settings(
+                base_config[key], new_config[key],
+                key_prefix=key,
+            ))
         else:
-            base_config[key] = new_config[key]
+            if base_config.get(key) != new_config[key]:
+                base_config[key] = new_config[key]
+                if key_prefix:
+                    changed_keys.append(f'{key_prefix}.{key}')
+                else:
+                    changed_keys.append(key)
+
+    return changed_keys
 
 
 @memoize
@@ -172,8 +184,9 @@ def get_style_setting(key, default=None):
 
 def update_settings(settings_updates):
     settings = get_settings()
-    _merge_settings(settings, settings_updates)
+    changed_keys = _merge_settings(settings, settings_updates)
     set_settings(settings)
+    return changed_keys
 
 
 def set_settings(new_settings):
