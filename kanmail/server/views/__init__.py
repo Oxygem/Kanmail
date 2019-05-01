@@ -8,7 +8,7 @@ from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
-from kanmail.settings import DEBUG, FROZEN, IS_APP, SERVER_PORT
+from kanmail.settings import DEBUG, FROZEN
 from kanmail.version import get_version
 from kanmail.window import create_window, destroy_window
 
@@ -75,23 +75,11 @@ def open_link():
     return abort(500, 'Could not open link!')
 
 
-def _open_window(name, endpoint, **kwargs):
-    link = f'http://localhost:{SERVER_PORT}{endpoint}'
-
-    if IS_APP:
-        create_window(name, endpoint, **kwargs)
-        return '', 204
-    else:
-        if webbrowser.open(link):
-            return '', 204
-
-    logger.critical(f'Failed to open {name} window!')
-    return abort(500, f'Could not open {name} window!')
-
-
 @app.route('/open-settings', methods=('GET',))
 def open_settings():
-    return _open_window('settings', '/settings', width=800, unique=True)
+    if not create_window('settings', '/settings', width=800, unique=True):
+        return abort(500, 'Could not open settings window')
+    return '', 204
 
 
 @app.route('/open-send', methods=('GET', 'POST'))
@@ -108,7 +96,9 @@ def open_send():
 
         endpoint = f'/send/{uid}'
 
-    return _open_window('new email', endpoint)
+    if not create_window('new email', endpoint):
+        return abort(500, 'Could not open send window')
+    return '', 204
 
 
 @app.route('/close-window', methods=('GET',))
