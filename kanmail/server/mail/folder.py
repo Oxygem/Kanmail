@@ -331,9 +331,16 @@ class Folder(object):
             deleted_message_uids = self.email_uids - message_uids
             self.fix_offset_before_removing_uids(deleted_message_uids)
         else:
-            # All old uids invalid, so set all new and all old deleted
-            new_message_uids = message_uids
+            # All old uids invalid, so set all old to deleted
             deleted_message_uids = self.email_uids
+
+            # At this point we have the entire folder as new message IDs - we want
+            # to fetch the first self.offset
+            if len(message_uids) > self.offset:
+                new_message_uids = message_uids[:self.offset]
+            else:
+                new_message_uids = message_uids
+                self.offset = len(message_uids)
 
         self.email_uids = message_uids
         self.cache_uids()
