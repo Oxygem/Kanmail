@@ -198,7 +198,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
             text_data = uid_part_data[uid][uid_to_text_part_number[uid]]
 
             if html_data is None:
-                html_data = markdownify(html_data)
+                html_data = markdownify(text_data)
 
         uid_part_data_with_cids[uid] = {
             'cid_to_part': uid_to_content_ids[uid],
@@ -235,7 +235,7 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
 
 def _handle_folder_action(
     action_name, account_key, folder_name, message_uids,
-    *args
+    *args,
 ):
     '''
     Perform a given action to a list of message UIDs on a given account/folder.
