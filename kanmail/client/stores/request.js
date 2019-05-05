@@ -5,12 +5,17 @@ import settingsStore from 'stores/settings.js';
 
 import { get, post } from 'util/requests.js';
 
+const MAX_REQUESTS = 4;
+
 
 class RequestStore extends BaseStore {
     static storeKey = 'requestStore';
 
     constructor() {
         super();
+
+        this.pendingRequests = [];
+        this.currentRequests = 0;
 
         this.props = {
             // Actual requests
@@ -29,31 +34,56 @@ class RequestStore extends BaseStore {
     }
 
     makeRequest = (method, requestsPropKey, message, args) => {
-        const request = method(...args);
+        const response = (resolve, reject) => {
+            const makeActualRequest = () => {
+                this.currentRequests += 1;
 
-        const requestMessageTuple = [request, message];
-        this.props[requestsPropKey].push(requestMessageTuple);
-        this.triggerUpdate();
+                // Create the request and complete handler
+                const request = method(...args);
+                const completeRequest = () => {
+                    // Remove self
+                    this.props[requestsPropKey] = _.filter(
+                        this.props[requestsPropKey],
+                        requestItem => requestItem[0] !== makeActualRequest,
+                    );
+                    this.triggerUpdate();
+                    this.currentRequests -= 1;
+                    this.makeNextPendingRequest();
+                }
 
-        const removeRequest = () => {
-            // Remove self
-            this.props[requestsPropKey] = _.filter(
-                this.props[requestsPropKey],
-                requestItem => requestItem[0] !== request,
-            );
+                // Now we simply resolve/reject the outer promise returning
+                // the actual request promise.
+                request.then(() => {
+                    completeRequest();
+                    resolve(request);
+                });
+                request.catch(() => {
+                    completeRequest();
+                    reject(request);
+                });
+            }
+
+            const requestMessageTuple = [makeActualRequest, message];
+            this.props[requestsPropKey].push(requestMessageTuple);
             this.triggerUpdate();
+
+            this.pendingRequests.push(makeActualRequest);
+            this.makeNextPendingRequest();
         }
 
-        request.then((...promiseArgs) => {
-            removeRequest();
-            return promiseArgs;
-        });
-        request.catch((e) => {
-            removeRequest();
-            throw e;
-        });
+        return new Promise(response);
+    }
 
-        return request;
+    makeNextPendingRequest = () => {
+        if (!this.pendingRequests.length) {
+            return;
+        }
+
+        if (this.currentRequests > MAX_REQUESTS) {
+            return;
+        }
+
+        this.pendingRequests.shift()();
     }
 
     get = (message, ...args) => {
