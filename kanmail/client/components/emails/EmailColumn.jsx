@@ -282,7 +282,7 @@ class EmailColumn extends React.Component {
 
                 <div
                     className="emails"
-                    onScroll={_.throttle(this.handleScroll, 300)}
+                    onScroll={_.throttle(this.handleScroll, 1000)}
                     ref={ref => this.emailsContainer = ref}
                 >
                     {this.renderEmailThreads(threads)}
