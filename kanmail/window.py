@@ -8,7 +8,7 @@ from kanmail.log import logger
 from kanmail.settings import DEBUG, IS_APP, SERVER_PORT
 
 ID_TO_UID = {}  # internal ID -> UID (ID passed to window via url)
-UNIQUE_NAME_TO_UID = {}  # name -> UID for unique windows
+UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
 
 
 def create_window(title='Kanmail', endpoint='/', unique=False, **kwargs):
@@ -22,8 +22,8 @@ def create_window(title='Kanmail', endpoint='/', unique=False, **kwargs):
 
     if IS_APP:
         # Nuke any existing unique window
-        if unique and title in UNIQUE_NAME_TO_UID:
-            window_uid = UNIQUE_NAME_TO_UID[title]
+        if unique and title in UNIQUE_NAME_TO_ID:
+            window_uid = UNIQUE_NAME_TO_ID[title]
             destroy_window(window_uid)
 
         window_uid = webview.create_window(
@@ -33,21 +33,22 @@ def create_window(title='Kanmail', endpoint='/', unique=False, **kwargs):
             text_select=True,
             **kwargs,
         )
-
-        ID_TO_UID[internal_id] = window_uid
-
-        if unique:
-            UNIQUE_NAME_TO_UID[title] = window_uid
     else:
         if not webbrowser.open(link):
             logger.warning('Failed to open browser window!')
             return False
 
+    ID_TO_UID[internal_id] = window_uid
+
+    if unique:
+        UNIQUE_NAME_TO_ID[title] = internal_id
+
     return internal_id
 
 
 def destroy_window(internal_id):
-    window_uid = ID_TO_UID[internal_id]
+    window_uid = ID_TO_UID.pop(internal_id)
+
     if webview.window_exists(uid=window_uid):
         webview.destroy_window(uid=window_uid)
     else:
