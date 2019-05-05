@@ -1,3 +1,12 @@
+# v1.1905051259
+
+Changes:
+- Limit the number of parallel requests executed via the `requestStore`.
+- Bump throttling of column scroll to 1000.
+- Fix wrong variable when markdownifying text data.
+- Fix create/destroy window issues.
+- Make sure main/search email stores don't clash when updating loading icons.
+
 # v1.1905012055
 
 Changes:
