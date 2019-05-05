@@ -40,9 +40,12 @@ class SearchEmails extends BaseEmails {
             requests.push(this.searchEmails(accountKey, folderName, options))
         });
 
-        return Promise.all(requests)
-            .then(() => columnMetaStore.setLoading(false))
-            .catch(() => columnMetaStore.setLoading(false));
+        const finishLoading = () => {
+            if (this.active) {
+                columnMetaStore.setLoading(false);
+            }
+        }
+        return Promise.all(requests).then(finishLoading).catch(finishLoading);
     }
 
     searchEmails(accountKey, folderName, options={}) {

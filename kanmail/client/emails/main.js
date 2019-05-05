@@ -30,9 +30,12 @@ class MainEmails extends BaseEmails {
             requests.push(this.syncEmails(accountKey, folderName, options))
         ));
 
-        return Promise.all(requests)
-            .then(() => columnMetaStore.setSyncing(false))
-            .catch(() => columnMetaStore.setSyncing(false));
+        const finishLoading = () => {
+            if (this.active) {
+                columnMetaStore.setSyncing(false);
+            }
+        }
+        return Promise.all(requests).then(finishLoading).catch(finishLoading);
     }
 
     syncEmails(accountKey, folderName, options={}) {
@@ -88,9 +91,12 @@ class MainEmails extends BaseEmails {
             requests.push(this.getEmails(accountKey, folderName, options))
         ));
 
-        return Promise.all(requests)
-            .then(() => columnMetaStore.setLoading(false))
-            .catch(() => columnMetaStore.setLoading(false));
+        const finishLoading = () => {
+            if (this.active) {
+                columnMetaStore.setLoading(false);
+            }
+        }
+        return Promise.all(requests).then(finishLoading).catch(finishLoading);
     }
 
     getEmails(accountKey, folderName, options={}) {
