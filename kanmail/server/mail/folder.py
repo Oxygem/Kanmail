@@ -337,7 +337,8 @@ class Folder(object):
             # At this point we have the entire folder as new message IDs - we want
             # to fetch the first self.offset
             if len(message_uids) > self.offset:
-                new_message_uids = message_uids[:self.offset]
+                sorted_message_uids = sorted(message_uids, reverse=True)
+                new_message_uids = sorted_message_uids[:self.offset]
             else:
                 new_message_uids = message_uids
                 self.offset = len(message_uids)
