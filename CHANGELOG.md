@@ -1,3 +1,10 @@
+# v1.1905091719
+
+Changes:
+- Fix column meta clashes by tracking number of syncs/loads.
+- Move email stores back inside stores folder.
+- Fix syncing when UID validity has changed.
+
 # v1.1905051259
 
 Changes:
