@@ -13,6 +13,11 @@ class ColumnMetaStore extends BaseStore {
         this.folderName = folderName;
         this.props = {
             counts: {},
+
+            syncCount: 0,
+            loadCount: 0,
+
+            // Controlled by the above
             isLoading: false,
             isSyncing: false,
         };
@@ -32,6 +37,14 @@ class ColumnMetaStore extends BaseStore {
     }
 
     setSyncing(isSyncing) {
+        if (isSyncing) {
+            this.props.syncCount += 1;
+        } else {
+            this.props.syncCount -= 1;
+        }
+
+        isSyncing = this.props.syncCount > 0;
+
         if (this.props.isSyncing == isSyncing) {
             return;
         }
@@ -41,6 +54,14 @@ class ColumnMetaStore extends BaseStore {
     }
 
     setLoading(isLoading) {
+        if (isLoading) {
+            this.props.loadCount += 1;
+        } else {
+            this.props.loadCount -= 1;
+        }
+
+        isLoading = this.props.loadCount > 0;
+
         if (this.props.isLoading == isLoading) {
             return;
         }
