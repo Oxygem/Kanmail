@@ -4,13 +4,12 @@ import PropTypes from 'prop-types';
 
 import { ALIAS_FOLDERS, ALIAS_TO_ICON } from 'constants.js';
 
-import mainEmailStore from 'emails/main.js';
-
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
+import mainEmailStore from 'stores/emails/main.js';
 
 import { get } from 'util/requests.js';
 import { capitalizeFirstLetter } from 'util/string.js';

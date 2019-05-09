@@ -15,13 +15,13 @@ import EmailColumn from 'components/emails/EmailColumn.jsx';
 import MainColumn from 'components/emails/MainColumn.jsx';
 import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 
-import mainEmailStore from 'emails/main.js';
-
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
-import { get } from 'util/requests.js';
+import mainEmailStore from 'stores/emails/main.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
+
+import { get } from 'util/requests.js';
 
 
 @subscribe(settingsStore)

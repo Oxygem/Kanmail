@@ -4,7 +4,7 @@ import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
 import { getColumnMetaStore } from 'stores/columns.js';
 
-import BaseEmails from 'emails/base.js';
+import BaseEmails from 'stores/emails/base.js';
 
 
 class SearchEmails extends BaseEmails {
@@ -40,11 +40,7 @@ class SearchEmails extends BaseEmails {
             requests.push(this.searchEmails(accountKey, folderName, options))
         });
 
-        const finishLoading = () => {
-            if (this.active) {
-                columnMetaStore.setLoading(false);
-            }
-        }
+        const finishLoading = () => columnMetaStore.setLoading(false);
         return Promise.all(requests).then(finishLoading).catch(finishLoading);
     }
 

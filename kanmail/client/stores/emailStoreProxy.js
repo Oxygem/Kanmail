@@ -1,9 +1,8 @@
 import _ from 'lodash';
 
 import settingsStore from 'stores/settings.js';
-
-import mainEmailStore from 'emails/main.js';
-import searchEmailStore from 'emails/search.js';
+import mainEmailStore from 'stores/emails/main.js';
+import searchEmailStore from 'stores/emails/search.js';
 
 
 class EmailStoreProxy {
