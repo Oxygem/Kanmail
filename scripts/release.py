@@ -51,7 +51,7 @@ def _generate_version():
     return f'{MAJOR_VERSION}.{date_version}'
 
 
-def _write_version(version):
+def _write_version_data(version):
     channel = 'stable'
 
     # Write the version to the dist directory to be injected into the bundle
@@ -181,7 +181,7 @@ def prepare_release():
 
     click.echo(f'--> generate {VERSION_DATA_FILENAME}')
     _write_release_version(version)
-    _write_version(version)
+    _write_version_data(version)
 
     click.echo()
     click.echo(f'Kanmail v{version} release is prepped!')
@@ -189,7 +189,7 @@ def prepare_release():
     click.echo()
 
 
-def build_release():
+def build_release(build_only=False):
     system_type = platform.system()
 
     if system_type == 'Darwin' and not CODESIGN_KEY_NAME:
@@ -197,8 +197,12 @@ def build_release():
             'No `CODESIGN_KEY_NAME` environment variable provided!',
         )
 
-    release_version = _get_release_version()
-    click.echo(f'--> building v{release_version} on {system_type}')
+    if build_only:
+        version = _generate_version()
+    else:
+        version = _get_release_version()
+
+    click.echo(f'--> building v{version} on {system_type}')
 
     # Build the clientside JS bundle, rename with version
     _print_and_run(('yarn', 'run', 'build'))
@@ -209,13 +213,16 @@ def build_release():
     ))
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
-    specfile = _generate_spec(release_version)
+    specfile = _generate_spec(version)
+
+    if build_only:
+        _write_version_data(version)
 
     # Do the build with pyinstaller or pyupdater if releasing
     _print_and_run((
         'pyupdater',
         'build',
-        f'--app-version={release_version}',
+        f'--app-version={version}',
         '--windowed',
         '--name',
         'Kanmail',
@@ -224,10 +231,15 @@ def build_release():
 
     # Now use `codesign` to sign the package with a Developer ID
     if system_type == 'Darwin':
-        _macos_codesign(release_version)
+        _macos_codesign(version)
 
     click.echo()
-    click.echo(f'Kanmail v{release_version} for {system_type} built!')
+    click.echo(f'Kanmail v{version} for {system_type} built!')
+
+    if build_only:
+        click.echo('Cleaning up single build...')
+        return
+
     click.echo((
         f'--> run {click.style("scripts/release.py", bold=True)} '
         'to build on another platform'
@@ -273,7 +285,8 @@ def complete_release():
 
 @click.command()
 @click.option('--complete', is_flag=True, default=False)
-def release(complete=False):
+@click.option('--build-only', is_flag=True, default=False)
+def release(complete=False, build_only=False):
     click.echo()
     click.echo('### Kanmail release script')
     click.echo()
@@ -281,6 +294,9 @@ def release(complete=False):
     version_lock_exists = path.exists(TEMP_VERSION_LOCK_FILENAME)
 
     if complete:
+        if build_only:
+            raise click.UsageError('Cannot have --build-only and --complete!')
+
         if not version_lock_exists:
             raise click.UsageError(
                 f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
@@ -291,9 +307,12 @@ def release(complete=False):
         return
 
     # If the version lock exists we're actually building for a given platform
-    if version_lock_exists:
+    if version_lock_exists or build_only:
+        if build_only and version_lock_exists:
+            raise click.UsageError('Cannot --build-only when preparing a release!')
+
         click.echo('--> [2*/3] building release')
-        build_release()
+        build_release(build_only=build_only)
         return
 
     # No version lock so let's create one and prepare start-of-release
