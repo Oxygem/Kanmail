@@ -16,13 +16,19 @@ from kanmail.window import create_window, destroy_window
 SEND_WINDOW_DATA = {}
 
 
+def _get_render_data():
+    return {
+        'version': get_version(),
+        'frozen': FROZEN,
+        'debug': DEBUG,
+    }
+
+
 @app.route('/', methods=('GET',))
 def get_index():
     return render_template(
         'index.html',
-        version=get_version(),
-        frozen=FROZEN,
-        debug=DEBUG,
+        **_get_render_data(),
     )
 
 
@@ -30,8 +36,7 @@ def get_index():
 def get_settings():
     return render_template(
         'settings.html',
-        frozen=FROZEN,
-        debug=DEBUG,
+        **_get_render_data(),
     )
 
 
@@ -40,8 +45,7 @@ def get_send():
     return render_template(
         'send.html',
         contacts=get_contacts(),
-        frozen=FROZEN,
-        debug=DEBUG,
+        **_get_render_data(),
     )
 
 
@@ -59,8 +63,7 @@ def get_send_reply(uid):
         'send.html',
         reply=reply,
         contacts=get_contacts(),
-        frozen=FROZEN,
-        debug=DEBUG,
+        **_get_render_data(),
     )
 
 
