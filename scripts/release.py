@@ -246,7 +246,7 @@ def complete_release():
         f'Are you SURE v{release_version} is ready to release '
         '(commit changelog -> package -> sign -> upload)?'
     )):
-        raise click.ClickException('User is not sure!')
+        raise click.Abort('User is not sure!')
 
     # Git commit the changelog/tag/push
     _print_and_run(('git', 'add', 'CHANGELOG.md'))
@@ -282,7 +282,7 @@ def release(complete=False):
 
     if complete:
         if not version_lock_exists:
-            raise click.ClickException(
+            raise click.UsageError(
                 f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
             )
 
