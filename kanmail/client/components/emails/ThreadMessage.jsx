@@ -101,6 +101,7 @@ export default class ThreadMessage extends React.Component {
             open: props.open || props.message.unread,
             replying: false,
             replyingAll: false,
+            imagesShown: false,
         };
     }
 
@@ -143,9 +144,9 @@ export default class ThreadMessage extends React.Component {
         _.each(doc.querySelectorAll('blockquote'), blockquote => {
             const showButton = document.createElement('button');
             showButton.textContent = 'Show quote';
-            showButton.classList.add('quote-toggle');
 
             showButton.addEventListener('click', (ev) => {
+                ev.stopPropagation();
                 ev.preventDefault();
 
                 if (blockquote.style.display == 'none') {
@@ -167,7 +168,48 @@ export default class ThreadMessage extends React.Component {
             );
         });
 
+        // Replace imgs with show/hide buttons
+        _.each(doc.querySelectorAll('img'), img => {
+            const showButton = document.createElement('button');
+            showButton.textContent = 'Show image';
+            showButton.classList.add('show-image-button');
+
+            const imageUrl = img.src;
+            img.src = 'about:blank';
+
+            showButton.addEventListener('click', (ev) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                img.src = imageUrl;
+                showButton.parentNode.removeChild(showButton);
+            });
+
+            // Insert the button before the blockquote
+            img.parentNode.insertBefore(
+                showButton,
+                img.nextSibling,
+            );
+        });
+
         this.messageElementReady = true;
+    }
+
+    handleClickShowImages = () => {
+        if (
+            !this.state.open  // not open
+            || !this.messageElement  // or no target element
+        ) {
+            return;
+        }
+
+        const doc = this.messageElement;
+        const showImageButtons = doc.querySelectorAll('button.show-image-button');
+
+        _.each(showImageButtons, button => button.click());
+
+        this.setState({
+            imagesShown: true,
+        });
     }
 
     handleClick = () => {
