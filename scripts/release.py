@@ -4,7 +4,7 @@ import json
 import platform
 
 from datetime import datetime
-from os import environ, listdir, makedirs, path, remove, symlink
+from os import environ, makedirs, path, remove, symlink
 from shutil import rmtree
 from subprocess import check_output, run
 
@@ -143,25 +143,15 @@ def _macos_codesign(version):
     # we remove the original and replace with a symlink. Fixes codesign issues,
     # see: https://github.com/pyinstaller/pyinstaller/issues/3550
     _print_and_run((
-        'cp',
+        'mv',
         path.join(macos_dir, 'base_library.zip'),
         resources_dir,
     ))
 
-    click.echo('--> fixing app bundle symlinks')
-    for name in listdir(resources_dir):
-        target_path = path.join(macos_dir, name)
-        if path.exists(target_path):
-            click.echo(f'replacing copy with symlink: {target_path}')
-            if path.isdir(target_path):
-                rmtree(target_path)
-            else:
-                remove(target_path)
-
-            symlink(
-                path.join('..', 'Resources', name),
-                path.join(macos_dir, name),
-            )
+    symlink(
+        path.join('..', 'Resources', 'base_library.zip'),
+        path.join(macos_dir, 'base_library.zip'),
+    )
 
     # Sign it and re-tar!
     _print_and_run(('codesign', '-s', CODESIGN_KEY_NAME, '--deep', app_dir))
