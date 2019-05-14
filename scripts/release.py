@@ -165,7 +165,10 @@ def prepare_release():
     version = _generate_version()
     git_changes = _get_git_changes()
 
-    if not click.confirm(f'\nGit Changes:\n{git_changes}\n\nAre you SURE you wish to start releasing v{version}?'):
+    if not click.confirm((
+        f'\nGit Changes:\n{git_changes}\n\n'
+        f'Are you SURE you wish to start releasing v{version}?'
+    )):
         raise click.ClickException('User is not sure!')
 
     click.echo(f'--> preparing v{version} release')
@@ -220,8 +223,14 @@ def build_release():
 
     click.echo()
     click.echo(f'Kanmail v{release_version} for {system_type} built!')
-    click.echo(f'--> run {click.style("scripts/release.py", bold=True)} to build on another platform')
-    click.echo(f'--> run {click.style("scripts/release.py --complete", bold=True)} to complete the release')
+    click.echo((
+        f'--> run {click.style("scripts/release.py", bold=True)} '
+        'to build on another platform'
+    ))
+    click.echo((
+        f'--> run {click.style("scripts/release.py --complete", bold=True)} '
+        'to complete the release'
+    ))
     click.echo()
 
 
