@@ -175,8 +175,7 @@ export default class ThreadMessage extends React.Component {
             showButton.textContent = 'Show image';
             showButton.classList.add('show-image-button');
 
-            const imageUrl = img.src;
-            img.src = 'about:blank';
+            const imageUrl = img.getAttribute('original-src');
 
             showButton.addEventListener('click', (ev) => {
                 ev.stopPropagation();
@@ -247,6 +246,19 @@ export default class ThreadMessage extends React.Component {
         });
     }
 
+    handleClickText = () => {
+        this.messageElementReady = false;
+        this.setState({showPlainText: true});
+    }
+
+    handleClickHtml = () => {
+        this.messageElementReady = false;
+        this.setState({
+            showPlainText: false,
+            imagesShown: false,
+        });
+    }
+
     renderStar() {
         const { message } = this.props;
         const starred = _.includes(message.flags, '\\Flagged');
@@ -275,13 +287,13 @@ export default class ThreadMessage extends React.Component {
 
         const htmlToggle = message.body.html ? (
             <button
-                onClick={() => this.setState({showPlainText: false})}
+                onClick={this.handleClickHtml}
                 className={this.state.showPlainText ? '' : 'active'}
             >HTML</button>
         ): null;
 
         const textToggle = message.body.text ? (<button
-                onClick={() => this.setState({showPlainText: true})}
+                onClick={this.handleClickText}
                 className={this.state.showPlainText ? 'active' : ''}
             >Text</button>
         ) : null;

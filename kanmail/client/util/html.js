@@ -13,6 +13,14 @@ export function cleanHtml(html, returnElement=false) {
         element.parentNode.removeChild(element);
     });
 
+    // Remove image src attributes to stop them loading immediately
+    _.each(tempDocument.body.querySelectorAll(
+        'img,image',
+    ), img => {
+        img.setAttribute('original-src', img.src);
+        img.src = 'about:blank';
+    });
+
     if (returnElement) {
         return tempDocument.body;
     }
