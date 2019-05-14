@@ -200,8 +200,13 @@ def build_release():
     release_version = _get_release_version()
     click.echo(f'--> building v{release_version} on {system_type}')
 
-    # Build the clientside JS bundle
+    # Build the clientside JS bundle, rename with version
     _print_and_run(('yarn', 'run', 'build'))
+    _print_and_run((
+        'mv',
+        path.join(DIST_DIRNAME, 'main.js'),
+        path.join(DIST_DIRNAME, f'main-{version}.js'),
+    ))
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = _generate_spec(release_version)
