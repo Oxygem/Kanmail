@@ -196,9 +196,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
 
         if uid in uid_to_text_part_number:
             text_data = uid_part_data[uid][uid_to_text_part_number[uid]]
-
-            if html_data is None:
-                html_data = markdownify(text_data)
+            text_data = markdownify(text_data)
 
         uid_part_data_with_cids[uid] = {
             'cid_to_part': uid_to_content_ids[uid],
