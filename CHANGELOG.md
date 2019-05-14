@@ -1,3 +1,11 @@
+# v1.1905141947
+
+Changes:
+- Add a `--build-only` flag to the release script.
+- Use more appropriate exceptions in the release script.
+- Include version number in the JS bundle.
+- De-dupe view data.
+
 # v1.1905141113
 
 Changes:
