@@ -1,3 +1,14 @@
+# v1.1905141113
+
+Changes:
+- Extend clean script to remove any incomplete builds/changelog.
+- Properly prevent images from loading until explicitly allowed.
+- Tidy up.
+- Upgrade `pyupdater` and remove symlink hack.
+- Markdownify the text version of emails.
+- Show both plaintext and HTML (default) versions of emails.
+- Hide images by default with toggles to show.
+
 # v1.1905091719
 
 Changes:
