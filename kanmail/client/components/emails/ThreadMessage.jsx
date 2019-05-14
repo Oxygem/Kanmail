@@ -102,6 +102,7 @@ export default class ThreadMessage extends React.Component {
             replying: false,
             replyingAll: false,
             imagesShown: false,
+            showPlainText: false,
         };
     }
 
@@ -266,32 +267,58 @@ export default class ThreadMessage extends React.Component {
     }
 
     renderExtraMeta() {
-        if (this.state.open) {
-            const { message } = this.props;
-
-            return (
-                <div className="extra-meta">
-                    {this.renderFolders()}
-                    To: {this.renderAddresses(message.to)}
-                    {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
-                    {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
-                    <span className="right">
-                        <a onClick={this.handleClickForward}>
-                            <i className="fa fa-send"></i>
-                            Forward
-                        </a>
-                        <a onClick={this.handleClickReply}>
-                            <i className="fa fa-reply"></i>
-                            Reply
-                        </a>
-                        <a onClick={this.handleClickReplyAll}>
-                            <i className="fa fa-reply-all"></i>
-                            Reply All
-                        </a>
-                    </span>
-                </div>
-            );
+        if (!this.state.open) {
+            return;
         }
+
+        const { message } = this.props;
+
+        const htmlToggle = message.body.html ? (
+            <button
+                onClick={() => this.setState({showPlainText: false})}
+                className={this.state.showPlainText ? '' : 'active'}
+            >HTML</button>
+        ): null;
+
+        const textToggle = message.body.text ? (<button
+                onClick={() => this.setState({showPlainText: true})}
+                className={this.state.showPlainText ? 'active' : ''}
+            >Text</button>
+        ) : null;
+
+        const imagesToggle = this.state.imagesShown ? null : (
+            <button
+                onClick={this.handleClickShowImages}
+            >Show all images</button>
+        );
+
+        return (
+            <div className="extra-meta">
+                {this.renderFolders()}
+                To: {this.renderAddresses(message.to)}
+                {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
+                {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
+
+                <span className="right">
+                    {htmlToggle}
+                    {textToggle}
+                    {imagesToggle}
+
+                    <a onClick={this.handleClickForward}>
+                        <i className="fa fa-send"></i>
+                        Forward
+                    </a>
+                    <a onClick={this.handleClickReply}>
+                        <i className="fa fa-reply"></i>
+                        Reply
+                    </a>
+                    <a onClick={this.handleClickReplyAll}>
+                        <i className="fa fa-reply-all"></i>
+                        Reply All
+                    </a>
+                </span>
+            </div>
+        );
     }
 
     renderBody() {
@@ -301,13 +328,15 @@ export default class ThreadMessage extends React.Component {
 
         const {
             body,
-            contentIds,
             account_name,
             folder_name,
             uid,
-         } = this.props.message;
+        } = this.props.message;
 
-        const doc = cleanHtml(body, true);
+        const html = this.state.showPlainText && body.text ? body.text : body.html;
+
+        const contentIds = body.cid_to_part;
+        const doc = cleanHtml(html, true);
 
         _.each(doc.querySelectorAll('img'), img => {
             if (_.startsWith(img.src, 'cid:')) {

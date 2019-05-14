@@ -109,8 +109,7 @@ class ThreadStore extends BaseStore {
         this.props.fetching = true;
 
         const requests = [];
-        const emailBodyParts = {};
-        const emailContentIds = {};
+        const emailParts = {};
 
         _.each(folderUidParts, (uidParts, folderName) => {
             const accountName = uidParts[0].message.account_name;
@@ -128,10 +127,7 @@ class ThreadStore extends BaseStore {
                 {uid: uidList},
                 criticalRequestNonce,
             ).then(data => {
-                _.each(data.emails, (email, uid) => {
-                    emailBodyParts[uid] = email.html;
-                    emailContentIds[uid] = email.cid_to_part;
-                });
+                _.each(data.emails, (email, uid) => emailParts[uid] = email);
             });
 
             requests.push(request);
@@ -149,8 +145,7 @@ class ThreadStore extends BaseStore {
                 const uid = message.folderUids[folderName];
 
                 return {
-                    body: emailBodyParts[uid],
-                    contentIds: emailContentIds[uid],
+                    body: emailParts[uid],
                     ...message,
                 };
             });
