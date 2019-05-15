@@ -47,8 +47,8 @@ function handleReponse(response, criticalRequestNonce=false) {
 }
 
 
-export function get(url, query={}, criticalRequestNonce=false) {
-    console.debug(`Requesting: GET ${url}?:`, query, criticalRequestNonce);
+function get_or_delete(type, url, query={}, criticalRequestNonce=false) {
+    console.debug(`Requesting: ${type} ${url}?:`, query, criticalRequestNonce);
 
     const uri = URI(url);
 
@@ -57,13 +57,19 @@ export function get(url, query={}, criticalRequestNonce=false) {
     }
 
     return (
-        fetch(uri.query(query))
+        fetch(uri.query(query), {
+            method: type,
+        })
         .then(response => {
-            console.debug(`Response to GET ${url}`, response);
+            console.debug(`Response to ${type} ${url}`, response);
             return handleReponse(response, criticalRequestNonce);
         })
     );
 }
+
+
+export const get = _.partial(get_or_delete, 'GET');
+export const delete_ = _.partial(get_or_delete, 'DELETE');
 
 
 function post_or_put(type, url, data, criticalRequestNonce=false) {
@@ -89,7 +95,6 @@ function post_or_put(type, url, data, criticalRequestNonce=false) {
         })
     );
 }
-
 
 export const post = _.partial(post_or_put, 'POST');
 export const put = _.partial(post_or_put, 'PUT');
