@@ -132,7 +132,7 @@ def get_default_settings():
             'sync_interval': 60000,
             # Number of ms to hold archive/trash actions before executing them - during
             # which you can undo them.
-            'undo_ms': 2000,
+            'undo_ms': 5000,
         },
     }
 
