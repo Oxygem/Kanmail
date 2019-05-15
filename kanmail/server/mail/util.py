@@ -163,7 +163,6 @@ def decode_string(string, string_meta=None):
         string = b64decode(string)
 
     if charset:
-        charset = charset.decode()
         string = string.decode(charset, 'ignore')
 
     if isinstance(string, bytes):
@@ -232,6 +231,26 @@ def extract_headers(raw_message):
     return headers
 
 
+def _parse_bodystructure_list(items):
+    '''
+    Given a list of items ('KEY', 'value', 'OTHER_KEY', 'other_value'), returns
+    a dict representation. Handles nested lists.
+    '''
+
+    data = {}
+
+    for i in range(0, len(items), 2):
+        key = items[i]
+        value = items[i + 1]
+
+        if isinstance(value, tuple):
+            value = _parse_bodystructure_list(value)
+
+        data[key] = value
+
+    return data
+
+
 def _parse_bodystructure(bodystructure, item_number=None):
     items = {}
 
@@ -257,6 +276,7 @@ def _parse_bodystructure(bodystructure, item_number=None):
         content_id = bodystructure[3]
         if content_id:
             content_id = content_id.decode()
+            content_id = content_id.strip('<>')
 
         data = {
             'type': type_or_bodies.decode(),
@@ -266,14 +286,32 @@ def _parse_bodystructure(bodystructure, item_number=None):
             'size': size,
         }
 
-        charset_or_name = bodystructure[2]
+        extra_data = {}
 
-        if charset_or_name:
-            charset_or_name_key, charset_or_name = bodystructure[2][:2]
-            if charset_or_name_key.upper() == b'NAME':
-                data['name'] = charset_or_name
-            else:
-                data['charset'] = charset_or_name
+        if bodystructure[2]:
+            extra_data.update(_parse_bodystructure_list(bodystructure[2]))
+
+        if len(bodystructure) >= 9 and bodystructure[8]:
+            extra_data.update(_parse_bodystructure_list(bodystructure[8]))
+
+        if b'CHARSET' in extra_data:
+            data['charset'] = extra_data[b'CHARSET'].decode()
+
+        if b'NAME' in extra_data:
+            data['name'] = extra_data[b'NAME'].decode()
+
+        attachment_data = extra_data.get(b'ATTACHMENT')
+        if attachment_data:
+            data['attachment'] = True
+
+        inline_data = extra_data.get(b'INLINE')
+        if inline_data:
+            data['inline'] = True
+
+        any_attachment_data = attachment_data or inline_data
+        if any_attachment_data:
+            if b'FILENAME' in any_attachment_data:
+                data['name'] = any_attachment_data[b'FILENAME'].decode()
 
         item_number = item_number or 1
         items[item_number] = data
@@ -307,6 +345,7 @@ def parse_bodystructure(bodystructure):
                 items['plain'] = number
                 continue
 
-        items['attachments'].append(number)
+        if part.get('attachment'):
+            items['attachments'].append(number)
 
     return items
