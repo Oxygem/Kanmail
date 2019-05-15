@@ -3,7 +3,7 @@ import React from 'react';
 import { PropTypes } from 'prop-types';
 import { DropTarget } from 'react-dnd';
 
-import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
+import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
 import EmailColumnHeader from 'components/emails/EmailColumnHeader.jsx';
 import EmailColumnThread from 'components/emails/EmailColumnThread.jsx';
@@ -138,7 +138,7 @@ class EmailColumn extends React.Component {
         // Kick off new email checking at the interval
         this.newEmailCheck = setInterval(
             this.getNewEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
+            this.props.systemSettings.sync_interval,
         );
     }
 

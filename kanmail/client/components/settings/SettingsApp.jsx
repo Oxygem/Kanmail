@@ -295,6 +295,23 @@ export default class SettingsApp extends React.Component {
                                 'systemSettings', 'undo_ms',
                             )}
                         />
+
+                        <label htmlFor="sync_interval">
+                            Sync interval (ms)
+                            <small>
+                                how often to sync emails
+                            </small>
+                        </label>
+                        <input
+                            required
+                            type="number"
+                            id="sync_interval"
+                            value={this.state.systemSettings.sync_interval}
+                            onChange={_.partial(
+                                this.handleSettingUpdate,
+                                'systemSettings', 'sync_interval',
+                            )}
+                        />
                     </div>
 
                     <div className="settings" id="system">

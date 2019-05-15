@@ -6,7 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 
 import keyboard from 'keyboard.js';
 import { createWindowPositionHandlers } from 'window.js';
-import { ALWAYS_SYNC_FOLDERS, CHECK_NEW_EMAIL_INTERVAL } from 'constants.js';
+import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
 import Thread from 'components/emails/Thread.jsx';
 import Search from 'components/emails/Search.jsx';
@@ -41,7 +41,12 @@ export default class EmailsApp extends React.Component {
         // Create resize/move window position saver handlers
         createWindowPositionHandlers();
 
-        const { initial_batches, batch_size } = this.props.systemSettings;
+        const {
+                initial_batches,
+                batch_size,
+                sync_interval,
+        } = this.props.systemSettings;
+
         const initialBatchSize = batch_size * initial_batches;
 
         // Load all the alias folders (ie the main column)
@@ -60,7 +65,7 @@ export default class EmailsApp extends React.Component {
 
         this.newAliasEmailCheck = setInterval(
             this.getNewAliasFolderEmails,
-            CHECK_NEW_EMAIL_INTERVAL,
+            sync_interval,
         );
         updateStore.checkUpdate();
     }

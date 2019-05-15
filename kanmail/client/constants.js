@@ -1,5 +1,3 @@
-export const CHECK_NEW_EMAIL_INTERVAL = 60000;
-
 export const ALWAYS_SYNC_FOLDERS = [
     'inbox',
     'sent',

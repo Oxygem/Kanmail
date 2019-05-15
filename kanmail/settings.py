@@ -128,7 +128,8 @@ def get_default_settings():
             'initial_batches': 3,
             # Number of days email to sync (0=all)
             'sync_days': 0,
-
+            # Number of ms between email syncs
+            'sync_interval': 60000,
             # Number of ms to hold archive/trash actions before executing them - during
             # which you can undo them.
             'undo_ms': 2000,
