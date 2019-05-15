@@ -12,6 +12,8 @@ import { get, post } from 'util/requests.js';
 
 
 const newAccountState = {
+    showAdvancedSettings: false,
+
     // Add account phase 1 - name/username/password autoconfig form
     addingAccount: false,
     newAccountName: '',
@@ -251,6 +253,79 @@ export default class SettingsApp extends React.Component {
         </div>;
     }
 
+    renderAdvancedSettings() {
+        if (!this.state.showAdvancedSettings) {
+            return (
+                <div className="settings" id="system">
+                    <button
+                        onClick={() => this.setState({showAdvancedSettings: true})}
+                    >Show advanced settings <i className="fa fa-arrow-down" /></button>
+                </div>
+            );
+        }
+
+        return (
+             <div className="settings advanced" id="system">
+                 <button
+                    onClick={() => this.setState({showAdvancedSettings: false})}
+                >Hide advanced settings <i className="fa fa-arrow-down" /></button>
+
+                <h2>
+                    Advanced <small>
+                        <i className="red fa fa-exclamation-triangle" /> danger zone
+                    </small>
+                </h2>
+                <label htmlFor="batch_size">
+                    Batch size
+                    <small>number of emails to fetch at once</small>
+                </label>
+                <input
+                    required
+                    type="number"
+                    id="batch_size"
+                    value={this.state.systemSettings.batch_size}
+                    onChange={_.partial(
+                        this.handleSettingUpdate,
+                        'systemSettings', 'batch_size',
+                    )}
+                />
+
+                <label htmlFor="initial_batches">
+                    Initial batches
+                    <small>initial number of batches to fetch</small>
+                </label>
+                <input
+                    required
+                    type="number"
+                    id="initial_batches"
+                    value={this.state.systemSettings.initial_batches}
+                    onChange={_.partial(
+                        this.handleSettingUpdate,
+                        'systemSettings', 'initial_batches',
+                    )}
+                />
+
+                <label htmlFor="sync_days">
+                    Sync days
+                    <small>
+                        days of email to sync (0 = all)<br />
+                        note: this does not affect search
+                    </small>
+                </label>
+                <input
+                    required
+                    type="number"
+                    id="sync_days"
+                    value={this.state.systemSettings.sync_days}
+                    onChange={_.partial(
+                        this.handleSettingUpdate,
+                        'systemSettings', 'sync_days',
+                    )}
+                />
+            </div>
+        );
+    }
+
     render() {
         return (
             <div>
@@ -314,60 +389,7 @@ export default class SettingsApp extends React.Component {
                         />
                     </div>
 
-                    <div className="settings" id="system">
-                        <h2>
-                            Sync <small>
-                                <i className="red fa fa-exclamation-triangle"></i> danger zone
-                            </small>
-                        </h2>
-                        <label htmlFor="batch_size">
-                            Batch size
-                            <small>number of emails to fetch at once</small>
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="batch_size"
-                            value={this.state.systemSettings.batch_size}
-                            onChange={_.partial(
-                                this.handleSettingUpdate,
-                                'systemSettings', 'batch_size',
-                            )}
-                        />
-
-                        <label htmlFor="initial_batches">
-                            Initial batches
-                            <small>initial number of batches to fetch</small>
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="initial_batches"
-                            value={this.state.systemSettings.initial_batches}
-                            onChange={_.partial(
-                                this.handleSettingUpdate,
-                                'systemSettings', 'initial_batches',
-                            )}
-                        />
-
-                        <label htmlFor="sync_days">
-                            Sync days
-                            <small>
-                                days of email to sync (0 = all)<br />
-                                note: this does not affect search
-                            </small>
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="sync_days"
-                            value={this.state.systemSettings.sync_days}
-                            onChange={_.partial(
-                                this.handleSettingUpdate,
-                                'systemSettings', 'sync_days',
-                            )}
-                        />
-                    </div>
+                    {this.renderAdvancedSettings()}
 
                     <button
                         type="submit"
