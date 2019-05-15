@@ -1,3 +1,17 @@
+# v1.1905152003
+
+Changes:
+- Huge improvement to parsing of `BODYSTRUCTURE`.
+- Add bust cache button to advanced settings.
+- Add API to delete caches.
+- Only bust cache if we had a UIDVALIDITY.
+- Add `delete` method to requests util.
+- Hide advanced settings behind a toggle.
+- Don't hide images included as attachments - only remote images.
+- Fix bug in re-opening settings window.
+- Up default undo ms to 5000.
+- Add `sync_interval` setting.
+
 # v1.1905141947
 
 Changes:
