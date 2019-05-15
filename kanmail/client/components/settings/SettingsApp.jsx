@@ -8,7 +8,7 @@ import Account from 'components/settings/Account.jsx';
 import keyboard from 'keyboard.js';
 import { closeWindow } from 'window.js';
 
-import { get, post } from 'util/requests.js';
+import { delete_, get, post } from 'util/requests.js';
 
 
 const newAccountState = {
@@ -173,6 +173,14 @@ export default class SettingsApp extends React.Component {
             .catch(err => console.log('SETTING ERROR', err));
     }
 
+    handleBustCache = (ev) => {
+        ev.preventDefault();
+
+        delete_('/api/settings/cache')
+            .then(() => closeWindow())
+            .catch(err => console.log('SETTING ERROR', err));
+    }
+
     renderAccounts() {
         return _.map(this.state.accounts, (accountSettings, accountId) => (
             <Account
@@ -246,7 +254,7 @@ export default class SettingsApp extends React.Component {
                 >Add Account</button>
 
                 <button className="cancel" onClick={this.toggleAddAccount}>
-                    <i className="fa fa-times"></i>
+                    <i className="fa fa-times" />
                 </button>
             </form>
             <p><strong>Gmail users:</strong> you will need to <a onClick={() => get('/open-link', {url: 'https://myaccount.google.com/apppasswords'})}>create an app password</a> to use with Kanmail.</p>
@@ -322,6 +330,18 @@ export default class SettingsApp extends React.Component {
                         'systemSettings', 'sync_days',
                     )}
                 />
+
+                <label>
+                    Clear cache
+                    <small>
+                        any settings changes will be lost,<br />
+                        will immediately reload the app
+                    </small>
+                </label>
+                <button
+                    className="cancel"
+                    onClick={this.handleBustCache}
+                >Clear the cache</button>
             </div>
         );
     }
@@ -372,9 +392,9 @@ export default class SettingsApp extends React.Component {
                         />
 
                         <label htmlFor="sync_interval">
-                            Sync interval (ms)
+                            Update interval (ms)
                             <small>
-                                how often to sync emails
+                                how often to fetch new emails
                             </small>
                         </label>
                         <input
