@@ -34,6 +34,7 @@ def create_window(title='Kanmail', endpoint='/', unique=False, **kwargs):
             **kwargs,
         )
     else:
+        window_uid = None
         if not webbrowser.open(link):
             logger.warning('Failed to open browser window!')
             return False
@@ -47,9 +48,9 @@ def create_window(title='Kanmail', endpoint='/', unique=False, **kwargs):
 
 
 def destroy_window(internal_id):
-    window_uid = ID_TO_UID.pop(internal_id)
+    window_uid = ID_TO_UID.pop(internal_id, None)
 
-    if webview.window_exists(uid=window_uid):
+    if window_uid and webview.window_exists(uid=window_uid):
         webview.destroy_window(uid=window_uid)
     else:
         logger.warning(f'Tried to destroy non-existant window: {internal_id}')
