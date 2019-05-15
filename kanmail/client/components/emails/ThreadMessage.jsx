@@ -97,12 +97,16 @@ export default class ThreadMessage extends React.Component {
     constructor(props) {
         super(props);
 
+        const hasHtml = props.message.body.html ? true : false;
+
         this.state = {
             open: props.open || props.message.unread,
             replying: false,
             replyingAll: false,
-            imagesShown: false,
-            showPlainText: false,
+
+            // No HTML version? Show plain text only and hide show images button
+            imagesShown: !hasHtml,
+            showPlainText: !hasHtml,
         };
     }
 
@@ -171,11 +175,14 @@ export default class ThreadMessage extends React.Component {
 
         // Replace imgs with show/hide buttons
         _.each(doc.querySelectorAll('img'), img => {
+            const imageUrl = img.getAttribute('original-src');
+            if (!imageUrl) { // ignore attached images (don't have original-src)
+                return;
+            }
+
             const showButton = document.createElement('button');
             showButton.textContent = 'Show image';
             showButton.classList.add('show-image-button');
-
-            const imageUrl = img.getAttribute('original-src');
 
             showButton.addEventListener('click', (ev) => {
                 ev.stopPropagation();
@@ -301,7 +308,7 @@ export default class ThreadMessage extends React.Component {
         const imagesToggle = this.state.imagesShown ? null : (
             <button
                 onClick={this.handleClickShowImages}
-            >Show all images</button>
+            >Show remote images</button>
         );
 
         return (
@@ -345,16 +352,20 @@ export default class ThreadMessage extends React.Component {
             uid,
         } = this.props.message;
 
-        const html = this.state.showPlainText && body.text ? body.text : body.html;
+        let html = body.html || body.text;
+        if (this.state.showPlainText) {
+            html = body.text;
+        }
 
         const contentIds = body.cid_to_part;
         const doc = cleanHtml(html, true);
 
         _.each(doc.querySelectorAll('img'), img => {
-            if (_.startsWith(img.src, 'cid:')) {
-                const cid = `<${img.src.slice(4)}>`;
-                img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}`
+            if (!_.startsWith(img.src, 'cid:')) {
+                return;
             }
+            const cid = `<${img.src.slice(4)}>`;
+            img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}`;
         });
 
         return <div

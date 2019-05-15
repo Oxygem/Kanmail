@@ -17,6 +17,10 @@ export function cleanHtml(html, returnElement=false) {
     _.each(tempDocument.body.querySelectorAll(
         'img,image',
     ), img => {
+        // Attached images are OK!
+        if (_.startsWith(img.src, 'cid:')) {
+            return;
+        }
         img.setAttribute('original-src', img.src);
         img.src = 'about:blank';
     });
