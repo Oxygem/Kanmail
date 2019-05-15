@@ -33,12 +33,12 @@ UIDS_NAMESPACE = 'uids'  # uid lists
 HEADERS_NAMESPACE = 'headers'  # email headers
 
 
-def bust_all_cached_uids():
-    logger.warning('Busting all UID caches!')
+def bust_all_caches(caches=(UID_VALIDITY_NAMESPACE, UIDS_NAMESPACE, HEADERS_NAMESPACE)):
+    logger.warning(f'Busting entire caches: {caches}!')
 
     with MAKE_DIRS_LOCK:
-        # TODO: un-hardcode these namespaces?
-        rmtree(path.join(CACHE_DIR, UIDS_NAMESPACE))
+        for folder in (caches):
+            rmtree(path.join(CACHE_DIR, folder))
 
 
 def _make_uid_key(uid):

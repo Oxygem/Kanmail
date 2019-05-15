@@ -3,7 +3,7 @@ from flask import jsonify, request
 from kanmail import settings
 from kanmail.server.app import app
 from kanmail.server.mail import reset_account_folders
-from kanmail.server.mail.folder_cache import bust_all_cached_uids
+from kanmail.server.mail.folder_cache import bust_all_caches
 from kanmail.settings import (
     get_settings,
     set_cached_window_settings,
@@ -29,20 +29,18 @@ def api_set_settings():
     # If sync days changes we need to nuke the caches
     if 'system.sync_days' in changed_keys:
         reset_account_folders()  # un-cache accounts/folders
-        bust_all_cached_uids()  # nuke the on-disk UID list caches
+        bust_all_caches()  # nuke the on-disk caches
 
     reload_main_window()
 
     return jsonify(saved=True)
 
 
-@app.route('/api/settings', methods=('PUT',))
-def api_update_settings():
-    request_data = request.get_json()
-
-    update_settings(request_data)
-
-    return jsonify(saved=True)
+@app.route('/api/settings/cache', methods=('DELETE',))
+def api_delete_caches():
+    bust_all_caches()
+    reload_main_window()
+    return jsonify(deleted=True)
 
 
 @app.route('/api/settings/window', methods=('POST',))
