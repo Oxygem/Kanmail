@@ -298,7 +298,12 @@ class Folder(object):
         cache_validity = self.cache.get_uid_validity()
 
         if uid_validity != cache_validity:
-            self.cache.bust()
+            if cache_validity:
+                logger.debug(
+                    'Found invalid UIDVALIDITY '
+                    f'(local={cache_validity}, remote={uid_validity})',
+                )
+                self.cache.bust()
             self.cache.set_uid_validity(uid_validity)
             return False
         return True
