@@ -22,3 +22,4 @@ def api_update_and_restart():
         return abort(404, 'No update found!')
 
     update_device(update)
+    return jsonify(update_ready=True)
