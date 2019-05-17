@@ -1,3 +1,10 @@
+# v1.1905171913
+
+Changes:
+- Provide feedback when updating and render the correct version.
+- Return something from the update view.
+- Don't auto restart after updating.
+
 # v1.1905152003
 
 Changes:
