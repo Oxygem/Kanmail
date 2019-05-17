@@ -21,6 +21,8 @@ export default class Filters extends React.Component {
         mainColumn: PropTypes.string.isRequired,
         filterStore: PropTypes.object.isRequired,
         accounts: PropTypes.object.isRequired,
+        updateReady: PropTypes.bool.isRequired,
+        updateDownloading: PropTypes.bool.isRequired,
         accountName: PropTypes.string,
         updateVersion: PropTypes.string,
     }
@@ -71,15 +73,24 @@ export default class Filters extends React.Component {
             return;
         }
 
+        if (this.props.updateReady) {
+            return (
+                <li>Update installed, restart Kanmail to use...</li>
+            );
+        }
+
+        const classNames = ['fa', 'fa-refresh'];
+        if (this.props.updateDownloading) {
+            classNames.push('fa-spin');
+        }
+
         return (
-            <ul>
-                <li>
-                    <a onClick={() => updateStore.doUpdate()}>
-                        <i className="fa fa-refresh"></i> Update & restart
-                        <span>new: v1.02429492</span>
-                    </a>
-                </li>
-            </ul>
+            <li>
+                <a onClick={() => updateStore.doUpdate()}>
+                    <i className={classNames.join(' ')}></i> Update
+                    <span>new: {this.props.updateVersion}</span>
+                </a>
+            </li>
         );
     }
 
@@ -103,7 +114,9 @@ export default class Filters extends React.Component {
                 </li>
             </ul>
 
-            {this.renderUpdateLink()}
+            <ul>
+                {this.renderUpdateLink()}
+            </ul>
         </div>);
     }
 }

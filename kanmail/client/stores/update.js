@@ -15,6 +15,8 @@ class UpdateStore extends BaseStore {
 
         this.props = {
             updateVersion: null,
+            updateReady: false,
+            updateDownloading: false,
         };
     }
 
@@ -28,8 +30,14 @@ class UpdateStore extends BaseStore {
     }
 
     doUpdate() {
+        this.props.updateDownloading = true;
+        this.triggerUpdate();
+
         // Just do the post - it'll nuke the window!
-        return post('/api/update');
+        return post('/api/update').then(() => {
+            this.props.updateReady = true;
+            this.triggerUpdate();
+        });
     }
 }
 
