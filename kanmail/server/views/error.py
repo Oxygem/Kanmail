@@ -2,6 +2,7 @@ from flask import jsonify, make_response
 
 from kanmail.log import logger
 from kanmail.server.app import app
+from kanmail.server.mail.connection import ImapConnectionError
 
 
 @app.errorhandler(400)
@@ -31,16 +32,23 @@ def error_method_not_allowed(e):
     ), 405)
 
 
+@app.errorhandler(ImapConnectionError)
+def error_network_exception(e):
+    error_name = e.__class__.__name__
+    message = f'{getattr(e, "args", e)}'
+    logger.exception(f'Unexpected exception in view: {message}')
+    return make_response(jsonify(
+        status_code=503,
+        error_name=error_name,
+        error_message=message,
+    ), 503)
+
+
 @app.errorhandler(Exception)
 def error_unexpected_exception(e):
     error_name = e.__class__.__name__
     message = f'{getattr(e, "args", e)}'
-
-    # Re-raise it so we log it
-    try:
-        raise e
-    except Exception:
-        logger.exception(f'Unexpected exception in view: {message}')
+    logger.exception(f'Unexpected exception in view: {message}')
 
     return make_response(jsonify(
         status_code=500,

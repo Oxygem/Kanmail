@@ -15,6 +15,10 @@ MAX_ATTEMPTS = 10
 MAX_CONNECTIONS = 10
 
 
+class ImapConnectionError(OSError):
+    pass
+
+
 class ImapConnectionWrapper(object):
     _imap = None
 
@@ -27,7 +31,7 @@ class ImapConnectionWrapper(object):
 
     def __getattr__(self, key):
         if self._imap is None:
-            self.make_imap()
+            self.try_make_imap()
 
         attr = getattr(self._imap, key)
 
@@ -56,10 +60,16 @@ class ImapConnectionWrapper(object):
                 except (IMAPClientAbortError, socket_error) as e:
                     attempts += 1
                     logger.critical(f'IMAP error {attempts}/{MAX_ATTEMPTS}: {e}')
-                    self.make_imap()
+                    self.try_make_imap()
                     func = getattr(self._imap, key)
 
         return wrapper
+
+    def try_make_imap(self):
+        try:
+            self.make_imap()
+        except OSError as e:
+            raise ImapConnectionError(*e.args)
 
     def make_imap(self):
         server_string = (
