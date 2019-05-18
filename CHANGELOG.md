@@ -1,3 +1,11 @@
+# v1.1905181142
+
+Changes:
+- Raise the first of any exceptions when executing threaded functions.
+- Only re-cache UIDs if changed.
+- Capture/wrap IMAP connection errors and handle in error view.
+- Get account capabilities on demand.
+
 # v1.1905171913
 
 Changes:
