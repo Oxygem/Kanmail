@@ -328,6 +328,7 @@ class Folder(object):
 
         # Check the folder UIDVALIDITY (busts the cache if needed)
         uids_valid = self.check_cache_validity()
+        uids_changed = False
 
         if uids_valid:
             # Remove existing from new to get anything new
@@ -335,6 +336,11 @@ class Folder(object):
             # Remove new from existing to get deleted
             deleted_message_uids = self.email_uids - message_uids
             self.fix_offset_before_removing_uids(deleted_message_uids)
+
+            uids_changed = (
+                len(new_message_uids) > 0
+                or len(deleted_message_uids) > 0
+            )
         else:
             # All old uids invalid, so set all old to deleted
             deleted_message_uids = self.email_uids
@@ -348,8 +354,12 @@ class Folder(object):
                 new_message_uids = message_uids
                 self.offset = len(message_uids)
 
+            uids_changed = True
+
         self.email_uids = message_uids
-        self.cache_uids()
+
+        if uids_changed:
+            self.cache_uids()
 
         for uid in deleted_message_uids:
             self.cache.delete_headers(uid)
