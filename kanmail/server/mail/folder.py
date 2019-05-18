@@ -233,7 +233,7 @@ class Folder(object):
         if isinstance(self.query, six.string_types):
             # Use Gmails X-GM-RAW search extension if available - supports full
             # Gmail style search queries.
-            if b'X-GM-EXT-1' in self.account.capabilities:
+            if b'X-GM-EXT-1' in self.account.get_capabilities():
                 search_query = ['X-GM-RAW', self.query]
             else:
                 # IMAP uses polish notation (operator on the left)

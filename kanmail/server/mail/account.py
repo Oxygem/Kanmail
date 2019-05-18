@@ -6,6 +6,8 @@ from .send import send_email
 
 
 class Account(object):
+    capabilities = None
+
     def __init__(self, name, settings):
         self.name = name
 
@@ -25,9 +27,10 @@ class Account(object):
             **settings['smtp_connection'],
         )
 
-        with self.connection_pool.get_connection() as connection:
-            self.capabilities = connection.capabilities()
-            logger.debug(f'Connected to {self.name}, capabilities: {self.capabilities}')
+    def reset(self):
+        # Map of folder name -> Folder object
+        self.folders = {}
+        self.query_folders = {}
 
     def get_imap_connection(self):
         return self.connection_pool.get_connection()
@@ -35,10 +38,13 @@ class Account(object):
     def get_smtp_connection(self):
         return self.smtp_connection.get_connection()
 
-    def reset(self):
-        # Map of folder name -> Folder object
-        self.folders = {}
-        self.query_folders = {}
+    def get_capabilities(self):
+        if self.capabilities is None:
+            with self.connection_pool.get_connection() as connection:
+                self.capabilities = connection.capabilities()
+                logger.debug(f'Loaded capabilities for {self.name}: {self.capabilities}')
+
+        return self.capabilities
 
     def get_folders(self):
         '''
