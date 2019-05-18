@@ -41,7 +41,11 @@ def execute_threaded(func, args_list):
     queue = Queue()
 
     def wrapper(queue, *args):
-        queue.put(func(*args))
+        try:
+            output = func(*args)
+        except Exception as e:
+            output = e
+        queue.put(output)
 
     threads = []
 
@@ -56,4 +60,10 @@ def execute_threaded(func, args_list):
 
     # Grab the queue - not thread safe but after threads :)
     items = list(queue.queue)
+
+    # Raise any exceptions (will only raise first)
+    for item in items:
+        if isinstance(item, Exception):
+            raise item
+
     return items
