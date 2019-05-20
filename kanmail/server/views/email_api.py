@@ -19,6 +19,7 @@ from kanmail.server.mail import (
     unstar_folder_emails,
 )
 from kanmail.server.util import get_list_or_400, get_or_400
+from kanmail.window import create_save_dialog
 
 
 @app.route('/api/folders', methods=['GET'])
@@ -112,11 +113,15 @@ def api_download_account_email_part(account, folder, uid, part_number):
     Download a specific part of an email by account/folder/UID.
     '''
 
-    # Get this now to trigger 400 if no filename
-    # TODO: ~/Downloads not portable
-    local_filename = path.expanduser(path.join(
-        '~', 'Downloads', request.args['filename'],
-    ))
+    local_filename = create_save_dialog(
+        path.expanduser(path.join('~', 'Downloads')),
+        request.args['filename'],
+    )
+
+    if local_filename is None:
+        return jsonify(saved=False, cancelled=True)
+
+    local_filename = local_filename[0]
 
     mime_type, data = get_folder_email_part(
         account, folder, uid, part_number,
@@ -130,7 +135,7 @@ def api_download_account_email_part(account, folder, uid, part_number):
     with open(local_filename, 'wb') as f:
         f.write(data)
 
-    return jsonify(saved_to_downloads=True)
+    return jsonify(saved=True, filename=local_filename)
 
 
 @app.route('/api/emails/<account>/<folder>/move', methods=('POST',))

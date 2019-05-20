@@ -20,8 +20,9 @@ class ThreadMessageAttachment extends React.Component {
         super(props);
 
         this.state = {
-            downloaded: false,
             downloading: false,
+            downloaded: false,
+            downloadedFilename: null,
         };
     }
 
@@ -38,34 +39,43 @@ class ThreadMessageAttachment extends React.Component {
             `Fetch message part in ${account_name}/${folder_name}: ${uid}/${partId}`,
             `/api/emails/${account_name}/${folder_name}/${uid}/${partId}/download`,
             {filename: part.name || 'unknown'},
-        ).then(() => {
-            this.setState({
-                downloaded: true,
-                downloading: false,
-            });
+        ).then(data => {
+            if (data.saved) {
+                this.setState({
+                    downloading: false,
+                    downloaded: true,
+                    downloadedFilename: data.filename,
+                });
+            } else {
+                this.setState({
+                    downloading: false,
+                    downloaded: false,
+                    downloadedFilename: null,
+                });
+            }
         });
     }
 
     renderName() {
         const { part } = this.props;
+        const name = part.name || 'unknown';
 
-        let name = part.name;
+        let nameOrIcon = name;
         let topMeta = `${part.type}/${part.subtype}`;
         let bottomMeta = `${part.size} bytes`;
 
         if (this.state.downloaded) {
-            name = <i className="fa fa-tick"></i>;
+            nameOrIcon = <i className="fa fa-tick"></i>;
             topMeta = 'File saved to';
-            bottomMeta = `~/Downloads/${part.name}`
+            bottomMeta = this.state.downloadedFilename;
         } else if (this.state.downloading) {
-            name = <i className="fa fa-cog fa-spin"></i>;
-            topMeta = 'Downloading to';
-            bottomMeta = `~/Downloads/${part.name}`
+            nameOrIcon = <i className="fa fa-cog fa-spin"></i>;
+            topMeta = 'Downloading...';
         }
 
         return (
             <div>
-                {name}
+                {nameOrIcon}
                 <span className="attachment-meta">
                     {topMeta}<br />
                     {bottomMeta}
