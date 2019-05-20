@@ -59,3 +59,18 @@ def destroy_window(internal_id):
 def reload_main_window():
     if IS_APP:
         webview.evaluate_js('window.location.reload()')
+
+
+def create_save_dialog(directory, filename):
+    return webview.create_file_dialog(
+        webview.SAVE_DIALOG,
+        directory=directory,
+        save_filename=filename,
+    )
+
+
+def create_open_dialog(allow_multiple=True):
+    return webview.create_file_dialog(
+        webview.OPEN_DIALOG,
+        allow_multiple=allow_multiple,
+    )
