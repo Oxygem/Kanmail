@@ -1,3 +1,10 @@
+# v1.1905201255
+
+Changes:
+- Add untested Linux/Windows requirements.
+- Ask where to save attachments to and reflect this in the UI.
+- Add save/open dialog helpers to window module.
+
 # v1.1905181142
 
 Changes:
