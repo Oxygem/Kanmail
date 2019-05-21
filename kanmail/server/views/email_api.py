@@ -22,7 +22,7 @@ from kanmail.server.util import get_list_or_400, get_or_400
 from kanmail.window import create_save_dialog
 
 
-@app.route('/api/folders', methods=['GET'])
+@app.route('/api/folders', methods=('GET',))
 def api_get_folders():
     '''
     List available folders/mailboxes for all the accounts.
@@ -33,7 +33,7 @@ def api_get_folders():
     return jsonify(folders=folders, folder_meta=meta)
 
 
-@app.route('/api/emails/<account>/<folder>', methods=['GET'])
+@app.route('/api/emails/<account>/<folder>', methods=('GET',))
 def api_get_account_folder_emails(account, folder):
     '''
     Get (more) emails for a folder in a given account.
@@ -56,7 +56,7 @@ def api_get_account_folder_emails(account, folder):
     return jsonify(emails=emails, meta=meta)
 
 
-@app.route('/api/emails/<account>/<folder>/sync', methods=['GET'])
+@app.route('/api/emails/<account>/<folder>/sync', methods=('GET',))
 def api_sync_account_folder_emails(account, folder):
     '''
     Sync emails within a folder for a given account.
@@ -74,7 +74,7 @@ def api_sync_account_folder_emails(account, folder):
     )
 
 
-@app.route('/api/emails/<account>/<folder>/text', methods=['GET'])
+@app.route('/api/emails/<account>/<folder>/text', methods=('GET',))
 def api_get_account_email_texts(account, folder):
     '''
     Get a specific list of email texts by UID for a given account/folder.
@@ -87,7 +87,7 @@ def api_get_account_email_texts(account, folder):
     return jsonify(emails=emails)
 
 
-@app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>')
+@app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>', methods=('GET',))
 def api_get_account_email_part(account, folder, uid, part_number):
     '''
     Return a specific part of an email by account/folder/UID.
@@ -107,7 +107,7 @@ def api_get_account_email_part(account, folder, uid, part_number):
     return response
 
 
-@app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>/download')
+@app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>/download', methods=('GET',))
 def api_download_account_email_part(account, folder, uid, part_number):
     '''
     Download a specific part of an email by account/folder/UID.
