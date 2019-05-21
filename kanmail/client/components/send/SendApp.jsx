@@ -133,7 +133,7 @@ export default class SendApp extends React.Component {
 
                 replyToMessageId: props.message.message_id,
                 replyToMessageReferences: props.message.originalReferences,
-                replyToQuoteHtml: props.message.body,
+                replyToQuoteHtml: props.message.body.html || props.message.body.text,
             });
 
             if (props.message.reply_all) {
