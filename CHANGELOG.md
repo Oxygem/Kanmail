@@ -1,3 +1,10 @@
+# v1.1905211057
+
+Changes:
+- Add `/select-files` endpoint in prep for sending attachments.
+- Tidy up view methods.
+- Fix reply quotes now we have both html+text emails.
+
 # v1.1905201255
 
 Changes:
