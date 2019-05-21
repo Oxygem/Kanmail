@@ -1,8 +1,9 @@
 import webbrowser
 
+from os import path
 from uuid import uuid4
 
-from flask import abort, render_template, request
+from flask import abort, jsonify, render_template, request
 
 from kanmail.log import logger
 from kanmail.server.app import app
@@ -10,7 +11,7 @@ from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
 from kanmail.settings import DEBUG, FROZEN
 from kanmail.version import get_version
-from kanmail.window import create_window, destroy_window
+from kanmail.window import create_open_dialog, create_window, destroy_window
 
 
 SEND_WINDOW_DATA = {}
@@ -111,3 +112,9 @@ def close_window():
     destroy_window(internal_id)
 
     return '', 204
+
+
+@app.route('/select-files')
+def select_files():
+    local_filenames = create_open_dialog(path.expanduser('~'))
+    return jsonify(filenames=local_filenames)
