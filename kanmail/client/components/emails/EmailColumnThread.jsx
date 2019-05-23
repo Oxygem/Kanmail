@@ -116,6 +116,26 @@ export default class EmailColumnThread extends React.Component {
         });
     }
 
+    componentDidUpdate(prevProps) {
+        // If we're open and the thread changed, reopen
+        if (
+            this.state.open
+            && prevProps.thread.length !== this.props.thread.length
+        ) {
+            // Mark the emails as read in the global email store
+            if (this.state.unread) {
+                getEmailStore().setEmailsRead(_.map(this.props.thread, message => (
+                    `${message.account_name}-${message.message_id}`
+                )));
+            }
+            this.setState({
+                unread: false,
+            });
+
+            threadStore.loadThread(this.props.thread);
+        }
+    }
+
     componentWillUnmount() {
         if (this.state.hover) {
             keyboard.setThreadComponent(null);
