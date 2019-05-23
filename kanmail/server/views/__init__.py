@@ -117,4 +117,5 @@ def close_window():
 @app.route('/select-files')
 def select_files():
     local_filenames = create_open_dialog(path.expanduser('~'))
+    local_filenames = local_filenames or []
     return jsonify(filenames=local_filenames)
