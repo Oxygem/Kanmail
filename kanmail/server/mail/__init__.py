@@ -199,7 +199,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
             text_data = markdownify(text_data)
 
         uid_part_data_with_cids[uid] = {
-            'cid_to_part': uid_to_content_ids[uid],
+            'cid_to_part': uid_to_content_ids.get(uid),
             'text': text_data,
             'html': html_data,
         }
