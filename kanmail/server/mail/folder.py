@@ -10,6 +10,7 @@ from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
 
+from .connection import MAX_ATTEMPTS
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
@@ -103,7 +104,7 @@ class Folder(object):
             headers['flags'] = tuple(flags)
             self.cache.set_headers(uid, headers)
 
-    def get_email_parts(self, email_uids, part):
+    def get_email_parts(self, email_uids, part, retry=0):
         '''
         Fetch actual email body parts, where the part is the same for each email.
         '''
@@ -126,6 +127,8 @@ class Folder(object):
         self.log('debug', f'Fetched {len(email_uids)} email parts ({part})')
 
         emails = {}
+        failed_email_uids = []
+        body_keyname = body_keyname.encode()  # returned as bytes via IMAP
 
         for uid, data in email_parts.items():
             parts = self.get_email_header_parts(uid)
@@ -134,16 +137,29 @@ class Folder(object):
             if not data_meta:
                 raise Exception('MISSING PART', uid, part, parts)
 
-            data = decode_string(
-                # Data comes back with bytes keys, so encode our str => bytes
-                data[body_keyname.encode()],
-                data_meta,
-            )
+            if body_keyname not in data:
+                if retry > MAX_ATTEMPTS:
+                    raise Exception(f'Missing data for UID/part {uid}/{part}')
+
+                failed_email_uids.append(uid)
+                continue
+
+            data = data[body_keyname]
+            data = decode_string(data, data_meta)
 
             emails[uid] = data
 
             self.add_cache_flags(uid, b'\\Seen')
 
+        if failed_email_uids:
+            self.log(
+                'warning',
+                f'Missing {len(failed_email_uids)} parts (part={part}, retry={retry})',
+            )
+            emails.update(self.get_email_parts(
+                failed_email_uids, part,
+                retry=retry + 1,
+            ))
         return emails
 
     def get_email_headers(self, email_uids):
@@ -167,7 +183,7 @@ class Folder(object):
 
         self.log(
             'debug',
-            f'Fetching {len(email_uids)} messages (+{len(emails)} from cached)',
+            f'Fetching {len(email_uids)} message headers (+{len(emails)} from cached)',
         )
 
         if not email_uids:
