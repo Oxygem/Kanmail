@@ -87,10 +87,8 @@ class ThreadStore extends BaseStore {
             this.close();
         }
 
-        // Build a list of (UID, folder, part#) for each message in the thread
-        const folderUidParts = makeFolderUidParts(thread);
-        // Make a hash to use as the critical request nonce
-        const criticalRequestNonce = hash(folderUidParts);
+        this.onClose = onClose;
+        this.isOpen = true;
 
         // Calculate the width/left styles of the column
         [
@@ -102,11 +100,19 @@ class ThreadStore extends BaseStore {
         this.props.messages = [];
         this.triggerUpdate();
 
-        // Set any onClose handler
-        this.onClose = onClose;
+        // Flag the current column as open and assign so we can remove on close
+        columnContainer.classList.add('open');
+        this.columnContainer = columnContainer;
 
-        // Fetch those emails!
-        this.props.fetching = true;
+        // Now, actually load the thread!
+        this.loadThread(thread);
+    }
+
+    loadThread(thread) {
+        // Build a list of (UID, folder, part#) for each message in the thread
+        const folderUidParts = makeFolderUidParts(thread);
+        // Make a hash to use as the critical request nonce
+        const criticalRequestNonce = hash(folderUidParts);
 
         const requests = [];
         const emailParts = {};
@@ -133,10 +139,12 @@ class ThreadStore extends BaseStore {
             requests.push(request);
         });
 
+        this.props.fetching = true;
+
         // Once all loaded, assign all the emails and trigger the update
         Promise.all(requests).then(() => {
             if (!this.props.fetching) {
-                console.debug('Ignoring returned emails, already closed!');
+                console.debug('Ignoring returned emails, thread already closed!');
                 return;
             }
 
@@ -155,15 +163,10 @@ class ThreadStore extends BaseStore {
                 const date = new Date(message.date);
                 return date;
             }, 'asc');
+            this.props.fetching = false;
 
             this.triggerUpdate();
         });
-
-        // Flag the current column as open and assign so we can remove on close
-        columnContainer.classList.add('open');
-        this.columnContainer = columnContainer;
-
-        this.isOpen = true;
     }
 
     close() {
