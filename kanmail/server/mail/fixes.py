@@ -10,7 +10,7 @@ This this StackOverflow question: https://stackoverflow.com/questions/46936646
 '''
 
 
-def fix_missing_uids(expected_uids, uids):
+def fix_missing_uids(expected_uid_count, uids):
     '''
     This fixes missing UIDs - when moving multiple emails into a new folder,
     the next search request sometimes returns just the latest UID. Because they
@@ -23,15 +23,15 @@ def fix_missing_uids(expected_uids, uids):
 
     uid_count = len(uids)
 
-    if uid_count < expected_uids:
-        diff = expected_uids - uid_count
+    if uid_count < expected_uid_count:
+        diff = expected_uid_count - uid_count
         lowest_uid = min(uids)
 
         for i in range(diff):
             uids.append(lowest_uid - (i + 1))
 
         logger.warning(
-            f'Corrected {uid_count} missing UIDs {expected_uids} -> {uids}',
+            f'Corrected {uid_count} missing UIDs {expected_uid_count} -> {uids}',
         )
 
     return uids

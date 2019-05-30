@@ -41,7 +41,7 @@ const columnTarget = {
                 forceProcess: true,
                 accountName: accountName,
                 // Tell the backend to expect X messages (and infer if needed!)
-                query: {expected_uids: messageUids.length},
+                query: {uid_count: messageUids.length},
             },
         ));
     }

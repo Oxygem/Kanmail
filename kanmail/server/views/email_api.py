@@ -65,6 +65,7 @@ def api_sync_account_folder_emails(account, folder):
     new_emails, deleted_uids, meta = sync_folder_emails(
         account, folder,
         query=request.args.get('query'),
+        expected_uid_count=request.args.get('uid_count'),
     )
 
     return jsonify(

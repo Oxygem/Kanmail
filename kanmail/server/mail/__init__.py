@@ -92,7 +92,10 @@ def get_folder_emails(
     return emails, meta
 
 
-def sync_folder_emails(account_key, folder_name, query=None):
+def sync_folder_emails(
+    account_key, folder_name,
+    query=None, expected_uid_count=None,
+):
     '''
     Get new emails and any deleted UIDs for a folder within an account.
     '''
@@ -100,7 +103,9 @@ def sync_folder_emails(account_key, folder_name, query=None):
     account = get_account(account_key)
     folder = account.get_folder(folder_name, query=query)
 
-    emails, deleted_uids = folder.sync_emails()
+    emails, deleted_uids = folder.sync_emails(
+        expected_uid_count=expected_uid_count,
+    )
 
     meta = {
         'count': len(folder),

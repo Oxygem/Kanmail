@@ -328,7 +328,7 @@ class Folder(object):
     #
 
     @lock_class_method
-    def sync_emails(self, expected_uids=None):
+    def sync_emails(self, expected_uid_count=None):
         '''
         Get new emails for this folder and prepend them to our internal email
         list. Once this is done the function increases ``self.offset`` by
@@ -380,9 +380,9 @@ class Folder(object):
         for uid in deleted_message_uids:
             self.cache.delete_headers(uid)
 
-        if expected_uids:
+        if expected_uid_count:
             new_message_uids = fix_missing_uids(
-                expected_uids, new_message_uids,
+                expected_uid_count, new_message_uids,
             )
 
         self.log('debug', (
