@@ -15,6 +15,7 @@ import EmailColumn from 'components/emails/EmailColumn.jsx';
 import MainColumn from 'components/emails/MainColumn.jsx';
 import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 
+import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
 import mainEmailStore from 'stores/emails/main.js';
@@ -84,7 +85,10 @@ export default class EmailsApp extends React.Component {
                     return;
                 }
 
-                mainEmailStore.syncFolderEmails(folder)
+                mainEmailStore.syncFolderEmails(folder, {
+                    // Only sync unreads if this column is shown
+                    skipUnreadSync: filterStore.props.mainColumn !== folder,
+                })
             },
         );
     }
