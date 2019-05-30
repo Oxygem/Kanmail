@@ -12,6 +12,11 @@ import {
  } from 'stores/columns.js';
 
 
+function isEmailUnread(email) {
+    return !_.includes(email.flags, '\\Seen');
+}
+
+
 export default class BaseEmails {
     /*
         Global store that fetches and manages all emails loaded in the frontend.
@@ -25,9 +30,6 @@ export default class BaseEmails {
 
         // Initialise emails/meta objects
         this.reset()
-
-        // Map of acocunt/folder/uid -> email message object
-        this.accountFolderUidToEmail = {};
     }
 
     /*
@@ -47,8 +49,14 @@ export default class BaseEmails {
     */
 
     reset() {
-        // Map of account/messageId -> email message object
+        // Map of <account>-<messageId> -> email message object
+        // used everywhere as a reference to a single email (not thread)
         this.emails = {};
+
+        // Map of <account>-<folder> -> <uid> -> email message object
+        // used in store only to translate from UID returns -> email objects
+        this.accountFolderUidToEmail = {};
+
         // Map of folder -> account -> meta
         this.meta = {};
     }
@@ -59,6 +67,39 @@ export default class BaseEmails {
         }
 
         this.meta[folderName][accountKey] = meta;
+    }
+
+    getAccountFolder(accountKey, folderName) {
+        const accountFolder = `${accountKey}-${folderName}`;
+        if (!this.accountFolderUidToEmail[accountFolder]) {
+            this.accountFolderUidToEmail[accountFolder] = {};
+        }
+        return this.accountFolderUidToEmail[accountFolder];
+    }
+
+    setEmailForAccountFolder(accountKey, folderName, email) {
+        this.getAccountFolder(accountKey, folderName)[email.uid] = email;
+    }
+
+    getEmailFromAccountFolder(accountKey, folderName, uid) {
+        return this.getAccountFolder(accountKey, folderName)[uid];
+    }
+
+    deleteEmailFromAccountFolder(accountKey, folderName, uid) {
+        const accountFolder = this.getAccountFolder(accountKey, folderName);
+        delete accountFolder[uid];
+    }
+
+    getUnreadUidsForAccountFolder(accountKey, folderName) {
+        return _.reduce(
+            this.getAccountFolder(accountKey, folderName),
+            (memo, email, uid) => {
+                if (isEmailUnread(email)) {
+                    memo.push(uid);
+                }
+                return memo;
+            }, [],
+        );
     }
 
     addEmailsToAccountFolder(accountKey, folderName, emails) {
@@ -99,11 +140,7 @@ export default class BaseEmails {
                 this.emails[accountMessageId] = email;
             }
 
-            // Add map from account/folder/uid -> email object
-            const accountFolderUid = (
-                `${accountKey}-${folderName}-${email.folderUids[folderName]}`
-            );
-            this.accountFolderUidToEmail[accountFolderUid] = email;
+            this.setEmailForAccountFolder(accountKey, folderName, email);
         });
     }
 
@@ -125,15 +162,8 @@ export default class BaseEmails {
                 delete this.emails[message.accountMessageId];
             }
 
-            // Remove any account/folder/uid -> email reference
-            const accountFolderUid = `${accountKey}-${folderName}-${uid}`;
-            delete this.accountFolderUidToEmail[accountFolderUid];
+            this.deleteEmailFromAccountFolder(accountKey, folderName, uid);
         });
-    }
-
-    getEmailFromAccountFolder(accountKey, folderName, uid) {
-        const accountFolderUid = `${accountKey}-${folderName}-${uid}`;
-        return this.accountFolderUidToEmail[accountFolderUid];
     }
 
     moveEmails(accountKey, messageUids, oldColumn, newColumn) {
@@ -212,17 +242,25 @@ export default class BaseEmails {
         });
     }
 
-    setEmailsRead(messageIds) {
+    setEmailsReadByUid(accountKey, folderName, messageUids) {
+        const accountFolder = this.getAccountFolder(accountKey, folderName);
+        const accountMessageIds = _.map(messageUids, uid => (
+            accountFolder[uid].accountMessageId
+        ));
+        this.setEmailsRead(accountMessageIds);
+    }
+
+    setEmailsRead(accountMessageIds) {
         /*
             Set emails as read in the store only and don't push updates.
         */
 
-        console.debug(`Marking ${messageIds.length} emails as read`);
+        console.debug(`Marking ${accountMessageIds.length} emails as read`);
 
-        _.each(messageIds, messageId => {
+        _.each(accountMessageIds, messageId => {
             const email = this.emails[messageId];
 
-            if (!_.includes(email.flags, '\\Seen')) {
+            if (isEmailUnread(email)) {
                 this.emails[messageId].flags.push('\\Seen');
             }
         });

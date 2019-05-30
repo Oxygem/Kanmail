@@ -38,6 +38,11 @@ class MainEmails extends BaseEmails {
         const url = `/api/emails/${accountKey}/${folderName}/sync`;
         const query = options.query || {};
 
+        if (!options.skipUnreadSync) {
+            const uids = this.getUnreadUidsForAccountFolder(accountKey, folderName);
+            query.unread_uids = uids;
+        }
+
         return requestStore.get(
             `Sync emails in ${accountKey}/${folderName}`,
             url, query,
@@ -46,13 +51,21 @@ class MainEmails extends BaseEmails {
 
             let changed = false;
 
+            if (data.read_uids.length > 0) {
+                this.setEmailsReadByUid(
+                    accountKey,
+                    folderName,
+                    data.read_uids,
+                );
+                changed = true;
+            }
+
             if (data.deleted_uids.length > 0) {
                 this.deleteEmailsFromAccountFolder(
                     accountKey,
                     folderName,
                     data.deleted_uids,
                 );
-
                 changed = true;
             }
 
@@ -62,7 +75,6 @@ class MainEmails extends BaseEmails {
                     folderName,
                     data.new_emails,
                 );
-
                 changed = true;
             }
 
