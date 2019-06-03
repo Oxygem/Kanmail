@@ -1,5 +1,4 @@
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
 from kanmail.log import logger
 
@@ -45,7 +44,7 @@ def send_email(
 
     to_addresses = to + cc + bcc
 
-    message = MIMEMultipart('alternative')
+    message = EmailMessage()
 
     message['From'] = _make_address(from_)
     message['To'] = ', '.join(_make_address(a) for a in to)
@@ -64,8 +63,7 @@ def send_email(
         message['References'] = ' '.join(references)
 
     # Attach the text part (simples!)
-    text_part = MIMEText(text, 'plain')
-    message.attach(text_part)
+    message.set_content(text)
 
     # Make/attach the HTML part, including any quote
     if not html:
@@ -74,8 +72,7 @@ def send_email(
     if reply_to_html:
         html = f'{html}<blockquote>{reply_to_html}</blockquote>'
 
-    html_part = MIMEText(html, 'html')
-    message.attach(html_part)
+    message.add_alternative(html, subtype='html')
 
     # Send the email!
     with smtp_connection.get_connection() as smtp:
