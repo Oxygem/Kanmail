@@ -36,6 +36,7 @@ class EmailColumnHeader extends React.Component {
         isLoading: PropTypes.bool.isRequired,
         isSyncing: PropTypes.bool.isRequired,
         isMainColumn: PropTypes.bool.isRequired,
+        getNewEmails: PropTypes.func.isRequired,
     }
 
     handleClickDelete = () => {
@@ -58,13 +59,21 @@ class EmailColumnHeader extends React.Component {
         return <i className="loading fa fa-refresh fa-spin"></i>;
     }
 
-    renderDeleteIcon() {
-        if (this.props.isMainColumn) return null;
-
-        return <i
-            className="close red fa fa-times"
+    renderMetaIcons() {
+        const deleteIcon = this.props.isMainColumn ? null : <i
+            className="red red-hover fa fa-times"
             onClick={this.handleClickDelete}
-        ></i>;
+        />;
+
+        return (
+            <div className="icons">
+                <i
+                    className="blue blue-hover refresh fa fa-refresh"
+                    onClick={this.props.getNewEmails}
+                />
+                {deleteIcon}
+            </div>
+        );
     }
 
     renderMeta() {
@@ -75,7 +84,11 @@ class EmailColumnHeader extends React.Component {
             return memo;
         }, 0);
 
-        return `${totalEmails.toLocaleString()} emails / ${totalAccounts} accounts`;
+        return (
+            <div className="text">
+                {totalEmails.toLocaleString()} emails / {totalAccounts} accounts
+            </div>
+        );
     }
 
     render() {
@@ -87,7 +100,7 @@ class EmailColumnHeader extends React.Component {
 
                     <span className="meta">
                         {this.renderMeta()}
-                        {this.renderDeleteIcon()}
+                        {this.renderMetaIcons()}
                     </span>
                 </h3>
             </div>

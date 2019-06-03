@@ -278,6 +278,7 @@ class EmailColumn extends React.Component {
                 <EmailColumnHeader
                     id={this.props.id}
                     isMainColumn={this.props.isMainColumn}
+                    getNewEmails={this.getNewEmails}
                 />
 
                 <div
