@@ -62,15 +62,19 @@ def api_sync_account_folder_emails(account, folder):
     Sync emails within a folder for a given account.
     '''
 
-    new_emails, deleted_uids, meta = sync_folder_emails(
+    unread_uids = [int(uid) for uid in request.args.getlist('unread_uids')]
+
+    new_emails, deleted_uids, read_uids, meta = sync_folder_emails(
         account, folder,
         query=request.args.get('query'),
         expected_uid_count=request.args.get('uid_count'),
+        check_unread_uids=unread_uids,
     )
 
     return jsonify(
         new_emails=new_emails,
         deleted_uids=deleted_uids,
+        read_uids=read_uids,
         meta=meta,
     )
 

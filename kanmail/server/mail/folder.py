@@ -15,6 +15,8 @@ from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
 
+SEEN_FLAG = b'\\Seen'
+
 
 class Folder(object):
     '''
@@ -113,13 +115,8 @@ class Folder(object):
 
         body_keyname = f'BODY[{part}]'
 
-        # Fetch the email headers/details
         with self.get_connection() as connection:
-            # Fetch the emails from the folder
-            email_parts = connection.fetch(
-                email_uids,
-                [body_keyname],
-            )
+            email_parts = connection.fetch(email_uids, [body_keyname])
 
         # Fix any dodgy UIDs
         email_parts = fix_email_uids(email_uids, email_parts)
@@ -149,7 +146,7 @@ class Folder(object):
 
             emails[uid] = data
 
-            self.add_cache_flags(uid, b'\\Seen')
+            self.add_cache_flags(uid, SEEN_FLAG)
 
         if failed_email_uids:
             self.log(
@@ -189,9 +186,7 @@ class Folder(object):
         if not email_uids:
             return emails
 
-        # Fetch the email headers/details
         with self.get_connection() as connection:
-            # Fetch the emails from the folder
             email_headers = connection.fetch(
                 email_uids,
                 [
@@ -218,6 +213,27 @@ class Folder(object):
             emails.append(headers)
 
         return emails
+
+    def check_update_unread_emails(self, email_uids):
+        self.log(
+            'debug',
+            f'Fetching flags for {len(email_uids)} emails',
+        )
+
+        with self.get_connection() as connection:
+            email_flags = connection.fetch(email_uids, ['FLAGS'])
+
+        # Fix any dodgy UIDs
+        email_flags = fix_email_uids(email_uids, email_flags)
+        read_uids = []
+
+        for uid, data in email_flags.items():
+            # For any seen emails, update cache and add to the list
+            if SEEN_FLAG in data[b'FLAGS']:
+                read_uids.append(uid)
+                self.add_cache_flags(uid, SEEN_FLAG)
+
+        return read_uids
 
     def get_email_header_parts(self, uid):
         emails = self.get_email_headers([uid])
@@ -328,7 +344,7 @@ class Folder(object):
     #
 
     @lock_class_method
-    def sync_emails(self, expected_uid_count=None):
+    def sync_emails(self, expected_uid_count=None, check_unread_uids=None):
         '''
         Get new emails for this folder and prepend them to our internal email
         list. Once this is done the function increases ``self.offset`` by
@@ -396,8 +412,16 @@ class Folder(object):
             # Now actually fetch & return those emails
             new_emails = self.get_email_headers(new_message_uids)
 
+        read_uids = []
+        if check_unread_uids:
+            check_unread_uids = [  # remove any deleted UIDs
+                uid for uid in check_unread_uids
+                if uid in message_uids
+            ]
+            read_uids = self.check_update_unread_emails(check_unread_uids)
+
         # Return the enw emails & any deleted uids
-        return new_emails, list(deleted_message_uids)
+        return new_emails, list(deleted_message_uids), read_uids
 
     @lock_class_method
     def get_emails(self, reset=False, batch_size=None):
