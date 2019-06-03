@@ -23,7 +23,7 @@ def fix_missing_uids(expected_uid_count, uids):
 
     uid_count = len(uids)
 
-    if uid_count < expected_uid_count:
+    if uid_count and uid_count < expected_uid_count:
         diff = expected_uid_count - uid_count
         lowest_uid = min(uids)
 
