@@ -63,11 +63,14 @@ def api_sync_account_folder_emails(account, folder):
     '''
 
     unread_uids = [int(uid) for uid in request.args.getlist('unread_uids')]
+    uid_count = request.args.get('uid_count')
+    if uid_count:
+        uid_count = int(uid_count)
 
     new_emails, deleted_uids, read_uids, meta = sync_folder_emails(
         account, folder,
         query=request.args.get('query'),
-        expected_uid_count=request.args.get('uid_count'),
+        expected_uid_count=uid_count,
         check_unread_uids=unread_uids,
     )
 
