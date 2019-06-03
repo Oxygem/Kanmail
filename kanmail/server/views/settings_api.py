@@ -36,6 +36,13 @@ def api_set_settings():
     return jsonify(saved=True)
 
 
+@app.route('/api/settings', methods=('PUT',))
+def api_update_settings():
+    request_data = request.get_json()
+    update_settings(request_data)
+    return jsonify(saved=True)
+
+
 @app.route('/api/settings/cache', methods=('DELETE',))
 def api_delete_caches():
     bust_all_caches()
