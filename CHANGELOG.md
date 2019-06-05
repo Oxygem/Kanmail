@@ -1,3 +1,30 @@
+# v1.1906051011
+
+This version adds support for sending attachments and syncing email reads!
+
+Changes:
+- Fetch the first 1024 bytes of the body.
+- Strip headers/duplicate lines when parsing excerpt.
+- Fix downloading text files/content.
+- Improve parsing of bodystructure attachments on Outlook.
+- Implement sending attachments.
+- Use `EmailMessage` (py3.6+) over `MIMEMultipart`.
+- Only fix if we have UIDs.
+- Ensure UID count is an integer.
+- Restore the `PUT` update settings endpoint.
+- Add refresh button to email column header.
+- Implement checking for read emails on the server.
+- Re-add UID count checking on sync when moving between folders.
+- Only sync unreads for the open main column.
+- Prepare email stores to sync unreads.
+- Move sync days out of advanced settings.
+- When a thread is open and we receive an update, reload it and mark emails read.
+- Don't assume we have content IDs/part headers.
+- Improve error formatting.
+- Default filenames to an empty list.
+- Retry when IMAP server misses parts.
+- Separate loading a thread from opening it, enabling reloads.
+
 # v1.1905211057
 
 Changes:
