@@ -246,7 +246,7 @@ def _parse_bodystructure_list(items):
         if isinstance(value, tuple):
             value = _parse_bodystructure_list(value)
 
-        data[key] = value
+        data[key.upper()] = value
 
     return data
 
@@ -291,8 +291,9 @@ def _parse_bodystructure(bodystructure, item_number=None):
         if bodystructure[2]:
             extra_data.update(_parse_bodystructure_list(bodystructure[2]))
 
-        if len(bodystructure) >= 9 and bodystructure[8]:
-            extra_data.update(_parse_bodystructure_list(bodystructure[8]))
+        for bit in bodystructure[7:]:
+            if isinstance(bit, tuple):
+                extra_data.update(_parse_bodystructure_list(bit))
 
         if b'CHARSET' in extra_data:
             data['charset'] = extra_data[b'CHARSET'].decode()
