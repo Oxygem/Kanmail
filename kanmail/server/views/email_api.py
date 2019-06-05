@@ -140,6 +140,9 @@ def api_download_account_email_part(account, folder, uid, part_number):
         response.status_code = 404
         return response
 
+    if isinstance(data, str):
+        data = data.encode()
+
     with open(local_filename, 'wb') as f:
         f.write(data)
 
