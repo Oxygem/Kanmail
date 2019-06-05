@@ -198,6 +198,12 @@ def _extract_excerpt(raw_body, raw_body_meta):
         if line[0] in ('#', '-'):
             continue
 
+        if re.match(r'^Content-[A-Za-z\-]+:', line):
+            continue
+
+        if line in lines:  # remove duplicates (ie text+html versions)
+            continue
+
         lines.append(line)
 
     if not lines:
