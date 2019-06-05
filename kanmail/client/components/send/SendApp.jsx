@@ -14,12 +14,16 @@ import { subscribe } from 'stores/base.jsx'
 import { closeWindow } from 'window.js';
 
 import { cleanHtml } from 'util/html.js'
-import { post } from 'util/requests.js'
+import { get, post } from 'util/requests.js'
 
 
 function makeContactLabel(contactTuple) {
     if (!contactTuple[0]) {
         return contactTuple[1];
+    }
+
+    if (contactTuple[0] == contactTuple[1]) {
+        return contactTuple[0];
     }
 
     return `${contactTuple[0]} (${contactTuple[1]})`;
@@ -29,9 +33,14 @@ function makeAccountContactOption(accountName, contactTuple) {
     const name = contactTuple[0]
     const email = contactTuple[1];
 
+    let label = `${name} (${email})`;
+    if (name == email) {
+        label = email;
+    }
+
     return {
         value: [accountName, name, email],
-        label: `${name} (${email})`,
+        label: label,
     };
 }
 
@@ -44,6 +53,11 @@ function prependIfNotPresent(prependTo, prependString) {
         return prependTo;
     }
     return `${prependString}: ${prependTo}`;
+}
+
+function getFilename(path) {
+    const bits = path.split('/');
+    return bits[bits.length - 1];
 }
 
 
@@ -83,6 +97,8 @@ export default class SendApp extends React.Component {
             subject: '',
             body: '',
             textBody: '',
+
+            attachments: [],
 
             // "Hidden"/uneditable fields
             replyToMessageId: null,
@@ -200,6 +216,7 @@ export default class SendApp extends React.Component {
 
         const emailData = _.pick(this.state, [
             'subject',
+            'attachments',
             'replyToMessageId',
             'replyToMessageReferences',
             'replyToQuoteHtml',
@@ -250,6 +267,17 @@ export default class SendApp extends React.Component {
         })
     }
 
+    handleClickAttach = (ev) => {
+        ev.preventDefault();
+
+        get('/select-files').then(data => {
+            const allFilenames = this.state.attachments.concat(data.filenames);
+            this.setState({
+                attachments: allFilenames,
+            });
+        });
+    }
+
     renderQuote() {
         if (!this.props.message) {
             return;
@@ -267,7 +295,10 @@ export default class SendApp extends React.Component {
 
         return (
             <div>
-                <div id="include-quote">
+                <div
+                    id="include-quote"
+                    className={this.state.sending ? 'sending': ''}
+                >
                     <input
                         id="include_quote"
                         type="checkbox"
@@ -320,7 +351,7 @@ export default class SendApp extends React.Component {
     }
 
     renderSendButton() {
-        const buttonClasses = [];
+        const buttonClasses = ['send-button'];
         let buttonText = this.state.sending ? 'Sending...' : 'Send';
 
         if (this.state.errorName || this.state.errorMessage) {
@@ -333,9 +364,30 @@ export default class SendApp extends React.Component {
         }
 
         return (
-            <button type="submit" className={buttonClasses.join(' ')}>
+            <button
+                type="submit"
+                className={buttonClasses.join(' ')}
+            >
                 <i className={`fa ${this.state.sending ? 'fa-spin fa-refresh' : 'fa-envelope'}`}></i> {buttonText}
             </button>
+        );
+    }
+
+    renderAttachButton() {
+        let buttonText = 'Attach files';
+        if (this.state.attachments.length > 0) {
+            buttonText = `Attach files (${this.state.attachments.length})`;
+        }
+
+        const attachments = _.map(this.state.attachments, attachment => (
+            <li>{getFilename(attachment)}</li>
+        ));
+
+        return (
+            <button
+                className="attach-button"
+                onClick={this.handleClickAttach}
+            ><i className="fa fa-attach" />{buttonText}{attachments}</button>
         );
     }
 
@@ -357,8 +409,6 @@ export default class SendApp extends React.Component {
             },
             [],
         );
-
-        console.log('OPTS', accountOptions)
 
         const contactOptions = _.map(this.props.contacts, (name, email) => {
             const label = makeContactLabel([name, email]);
@@ -456,6 +506,7 @@ export default class SendApp extends React.Component {
                     </div>
 
                     {this.renderSendButton()}
+                    {this.renderAttachButton()}
                 </form>
             </section>
         );

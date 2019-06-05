@@ -1,4 +1,6 @@
 from email.message import EmailMessage
+from mimetypes import guess_type
+from os import path
 
 from kanmail.log import logger
 
@@ -31,6 +33,7 @@ def send_email(
     from_,
     to=None, cc=None, bcc=None,
     subject=None, text=None, html=None,
+    attachments=None,
     # If replying to another message
     reply_to_message_id=None,
     reply_to_message_references=None,
@@ -73,6 +76,20 @@ def send_email(
         html = f'{html}<blockquote>{reply_to_html}</blockquote>'
 
     message.add_alternative(html, subtype='html')
+
+    # Handle attached files
+    if attachments:
+        for attachment in attachments:
+            mimetype = guess_type(attachment)[0]
+            maintype, subtype = mimetype.split('/')
+
+            with open(attachment, 'rb') as file:
+                message.add_attachment(
+                    file.read(),
+                    maintype=maintype,
+                    subtype=subtype,
+                    filename=path.basename(attachment),
+                )
 
     # Send the email!
     with smtp_connection.get_connection() as smtp:

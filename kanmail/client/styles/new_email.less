@@ -3,7 +3,7 @@
 
 section#new-email {
     form {
-        margin: 20px;
+        margin: 10px;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
@@ -16,12 +16,12 @@ section#new-email {
             font-size: 14px;
             margin-bottom: 10px;
             position: absolute;
-            margin-top: 9px;
+            margin-top: 4px;
         }
 
         div input {
-            padding: 4px 9px;
-            margin: 2px;
+            padding: 2px 9px;
+            margin: 0 2px;
             font-size: 14px;
             border: 1px solid @formBorderGrey;
             width: 100%;
@@ -38,7 +38,7 @@ section#new-email {
         }
 
         input#subject {
-            height: 40px;
+            height: 32px;
         }
 
         div.wide, div.wide, div.two-third, div.third, div.half {
@@ -62,8 +62,8 @@ section#new-email {
             position: absolute;
             right: 20px;
             bottom: 90px;
-            left: 80px;
-            top: 186px;
+            left: 70px;
+            top: 144px;
 
             &.short {
                 bottom: 200px;
@@ -74,12 +74,16 @@ section#new-email {
             margin: 0;
             max-height: 100px;
             right: 20px;
-            left: 80px;
+            left: 70px;
             overflow-y: auto;
             background: #F7F7F7;
             position: absolute;
             bottom: 50px;
             border: 1px solid #F1F1F1;
+
+            * {
+                pointer-events: none;
+            }
         }
 
         label#include_quote {
@@ -92,23 +96,28 @@ section#new-email {
 
         #include-quote {
             position: absolute;
-            bottom: 0px;
-            left: 110px;
+            bottom: 10px;
+            left: 100px;
             width: 200px;
+
+            &.sending {
+                left: 130px;
+            }
 
             label {
                 width: auto;
+                padding-left: 1px;
             }
             input {
-                height: 40px;
+                height: 32px;
             }
         }
 
-        > button {
-            left: 80px;
+        button.send-button, button.attach-button {
+            left: 70px;
             cursor: pointer;
             padding: 5px 10px;
-            background: @blue;
+            background: @green;
             color: white;
             font-size: 16px;
             border-radius: 2px;
@@ -116,15 +125,20 @@ section#new-email {
             position: absolute;
             bottom: 10px;
 
+            &.attach-button {
+                left: auto;
+                right: 20px;
+                bottom: 10px;
+                background: @blue;
+            }
+
             &.sending {
                 background: @lightGrey;
             }
 
             &.error {
                 background: @orange;
-            }
-        }
-
+            }        }
 
         /*
             React select overrides */
@@ -168,7 +182,7 @@ section#new-email {
         }
 
         div.react-select__value-container {
-            height: 40px;
+            height: 30px;
             overflow-y: auto;
         }
 
@@ -193,7 +207,7 @@ section#new-email {
             }
 
             .ql-toolbar.ql-snow {
-                padding: 8px 1px;
+                padding: 4px 1px;
             }
 
             .ql-container {
