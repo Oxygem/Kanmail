@@ -247,6 +247,10 @@ def _parse_bodystructure_list(items):
 
     for i in range(0, len(items), 2):
         key = items[i]
+
+        if not isinstance(key, (str, bytes)):
+            continue
+
         value = items[i + 1]
 
         if isinstance(value, tuple):
