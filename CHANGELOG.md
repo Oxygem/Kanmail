@@ -1,3 +1,9 @@
+# v1.1906061816
+
+Changes:
+- Ignore invalid keys when parsing `BODYSTRUCTURE`.
+- Fixup requirements for dodgy packages.
+
 # v1.1906051011
 
 This version adds support for sending attachments and syncing email reads!
