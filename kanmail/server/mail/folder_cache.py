@@ -96,7 +96,9 @@ class FolderCache(object):
     def populate_namespaces(func):
         @wraps(func)
         def decorated(self, namespace, *args, **kwargs):
-            if not CACHE_ENABLED:
+            # We *always* cache UID validity or it means we refetch emails every
+            # sync. Realistically the cache is only disabled in dev.
+            if not CACHE_ENABLED and namespace != UID_VALIDITY_NAMESPACE:
                 return
             self.namespaces.add(namespace)
             return func(self, namespace, *args, **kwargs)
