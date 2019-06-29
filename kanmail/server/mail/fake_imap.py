@@ -2,6 +2,8 @@
 A horrible hacky fake IMAP client - useful for dev on planes :)
 '''
 
+import re
+
 from datetime import datetime
 from os import environ
 from random import choice
@@ -88,13 +90,8 @@ def make_fake_fetch_item(folder, uid, keys):
 
 
 def make_key(key):
-    if key.startswith('BODY.PEEK'):
-        key = key.replace('BODY.PEEK', 'BODY')
-
-    # TODO: remove this crap!
-    if key.endswith('<0.500>'):
-        key = key.replace('<0.500>', '<0>')
-
+    key = key.replace('BODY.PEEK', 'BODY')
+    key = re.sub(r'<0\.[0-9]+>', '<0>', key)
     return key.encode()
 
 
