@@ -10,7 +10,6 @@ from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
 
-from .connection import MAX_ATTEMPTS
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
@@ -84,8 +83,7 @@ class Folder(object):
         Shortcut to getting a connection and selecting our folder with it.
         '''
 
-        with self.account.get_imap_connection() as connection:
-            connection.select_folder(self.name)
+        with self.account.get_imap_connection(selected_folder=self.name) as connection:
             yield connection
 
     def add_cache_flags(self, uid, new_flag):
@@ -135,7 +133,7 @@ class Folder(object):
                 raise Exception('MISSING PART', uid, part, parts)
 
             if body_keyname not in data:
-                if retry > MAX_ATTEMPTS:
+                if retry > connection.max_attempts:
                     raise Exception(f'Missing data for UID/part {uid}/{part}')
 
                 failed_email_uids.append(uid)

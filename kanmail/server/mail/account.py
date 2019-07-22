@@ -32,11 +32,11 @@ class Account(object):
         self.folders = {}
         self.query_folders = {}
 
-    def get_imap_connection(self):
-        return self.connection_pool.get_connection()
+    def get_imap_connection(self, *args, **kwargs):
+        return self.connection_pool.get_connection(*args, **kwargs)
 
-    def get_smtp_connection(self):
-        return self.smtp_connection.get_connection()
+    def get_smtp_connection(self, *args, **kwargs):
+        return self.smtp_connection.get_connection(*args, **kwargs)
 
     def get_capabilities(self):
         if self.capabilities is None:
