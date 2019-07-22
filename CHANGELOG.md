@@ -1,3 +1,13 @@
+# v1.1907220932
+
+Changes:
+- Fix and tidy up trashing/archiving/moving of email threads.
+- Fix IMAP connection retrys.
+- Fix bug when trying to remove a message that doesn't exist.
+- Fix fake boxy text (return string not list).
+- Tidy up fake fetch key handling.
+- Never disable the UID validity cache.
+
 # v1.1906061816
 
 Changes:
