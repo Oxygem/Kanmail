@@ -154,6 +154,10 @@ export default class BaseEmails {
                 accountKey, folderName, uid,
             );
 
+            if (!message) {
+                return;
+            }
+
             // Remove any UID for this folder
             delete message.folderUids[folderName];
 
