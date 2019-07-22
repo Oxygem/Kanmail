@@ -3,6 +3,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { DragSource } from 'react-dnd';
 
+import { ALIAS_FOLDERS } from 'constants.js';
+
 import keyboard from 'keyboard.js';
 
 import requestStore from 'stores/request.js';
@@ -15,30 +17,31 @@ import { formatAddress, formatDate } from 'util/string.js';
 /*
     Return a list of UIDs for a given folder in this thread.
 */
-function getThreadFolderMessageIds(thread, columnId) {
+function getThreadColumnMessageIds(thread, columnId) {
     return _.filter(_.map(thread, message => (
         message.folderUids[columnId]
     )));
 }
 
 /*
-    For every message in this thread, generate a move request to another folder.
+    Return a map of folder -> UIDs for all messages in this thread.
 */
-function moveThread(thread, columnId, targetFolder, previousState={}) {
-    const uids = getThreadFolderMessageIds(thread, columnId);
-    const emailStore = getEmailStore();
+function getThreadFolderMessageIds(thread) {
+    return _.reduce(
+        thread,
+        (memo, message) => {
+            _.each(message.folderUids, (uid, folderName) => {
+                if (!memo[folderName]) {
+                    memo[folderName] = [];
+                }
 
-    return emailStore.moveEmails(
-        thread[0].account_name, uids,
-        columnId, targetFolder,
-    ).then(() => {
-        emailStore.processEmailChanges();
-    }).catch(() => {
-        this.setState({
-            error: true,
-            ...previousState,
-        });
-    });
+                memo[folderName].push(uid);
+            });
+
+            return memo;
+        },
+        {},
+    );
 }
 
 
@@ -48,7 +51,7 @@ const emailSource = {
         const { account_name } = props.thread[0];
 
         // Get list of message UIDs *for this folder*
-        const messageUids = getThreadFolderMessageIds(
+        const messageUids = getThreadColumnMessageIds(
             props.thread,
             props.columnId,
         );
@@ -140,6 +143,43 @@ export default class EmailColumnThread extends React.Component {
         if (this.state.hover) {
             keyboard.setThreadComponent(null);
         }
+    }
+
+    /*
+        For every message in this thread, *any folder*, generate a move request
+        to another folder.
+    */
+    moveThreadMessages = (targetFolder, previousState, folderFilter=null) => {
+        const thread = this.props.thread;
+
+        const allMessageFolderUids = getThreadFolderMessageIds(thread);
+        const emailStore = getEmailStore();
+
+        const requests = [];
+
+        _.each(allMessageFolderUids, (uids, folderName) => {
+            if (folderFilter !== null && !folderFilter(folderName)) {
+                return;
+            }
+
+            requests.push(emailStore.moveEmails(
+                thread[0].account_name,
+                uids,
+                folderName,
+                targetFolder,
+            ));
+        });
+
+        return Promise.all(requests).then(() => {
+            emailStore.processEmailChanges();
+        }).catch((e) => {
+            this.setState({
+                error: true,
+                ...previousState,
+            });
+            // Re-throw for the requestStore to capture
+            throw e;
+        });
     }
 
     setHover = (state=true) => {
@@ -243,7 +283,8 @@ export default class EmailColumnThread extends React.Component {
             locked: true,
         });
 
-        const messageUids = getThreadFolderMessageIds(
+        // Only star messages from this thread in the current column/folder
+        const messageUids = getThreadColumnMessageIds(
             this.props.thread,
             this.props.columnId,
         );
@@ -295,9 +336,11 @@ export default class EmailColumnThread extends React.Component {
             locked: false,
         };
 
-        const archiveThread = () => moveThread(
-            this.props.thread, this.props.columnId, 'archive',
-            previousState,
+        // Move every message in the thread, that exists in non-core folders, or
+        // is in the inbox, to the archive. Ie don't move sent/trash/spam -> archive.
+        const archiveThread = () => this.moveThreadMessages(
+            'archive', previousState,
+            folderName => folderName == 'inbox' || !_.includes(ALIAS_FOLDERS, folderName),
         );
         const undoArchive = () => this.setState(previousState);
 
@@ -336,9 +379,9 @@ export default class EmailColumnThread extends React.Component {
             locked: false,
         };
 
-        const trashThread = () => moveThread(
-            this.props.thread, this.props.columnId, 'trash',
-            previousState,
+        // Move every messasge in the thread, from any folder, to trash
+        const trashThread = () => this.moveThreadMessages(
+            'trash', previousState,
         );
         const undoTrash = () => this.setState(previousState);
 
@@ -377,9 +420,10 @@ export default class EmailColumnThread extends React.Component {
             locked: false,
         };
 
-        const restoreThread = () => moveThread(
-            this.props.thread, this.props.columnId, 'inbox',
-            previousState,
+        // Move every message from the thread in this folder/column to the inbox
+        const restoreThread = () => this.moveThreadMessages(
+            'inbox', previousState,
+            folderName => folderName == this.props.columnId,
         );
         const undoRestore = () => this.setState(previousState);
 
