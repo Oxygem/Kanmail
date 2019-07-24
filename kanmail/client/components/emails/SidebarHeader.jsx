@@ -10,9 +10,10 @@ import { subscribe } from 'stores/base.jsx';
 export default class SidebarHeader extends Component {
     static propTypes = {
         requestErrors: PropTypes.array.isRequired,
+        networkErrors: PropTypes.array.isRequired,
     }
 
-    renderErrors() {
+    renderRequestErrors() {
         if (!this.props.requestErrors.length) {
             return null;
         }
@@ -33,10 +34,26 @@ export default class SidebarHeader extends Component {
         );
     }
 
+    renderNetworkErrorIcon() {
+        if (!this.props.networkErrors.length) {
+            return null;
+        }
+
+        return (
+            <div className="icon-wrapper">
+                <div className="icon-contents">
+                    <strong>Kanmail cannot connect!</strong>
+                </div>
+                <i className="error fa fa-bolt"></i>
+            </div>
+        );
+    }
+
     render() {
         return (
             <div className="sidebar-header">
-                {this.renderErrors()}
+                {this.renderRequestErrors()}
+                {this.renderNetworkErrorIcon()}
             </div>
         );
     }
