@@ -18,6 +18,7 @@ function handleReponse(response, criticalRequestNonce=false) {
         return response.text().then(body => {
             let data = {
                 url: response.url,
+                status: response.status,
                 errorName: 'unknown',
                 errorMessage: body,
             };
@@ -38,6 +39,8 @@ function handleReponse(response, criticalRequestNonce=false) {
             throw error;
         });
     }
+
+    requestStore.clearNetworkErrors();
 
     if (response.status == 204) {
         return;

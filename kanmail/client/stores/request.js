@@ -24,12 +24,25 @@ class RequestStore extends BaseStore {
             pendingPushRequests: [],
             // Request error "log"
             requestErrors: [],
+            // Network error "log" (ie dodgy network, not "errors")
+            networkErrors: [],
         };
     }
 
     addError = (errorData) => {
         console.error('Received error:', errorData);
-        this.props.requestErrors.push(errorData);
+
+        const target = (
+            errorData.status == 503 ?
+            this.props.networkErrors : this.props.requestErrors
+        );
+
+        target.push(errorData);
+        this.triggerUpdate();
+    }
+
+    clearNetworkErrors = () => {
+        this.props.networkErrors = [];
         this.triggerUpdate();
     }
 
