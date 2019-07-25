@@ -102,12 +102,11 @@ class ImapConnectionWrapper(object):
 
     def set_selected_folder(self, selected_folder):
         self._selected_folder = selected_folder
-        if self._imap:
-            self._imap.select_folder(selected_folder)
+        self.select_folder(selected_folder)
 
     def unset_selected_folder(self):
         self._selected_folder = None
-        self._imap.unselect_folder()
+        self.unselect_folder()
 
 
 class ImapConnectionPool(object):
@@ -144,11 +143,12 @@ class ImapConnectionPool(object):
         connection = self.pool.get()
         logger.debug(f'Got connection from pool: {self.pool.qsize()} (-1)')
 
-        if selected_folder:
-            connection.set_selected_folder(selected_folder)
-
         try:
+            if selected_folder:
+                connection.set_selected_folder(selected_folder)
+
             yield connection
+
             if selected_folder:
                 connection.unset_selected_folder()
 
