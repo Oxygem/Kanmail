@@ -1,3 +1,10 @@
+# v1.1907261109
+
+Changes:
+- Fixup selecting a folder in IMAP connections.
+- Render network erros in sidebar header.
+- Store network errors (503) separately to other request errors.
+
 # v1.1907220932
 
 Changes:
