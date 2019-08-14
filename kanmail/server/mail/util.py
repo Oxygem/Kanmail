@@ -311,15 +311,7 @@ def _parse_bodystructure(bodystructure, item_number=None):
         if b'NAME' in extra_data:
             data['name'] = extra_data[b'NAME'].decode()
 
-        attachment_data = extra_data.get(b'ATTACHMENT')
-        if attachment_data:
-            data['attachment'] = True
-
-        inline_data = extra_data.get(b'INLINE')
-        if inline_data:
-            data['inline'] = True
-
-        any_attachment_data = attachment_data or inline_data
+        any_attachment_data = extra_data.get(b'ATTACHMENT') or extra_data.get(b'INLINE')
         if any_attachment_data:
             if b'FILENAME' in any_attachment_data:
                 data['name'] = any_attachment_data[b'FILENAME'].decode()
