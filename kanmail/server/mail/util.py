@@ -348,7 +348,6 @@ def parse_bodystructure(bodystructure):
                 items['plain'] = number
                 continue
 
-        if part.get('attachment'):
-            items['attachments'].append(number)
+        items['attachments'].append(number)
 
     return items
