@@ -1,3 +1,12 @@
+# v1.1908141947
+
+Changes:
+- Add all non-text/html objects as attachments.
+- Include `X-Mailer` header in emails.
+- Remove floats in threads to fix layout.
+- Add new yarn lockfile.
+- Remove `parcel-bundler` dependency.
+
 # v1.1907261109
 
 Changes:
