@@ -3,6 +3,7 @@ from mimetypes import guess_type
 from os import path
 
 from kanmail.log import logger
+from kanmail.version import get_version
 
 from .contacts import get_contacts
 from .util import markdownify
@@ -48,6 +49,8 @@ def send_email(
     to_addresses = to + cc + bcc
 
     message = EmailMessage()
+
+    message['X-Mailer'] = f'Kanmail v{get_version()}'
 
     message['From'] = _make_address(from_)
     message['To'] = ', '.join(_make_address(a) for a in to)
