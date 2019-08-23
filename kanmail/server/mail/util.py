@@ -7,9 +7,6 @@ from base64 import b64decode
 from markdown import markdown
 from mdx_linkify.mdx_linkify import LinkifyExtension
 
-# Can't use as they refuse to Python3!
-# from flanker import mime
-
 from kanmail.log import logger
 
 from .contacts import add_contact
