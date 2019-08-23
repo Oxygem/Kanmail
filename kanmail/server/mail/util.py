@@ -226,12 +226,12 @@ def extract_excerpt(raw_body, raw_body_meta):
 
 def extract_headers(raw_message):
     message = decode_string(raw_message)
-
     parser = email.parser.HeaderParser()
 
-    headers = dict(parser.parsestr(message).items())
-
-    return headers
+    return {
+        key: decode_header(header)
+        for key, header in parser.parsestr(message).items()
+    }
 
 
 def _parse_bodystructure_list(items):
