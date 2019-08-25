@@ -1,3 +1,9 @@
+# v1.1908250954
+
+Changes:
+- Decode all headers.
+- Remove unused import.
+
 # v1.1908141956
 
 Changes:
