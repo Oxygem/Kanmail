@@ -5,10 +5,10 @@ from time import sleep
 
 import webview
 
-from kanmail import settings
 from kanmail.device import register_or_ping_device
 from kanmail.log import logger
 from kanmail.server.app import app, boot
+from kanmail.settings import DEBUG, SERVER_PORT, WINDOW_HEIGHT, WINDOW_WIDTH
 from kanmail.version import get_version
 from kanmail.window import create_window
 
@@ -17,8 +17,8 @@ def run_server():
     try:
         boot()
         app.run(
-            port=settings.SERVER_PORT,
-            debug=settings.DEBUG,
+            port=SERVER_PORT,
+            debug=DEBUG,
             threaded=True,
             # We can't use the reloader within a thread as it needs signal support
             use_reloader=False,
@@ -75,8 +75,8 @@ def main():
     # First/main call to webview, blocking - when this is quit the threads will
     # all be killed off (daemon=True).
     create_window(
-        width=settings.WINDOW_WIDTH,
-        height=settings.WINDOW_HEIGHT,
+        width=WINDOW_WIDTH,
+        height=WINDOW_HEIGHT,
     )
 
     # Main window closed, cleanup/exit
