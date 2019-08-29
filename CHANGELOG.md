@@ -1,3 +1,8 @@
+# v1.1908290941
+
+Changes:
+- Decode bytes values.
+
 # v1.1908250954
 
 Changes:
