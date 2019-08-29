@@ -17,6 +17,11 @@ from kanmail.window import create_open_dialog, create_window, destroy_window
 SEND_WINDOW_DATA = {}
 
 
+@app.route('/api/ping', methods=('GET',))
+def api_ping():
+    return jsonify(ping='pong')
+
+
 def _get_render_data():
     return {
         'version': get_version(),

@@ -3,6 +3,7 @@ import sys
 from threading import Thread
 from time import sleep
 
+import requests
 import webview
 
 from kanmail.device import register_or_ping_device
@@ -71,6 +72,17 @@ def main():
 
     # Register/ping immediately - without caring if it fails
     run_thread(register_or_ping_device)
+
+    # Ensure the webserver is up & running by polling it
+    while True:
+        try:
+            response = requests.get(f'http://localhost:{SERVER_PORT}/api/ping')
+            response.raise_for_status()
+        except requests.RequestException as e:
+            sleep(0.1)
+            logger.warning(f'Waiting for main window: {e}')
+        else:
+            break
 
     # First/main call to webview, blocking - when this is quit the threads will
     # all be killed off (daemon=True).
