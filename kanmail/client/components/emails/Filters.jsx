@@ -75,7 +75,11 @@ export default class Filters extends React.Component {
 
         if (this.props.updateReady) {
             return (
-                <li>Update installed, restart Kanmail to use...</li>
+                <li>
+                    <a onClick={() => updateStore.doRestart()}>
+                        Update installed, click to restart Kanmail...
+                    </a>
+                </li>
             );
         }
 
