@@ -6,7 +6,7 @@ from kanmail.version import get_version
 
 
 @app.route('/api/update', methods=('GET',))
-def get_check_update():
+def api_check_update():
     update = check_device_update()
 
     if update:
@@ -15,7 +15,7 @@ def get_check_update():
 
 
 @app.route('/api/update', methods=('POST',))
-def api_update_and_restart():
+def api_download_overwrite_update():
     update = check_device_update()
 
     if not update:
