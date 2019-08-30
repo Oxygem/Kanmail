@@ -1,3 +1,8 @@
+# v1.1908300907
+
+Changes:
+- Remove restart link as it still doesn't bloody work.
+
 # v1.1908300715
 
 Changes:
