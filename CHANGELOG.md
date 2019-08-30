@@ -1,3 +1,12 @@
+# v1.1908300715
+
+Changes:
+- Add ping endpoint and don't create the main window until it responds.
+- Import settings variables rather tha module.
+- Consistent function names.
+- Change the frontend to show a restart button on update download.
+- Implement `restart_device` w/API endpoint.
+
 # v1.1908290941
 
 Changes:
