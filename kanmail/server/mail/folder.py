@@ -4,8 +4,6 @@ from datetime import date, timedelta
 
 import six
 
-from imapclient.exceptions import IMAPClientError
-
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
@@ -29,9 +27,6 @@ class Folder(object):
     position for each account/folder combination.
     '''
 
-    # List of email UIDs in this folder
-    email_uids = None
-
     # Whether this folder exists on the server
     exists = True
 
@@ -54,19 +49,24 @@ class Folder(object):
         else:
             self.cache = FolderCache(self)
 
-        self.refresh()
+        # If we exist on the server, fetch (possibly from cache) and set UID list
+        if self.check_exists():
+            self.get_and_set_email_uids()
 
-    def refresh(self):
-        # Fetch email UIDs (cached if possible)
-        try:
-            self.email_uids = self.get_email_uids()
-            self.exists = True
-        except IMAPClientError as e:
-            # The folder doesn't (yet) exist on the server
-            if "doesn't exist" not in e.args[0]:
-                raise
-            self.exists = False
-        return self.exists
+        # If we don't exist, our UID list is empty
+        else:
+            self.email_uids = set()
+
+    def check_exists(self):
+        '''
+        Check whether this folder exists on the server.
+        '''
+
+        with self.account.get_imap_connection() as connection:
+            exists = connection.folder_exists(self.name)
+
+        self.exists = exists
+        return exists
 
     def __len__(self):
         if self.exists:
@@ -329,10 +329,10 @@ class Folder(object):
 
         if uid_validity != cache_validity:
             if cache_validity:
-                logger.debug(
+                self.log('warning', (
                     'Found invalid UIDVALIDITY '
                     f'(local={cache_validity}, remote={uid_validity})',
-                )
+                ))
                 self.cache.bust()
             self.cache.set_uid_validity(uid_validity)
             return False
@@ -340,6 +340,10 @@ class Folder(object):
 
     # Bits that fiddle with self.email_uids
     #
+
+    @lock_class_method
+    def get_and_set_email_uids(self):
+        self.email_uids = self.get_email_uids()
 
     @lock_class_method
     def sync_emails(self, expected_uid_count=None, check_unread_uids=None):
@@ -351,8 +355,8 @@ class Folder(object):
 
         # If we don't exist, try again or we have nothing
         if not self.exists:
-            if not self.refresh():
-                return [], []
+            if not self.check_exists():
+                return [], [], []
 
         message_uids = self.get_email_uids(use_cache=False)
 
@@ -376,8 +380,12 @@ class Folder(object):
             deleted_message_uids = self.email_uids
 
             # At this point we have the entire folder as new message IDs - we want
-            # to fetch the first self.offset
+            # to fetch the first self.offset to match where we "were".
             if len(message_uids) > self.offset:
+                # Folder didn't exist before so offset is 0; fetch up to batch size
+                if self.offset == 0:
+                    self.offset = get_system_setting('batch_size')
+
                 sorted_message_uids = sorted(message_uids, reverse=True)
                 new_message_uids = sorted_message_uids[:self.offset]
             else:

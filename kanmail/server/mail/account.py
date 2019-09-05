@@ -90,8 +90,7 @@ class Account(object):
             with self.get_imap_connection() as connection:
                 connection.create_folder(folder.name)
 
-            # Reload the folder
-            folder.refresh()
+            folder.get_and_set_email_uids()
 
         return folder.name
 
