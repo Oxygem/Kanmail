@@ -1,3 +1,9 @@
+# v1.1909052150
+
+Changes:
+- Split checking whether a folder exists from fetching UIDs.
+- Implement left/right buttons on column header to re-order columns (excluding main).
+
 # v1.1908300907
 
 Changes:
