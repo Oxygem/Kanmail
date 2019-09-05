@@ -5,6 +5,13 @@ import { BaseStore } from 'stores/base.jsx';
 import { get, put } from 'util/requests.js';
 
 
+function arrayMove(arr, fromIndex, toIndex) {
+    const element = arr[fromIndex];
+    arr.splice(fromIndex, 1);
+    arr.splice(toIndex, 0, element);
+}
+
+
 class SettingsStore extends BaseStore {
     /*
         Global store of the users app settings.
@@ -21,9 +28,7 @@ class SettingsStore extends BaseStore {
         };
     }
 
-    addColumn(name) {
-        this.props.columns.push(name);
-
+    updateColumnsTriggerState() {
         // Save the new list of columns via the API before updating
         return put('/api/settings', {
             columns: this.props.columns,
@@ -32,14 +37,28 @@ class SettingsStore extends BaseStore {
         });
     }
 
+    addColumn(name) {
+        this.props.columns.push(name);
+        this.updateColumnsTriggerState();
+    }
+
     removeColumn(name) {
         this.props.columns = _.without(this.props.columns, name);
+        this.updateColumnsTriggerState();
+    }
 
-        return put('/api/settings', {
-            columns: this.props.columns,
-        }).then(() => {
-            this.triggerUpdate();
-        });
+    moveColumn(name, position) {
+        const index = this.props.columns.indexOf(name);
+        arrayMove(this.props.columns, index, index + position);
+        this.updateColumnsTriggerState();
+    }
+
+    moveColumnLeft(name) {
+        this.moveColumn(name, -1);
+    }
+
+    moveColumnRight(name) {
+        this.moveColumn(name, 1);
     }
 
     getSettings() {

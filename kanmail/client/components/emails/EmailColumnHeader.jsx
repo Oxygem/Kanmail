@@ -43,6 +43,14 @@ class EmailColumnHeader extends React.Component {
         settingsStore.removeColumn(this.props.id);
     }
 
+    handleClickMoveLeft = () => {
+        settingsStore.moveColumnLeft(this.props.id);
+    }
+
+    handleClickMoveRight = () => {
+        settingsStore.moveColumnRight(this.props.id);
+    }
+
     renderName() {
         const column = this.props.id;
 
@@ -61,9 +69,38 @@ class EmailColumnHeader extends React.Component {
 
     renderMetaIcons() {
         const deleteIcon = this.props.isMainColumn ? null : <i
-            className="red red-hover fa fa-times"
+            className="red red-hover delete fa fa-times"
             onClick={this.handleClickDelete}
         />;
+
+        let moveLeftIcon = null;
+        if (
+            !this.props.isMainColumn
+            && settingsStore.props.columns[0] != this.props.id
+        ) {
+            moveLeftIcon = (
+                <i
+                    className="green green-hover fa fa-chevron-left"
+                    onClick={this.handleClickMoveLeft}
+                ></i>
+            );
+        }
+
+        let moveRightIcon = null;
+        const lastColumn = (  // words cannot describe my dislike of JavaScript
+            settingsStore.props.columns[settingsStore.props.columns.length - 1]
+        );
+        if (
+            !this.props.isMainColumn
+            && lastColumn != this.props.id
+        ) {
+            moveRightIcon = (
+                <i
+                    className="green green-hover fa fa-chevron-right"
+                    onClick={this.handleClickMoveRight}
+                ></i>
+            );
+        }
 
         return (
             <div className="icons">
@@ -71,6 +108,8 @@ class EmailColumnHeader extends React.Component {
                     className="blue blue-hover refresh fa fa-refresh"
                     onClick={this.props.getNewEmails}
                 />
+                {moveLeftIcon}
+                {moveRightIcon}
                 {deleteIcon}
             </div>
         );
