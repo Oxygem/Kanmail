@@ -75,7 +75,7 @@ class Folder(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[Account: {self.account.name}/{self.name}]: {message}')
+        func(f'[Folder: {self.account.name}/{self.name}]: {message}')
 
     @contextmanager
     def get_connection(self):

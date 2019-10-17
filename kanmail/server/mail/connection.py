@@ -24,19 +24,8 @@ class ImapConnectionWrapper(object):
     _imap = None
     _selected_folder = None
 
-    def __init__(
-        self, host, port, username, password,
-        ssl=True,
-        timeout=DEFAULT_TIMEOUT,
-        max_attempts=DEFAULT_ATTEMPTS,
-    ):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-        self.ssl = ssl
-        self.timeout = timeout
-        self.max_attempts = max_attempts
+    def __init__(self, connection):
+        self.connection = connection
 
     def __getattr__(self, key):
         if self._imap is None:
@@ -53,12 +42,12 @@ class ImapConnectionWrapper(object):
 
             attempts = 0
 
-            while attempts < self.max_attempts:
+            while attempts < self.connection.max_attempts:
                 try:
                     ret = func(*args, **kwargs)
 
                     took = (time() - start) * 1000
-                    logger.debug((
+                    self.connection.log('debug', (
                         f'Completed IMAP action: '
                         f'{key}({args}, {kwargs}) in {took}ms'
                     ))
@@ -68,7 +57,10 @@ class ImapConnectionWrapper(object):
                 # Network issues/IMAP aborts - both should fixed by reconnect
                 except (IMAPClientAbortError, socket_error) as e:
                     attempts += 1
-                    logger.critical(f'IMAP error {attempts}/{self.max_attempts}: {e}')
+                    self.connection.log(
+                        'critical',
+                        f'IMAP error {attempts}/{self.connection.max_attempts}: {e}',
+                    )
                     self.try_make_imap()
                     func = getattr(self._imap, key)
 
@@ -82,40 +74,47 @@ class ImapConnectionWrapper(object):
 
     def make_imap(self):
         server_string = (
-            f'{self.username}@{self.host}:{self.port} (ssl={self.ssl})'
+            f'{self.connection.username}@{self.connection.host}:{self.connection.port} '
+            f'(ssl={self.connection.ssl})'
         )
-        logger.debug(f'Connecting to IMAP server: {server_string}')
+        self.connection.log('debug', f'Connecting to IMAP server: {server_string}')
 
         imap = IMAPClient(
-            self.host,
-            port=self.port, ssl=self.ssl, timeout=self.timeout,
+            self.connection.host,
+            port=self.connection.port,
+            ssl=self.connection.ssl,
+            timeout=self.connection.timeout,
             use_uid=True,
         )
-        imap.login(self.username, self.password)
+        imap.login(self.connection.username, self.connection.password)
         imap.normalise_times = False
 
         if self._selected_folder:
             imap.select_folder(self._selected_folder)
 
         self._imap = imap
-        logger.info(f'Connected to IMAP server: {server_string}')
+        self.connection.log('info', f'Connected to IMAP server: {server_string}')
 
     def set_selected_folder(self, selected_folder):
         self._selected_folder = selected_folder
         self.select_folder(selected_folder)
 
     def unset_selected_folder(self):
+        if self._selected_folder is None:
+            return
+
         self._selected_folder = None
         self.unselect_folder()
 
 
 class ImapConnectionPool(object):
     def __init__(
-        self, host, port, username, password,
+        self, account, host, port, username, password,
         ssl=True, timeout=DEFAULT_TIMEOUT,
         max_connections=DEFAULT_CONNECTIONS,
         max_attempts=DEFAULT_ATTEMPTS,
     ):
+        self.account = account
         self.host = host
         self.port = port
         self.username = username
@@ -130,18 +129,17 @@ class ImapConnectionPool(object):
         for _ in range(max_connections):
             self.pool.put(self.create_connection())
 
-    def create_connection(self):
-        connection = ImapConnectionWrapper(
-            self.host, self.port, self.username, self.password,
-            ssl=self.ssl, timeout=self.timeout, max_attempts=self.max_attempts,
-        )
+    def log(self, method, message):
+        func = getattr(logger, method)
+        func(f'[Account: {self.account.name}]: {message}')
 
-        return connection
+    def create_connection(self):
+        return ImapConnectionWrapper(self)
 
     @contextmanager
     def get_connection(self, selected_folder=None):
         connection = self.pool.get()
-        logger.debug(f'Got connection from pool: {self.pool.qsize()} (-1)')
+        self.log('debug', f'Got connection from pool: {self.pool.qsize()} (-1)')
 
         try:
             if selected_folder:
@@ -154,11 +152,12 @@ class ImapConnectionPool(object):
 
         finally:
             self.pool.put(connection)
-            logger.debug(f'Returned connection to pool: {self.pool.qsize()} (+1)')
+            self.log('debug', f'Returned connection to pool: {self.pool.qsize()} (+1)')
 
 
 class SmtpConnection(object):
-    def __init__(self, host, port, username, password, ssl=True, tls=False):
+    def __init__(self, account, host, port, username, password, ssl=True, tls=False):
+        self.account = account
         self.host = host
         self.port = port
         self.username = username

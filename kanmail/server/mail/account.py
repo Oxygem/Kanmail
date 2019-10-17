@@ -19,11 +19,13 @@ class Account(object):
 
         # Setup/wrap IMAP connection
         self.connection_pool = ImapConnectionPool(
+            self,
             **settings['imap_connection'],
         )
 
         # Prepare SMTP connection getter
         self.smtp_connection = SmtpConnection(
+            self,
             **settings['smtp_connection'],
         )
 

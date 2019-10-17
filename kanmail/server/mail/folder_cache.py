@@ -65,7 +65,7 @@ class FolderCache(object):
     def __init__(self, folder):
         self.folder = folder
 
-        name = f'{self.folder.account.name}-{self.folder.name}'
+        name = f'{self.folder.account.name}/{self.folder.name}'
 
         self.name = name
         self.namespaces = set()
