@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from functools import wraps
-from threading import RLock, Thread
+from threading import Lock, Thread
 
 from flask import abort
 from six.moves.queue import Queue
@@ -11,7 +11,7 @@ def lock_class_method(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, 'lock'):
-            self.lock = RLock()
+            self.lock = Lock()
 
         with self.lock:
             return func(self, *args, **kwargs)
