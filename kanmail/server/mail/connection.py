@@ -24,8 +24,8 @@ class ImapConnectionWrapper(object):
     _imap = None
     _selected_folder = None
 
-    def __init__(self, connection):
-        self.connection = connection
+    def __init__(self, config):
+        self.config = config
 
     def __getattr__(self, key):
         if self._imap is None:
@@ -42,12 +42,12 @@ class ImapConnectionWrapper(object):
 
             attempts = 0
 
-            while attempts < self.connection.max_attempts:
+            while attempts < self.config.max_attempts:
                 try:
                     ret = func(*args, **kwargs)
 
                     took = (time() - start) * 1000
-                    self.connection.log('debug', (
+                    self.config.log('debug', (
                         f'Completed IMAP action: '
                         f'{key}({args}, {kwargs}) in {took}ms'
                     ))
@@ -57,9 +57,9 @@ class ImapConnectionWrapper(object):
                 # Network issues/IMAP aborts - both should fixed by reconnect
                 except (IMAPClientAbortError, socket_error) as e:
                     attempts += 1
-                    self.connection.log(
+                    self.config.log(
                         'critical',
-                        f'IMAP error {attempts}/{self.connection.max_attempts}: {e}',
+                        f'IMAP error {attempts}/{self.config.max_attempts}: {e}',
                     )
                     self.try_make_imap()
                     func = getattr(self._imap, key)
@@ -74,30 +74,30 @@ class ImapConnectionWrapper(object):
 
     def make_imap(self):
         server_string = (
-            f'{self.connection.username}@{self.connection.host}:{self.connection.port} '
-            f'(ssl={self.connection.ssl})'
+            f'{self.config.username}@{self.config.host}:{self.config.port} '
+            f'(ssl={self.config.ssl})'
         )
-        self.connection.log('debug', f'Connecting to IMAP server: {server_string}')
+        self.config.log('debug', f'Connecting to IMAP server: {server_string}')
 
         imap = IMAPClient(
-            self.connection.host,
-            port=self.connection.port,
-            ssl=self.connection.ssl,
-            timeout=self.connection.timeout,
+            self.config.host,
+            port=self.config.port,
+            ssl=self.config.ssl,
+            timeout=self.config.timeout,
             use_uid=True,
         )
-        imap.login(self.connection.username, self.connection.password)
+        imap.login(self.config.username, self.config.password)
         imap.normalise_times = False
 
         if self._selected_folder:
             imap.select_folder(self._selected_folder)
 
         self._imap = imap
-        self.connection.log('info', f'Connected to IMAP server: {server_string}')
+        self.config.log('info', f'Connected to IMAP server: {server_string}')
 
     def set_selected_folder(self, selected_folder):
-        self._selected_folder = selected_folder
         self.select_folder(selected_folder)
+        self._selected_folder = selected_folder
 
     def unset_selected_folder(self):
         if self._selected_folder is None:
