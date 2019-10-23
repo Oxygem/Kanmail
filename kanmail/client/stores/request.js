@@ -29,20 +29,15 @@ class RequestStore extends BaseStore {
         };
     }
 
-    addError = (errorData) => {
-        console.error('Received error:', errorData);
-
-        const target = (
-            errorData.status == 503 ?
-            this.props.networkErrors : this.props.requestErrors
-        );
-
-        target.push(errorData);
+    addRequestError = (errorData) => {
+        console.error('Received request error:', errorData);
+        this.props.requestErrors.push(errorData);
         this.triggerUpdate();
     }
 
-    clearNetworkErrors = () => {
-        this.props.networkErrors = [];
+    addNetworkError = (errorData) => {
+        console.error('Received network error: ', errorData);
+        this.props.networkErrors.push(errorData);
         this.triggerUpdate();
     }
 
@@ -160,7 +155,7 @@ window.onerror = (message, source, lineno, colno, e) => {
     const name = e ? e.name : 'Unknown';
     const errorMessage = e ? e.message : message;
 
-    requestStore.addError({
+    requestStore.addRequestError({
         errorName: `JS error: ${name}`,
         errorMessage: errorMessage,
     });

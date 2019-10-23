@@ -25,7 +25,8 @@ export default class SidebarHeader extends Component {
         return (
             <div className="icon-wrapper">
                 <div className="icon-contents">
-                    <strong>Kanmail encountered a serious sync or UI error, click to reload</strong> {errors}
+                    <strong>Kanmail encountered a serious sync or UI error, click to reload</strong>
+                    {errors}
                 </div>
                 <a onClick={() => window.location.reload()}>
                     <i className="error fa fa-exclamation-triangle"></i> {this.props.requestErrors.length}
@@ -39,12 +40,17 @@ export default class SidebarHeader extends Component {
             return null;
         }
 
+        const errors = _.map(this.props.networkErrors, (error, i) => (
+            <p key={i}>{error.errorName}: {error.errorMessage}</p>
+        ));
+
         return (
             <div className="icon-wrapper">
                 <div className="icon-contents">
                     <strong>Kanmail cannot connect!</strong>
+                    {errors}
                 </div>
-                <i className="error fa fa-bolt"></i>
+                <i className="error fa fa-bolt"> {this.props.networkErrors.length}</i>
             </div>
         );
     }

@@ -33,14 +33,17 @@ function handleReponse(response, criticalRequestNonce=false) {
                 data.jsonError = e;
             }
 
-            requestStore.addError(data);
+            if (response.status == 503) {
+                requestStore.addNetworkError(data);
+            } else {
+                requestStore.addRequestError(data);
+            }
+
             const error = new Error(`Error fetching: ${response.url}`);
             error.data = body;
             throw error;
         });
     }
-
-    requestStore.clearNetworkErrors();
 
     if (response.status == 204) {
         return;
