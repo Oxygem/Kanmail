@@ -133,7 +133,7 @@ class Folder(object):
                 raise Exception('MISSING PART', uid, part, parts)
 
             if body_keyname not in data:
-                if retry > connection.max_attempts:
+                if retry > connection.config.max_attempts:
                     raise Exception(f'Missing data for UID/part {uid}/{part}')
 
                 failed_email_uids.append(uid)
