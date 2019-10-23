@@ -1,3 +1,12 @@
+# v1.1910232049
+
+Changes:
+- Replace `Connection.connection` with `Connection.config`.
+- Fix attribute access.
+- Improve tracking+display of network/request errors.
+- Use a `Lock` instead of `RLock` for class locking.
+- Overhaul connection logging and make logs consistent.
+
 # v1.1909052150
 
 Changes:
