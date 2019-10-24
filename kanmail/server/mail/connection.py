@@ -17,7 +17,11 @@ DEFAULT_TIMEOUT = 10
 
 
 class ImapConnectionError(OSError):
-    pass
+    account = None
+
+    def __init__(self, account, *args, **kwargs):
+        self.account = account
+        super(ImapConnectionError, self).__init__(*args, **kwargs)
 
 
 class ImapConnectionWrapper(object):
@@ -70,7 +74,7 @@ class ImapConnectionWrapper(object):
         try:
             self.make_imap()
         except OSError as e:
-            raise ImapConnectionError(*e.args)
+            raise ImapConnectionError(self.config.account, *e.args)
 
     def make_imap(self):
         server_string = (
@@ -131,7 +135,7 @@ class ImapConnectionPool(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[Account: {self.account.name}]: {message}')
+        func(f'[Account: {self.account}]: {message}')
 
     def create_connection(self):
         return ImapConnectionWrapper(self)

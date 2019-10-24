@@ -35,8 +35,8 @@ def error_method_not_allowed(e):
 @app.errorhandler(ImapConnectionError)
 def error_network_exception(e):
     error_name = e.__class__.__name__
-    message = f'{e}'
-    logger.exception(f'Unexpected exception in view: {message}')
+    message = f'{e} (account={e.account})'
+    logger.exception(f'Network exception in view: {message}')
     return make_response(jsonify(
         status_code=503,
         error_name=error_name,
