@@ -6,6 +6,16 @@ import requestStore from 'stores/request.js';
 import { subscribe } from 'stores/base.jsx';
 
 
+const renderError = (error, key) => {
+    return (
+        <p key={key}>
+            <span className="meta">{error.status}: {error.url}</span>
+            {error.errorName}: {error.errorMessage}
+        </p>
+    );
+}
+
+
 @subscribe(requestStore)
 export default class SidebarHeader extends Component {
     static propTypes = {
@@ -18,15 +28,11 @@ export default class SidebarHeader extends Component {
             return null;
         }
 
-        const errors = _.map(this.props.requestErrors, (error, i) => (
-            <p key={i}>{error.errorName}: {error.errorMessage}</p>
-        ));
-
         return (
             <div className="icon-wrapper">
                 <div className="icon-contents">
                     <strong>Kanmail encountered a serious sync or UI error, click to reload</strong>
-                    {errors}
+                    {_.map(this.props.requestErrors, renderError)}
                 </div>
                 <a onClick={() => window.location.reload()}>
                     <i className="error fa fa-exclamation-triangle"></i> {this.props.requestErrors.length}
@@ -40,17 +46,16 @@ export default class SidebarHeader extends Component {
             return null;
         }
 
-        const errors = _.map(this.props.networkErrors, (error, i) => (
-            <p key={i}>{error.errorName}: {error.errorMessage}</p>
-        ));
-
         return (
             <div className="icon-wrapper">
                 <div className="icon-contents">
-                    <strong>Kanmail cannot connect!</strong>
-                    {errors}
+                    <strong>Kanmail cannot connect! Click to clear!</strong>
+                    {_.map(this.props.networkErrors, renderError)}
                 </div>
-                <i className="error fa fa-bolt"> {this.props.networkErrors.length}</i>
+
+                <a onClick={() => requestStore.clearNetworkErrors()}>
+                    <i className="error fa fa-bolt"></i> {this.props.networkErrors.length}
+                </a>
             </div>
         );
     }
