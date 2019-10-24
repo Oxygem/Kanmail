@@ -38,6 +38,11 @@ class RequestStore extends BaseStore {
     addNetworkError = (errorData) => {
         console.error('Received network error: ', errorData);
         this.props.networkErrors.push(errorData);
+    }
+
+    clearNetworkErrors = () => {
+        console.debug('Clearing network errors...');
+        this.props.networkErrors = [];
         this.triggerUpdate();
     }
 
