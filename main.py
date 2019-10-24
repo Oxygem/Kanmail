@@ -57,18 +57,19 @@ def run_thread(target):
 def main():
     logger.info(f'\n#\n# Booting Kanmail {get_version()}\n#')
 
-    server_thread = Thread(name='Server', target=run_server)
-    server_thread.daemon = True
-    server_thread.start()
+    if '--no-server' not in sys.argv:
+        server_thread = Thread(name='Server', target=run_server)
+        server_thread.daemon = True
+        server_thread.start()
 
-    # Let's hope this thread doesn't fail!
-    monitor_thread = Thread(
-        name='Thread monitor',
-        target=monitor_threads,
-        args=(server_thread,),
-    )
-    monitor_thread.daemon = True
-    monitor_thread.start()
+        # Let's hope this thread doesn't fail!
+        monitor_thread = Thread(
+            name='Thread monitor',
+            target=monitor_threads,
+            args=(server_thread,),
+        )
+        monitor_thread.daemon = True
+        monitor_thread.start()
 
     # Register/ping immediately - without caring if it fails
     run_thread(register_or_ping_device)
