@@ -1,3 +1,12 @@
+# v1.1910250852
+
+Changes:
+- Improve backend network errors by including the account.
+- Improve layout/styling of errors.
+- Store new errors at the *start* of the lists.
+- Re-add `clearNetworkErrors` function.
+- Implement full dev reloading.
+
 # v1.1910232049
 
 Changes:
