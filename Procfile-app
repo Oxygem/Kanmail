@@ -1,3 +1,2 @@
-window: sleep 1 && python main.py --no-server
-server: scripts/dev_server.py
+server: sleep 1 && python main.py
 client: yarn run dev
