@@ -52,7 +52,7 @@ def _test_account_settings(account_settings, get_folders=False):
     if not all(smtp_settings.get(key) for key in CONNECTION_KEYS):
         return False, ('smtp', 'Missing username or password!')
 
-    new_account = Account(None, account_settings)
+    new_account = Account('Unsaved test account', account_settings)
 
     folders = {}
 
