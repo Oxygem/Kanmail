@@ -323,11 +323,6 @@ export default class ThreadMessage extends React.Component {
 
         return (
             <div className="extra-meta">
-                {this.renderFolders()}
-                To: {this.renderAddresses(message.to)}
-                {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
-                {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
-
                 <span className="right">
                     {htmlToggle}
                     {textToggle}
@@ -346,6 +341,11 @@ export default class ThreadMessage extends React.Component {
                         Reply All
                     </a>
                 </span>
+
+                {this.renderFolders()}
+                To: {this.renderAddresses(message.to)}
+                {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
+                {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
             </div>
         );
     }
