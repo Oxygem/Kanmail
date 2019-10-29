@@ -34,9 +34,10 @@ function calculateContainerWidth(columnContainer) {
         containerWidth = Math.min(maxWidth, spaceRight);
     } else {
         containerWidth = Math.min(maxWidth, spaceLeft);
-        containerLeft = 150;
+        containerLeft = spaceLeft - containerWidth;
 
-        if (spaceLeft < maxWidth) {
+        if (containerLeft === 0) {
+            containerLeft = 150;
             containerWidth -= 150;
         }
     }
