@@ -109,7 +109,11 @@ export default class EmailColumnThread extends React.Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
+    // See below as to why we have to use this unsafe(ish) method
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        // Ensure that we match any thread props - these are copied to state so that
+        // we can star/read/archive a thread without actually re-rendering the entire
+        // column, just this component.
         const { starred, unread, archived } = nextProps.thread;
 
         this.setState({
@@ -118,6 +122,27 @@ export default class EmailColumnThread extends React.Component {
             archived: archived,
         });
     }
+
+    // static getDerivedStateFromProps(props, state) {
+    //     // NOTE: this method is *useless* because it triggers every render, not just
+    //     // when receving props from above. React is annoying.
+    //
+    //     // Ensure that we match any thread props - these are copied to state so that
+    //     // we can star/read/archive a thread without actually re-rendering the entire
+    //     // column, just this component.
+    //     const { starred, unread, archived } = props.thread;
+    //     if (
+    //         state.starred !== starred
+    //         || state.unread !== unread
+    //         || state.archived !== archived
+    //     ) {
+    //         return {
+    //             starred,
+    //             unread,
+    //             archived,
+    //         }
+    //     }
+    // }
 
     componentDidUpdate(prevProps) {
         // If we're open and the thread changed, reopen
