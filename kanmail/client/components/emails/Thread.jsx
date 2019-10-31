@@ -12,9 +12,11 @@ const DEFAULT_MESSAGES_TO_SHOW = 3;
 
 class Thread extends React.Component {
     static propTypes = {
-        messages: PropTypes.array,
-        containerWidth: PropTypes.number,
-        containerLeft: PropTypes.number,
+        messages: PropTypes.array.isRequired,
+        fetching: PropTypes.bool.isRequired,
+        fetchingFailed: PropTypes.bool.isRequired,
+        containerWidth: PropTypes.number.isRequired,
+        containerLeft: PropTypes.number.isRequired,
     }
 
     constructor(props) {
@@ -55,12 +57,16 @@ class Thread extends React.Component {
     }
 
     renderContent() {
-        const { messages } = this.props;
+        const { messages, fetching, fetchingFailed } = this.props;
 
-        if (messages.length === 0) {
+        if (fetching) {
             return <div className="loader">
                 <i className="fa fa-spin fa-refresh"></i>
             </div>;
+        }
+
+        if (fetchingFailed) {
+            return <p>Failed to fetch thread messages!</p>;
         }
 
         let showMoreMessagesLinks;

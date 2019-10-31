@@ -11,6 +11,7 @@ function makeDefaults() {
         containerWidth: null,
         containerLeft: null,
         fetching: false,
+        fetchingFailed: false,
     };
 }
 
@@ -166,6 +167,10 @@ class ThreadStore extends BaseStore {
             }, 'asc');
             this.props.fetching = false;
 
+            this.triggerUpdate();
+        }).catch(() => {
+            this.props.fetching = false;
+            this.props.fetchingFailed = true;
             this.triggerUpdate();
         });
     }
