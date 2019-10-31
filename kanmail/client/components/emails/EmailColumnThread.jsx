@@ -479,7 +479,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <a
                 onClick={this.handleClickStar}
-                className={this.state.starred ? 'active' : ''}
+                className={`star ${this.state.starred ? 'active' : ''}`}
             >
                 <i className={classNames.join(' ')}></i>
             </a>
@@ -503,6 +503,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <a
                 onClick={this.handleClickArchive}
+                className='archive'
             >
                 <i className={classNames.join(' ')}></i>
             </a>
@@ -526,6 +527,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <a
                 onClick={this.handleClickRestore}
+                className='archive'
             >
                 <i className={classNames.join(' ')}></i>
             </a>
@@ -549,6 +551,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <a
                 onClick={this.handleClickTrash}
+                className='trash'
             >
                 <i className={classNames.join(' ')}></i>
             </a>

@@ -227,12 +227,22 @@ section#columns {
                         padding-right: 0;
                     }
 
-                    &.active, &:hover {
-                        color: @blue;
+                    &.star {
+                        &.active, &:hover {
+                            color: @yellow;
+                        }
                     }
 
-                    &.active:hover {
-                        color: #666;
+                    &.archive {
+                        &.active, &:hover {
+                            color: @green;
+                        }
+                    }
+
+                    &.trash {
+                        &.active, &:hover {
+                            color: @orange;
+                        }
                     }
                 }
             }
