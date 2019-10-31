@@ -43,9 +43,9 @@ export default class EmailsApp extends React.Component {
         createWindowPositionHandlers();
 
         const {
-                initial_batches,
-                batch_size,
-                sync_interval,
+            initial_batches,
+            batch_size,
+            sync_interval,
         } = this.props.systemSettings;
 
         const initialBatchSize = batch_size * initial_batches;
