@@ -8,6 +8,7 @@ from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
 
+from .connection import ImapConnectionError
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
@@ -28,7 +29,7 @@ class Folder(object):
     '''
 
     # Whether this folder exists on the server
-    exists = True
+    exists = None
 
     # Index of the current view for this folder - as we request more emails
     # this is increased.
@@ -49,13 +50,18 @@ class Folder(object):
         else:
             self.cache = FolderCache(self)
 
-        # If we exist on the server, fetch (possibly from cache) and set UID list
-        if self.check_exists():
-            self.get_and_set_email_uids()
-
         # If we don't exist, our UID list is empty
-        else:
-            self.email_uids = set()
+        self.email_uids = set()
+
+        # If we exist on the server, fetch (possibly from cache) and set UID list
+        try:
+            self.get_and_set_email_uids()
+            self.check_exists()
+        except ImapConnectionError:
+            if self.email_uids:  # we had UIDs in cache, we *probably* exist
+                self.exists = True
+            else:
+                self.exists = False
 
     def check_exists(self):
         '''
