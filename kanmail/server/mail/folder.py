@@ -294,16 +294,6 @@ class Folder(object):
         uids = set(message_uids)
         return uids
 
-    def remove_uids(self, email_uids):
-        if not email_uids:
-            return
-
-        for uid in email_uids:
-            self.email_uids.remove(uid)
-            self.cache.delete_headers(uid)
-
-        self.cache_uids()
-
     def fix_offset_before_removing_uids(self, uids):
         if not self.email_uids or self.offset >= len(self.email_uids):
             return
@@ -479,24 +469,23 @@ class Folder(object):
 
         return emails, offset, self.offset
 
-    @lock_class_method
-    def delete_emails(self, email_uids):
-        '''
-        Flag emails as deleted within this folder.
-        '''
+    # @lock_class_method
+    # def delete_emails(self, email_uids):
+    #     '''
+    #     Flag emails as deleted within this folder.
+    #     '''
 
-        self.log('debug', f'Deleting {len(email_uids)} ({email_uids}) emails')
+    #     self.log('debug', f'Deleting {len(email_uids)} ({email_uids}) emails')
 
-        with self.get_connection() as connection:
-            connection.delete_messages(email_uids)
+    #     with self.get_connection() as connection:
+    #         connection.delete_messages(email_uids)
 
-        self.fix_offset_before_removing_uids(email_uids)
-        self.remove_uids(email_uids)
-
-    @lock_class_method
     def move_emails(self, email_uids, new_folder):
         '''
         Move (copy + delete) emails (by UID) from this folder to another.
+
+        Note this method does not update the internal UID list, this is to be
+        handled by the `sync_emails` method.
         '''
 
         # Ensure the new folder exists and update any alias
@@ -510,9 +499,6 @@ class Folder(object):
         with self.get_connection() as connection:
             connection.copy(email_uids, new_folder)
             connection.delete_messages(email_uids)
-
-        self.fix_offset_before_removing_uids(email_uids)
-        self.remove_uids(email_uids)
 
     # Functions that affect emails, but not any of the class internals
     #
