@@ -107,8 +107,8 @@ class ImapConnectionWrapper(object):
         if self._selected_folder is None:
             return
 
-        self._selected_folder = None
         self.unselect_folder()
+        self._selected_folder = None
 
 
 class ImapConnectionPool(object):
@@ -151,10 +151,13 @@ class ImapConnectionPool(object):
 
             yield connection
 
-            if selected_folder:
-                connection.unset_selected_folder()
-
         finally:
+            try:
+                if selected_folder:
+                    connection.unset_selected_folder()
+            except Exception:
+                self.log('warning', 'Failed to unselect folder!')
+
             self.pool.put(connection)
             self.log('debug', f'Returned connection to pool: {self.pool.qsize()} (+1)')
 
