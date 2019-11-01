@@ -1,3 +1,23 @@
+# v1.1911011831
+
+Changes:
+- Stop removal of UIDs on move/delete emails, handled by sync.
+- Capture `ImapClientError` when checking if a folder exists.
+- Improve handling of select/unselect folder errors.
+- Upgrade to pywebview 3, with some additions.
+- Remove use of `six` + requirement.
+- Expand the sycning docs.
+- Add some basic syncing docs.
+- Handle failed thread loading state.
+- Ensure, on get folder emails, we *always* return.
+- Fix indent.
+- Make the archive/star/trash thread buttons nicer colours.
+- Implement & undo `getDerivedStateFromProps` replacement for `componentWillReceiveProps`.
+- Fix new account testing by providing an account name.
+- Fix thread positioning with 4+ columns.
+- Fix message meta/buttons being unclickable.
+- Doesn't work because the webserver cannot open windows, ugh!
+
 # v1.1910250852
 
 Changes:
