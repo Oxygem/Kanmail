@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
 from functools import wraps
+from queue import Queue
 from threading import Lock, Thread
 
 from flask import abort
-from six.moves.queue import Queue
 
 
 def lock_class_method(func):

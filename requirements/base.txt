@@ -30,6 +30,5 @@ pyinstaller==3.4
 pyupdater[s3]==3.0.1
 
 # Pinned because other packages either miss them or have wrong versions!
-six==1.12.0
 urllib3==1.25.3
 certifi==2019.3.9

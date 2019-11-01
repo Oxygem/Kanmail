@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from copy import copy
 from datetime import date, timedelta
 
-import six
 
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
@@ -266,7 +265,7 @@ class Folder(object):
                 return cached_uids
 
         # Searching
-        if isinstance(self.query, six.string_types):
+        if isinstance(self.query, (bytes, str)):
             # Use Gmails X-GM-RAW search extension if available - supports full
             # Gmail style search queries.
             if b'X-GM-EXT-1' in self.account.get_capabilities():

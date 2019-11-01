@@ -1,13 +1,13 @@
 from __future__ import unicode_literals
 
 from contextlib import contextmanager
+from queue import LifoQueue
 from smtplib import SMTP, SMTP_SSL
 from socket import error as socket_error
 from time import time
 
 from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError
-from six.moves.queue import LifoQueue
 
 from kanmail.log import logger
 
