@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from copy import copy
 from datetime import date, timedelta
 
+from imapclient.exceptions import IMAPClientError
 
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
@@ -56,7 +57,7 @@ class Folder(object):
         try:
             self.get_and_set_email_uids()
             self.check_exists()
-        except ImapConnectionError:
+        except (ImapConnectionError, IMAPClientError):
             if self.email_uids:  # we had UIDs in cache, we *probably* exist
                 self.exists = True
             else:
