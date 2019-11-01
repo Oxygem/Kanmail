@@ -86,7 +86,7 @@ def open_link():
 
 @app.route('/open-settings', methods=('GET',))
 def open_settings():
-    if not create_window('settings', '/settings', width=800, unique=True):
+    if not create_window('/settings', width=800, unique_key='settings'):
         return abort(500, 'Could not open settings window')
     return '', 204
 
@@ -106,7 +106,7 @@ def open_send():
 
         endpoint = f'/send/{uid}'
 
-    if not create_window('new email', endpoint):
+    if not create_window(endpoint):
         return abort(500, 'Could not open send window')
     return '', 204
 

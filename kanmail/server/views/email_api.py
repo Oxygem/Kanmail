@@ -1,7 +1,5 @@
 from os import path
 
-import webview
-
 from flask import jsonify, make_response, request
 
 from kanmail import settings
@@ -19,7 +17,7 @@ from kanmail.server.mail import (
     unstar_folder_emails,
 )
 from kanmail.server.util import get_list_or_400, get_or_400
-from kanmail.window import create_save_dialog
+from kanmail.window import create_save_dialog, get_main_window
 
 
 @app.route('/api/folders', methods=('GET',))
@@ -249,6 +247,7 @@ def api_send_account_email(account_key):
 
     # Tell the main window to reload the sent folder
     if settings.IS_APP:
-        webview.evaluate_js('window.mainEmailStore.syncFolderEmails("sent")')
+        window = get_main_window()
+        window.evaluate_js('window.mainEmailStore.syncFolderEmails("sent")')
 
     return jsonify(sent=False)

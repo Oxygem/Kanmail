@@ -9,7 +9,7 @@ from kanmail.settings import (
     set_cached_window_settings,
     update_settings,
 )
-from kanmail.window import reload_main_window
+from kanmail.window import get_main_window_size_position, reload_main_window
 
 
 @app.route('/api/settings', methods=('GET',))
@@ -52,19 +52,6 @@ def api_delete_caches():
 
 @app.route('/api/settings/window', methods=('POST',))
 def api_update_window_settings():
-    request_data = request.get_json()
-
-    # Importing this before creating the initial main window isn't allowed
-    # from webview.cocoa import BrowserView
-    # top_bar_height = BrowserView.DragBar.default_height + 1
-    top_bar_height = 23
-
-    if 'height' in request_data:
-        request_data['height'] += top_bar_height
-
-    if 'top' in request_data:
-        request_data['top'] -= top_bar_height
-
-    set_cached_window_settings(**request_data)
-
+    window_settings = get_main_window_size_position()
+    set_cached_window_settings(**window_settings)
     return jsonify(saved=True)

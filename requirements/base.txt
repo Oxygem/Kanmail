@@ -2,7 +2,7 @@
 # The official pywebview has some serious flaws:
 # https://github.com/r0x0r/pywebview/issues/315
 # https://github.com/r0x0r/pywebview/pull/332
-git+https://github.com/Fizzadar/pywebview@frameless-2.4
+git+https://github.com/Fizzadar/pywebview@frameless-3.0
 
 # Server
 click==7.0
