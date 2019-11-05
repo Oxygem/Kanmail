@@ -374,7 +374,7 @@ export default class ThreadMessage extends React.Component {
             if (!_.startsWith(img.src, 'cid:')) {
                 return;
             }
-            const cid = `<${img.src.slice(4)}>`;
+            const cid = img.src.slice(4);
             img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}`;
         });
 
