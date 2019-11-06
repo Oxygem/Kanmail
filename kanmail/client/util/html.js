@@ -21,8 +21,11 @@ export function cleanHtml(html, returnElement=false) {
         if (_.startsWith(img.src, 'cid:')) {
             return;
         }
+
+        // Swap src for original-src, remove any srcset
         img.setAttribute('original-src', img.src);
-        img.src = 'about:blank';
+        img.setAttribute('src', 'about:blank');
+        img.removeAttribute('srcset');
     });
 
     if (returnElement) {
