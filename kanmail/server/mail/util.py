@@ -69,6 +69,8 @@ def make_email_headers(account, folder, uid, data, parts):
 
     if '1' in parts:
         body_meta = parts['1']
+    elif '1.1' in parts:
+        body_meta = parts['1.1']
 
     if not body_meta:
         content_transfer_encoding = headers.get('Content-Transfer-Encoding')
