@@ -28,6 +28,16 @@ export function cleanHtml(html, returnElement=false) {
         img.removeAttribute('srcset');
     });
 
+    // Remove any background images (currently cannot be restored!)
+    _.each(tempDocument.body.querySelectorAll('*[background]'), element => {
+        const background = element.getAttribute('background');
+
+        if (_.startsWith(background, 'http')) {
+            element.removeAttribute('background');
+            element.setAttribute('original-background', background);
+        }
+    });
+
     if (returnElement) {
         return tempDocument.body;
     }
