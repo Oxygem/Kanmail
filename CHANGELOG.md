@@ -1,3 +1,13 @@
+# v1.1911061838
+
+Changes:
+- Capture and attempt to base64 decode line by line if full text is partial.
+- Look at part `1.1` if `1` doesn't exist (multipart excerpt support).
+- Strip style tags that contain background images.
+- Remove background images in emails.
+- Remove srcsets when replacing images w/buttons.
+- Fix inline images by removing <> tag wraps.
+
 # v1.1911011831
 
 Changes:
