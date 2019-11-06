@@ -38,6 +38,15 @@ export function cleanHtml(html, returnElement=false) {
         }
     });
 
+    _.each(tempDocument.body.querySelectorAll('*[style]'), element => {
+        const style = element.getAttribute('style');
+
+        if (_.includes(style, 'background-image')) {
+            element.removeAttribute('style');
+            // element.style.backgroundImage = 'about:blank';
+        }
+    });
+
     if (returnElement) {
         return tempDocument.body;
     }
