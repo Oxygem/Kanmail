@@ -3,6 +3,7 @@ import quopri
 import re
 
 from base64 import b64decode
+from binascii import Error as BinasciiError
 
 from markdown import markdown
 from mdx_linkify.mdx_linkify import LinkifyExtension
@@ -159,9 +160,26 @@ def decode_string(string, string_meta=None):
     if encoding == 'quoted-printable':
         string = quopri.decodestring(string)
 
-    # Remove any base64 stuff
     if encoding == 'base64':
-        string = b64decode(string)
+        try:
+            string = b64decode(string)
+
+        # Handle incomplete payloads (we only fetch the first 1024 bytes of a
+        # message). Split into lines and attempt to decode.
+        except BinasciiError:
+            string_bits = string.split()
+            valid_bits = []
+
+            for bit in string_bits:
+                try:
+                    valid_bits.append(b64decode(bit))
+                except Exception:
+                    pass
+
+            if not valid_bits:
+                raise
+
+            string = b'\n'.join(valid_bits)
 
     if charset:
         string = string.decode(charset, 'ignore')
