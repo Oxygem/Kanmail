@@ -85,7 +85,9 @@ def get_main_window_size_position():
 
 
 def create_save_dialog(directory, filename):
-    return webview.create_file_dialog(
+    window = get_main_window()
+
+    return window.create_file_dialog(
         webview.SAVE_DIALOG,
         directory=directory,
         save_filename=filename,
@@ -93,7 +95,9 @@ def create_save_dialog(directory, filename):
 
 
 def create_open_dialog(allow_multiple=True):
-    return webview.create_file_dialog(
+    window = get_main_window()
+
+    return window.create_file_dialog(
         webview.OPEN_DIALOG,
         allow_multiple=allow_multiple,
     )
