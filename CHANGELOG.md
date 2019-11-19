@@ -1,3 +1,8 @@
+# v1.1911190836
+
+Changes:
+- Fix window dialog creation (save/add attachments).
+
 # v1.1911061838
 
 Changes:
