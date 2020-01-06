@@ -11,7 +11,10 @@ from kanmail.settings import CLIENT_ROOT
 class JsonEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, bytes):
-            return obj.decode()
+            try:
+                return obj.decode()
+            except UnicodeDecodeError:
+                return obj.decode('utf-8', 'ignore')
 
         return super(JsonEncoder, self).default(obj)
 
