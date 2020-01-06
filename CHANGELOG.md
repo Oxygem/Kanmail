@@ -1,3 +1,9 @@
+# v1.2001061828
+
+Changes:
+- Don't attempt to verify/fix UIDs returned when syncing flags (non-essential).
+- Fix attempting to decode dodgy strings.
+
 # v1.1911190836
 
 Changes:
