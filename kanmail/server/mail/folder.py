@@ -227,10 +227,7 @@ class Folder(object):
         with self.get_connection() as connection:
             email_flags = connection.fetch(email_uids, ['FLAGS'])
 
-        # Fix any dodgy UIDs
-        email_flags = fix_email_uids(email_uids, email_flags)
         read_uids = []
-
         for uid, data in email_flags.items():
             # For any seen emails, update cache and add to the list
             if SEEN_FLAG in data[b'FLAGS']:
