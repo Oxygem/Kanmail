@@ -1,0 +1,12 @@
+*.pyc
+*.log
+.python-version
+
+node_modules/
+
+# Build stuff
+build/
+pyu-data/
+.pyupdater/
+.git/
+.mypy_cache/

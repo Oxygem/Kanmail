@@ -26,6 +26,9 @@ a = Analysis(  # noqa: F821
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=None,
+    {% if platform_name == 'nix64' %}  # noqa
+    noarchive=False,
+    {% endif %}  # noqa
 )
 
 pyz = PYZ(  # noqa: F821
@@ -35,21 +38,34 @@ pyz = PYZ(  # noqa: F821
 
 exe = EXE(  # noqa: F821
     pyz, a.scripts,
+
+    {% if platform_name == 'nix64' %}  # noqa
+    a.binaries, a.zipfiles, a.datas, [],
+    {% elif platform_name == 'mac' %}  # noqa
     exclude_binaries=True,
-    name='mac',
+    {% endif %}  # noqa
+
+    name='{{ platform_name }}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+
+    {% if platform_name == 'mac' %}  # noqa
     console=False,
     icon='{{ root_dir }}/make/Kanmail.icns',
+    {% elif platform_name == 'nix64' %}  # noqa
+    runtime_tmpdir=None,
+    console=True,
+    {% endif %}  # noqa
 )
 
+{% if platform_name == 'mac' %}  # noqa
 coll = COLLECT(  # noqa: F821
     exe, a.binaries, a.zipfiles, a.datas,
     strip=False,
     upx=True,
-    name='mac',
+    name='{{ platform_name }}',
 )
 
 app = BUNDLE(  # noqa: F821
@@ -64,3 +80,4 @@ app = BUNDLE(  # noqa: F821
         'CFBundleShortVersionString': '{{ version }}',
     },
 )
+{% endif %}  # noqa

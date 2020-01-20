@@ -1,5 +1,6 @@
 import json
 import pickle
+import platform
 import sys
 
 from os import environ, makedirs, path
@@ -60,6 +61,17 @@ if FROZEN:
     CLIENT_ROOT = sys._MEIPASS
 
 
+# Platform specific interface settings
+PLATFORM = platform.system()
+FRAMELESS = PLATFORM == 'Darwin'
+
+platform_to_gui = {
+    'Darwin': 'cocoa',
+    'Linux': 'gtk',
+}
+GUI_LIB = platform_to_gui[PLATFORM]
+
+
 # Bootstrap logging before we use logging!
 #
 
@@ -68,6 +80,8 @@ for needed_dir in (APP_DIR, CACHE_DIR):
         makedirs(needed_dir)
 
 setup_logging(debug=DEBUG, log_file=LOG_FILE)
+
+logger.debug(f'App dir set to: {APP_DIR}')
 
 
 # Window settings

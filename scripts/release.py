@@ -66,14 +66,16 @@ def _write_version_data(version):
 def _generate_spec(version):
     system_type = platform.system()
 
-    template_filename = None
+    platform_name = None
     if system_type == 'Darwin':
-        template_filename = 'spec_mac.j2.py'
+        platform_name = 'mac'
+    elif system_type == 'Linux':
+        platform_name = 'nix64'
 
-    if not template_filename:
-        raise NotImplementedError('This platform is not supported')
+    if not platform_name:
+        raise NotImplementedError('This platform is not supported!')
 
-    with open(path.join(MAKE_DIRNAME, template_filename), 'r') as f:
+    with open(path.join(MAKE_DIRNAME, 'spec.j2.py'), 'r') as f:
         template_data = f.read()
     template = Template(template_data)
 
@@ -81,6 +83,7 @@ def _generate_spec(version):
         f.write(template.render({
             'root_dir': ROOT_DIRNAME,
             'version': version,
+            'platform_name': platform_name,
             'pyupdater_package_dir': _get_pyupdater_package_dir(),
             'tld_package_dir': _get_tld_package_dir(),
         }))
@@ -189,8 +192,8 @@ def prepare_release():
     click.echo()
 
 
-def build_release(build_only=False):
-    system_type = platform.system()
+def build_release(build_only=False, docker=False):
+    system_type = 'Docker' if docker else platform.system()
 
     if system_type == 'Darwin' and not CODESIGN_KEY_NAME:
         raise click.ClickException(
@@ -218,26 +221,37 @@ def build_release(build_only=False):
     if build_only:
         _write_version_data(version)
 
-    # Do the build with pyinstaller or pyupdater if releasing
-    _print_and_run((
-        'pyupdater',
-        'build',
-        f'--app-version={version}',
-        '--windowed',
-        '--name',
-        'Kanmail',
-        specfile,
-    ))
+    if docker:
+        _print_and_run((
+            'docker',
+            'build',
+            '--pull',
+            '-t',
+            f'kanmail:{version}',
+            '-f',
+            'docker/Dockerfile',
+            '.',
+        ))
+    else:
+        _print_and_run((
+            'pyupdater',
+            'build',
+            f'--app-version={version}',
+            '--pyinstaller-log-info',
+            '--name',
+            'Kanmail',
+            specfile,
+        ))
 
-    # Now use `codesign` to sign the package with a Developer ID
-    if system_type == 'Darwin':
-        _macos_codesign(version)
+        # Now use `codesign` to sign the package with a Developer ID
+        if system_type == 'Darwin':
+            _macos_codesign(version)
 
     click.echo()
     click.echo(f'Kanmail v{version} for {system_type} built!')
 
     if build_only:
-        click.echo('Cleaning up single build...')
+        click.echo('Single build complete...')
         return
 
     click.echo((
@@ -253,6 +267,9 @@ def build_release(build_only=False):
 
 def complete_release():
     release_version = _get_release_version()
+
+    # TODO: CHECK DOCKER IMAGE EXISTS
+    _print_and_run(('docker', 'image', 'inspect', f'kanmail:{release_version}'))
 
     if not click.confirm((
         f'Are you SURE v{release_version} is ready to release '
@@ -286,7 +303,8 @@ def complete_release():
 @click.command()
 @click.option('--complete', is_flag=True, default=False)
 @click.option('--build-only', is_flag=True, default=False)
-def release(complete=False, build_only=False):
+@click.option('--docker', is_flag=True, default=False)
+def release(complete, build_only, docker):
     click.echo()
     click.echo('### Kanmail release script')
     click.echo()
@@ -312,7 +330,7 @@ def release(complete=False, build_only=False):
             raise click.UsageError('Cannot --build-only when preparing a release!')
 
         click.echo('--> [2*/3] building release')
-        build_release(build_only=build_only)
+        build_release(build_only=build_only, docker=docker)
         return
 
     # No version lock so let's create one and prepare start-of-release

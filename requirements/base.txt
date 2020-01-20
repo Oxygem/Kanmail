@@ -2,7 +2,7 @@
 # The official pywebview has some serious flaws:
 # https://github.com/r0x0r/pywebview/issues/315
 # https://github.com/r0x0r/pywebview/pull/332
-git+https://github.com/Fizzadar/pywebview@frameless-3.0
+git+https://github.com/Fizzadar/pywebview@4597b43ab9c8de351f9238038ad10e58e397a1a8
 
 # Server
 click==7.0
@@ -18,17 +18,13 @@ requests==2.20.0
 # IMAPClient==2.1.0 - pending 2.2.0
 git+https://github.com/mjs/imapclient@580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87
 
-# Dev
-honcho==1.0.1
-Faker==0.9.2
-flake8==3.6.0
-flake8-commas==2.0.0
-flake8-import-order==0.18
-
-# Build
+# App bundling
 pyinstaller==3.4
 pyupdater[s3]==3.0.1
 
 # Pinned because other packages either miss them or have wrong versions!
 urllib3==1.25.3
 certifi==2019.3.9
+
+# Setuptools 45 broke a lot of things, and will not work with pyinstaller
+setuptools<45
