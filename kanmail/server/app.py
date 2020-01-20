@@ -1,4 +1,3 @@
-
 from os import environ, path
 
 from flask import Flask
@@ -28,7 +27,7 @@ app.json_encoder = JsonEncoder
 app.config['JSON_SORT_KEYS'] = False
 
 
-def boot():
+def boot() -> None:
     logger.debug(f'App client root is: {CLIENT_ROOT}')
 
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':

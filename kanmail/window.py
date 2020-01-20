@@ -1,5 +1,4 @@
-import webbrowser
-
+from typing import Dict, Optional, Union
 from uuid import uuid4
 
 import webview
@@ -11,7 +10,11 @@ ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
 
 
-def create_window(endpoint='/', unique_key=False, **kwargs):
+def create_window(
+    endpoint: str = '/',
+    unique_key: Optional[str] = None,
+    **kwargs,
+) -> Union[str, bool]:
     if not IS_APP:
         logger.warning('Cannot open window in server mode!')
         return False
@@ -45,7 +48,7 @@ def create_window(endpoint='/', unique_key=False, **kwargs):
     return internal_id
 
 
-def destroy_window(internal_id):
+def destroy_window(internal_id: str) -> None:
     window = ID_TO_WINDOW.pop(internal_id, None)
 
     if window:
@@ -58,17 +61,17 @@ def destroy_window(internal_id):
     logger.warning(f'Tried to destroy non-existant window: {internal_id}')
 
 
-def reload_main_window():
+def reload_main_window() -> None:
     if IS_APP:
         window = get_main_window()
         window.evaluate_js('window.location.reload()')
 
 
-def get_main_window():
+def get_main_window() -> webview.Window:
     return ID_TO_WINDOW[UNIQUE_NAME_TO_ID['main']]
 
 
-def get_main_window_size_position():
+def get_main_window_size_position() -> Dict[str, int]:
     window = get_main_window()
 
     x, y = window.get_position()
@@ -82,7 +85,7 @@ def get_main_window_size_position():
     }
 
 
-def create_save_dialog(directory, filename):
+def create_save_dialog(directory: str, filename: str) -> bool:
     window = get_main_window()
 
     return window.create_file_dialog(
@@ -92,7 +95,7 @@ def create_save_dialog(directory, filename):
     )
 
 
-def create_open_dialog(allow_multiple=True):
+def create_open_dialog(allow_multiple: bool = True) -> bool:
     window = get_main_window()
 
     return window.create_file_dialog(

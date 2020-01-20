@@ -9,3 +9,4 @@ build/
 dist/
 pyu-data/
 .pyupdater/
+.mypy_cache/

@@ -7,6 +7,7 @@ import os
 import sys
 
 from os import path
+from typing import Optional
 
 import requests
 
@@ -30,15 +31,15 @@ def get_pyupdater_client():
     return PyUpdaterClient(PyUpdaterConfig())
 
 
-def get_device_id():
+def get_device_id() -> Optional[str]:
     if not path.exists(DEVICE_ID_FILE):
-        return
+        return None
 
     with open(DEVICE_ID_FILE) as f:
         return f.read()
 
 
-def register_or_ping_device():
+def register_or_ping_device() -> None:
     '''
     Registers or pings (updates) this device on the license server.
     '''
@@ -60,7 +61,8 @@ def register_or_ping_device():
     try:
         response.raise_for_status()
     except HTTPError:
-        logger.warning(f'Failed to ping or register device ID: {response.content}')
+        content = response.content.decode()
+        logger.warning(f'Failed to ping or register device ID: {content}')
         return
 
     if existing_device_id:
@@ -119,5 +121,5 @@ def update_device(update):
     update.extract_overwrite()
 
 
-def restart_device():
+def restart_device() -> None:
     os.execl(sys.executable, sys.executable, *sys.argv)

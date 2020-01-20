@@ -50,7 +50,7 @@ class LogFormatter(logging.Formatter):
         return f'{now} {record.levelname} {message}'
 
 
-def setup_logging(debug, log_file):
+def setup_logging(debug: bool, log_file: str) -> int:
     # Figure out the log level
     log_level = logging.WARNING
 

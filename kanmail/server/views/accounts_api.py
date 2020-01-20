@@ -5,7 +5,7 @@ from kanmail.server.app import app
 from kanmail.server.mail import Account
 from kanmail.server.mail.autoconf import get_autoconf_settings
 
-CONNECTION_KEYS = ('host', 'port', 'username', 'password', 'ssl')
+CONNECTION_KEYS = ('host', 'port', 'username', 'password')
 
 
 def _get_folders(connection):
@@ -46,11 +46,13 @@ def _test_account_settings(account_settings, get_folders=False):
     imap_settings = account_settings['imap_connection']
     smtp_settings = account_settings['smtp_connection']
 
-    if not all(imap_settings.get(key) for key in CONNECTION_KEYS):
-        return False, ('imap', 'Missing username or password!')
-
-    if not all(smtp_settings.get(key) for key in CONNECTION_KEYS):
-        return False, ('smtp', 'Missing username or password!')
+    for settings_type, settings in (
+        ('imap', imap_settings),
+        ('smtp', smtp_settings),
+    ):
+        for key in CONNECTION_KEYS:
+            if not settings.get(key):
+                return False, (settings_type, f'Missing {settings_type} setting: {key}')
 
     new_account = Account('Unsaved test account', account_settings)
 
@@ -87,7 +89,6 @@ def api_test_account_settings():
     }
 
     status, error = _test_account_settings(account_settings)
-
     if status:
         return jsonify(connected=True)
 

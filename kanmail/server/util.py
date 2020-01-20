@@ -5,6 +5,7 @@ from queue import Queue
 from threading import Lock, Thread
 
 from flask import abort
+from werkzeug import ImmutableMultiDict
 
 
 def lock_class_method(func):
@@ -19,20 +20,20 @@ def lock_class_method(func):
     return wrapper
 
 
-def get_or_400(obj, key, **kwargs):
-    data = obj.get(key, **kwargs)
+def get_or_400(obj: ImmutableMultiDict, key: str) -> dict:
+    data = obj.get(key)
 
     if not data:
-        return abort(400)
+        abort(400)
 
     return data
 
 
-def get_list_or_400(obj, key, **kwargs):
+def get_list_or_400(obj: ImmutableMultiDict, key: str, **kwargs) -> dict:
     data = obj.getlist(key, **kwargs)
 
     if not data:
-        return abort(400)
+        abort(400)
 
     return data
 

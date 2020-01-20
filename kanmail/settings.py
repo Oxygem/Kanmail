@@ -4,6 +4,7 @@ import platform
 import sys
 
 from os import environ, makedirs, path
+from typing import Optional, Union
 
 from click import get_app_dir
 from pydash import memoize
@@ -128,7 +129,7 @@ class PyUpdaterConfig(object):  # noqa: E302
 # "App"/user settings
 #
 
-def get_default_settings():
+def get_default_settings() -> dict:
     return {
         # Account key -> account details
         'accounts': {},
@@ -151,7 +152,7 @@ def get_default_settings():
     }
 
 
-def _merge_settings(base_config, new_config, key_prefix=None):
+def _merge_settings(base_config: dict, new_config: dict, key_prefix=None) -> list:
     changed_keys = []
 
     for key, value in new_config.items():
@@ -173,7 +174,7 @@ def _merge_settings(base_config, new_config, key_prefix=None):
 
 
 @memoize
-def get_settings():
+def get_settings() -> dict:
     settings = get_default_settings()
 
     if path.exists(SETTINGS_FILE):
@@ -189,22 +190,22 @@ def get_settings():
     return settings
 
 
-def get_system_setting(key, default=None):
+def get_system_setting(key: str, default: Optional[dict] = None) -> Union[None, str, int]:
     return get_settings()['system'].get(key, default)
 
 
-def get_style_setting(key, default=None):
+def get_style_setting(key: str, default: Optional[dict] = None) -> Union[None, str, int]:
     return get_settings()['style'].get(key, default)
 
 
-def update_settings(settings_updates):
+def update_settings(settings_updates: dict) -> list:
     settings = get_settings()
     changed_keys = _merge_settings(settings, settings_updates)
     set_settings(settings)
     return changed_keys
 
 
-def set_settings(new_settings):
+def set_settings(new_settings: dict) -> None:
     logger.debug(f'Writing new settings: {new_settings}')
     json_data = json.dumps(new_settings, indent=4)
 
@@ -215,7 +216,7 @@ def set_settings(new_settings):
     get_settings.cache = {}
 
 
-def set_cached_window_settings(width, height, left, top):
+def set_cached_window_settings(width: int, height: int, left: int, top: int) -> None:
     window_settings = {
         'WINDOW_WIDTH': width,
         'WINDOW_HEIGHT': height,
