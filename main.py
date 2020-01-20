@@ -11,6 +11,7 @@ from kanmail.log import logger
 from kanmail.server.app import app, boot
 from kanmail.settings import (
     DEBUG,
+    GUI_LIB,
     SERVER_PORT,
     WINDOW_HEIGHT,
     WINDOW_LEFT,
@@ -101,7 +102,7 @@ def main():
         unique_key='main',
     )
 
-    webview.start(debug=DEBUG)
+    webview.start(gui=GUI_LIB, debug=DEBUG)
 
     # Main window closed, cleanup/exit
     sys.exit()

@@ -5,13 +5,17 @@ from uuid import uuid4
 import webview
 
 from kanmail.log import logger
-from kanmail.settings import IS_APP, SERVER_PORT
+from kanmail.settings import FRAMELESS, IS_APP, SERVER_PORT
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
 
 
 def create_window(endpoint='/', unique_key=False, **kwargs):
+    if not IS_APP:
+        logger.warning('Cannot open window in server mode!')
+        return False
+
     internal_id = str(uuid4())
     link = f'http://localhost:{SERVER_PORT}{endpoint}?window_id={internal_id}'
 
@@ -20,24 +24,18 @@ def create_window(endpoint='/', unique_key=False, **kwargs):
         f'url={endpoint} kwargs={kwargs}',
     )
 
-    if IS_APP:
-        # Nuke any existing unique window
-        if unique_key and unique_key in UNIQUE_NAME_TO_ID:
-            old_window_id = UNIQUE_NAME_TO_ID.get(unique_key)
-            if old_window_id:
-                destroy_window(old_window_id)
+    # Nuke any existing unique window
+    if unique_key and unique_key in UNIQUE_NAME_TO_ID:
+        old_window_id = UNIQUE_NAME_TO_ID.get(unique_key)
+        if old_window_id:
+            destroy_window(old_window_id)
 
-        window = webview.create_window(
-            'Kanmail', link,
-            frameless=True,
-            text_select=True,
-            **kwargs,
-        )
-    else:
-        window = None
-        if not webbrowser.open(link):
-            logger.warning('Failed to open browser window!')
-            return False
+    window = webview.create_window(
+        'Kanmail', link,
+        frameless=FRAMELESS,
+        text_select=True,
+        **kwargs,
+    )
 
     ID_TO_WINDOW[internal_id] = window
 

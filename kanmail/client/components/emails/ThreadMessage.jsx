@@ -2,10 +2,10 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { openLink, openWindow } from 'window.js';
 import requestStore from 'stores/request.js';
-
 import { cleanHtml } from 'util/html.js';
-import { get, post } from 'util/requests.js';
+import { post } from 'util/requests.js';
 import { formatAddress, formatDate } from 'util/string.js';
 
 
@@ -149,9 +149,7 @@ export default class ThreadMessage extends React.Component {
             // OS default browser.
             link.addEventListener('click', ev => {
                 ev.preventDefault();
-                get('/open-link', {
-                    url: target,
-                });
+                openLink(target);
             });
         });
 
@@ -243,21 +241,29 @@ export default class ThreadMessage extends React.Component {
         }
     }
 
+    handleReplyClick(options) {
+        post('/create-send', options).then((data) => openWindow(data.endpoint, {
+            width: 800,
+            height: 600,
+            title: `Kanmail: reply to ${this.props.message.subject}`,
+        }));
+    }
+
     handleClickReply = () => {
-        post('/open-send', {
+        this.handleReplyClick({
             message: this.props.message,
         });
     }
 
     handleClickReplyAll = () => {
-        post('/open-send', {
+        this.handleReplyClick({
             message: this.props.message,
             reply_all: true,
         });
     }
 
     handleClickForward = () => {
-        post('/open-send', {
+        this.handleReplyClick({
             message: this.props.message,
             forward: true,
         });

@@ -5,8 +5,8 @@ import Filters from 'components/emails/Filters.jsx';
 import SidebarHeader from 'components/emails/SidebarHeader.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
 
+import { openLink, openWindow } from 'window.js';
 import settingsStore from 'stores/settings.js';
-import { get } from 'util/requests.js';
 import { subscribe } from 'stores/base.jsx';
 
 
@@ -24,6 +24,14 @@ export default class Sidebar extends React.Component {
         }
     }
 
+    openSend = () => {
+        openWindow('/send', {
+            title: 'Kanmail: compose email',
+            width: 800,
+            height: 600,
+        });
+    }
+
     render() {
         return (
             <section id="sidebar">
@@ -37,7 +45,7 @@ export default class Sidebar extends React.Component {
                     <div>
                         <a
                             className="compose"
-                            onClick={() => get('/open-send')}
+                            onClick={this.openSend}
                         >
                             <i className="fa fa-pencil-square-o"></i>
                             New email
@@ -48,7 +56,7 @@ export default class Sidebar extends React.Component {
                 <Filters />
 
                 <footer>
-                    <a onClick={() => get('/open-link', {url: 'https://github.com/Fizzadar/kanmail'})}>
+                    <a onClick={() => openLink('https://github.com/Fizzadar/kanmail')}>
                         Kanmail v{window.KANMAIL_VERSION}
                     </a>
                     {window.KANMAIL_DEBUG && ' (debug)'}

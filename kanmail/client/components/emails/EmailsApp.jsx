@@ -5,7 +5,7 @@ import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import keyboard from 'keyboard.js';
-import { createWindowPositionHandlers } from 'window.js';
+import { createWindowPositionHandlers, openSettings } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
 import Thread from 'components/emails/Thread.jsx';
@@ -21,8 +21,6 @@ import updateStore from 'stores/update.js';
 import mainEmailStore from 'stores/emails/main.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
-
-import { get } from 'util/requests.js';
 
 
 @subscribe(settingsStore)
@@ -147,7 +145,7 @@ export default class EmailsApp extends React.Component {
         if (_.isEmpty(this.props.accounts)) {
             return (
                 <div style={{marginTop: '20px', marginLeft: '10px'}}>
-                    No accounts configured! Please <a onClick={() => get('/open-settings')}>open settings to get started</a>.
+                    No accounts configured! Please <a onClick={openSettings}>open settings to get started</a>.
                 </div>
             );
         }

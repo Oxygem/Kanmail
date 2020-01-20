@@ -9,7 +9,7 @@ from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
-from kanmail.settings import DEBUG, FROZEN
+from kanmail.settings import DEBUG, FROZEN, IS_APP
 from kanmail.version import get_version
 from kanmail.window import create_open_dialog, create_window, destroy_window
 
@@ -27,6 +27,7 @@ def _get_render_data():
         'version': get_version(),
         'frozen': FROZEN,
         'debug': DEBUG,
+        'is_app': IS_APP,
     }
 
 
@@ -73,41 +74,42 @@ def get_send_reply(uid):
     )
 
 
+@app.route('/create-send', methods=('POST',))
+def create_send():
+    data = request.get_json()
+    message_data = get_or_400(data, 'message')
+    message_data['reply_all'] = data.get('reply_all', False)
+    message_data['forward'] = data.get('forward', False)
+
+    uid = str(uuid4())
+    SEND_WINDOW_DATA[uid] = message_data
+    logger.debug(f'Created send data with UID={uid}')
+
+    endpoint = f'/send/{uid}'
+    return jsonify(endpoint=endpoint)
+
+
 @app.route('/open-link', methods=('GET',))
 def open_link():
     link = request.args['url']
 
-    if webbrowser.open(link):
-        return '', 204
+    if IS_APP:
+        if webbrowser.open(link):
+            return '', 204
 
     logger.critical(f'Failed to open browser link: {link}!')
     return abort(500, 'Could not open link!')
 
 
-@app.route('/open-settings', methods=('GET',))
-def open_settings():
-    if not create_window('/settings', width=800, unique_key='settings'):
-        return abort(500, 'Could not open settings window')
-    return '', 204
+@app.route('/open-window', methods=('GET',))
+def open_window():
+    link = request.args['url']
+    width = request.args['width']
+    height = request.args['height']
+    unique_key = request.args.get('unique_key')
 
-
-@app.route('/open-send', methods=('GET', 'POST'))
-def open_send():
-    endpoint = '/send'
-
-    if request.method == 'POST':
-        data = request.get_json()
-        message_data = get_or_400(data, 'message')
-        message_data['reply_all'] = data.get('reply_all', False)
-        message_data['forward'] = data.get('forward', False)
-
-        uid = str(uuid4())
-        SEND_WINDOW_DATA[uid] = message_data
-
-        endpoint = f'/send/{uid}'
-
-    if not create_window(endpoint):
-        return abort(500, 'Could not open send window')
+    if not create_window(link, width=width, height=height, unique_key=unique_key):
+        return abort(500, f'Could not open {link} window')
     return '', 204
 
 

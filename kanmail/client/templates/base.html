@@ -8,12 +8,13 @@
     <script type="text/javascript">
         window.KANMAIL_VERSION = '{{ version }}';
         window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
+        window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
     </script>
 
-    {% if frozen %}
-        <script type="text/javascript" src="/static/dist/main-{{ version }}.js"></script>
-    {% else %}
+    {% if version == 'dev' %}
         <script type="text/javascript" src="http://localhost:4421/main.js"></script>
+    {% else %}
+        <script type="text/javascript" src="/static/dist/main-{{ version }}.js"></script>
     {% endif %}
 </body>
 </html>

@@ -4,16 +4,16 @@ from os import path
 
 from pydash import memoize
 
-from kanmail.settings import CLIENT_ROOT, FROZEN
+from kanmail.settings import CLIENT_ROOT
 
 
 @memoize
 def get_version_data():
     version_filename = path.join(CLIENT_ROOT, 'static', 'dist', 'version.json')
 
-    if not FROZEN or not path.exists(version_filename):
+    if not path.exists(version_filename):
         return {
-            'version': '0.0.0dev',
+            'version': 'dev',
             'channel': 'alpha',
         }
 
@@ -24,8 +24,5 @@ def get_version_data():
 
 
 def get_version():
-    if not FROZEN:
-        return '0.0.0dev'
-
     version_data = get_version_data()
     return version_data['version']
