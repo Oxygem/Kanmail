@@ -16,13 +16,13 @@ import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 
 
 const columnTarget = {
+    canDrop(props, monitor) {
+        const { oldColumn } = monitor.getItem();
+        return oldColumn !== props.id;
+    },
+
     drop(props, monitor) {
         const { messageUids, oldColumn, accountName } = monitor.getItem();
-
-        if (oldColumn === props.id) {
-            return;
-        }
-
         const emailStore = getEmailStore();
 
         emailStore.moveEmails(
@@ -44,7 +44,7 @@ const columnTarget = {
                 query: {uid_count: messageUids.length},
             },
         ));
-    }
+    },
 };
 
 
@@ -52,6 +52,7 @@ function collect(connect, monitor) {
     return {
         connectDropTarget: connect.dropTarget(),
         isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
     };
 }
 
@@ -97,6 +98,9 @@ class EmailColumn extends React.Component {
         isMainColumn: PropTypes.bool,
         systemSettings: PropTypes.object.isRequired,
         columns: PropTypes.array.isRequired,
+
+        isOver: PropTypes.bool.isRequired,
+        canDrop: PropTypes.bool.isRequired,
 
         // Surrounding columns
         getPreviousColumn: PropTypes.func.isRequired,
@@ -149,6 +153,14 @@ class EmailColumn extends React.Component {
 
         // Remove any pending email check
         clearInterval(this.newEmailCheck);
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.canDrop && !prevProps.isOver && this.props.isOver) {
+            this.containerDiv.classList.add('hover');
+        } else {
+            this.containerDiv.classList.remove('hover');
+        }
     }
 
     getNewEmails = () => {
