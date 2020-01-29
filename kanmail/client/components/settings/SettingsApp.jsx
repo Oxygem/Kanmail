@@ -149,7 +149,9 @@ export default class SettingsApp extends React.Component {
 
     handleSettingUpdate = (stateKey, key, ev) => {
         let value = ev.target.value;
-        if (value && ev.target.type === 'number') value = parseInt(value);
+        if (value && ev.target.type === 'number') {
+            value = parseInt(value);
+        }
 
         const settings = this.state[stateKey];
         settings[key] = value;
@@ -276,6 +278,7 @@ export default class SettingsApp extends React.Component {
             return (
                 <div className="settings" id="system">
                     <button
+                        className="cancel"
                         onClick={() => this.setState({showAdvancedSettings: true})}
                     >Show advanced settings <i className="fa fa-arrow-down" /></button>
                 </div>
@@ -285,8 +288,9 @@ export default class SettingsApp extends React.Component {
         return (
              <div className="settings advanced" id="system">
                  <button
+                    className="cancel"
                     onClick={() => this.setState({showAdvancedSettings: false})}
-                >Hide advanced settings <i className="fa fa-arrow-down" /></button>
+                >Hide advanced settings <i className="fa fa-arrow-up" /></button>
 
                 <h2>
                     Advanced <small>
@@ -367,7 +371,7 @@ export default class SettingsApp extends React.Component {
                 <section id="settings">
                     <div id="accounts">
                         <h2>Accounts</h2>
-                        <small>changes will not be saved until you save all settings at the bottom of the page</small>
+                        <small>Changes will not be saved until you save all settings at the bottom of the page.</small>
                         {this.renderAccounts()}
                         <div id="add-account">
                             {this.renderNewAccountForm()}
@@ -375,7 +379,7 @@ export default class SettingsApp extends React.Component {
                     </div>
 
                     <div className="settings" id="style">
-                        <h2>General</h2>
+                        <h2>Appearance</h2>
                         <label htmlFor="header_background">
                             Header background
                             <small>header background colour</small>
@@ -390,6 +394,26 @@ export default class SettingsApp extends React.Component {
                             )}
                         />
 
+                        <label htmlFor="sidebar_folders">
+                            Sidebar folders
+                            <small>
+                                comma separated folder names to show in the sidebar
+                            </small>
+                        </label>
+                        <input
+                            required
+                            type="text"
+                            id="sidebar_folders"
+                            value={this.state.styleSettings.sidebar_folders}
+                            onChange={_.partial(
+                                this.handleSettingUpdate,
+                                'styleSettings', 'sidebar_folders',
+                            )}
+                        />
+                    </div>
+
+                    <div className="settings" id="style">
+                        <h2>Sync</h2>
                         <label htmlFor="undo_ms">
                             Undo time (ms)
                             <small>length of time to undo actions</small>
@@ -441,12 +465,7 @@ export default class SettingsApp extends React.Component {
                     </div>
 
                     {this.renderAdvancedSettings()}
-
-                    <button
-                        type="submit"
-                        className="main-button submit"
-                        onClick={this.handleSaveSettings}
-                    >Save all settings &rarr;</button>
+                    {this.renderSaveButton()}
                 </section>
             </div>
         );

@@ -21,6 +21,7 @@ export default class Filters extends React.Component {
         accounts: PropTypes.object.isRequired,
         updateReady: PropTypes.bool.isRequired,
         updateDownloading: PropTypes.bool.isRequired,
+        styleSettings: PropTypes.object.isRequired,
         accountName: PropTypes.string,
         updateVersion: PropTypes.string,
     }
@@ -29,9 +30,17 @@ export default class Filters extends React.Component {
         this.props.filterStore.setAccountFilter(accountName);
     }
 
-    renderAliases() {
-        return _.map(ALIAS_FOLDERS, alias => {
-            const iconName = ALIAS_TO_ICON[alias];
+    renderMainColumnFolders() {
+        const mainFolders = [...ALIAS_FOLDERS];
+
+        let sidebarFolders = this.props.styleSettings.sidebar_folders;
+        if (sidebarFolders) {
+            sidebarFolders = sidebarFolders.split(',');
+            mainFolders.push(...sidebarFolders);
+        }
+
+        return _.map(mainFolders, alias => {
+            const iconName = ALIAS_TO_ICON[alias] || 'folder';
             const isActive = this.props.mainColumn === alias;
             const handleClick = () => {
                 const columnMetaStore = getColumnMetaStore(alias);
@@ -98,7 +107,7 @@ export default class Filters extends React.Component {
 
     render() {
         return (<div>
-            <ul>{this.renderAliases()}</ul>
+            <ul>{this.renderMainColumnFolders()}</ul>
 
             <ul>
                 <li className={_.isNull(this.props.accountName) ? 'active': ''}><a
