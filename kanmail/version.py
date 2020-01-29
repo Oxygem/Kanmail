@@ -14,7 +14,7 @@ def get_version_data() -> Dict[str, str]:
 
     if not path.exists(version_filename):
         return {
-            'version': 'dev',
+            'version': '0.0.0dev',
             'channel': 'alpha',
         }
 
