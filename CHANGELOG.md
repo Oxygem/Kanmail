@@ -1,3 +1,21 @@
+# v1.2001291810
+
+First release for Linux & Docker!
+
+Changes:
+- Bump `pyinstaller` and `pyupdater` requirements.
+- Ensure we pass width/height as integers.
+- Make it possible to drag n' drop emails into sidebar folders.
+- Improve advanced settings block style.
+- Add `sidebar_folders` setting.
+- Tweak save button for service/browser mode.
+- Fix version to work with pyupdater.
+- Show hover state when dragging emails between columns.
+- Fix Kanmail link.
+- Begin adding type annotations to the server.
+- Linux & Docker build support!
+- Proper support for running as a server.
+
 # v1.2001061828
 
 Changes:
