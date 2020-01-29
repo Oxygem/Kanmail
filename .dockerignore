@@ -8,5 +8,6 @@ node_modules/
 build/
 pyu-data/
 .pyupdater/
-.git/
 .mypy_cache/
+
+.git/

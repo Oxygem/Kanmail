@@ -14,13 +14,10 @@ dnspython==1.15.0
 defusedxml==0.5.0
 tld==0.9.1
 requests==2.20.0
+pyupdater==3.1.1  # must match version in ./development.txt
 
 # IMAPClient==2.1.0 - pending 2.2.0
 git+https://github.com/mjs/imapclient@580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87
-
-# App bundling
-pyinstaller==3.6
-pyupdater[s3]==3.1.1
 
 # Pinned because other packages either miss them or have wrong versions!
 urllib3==1.25.3
