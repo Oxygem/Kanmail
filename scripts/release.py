@@ -10,6 +10,7 @@ from subprocess import check_output, run
 
 import click
 import pyupdater
+import requests
 import tld
 
 from jinja2 import Template
@@ -22,10 +23,14 @@ MAKE_DIRNAME = path.join(ROOT_DIRNAME, 'make')
 
 TEMP_VERSION_LOCK_FILENAME = path.join(DIST_DIRNAME, '.release_version_lock')
 TEMP_SPEC_FILENAME = path.join(DIST_DIRNAME, '.spec')
+TEMP_CHANGELOG_FILENAME = path.join(DIST_DIRNAME, '.changelog')
 
 VERSION_DATA_FILENAME = path.join(DIST_DIRNAME, 'version.json')
 
+DOCKER_NAME = 'fizzadar/kanmail'
+
 CODESIGN_KEY_NAME = environ.get('CODESIGN_KEY_NAME')
+GITHUB_API_TOKEN = environ.get('GITHUB_API_TOKEN')
 
 
 def _print_and_run(command):
@@ -103,20 +108,43 @@ def _get_git_changes():
     return '\n'.join([f'- {change}' for change in git_changes])
 
 
-def _update_changelog(version, git_changes):
+def _create_new_changelog(version, git_changes):
     new_changelog = f'# v{version}\n\nChanges:\n{git_changes}\n\n'
     new_changelog = click.edit(new_changelog)
 
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
 
-    with open('CHANGELOG.md', 'r') as f:
-        current_changelog = f.read()
+    with open(TEMP_CHANGELOG_FILENAME, 'w') as f:
+        f.write(new_changelog)
 
-    new_changelog = f'{new_changelog}{current_changelog}'
+
+def _get_new_changelog():
+    with open(TEMP_CHANGELOG_FILENAME, 'r') as f:
+        return f.read()
+
+
+def _write_new_changelog():
+    new_changelog = _get_new_changelog()
 
     with open('CHANGELOG.md', 'w') as f:
-        f.write(new_changelog)
+        current_changelog = f.read()
+        changelog = f'{new_changelog}{current_changelog}'
+        f.write(changelog)
+
+
+def _create_github_release(version):
+    response = requests.post(
+        'https://api.github.com/repos/fizzadar/Kanmail/releases',
+        json={
+            'tag_name': f'v{version}',
+            'body': _get_new_changelog(),
+        },
+        headers={
+            'Authorization': f'token {GITHUB_API_TOKEN}',
+        },
+    )
+    response.raise_for_status()
 
 
 def _get_release_version():
@@ -178,8 +206,8 @@ def prepare_release():
 
     click.echo(f'--> preparing v{version} release')
 
-    click.echo('--> update changelog')
-    _update_changelog(version, git_changes)
+    click.echo('--> create changelog')
+    _create_new_changelog(version, git_changes)
 
     if not path.isdir(DIST_DIRNAME):
         makedirs(DIST_DIRNAME)
@@ -268,10 +296,15 @@ def build_release(build_only=False, docker=False):
 
 
 def complete_release():
+    if not GITHUB_API_TOKEN:
+        raise click.ClickException(
+            'No `GITHUB_API_TOKEN` environment variable provided!',
+        )
+
     release_version = _get_release_version()
 
-    # TODO: CHECK DOCKER IMAGE EXISTS
-    _print_and_run(('docker', 'image', 'inspect', f'kanmail:{release_version}'))
+    _print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
+    _print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
 
     if not click.confirm((
         f'Are you SURE v{release_version} is ready to release '
@@ -279,7 +312,7 @@ def complete_release():
     )):
         raise click.Abort('User is not sure!')
 
-    # Git commit the changelog/tag/push
+    _write_new_changelog()
     _print_and_run(('git', 'add', 'CHANGELOG.md'))
     _print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
     _print_and_run((
@@ -287,19 +320,21 @@ def complete_release():
         '-a', f'v{release_version}',
         '-m', f'v{release_version}',
     ))
+
+    _print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
+    _print_and_run(('pyupdater', 'upload', '--service', 's3'))
+
     _print_and_run(('git', 'push'))
     _print_and_run(('git', 'push', '--tags'))
 
-    # Sign + upload
-    _print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
-    _print_and_run(('pyupdater', 'upload', '--service', 's3'))
+    _create_github_release(release_version)
 
     # Finally, remove the release version lock
     remove(TEMP_VERSION_LOCK_FILENAME)
     click.echo(f'--> Kanmail v{release_version} released!')
 
-    if click.confirm(f'Delete dist/?', default=True):
-        rmtree(DIST_DIRNAME)
+    if click.confirm(f'Run scripts/clean.sh?', default=True):
+        _print_and_run(('scripts/clean.sh',))
 
 
 @click.command()
