@@ -91,7 +91,6 @@ export default class EmailColumnWrapper extends React.Component {
 class EmailColumn extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
-        connectDropTarget: PropTypes.func.isRequired,
         threads: PropTypes.array,
         accountName: PropTypes.string,
         mainColumn: PropTypes.string, // name of the *current* main column
@@ -101,6 +100,7 @@ class EmailColumn extends React.Component {
 
         isOver: PropTypes.bool.isRequired,
         canDrop: PropTypes.bool.isRequired,
+        connectDropTarget: PropTypes.func.isRequired,
 
         // Surrounding columns
         getPreviousColumn: PropTypes.func.isRequired,
