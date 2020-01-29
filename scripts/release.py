@@ -104,14 +104,16 @@ def _get_git_changes():
 
 
 def _update_changelog(version, git_changes):
-    # Edit/create the changelog
-    with open('CHANGELOG.md', 'r') as f:
-        changelog_data = f.read()
+    new_changelog = f'# v{version}\n\nChanges:\n{git_changes}\n\n'
+    new_changelog = click.edit(new_changelog)
 
-    changelog_data = f'# v{version}\n\nChanges:\n{git_changes}\n\n{changelog_data}'
-    new_changelog = click.edit(changelog_data)
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
+
+    with open('CHANGELOG.md', 'r') as f:
+        current_changelog = f.read()
+
+    new_changelog = f'{new_changelog}{current_changelog}'
 
     with open('CHANGELOG.md', 'w') as f:
         f.write(new_changelog)
