@@ -104,8 +104,10 @@ def open_link():
 @app.route('/open-window', methods=('GET',))
 def open_window():
     link = request.args['url']
-    width = request.args['width']
-    height = request.args['height']
+
+    width = int(request.args['width'])
+    height = int(request.args['height'])
+
     unique_key = request.args.get('unique_key')
 
     if not create_window(link, width=width, height=height, unique_key=unique_key):
