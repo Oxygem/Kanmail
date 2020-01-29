@@ -13,6 +13,7 @@ import { delete_, get, post } from 'util/requests.js';
 
 const newAccountState = {
     showAdvancedSettings: false,
+    isSaving: false,
 
     // Add account phase 1 - name/username/password autoconfig form
     addingAccount: false,
@@ -161,6 +162,12 @@ export default class SettingsApp extends React.Component {
     handleSaveSettings = (ev) => {
         ev.preventDefault();
 
+        if (this.state.isSaving) {
+            return;
+        }
+
+        this.setState({isSaving: true});
+
         const newSettings = {
             accounts: this.state.accounts,
             system: this.state.systemSettings,
@@ -169,7 +176,10 @@ export default class SettingsApp extends React.Component {
         };
 
         post('/api/settings', newSettings)
-            .then(() => closeWindow())
+            .then(() => {
+                closeWindow();
+                this.setState({isSaved: true});
+            })
             .catch(err => console.log('SETTING ERROR', err));
     }
 
@@ -325,6 +335,27 @@ export default class SettingsApp extends React.Component {
                     onClick={this.handleBustCache}
                 >Clear the cache</button>
             </div>
+        );
+    }
+
+    renderSaveButton() {
+        if (this.state.isSaving) {
+            const text = this.state.isSaved ? 'Settings saved, please close this window & reload the main one' : 'Saving...';
+            return (
+                <button
+                    type="submit"
+                    className="main-button disabled"
+                    onClick={this.handleSaveSettings}
+                >{text}</button>
+            );
+        }
+
+        return (
+            <button
+                type="submit"
+                className="main-button submit"
+                onClick={this.handleSaveSettings}
+            >Save all settings &rarr;</button>
         );
     }
 
