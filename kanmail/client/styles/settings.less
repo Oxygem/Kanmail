@@ -1,5 +1,3 @@
-
-
 /*
     Settings */
 
@@ -43,6 +41,7 @@ section#settings {
 
         &.disabled {
             background: @lightGrey;
+            cursor: auto;
         }
     }
 
@@ -119,13 +118,19 @@ section#settings {
     }
 
     div#style, div#system {
-        padding: 0 10px;
+        padding-left: 10px;
+        padding-right: 10px;
 
         input {
             width: 70%;
             display: inline-block;
             margin-bottom: 30px;
         }
+    }
+
+    div#system {
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
 
     div#accounts {
