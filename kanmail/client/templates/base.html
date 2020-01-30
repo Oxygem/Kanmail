@@ -14,7 +14,7 @@
     {% if version == '0.0.0dev' %}
         <script type="text/javascript" src="http://localhost:4421/main.js"></script>
     {% else %}
-        <script type="text/javascript" src="/static/dist/main-{{ version }}.js"></script>
+        <script type="text/javascript" src="/static/dist/{{ version }}/main.js"></script>
     {% endif %}
 </body>
 </html>
