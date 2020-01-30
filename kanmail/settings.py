@@ -69,6 +69,7 @@ FRAMELESS = PLATFORM == 'Darwin'
 platform_to_gui = {
     'Darwin': 'cocoa',
     'Linux': 'gtk',
+    'Windows': 'winforms',
 }
 GUI_LIB = platform_to_gui[PLATFORM]
 

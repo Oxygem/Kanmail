@@ -69,13 +69,12 @@ def _write_version_data(version):
 
 
 def _generate_spec(version):
-    system_type = platform.system()
-
-    platform_name = None
-    if system_type == 'Darwin':
-        platform_name = 'mac'
-    elif system_type == 'Linux':
-        platform_name = 'nix64'
+    system_to_platform = {
+        'Darwin': 'mac',
+        'Linux': 'nix64',
+        'Windows': 'win',
+    }
+    platform_name = system_to_platform.get(platform.system())
 
     if not platform_name:
         raise NotImplementedError('This platform is not supported!')
