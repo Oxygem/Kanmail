@@ -208,6 +208,9 @@ def prepare_release():
     click.echo('--> create changelog')
     _create_new_changelog(version, git_changes)
 
+    click.echo('--> building clientside bundle')
+    _print_and_run(('yarn', 'run', 'build'))
+
     if not path.isdir(DIST_DIRNAME):
         makedirs(DIST_DIRNAME)
 
@@ -229,16 +232,19 @@ def build_release(build_only=False, docker=False):
             'No `CODESIGN_KEY_NAME` environment variable provided!',
         )
 
+    js_bundle_exists = path.exists(path.join(DIST_DIRNAME, 'main.js'))
+
     if build_only:
         version = _generate_version()
+        if not js_bundle_exists:
+            click.echo('--> building clientside bundle')
+            _print_and_run(('yarn', 'run', 'build'))
     else:
         version = _get_release_version()
+        if not js_bundle_exists:
+            raise click.ClickException('No JS bundle exists, exiting!')
 
     click.echo(f'--> building v{version} on {system_type}')
-
-    # Build the clientside JS bundle, rename with version
-    if not path.exists(path.join(DIST_DIRNAME, 'main.js')):
-        _print_and_run(('yarn', 'run', 'build'))
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = _generate_spec(version)
