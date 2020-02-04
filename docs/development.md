@@ -12,15 +12,20 @@ To build/release you'll need to intsall GNU tar, which can be done with brew:
 brew install gnu-tar
 ```
 
-### Linux/Ubuntu
+### Linux (Ubuntu)
 
 For `qt` to install properly you'll need:
 
 ```
-apt install build-essential pkg-config git libcairo2-dev libgirepository1.0-dev
+apt install build-essential pkg-config git python3-dev libcairo2-dev libgirepository1.0-dev
 ```
 
 Then, _after_ requirements are installed you need to edit [this pyinstaller file](https://github.com/pyinstaller/pyinstaller/blob/develop/PyInstaller/hooks/hook-gi.repository.Gtk.py#L24) and comment out the lines that add fontconfig/icons/themes (prevents the resultant bundle being >200mb).
+
+### Windows
+
+You'll need the [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/).
+
 
 ## Install Python requirements
 
