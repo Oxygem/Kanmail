@@ -292,7 +292,12 @@ class Folder(object):
         return uids
 
     def fix_offset_before_removing_uids(self, uids):
-        if not self.email_uids or self.offset >= len(self.email_uids):
+        if not self.email_uids:
+            self.offset = 0
+            return
+
+        if self.offset >= len(self.email_uids):
+            self.offset = len(self.email_uids)
             return
 
         sorted_email_uids = sorted(self.email_uids, reverse=True)
