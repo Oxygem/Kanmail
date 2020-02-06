@@ -150,8 +150,13 @@ export default class EmailsApp extends React.Component {
             );
         }
 
+        const classNames = ['wrapper'];
+        if (window.KANMAIL_FRAMELESS) {
+            classNames.push('frameless');
+        }
+
         return (
-            <div className="wrapper">
+            <div className={classNames.join(' ')}>
                 <Sidebar />
                 <Search columnsCount={this.props.columns.length} />
                 {this.renderColumnsSection()}
