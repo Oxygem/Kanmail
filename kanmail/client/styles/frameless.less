@@ -1,0 +1,34 @@
+div.frameless {
+    section#search input {
+        margin-top: @framelessHeight + 4;
+    }
+
+    section#columns {
+        form#add-column {
+            height: @topHeight + @framelessHeight;
+
+            div {
+                padding-top: 60px;
+            }
+        }
+
+        div.column {
+            h3 {
+                padding-top: @framelessHeight + 40;
+                height: @topHeight + @framelessHeight;
+            }
+
+            div.emails {
+                top: @topHeight + @framelessHeight - 1;
+            }
+        }
+    }
+
+    section#sidebar header {
+        height: @topHeight + @framelessHeight;
+
+        h1 {
+            padding-top: @framelessHeight;
+        }
+    }
+}
