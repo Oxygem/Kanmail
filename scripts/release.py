@@ -224,7 +224,7 @@ def prepare_release():
     click.echo()
 
 
-def build_release(build_only=False, docker=False):
+def build_release(build_only=False, docker=False, build_version=None):
     system_type = 'Docker' if docker else platform.system()
 
     if system_type == 'Darwin' and not CODESIGN_KEY_NAME:
@@ -238,7 +238,10 @@ def build_release(build_only=False, docker=False):
         raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
     if build_only:
-        version = _generate_version()
+        if build_version:
+            version = build_version
+        else:
+            version = _generate_version()
     else:
         version = _get_release_version()
 
@@ -340,7 +343,8 @@ def complete_release():
 @click.option('--complete', is_flag=True, default=False)
 @click.option('--build-only', is_flag=True, default=False)
 @click.option('--docker', is_flag=True, default=False)
-def release(complete, build_only, docker):
+@click.option('--version', default=None)
+def release(complete, build_only, docker, version):
     click.echo()
     click.echo('### Kanmail release script')
     click.echo()
@@ -365,8 +369,11 @@ def release(complete, build_only, docker):
         if build_only and version_lock_exists:
             raise click.UsageError('Cannot --build-only when preparing a release!')
 
+        if version and not build_only:
+            raise click.UsageError('Cannot --version without --build-only!')
+
         click.echo('--> [2*/3] building release')
-        build_release(build_only=build_only, docker=docker)
+        build_release(build_only=build_only, docker=docker, build_version=version)
         return
 
     # No version lock so let's create one and prepare start-of-release
