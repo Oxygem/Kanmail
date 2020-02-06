@@ -232,17 +232,15 @@ def build_release(build_only=False, docker=False):
             'No `CODESIGN_KEY_NAME` environment variable provided!',
         )
 
-    js_bundle_exists = path.exists(path.join(DIST_DIRNAME, 'main.js'))
+    js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
+    js_bundle_exists = path.exists(js_bundle_filename)
+    if not js_bundle_exists:
+        raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
     if build_only:
         version = _generate_version()
-        if not js_bundle_exists:
-            click.echo('--> building clientside bundle')
-            _print_and_run(('yarn', 'run', 'build'))
     else:
         version = _get_release_version()
-        if not js_bundle_exists:
-            raise click.ClickException('No JS bundle exists, exiting!')
 
     click.echo(f'--> building v{version} on {system_type}')
 
