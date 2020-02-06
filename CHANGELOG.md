@@ -1,3 +1,26 @@
+# v1.2002061815
+
+Changes:
+- Add Python version @ 3.7.6.
+- Make it possible to pass a version when building.
+- Require building the JS bundle outside of the release script when building only.
+- Reimplement tracking of seen email UIDs in the folder class.
+- Fix z-index styles.
+- Render custom sidebar folders in a separate list.
+- Fix scroll handler errors when changing main column.
+- Add frameless class when in frameless mode.
+- Implement non-frameless styles.
+- Only flag as frameless if we're in app mode (on MacOS).
+- Pass frameless setting to the frontend.
+- Fix offset correction when removing UIDs from a folder.
+- Add Docker docs.
+- Expand development instructions, add Windows notes.
+- Build the client bundle once during a release.
+- Handle Docker not having versioned folder for JS.
+- Store the main JS file in a versioned directory.
+- Windows build support!
+- Create a github release after pushing new tag.
+
 # v1.2001291810
 
 First release for Linux & Docker!
