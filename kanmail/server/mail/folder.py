@@ -1,5 +1,4 @@
 from contextlib import contextmanager
-from copy import copy
 from datetime import date, timedelta
 
 from imapclient.exceptions import IMAPClientError
@@ -31,10 +30,6 @@ class Folder(object):
     # Whether this folder exists on the server
     exists = None
 
-    # Index of the current view for this folder - as we request more emails
-    # this is increased.
-    offset = 0
-
     def __init__(self, name, alias_name, account, query=None):
         self.name = name
         self.alias_name = alias_name
@@ -52,6 +47,8 @@ class Folder(object):
 
         # If we don't exist, our UID list is empty
         self.email_uids = set()
+        # Set of UIDs we've "seen" - ie ones not to return again
+        self.seen_email_uids = set()
 
         # If we exist on the server, fetch (possibly from cache) and set UID list
         try:
@@ -291,27 +288,6 @@ class Folder(object):
         uids = set(message_uids)
         return uids
 
-    def fix_offset_before_removing_uids(self, uids):
-        if not self.email_uids:
-            self.offset = 0
-            return
-
-        if self.offset >= len(self.email_uids):
-            self.offset = len(self.email_uids)
-            return
-
-        sorted_email_uids = sorted(self.email_uids, reverse=True)
-
-        # Figure out the number of email UIDs we're removing *before* the offset,
-        # so we can reduce the offset accordingly (so we don't jump).
-        offset_email_uid = sorted_email_uids[self.offset]
-        uids_lower_than_offset = len([
-            uid for uid in uids
-            if uid < offset_email_uid
-        ])
-
-        self.offset -= uids_lower_than_offset
-
     def check_cache_validity(self):
         '''
         Checks if our cached UID validity matches the server.
@@ -336,7 +312,7 @@ class Folder(object):
             return False
         return True
 
-    # Bits that fiddle with self.email_uids
+    # Bits that fiddle with self.email_uids & self.seen_email_uids
     #
 
     @lock_class_method
@@ -346,9 +322,7 @@ class Folder(object):
     @lock_class_method
     def sync_emails(self, expected_uid_count=None, check_unread_uids=None):
         '''
-        Get new emails for this folder and prepend them to our internal email
-        list. Once this is done the function increases ``self.offset`` by
-        the number of new emails, meaning we don't jump back when ``get_emails``.
+        Get new and deleted emails for this folder.
         '''
 
         # If we don't exist, try again or we have nothing
@@ -367,30 +341,20 @@ class Folder(object):
             new_message_uids = message_uids - self.email_uids
             # Remove new from existing to get deleted
             deleted_message_uids = self.email_uids - message_uids
-            self.fix_offset_before_removing_uids(deleted_message_uids)
 
             uids_changed = (
                 len(new_message_uids) > 0
                 or len(deleted_message_uids) > 0
             )
         else:
+            uids_changed = True
+
             # All old uids invalid, so set all old to deleted
             deleted_message_uids = self.email_uids
 
-            # At this point we have the entire folder as new message IDs - we want
-            # to fetch the first self.offset to match where we "were".
-            if len(message_uids) > self.offset:
-                # Folder didn't exist before so offset is 0; fetch up to batch size
-                if self.offset == 0:
-                    self.offset = get_system_setting('batch_size')
-
-                sorted_message_uids = sorted(message_uids, reverse=True)
-                new_message_uids = sorted_message_uids[:self.offset]
-            else:
-                new_message_uids = message_uids
-                self.offset = len(message_uids)
-
-            uids_changed = True
+            batch_size = get_system_setting('batch_size')
+            sorted_message_uids = sorted(message_uids, reverse=True)
+            new_message_uids = sorted_message_uids[:batch_size]
 
         self.email_uids = message_uids
 
@@ -415,6 +379,7 @@ class Folder(object):
         if new_message_uids:
             # Now actually fetch & return those emails
             new_emails = self.get_email_headers(new_message_uids)
+            self.seen_email_uids.update(new_message_uids)
 
         read_uids = []
         if check_unread_uids:
@@ -431,45 +396,34 @@ class Folder(object):
     def get_emails(self, reset=False, batch_size=None):
         '''
         Get slices of emails from our email list, fetching more if needed.
-
-        Once the emails are selected this function increases ``self.offset``
-        by the # of emails selected, which will then offset the start of the
-        next call to this function. This means repeated calls to the function
-        will iterate through the folders email, in descending order (newest
-        first).
         '''
 
         # If we don't exist, we have nothing
         if not self.exists:
-            return [], 0, 0
+            return []
 
         if reset:
-            self.log('debug', 'Resetting folder (offset=0)')
-            self.offset = 0
+            self.log('debug', 'Resetting folder')
+            self.seen_email_uids = set()
 
         if not batch_size:
             batch_size = get_system_setting('batch_size')
 
-        sorted_email_uids = sorted(self.email_uids, reverse=True)
+        unseen_email_uids = self.email_uids - self.seen_email_uids
+        sorted_unseen_email_uids = sorted(unseen_email_uids, reverse=True)
 
         # Select the slice of UIDs
-        index = self.offset
-        email_uids = sorted_email_uids[index:index + batch_size]
+        email_uids = sorted_unseen_email_uids[:batch_size]
 
         # Nothing to fetch? Shortcut!
         if not email_uids:
-            return [], self.offset, self.offset
+            return []
 
         # Actually fetch the emails
         emails = self.get_email_headers(email_uids)
+        self.seen_email_uids.update(email_uids)
 
-        # Store the old offset as we need to return it
-        offset = copy(self.offset)
-
-        # Move the index along by the # fetched
-        self.offset += len(emails)
-
-        return emails, offset, self.offset
+        return emails
 
     # @lock_class_method
     # def delete_emails(self, email_uids):

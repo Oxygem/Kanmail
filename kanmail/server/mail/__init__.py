@@ -77,15 +77,13 @@ def get_folder_emails(
     account = get_account(account_key)
     folder = account.get_folder(folder_name, query=query)
 
-    emails, from_offset, to_offset = folder.get_emails(
+    emails = folder.get_emails(
         reset=reset,
         batch_size=batch_size,
     )
 
     meta = {
         'count': len(folder),
-        'from': from_offset,
-        'to': to_offset,
         'exists': folder.exists,
     }
 
