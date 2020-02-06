@@ -64,7 +64,7 @@ if FROZEN:
 
 # Platform specific interface settings
 PLATFORM = platform.system()
-FRAMELESS = PLATFORM == 'Darwin'
+FRAMELESS = IS_APP and PLATFORM == 'Darwin'
 
 platform_to_gui = {
     'Darwin': 'cocoa',
