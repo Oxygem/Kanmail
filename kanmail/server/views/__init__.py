@@ -9,7 +9,7 @@ from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
 from kanmail.server.util import get_or_400
-from kanmail.settings import DEBUG, FROZEN, IS_APP
+from kanmail.settings import DEBUG, FRAMELESS, FROZEN, IS_APP
 from kanmail.version import get_version
 from kanmail.window import create_open_dialog, create_window, destroy_window
 
@@ -28,6 +28,7 @@ def _get_render_data():
         'frozen': FROZEN,
         'debug': DEBUG,
         'is_app': IS_APP,
+        'frameless': FRAMELESS,
     }
 
 
