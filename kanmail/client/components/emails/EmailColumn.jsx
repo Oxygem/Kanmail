@@ -260,6 +260,10 @@ class EmailColumn extends React.Component {
     }
 
     handleScroll = () => {
+        if (!this.emailsContainer) {
+            return;
+        }
+
         const columnMetaStore = getColumnMetaStore(this.props.id);
         if (columnMetaStore.props.isLoading) {
             console.debug(`Not loading more ${this.props.id} as we are already loading!`);
