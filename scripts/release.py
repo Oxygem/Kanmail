@@ -126,9 +126,11 @@ def _get_new_changelog():
 def _write_new_changelog():
     new_changelog = _get_new_changelog()
 
-    with open('CHANGELOG.md', 'w') as f:
+    with open('CHANGELOG.md', 'r') as f:
         current_changelog = f.read()
-        changelog = f'{new_changelog}{current_changelog}'
+
+    changelog = f'{new_changelog}{current_changelog}'
+    with open('CHANGELOG.md', 'w') as f:
         f.write(changelog)
 
 
