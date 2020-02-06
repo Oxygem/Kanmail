@@ -116,16 +116,8 @@ export default class Filters extends React.Component {
         this.props.filterStore.setAccountFilter(accountName);
     }
 
-    renderMainColumnFolders() {
-        const mainFolders = [...ALIAS_FOLDERS];
-
-        let sidebarFolders = this.props.styleSettings.sidebar_folders;
-        if (sidebarFolders) {
-            sidebarFolders = sidebarFolders.split(',');
-            mainFolders.push(...sidebarFolders);
-        }
-
-        return _.map(mainFolders, folderName => {
+    renderFolderLinks(folders) {
+        return _.map(folders, folderName => {
             const iconName = ALIAS_TO_ICON[folderName] || 'folder';
             const isActive = this.props.mainColumn === folderName;
             const handleClick = () => {
@@ -149,6 +141,20 @@ export default class Filters extends React.Component {
                 iconName={iconName}
             />;
         });
+    }
+
+    renderMainFolderLinks() {
+        return this.renderFolderLinks(ALIAS_FOLDERS);
+    }
+
+    renderCustomFolderLinks() {
+        let sidebarFolders = this.props.styleSettings.sidebar_folders;
+        if (!sidebarFolders) {
+            return null;
+        }
+
+        sidebarFolders = sidebarFolders.split(',');
+        return this.renderFolderLinks(sidebarFolders);
     }
 
     renderAccounts() {
@@ -192,7 +198,8 @@ export default class Filters extends React.Component {
 
     render() {
         return (<div>
-            <ul>{this.renderMainColumnFolders()}</ul>
+            <ul>{this.renderMainFolderLinks()}</ul>
+            <ul>{this.renderCustomFolderLinks()}</ul>
 
             <ul>
                 <li className={_.isNull(this.props.accountName) ? 'active': ''}><a
