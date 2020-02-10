@@ -173,11 +173,9 @@ export default class Filters extends React.Component {
 
         if (this.props.updateReady) {
             return (
-                <li>
-                    <a>
-                        Update installed, restart Kanmail when ready...
-                    </a>
-                </li>
+                <li><span>
+                    Update installed, restart Kanmail when ready...
+                </span></li>
             );
         }
 
