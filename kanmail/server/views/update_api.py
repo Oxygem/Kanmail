@@ -1,6 +1,6 @@
 from flask import abort, jsonify
 
-from kanmail.device import check_device_update, restart_device, update_device
+from kanmail.device import check_device_update, update_device
 from kanmail.server.app import app
 from kanmail.version import get_version
 
@@ -23,9 +23,3 @@ def api_download_overwrite_update():
 
     update_device(update)
     return jsonify(update_ready=True)
-
-
-@app.route('/api/update/restart', methods=('POST',))
-def api_restart():
-    restart_device()
-    # No return as we'll never get here!

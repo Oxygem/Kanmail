@@ -3,9 +3,6 @@ Handle "device" licenses and updates. In this instance a device is basically
 a single install of Kanmail on whatever hardware.
 '''
 
-import os
-import sys
-
 from os import path
 from typing import Optional
 
@@ -119,7 +116,3 @@ def update_device(update):
 
     logger.debug(f'Download complete, extracting & overwriting')
     update.extract_overwrite()
-
-
-def restart_device() -> None:
-    os.execl(sys.executable, sys.executable, *sys.argv)

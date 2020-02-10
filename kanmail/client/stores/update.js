@@ -39,10 +39,6 @@ class UpdateStore extends BaseStore {
             this.triggerUpdate();
         });
     }
-
-    doRestart() {
-        return post('/api/update/restart');
-    }
 }
 
 
