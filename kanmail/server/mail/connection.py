@@ -7,7 +7,7 @@ from socket import error as socket_error
 from time import time
 
 from imapclient import IMAPClient
-from imapclient.exceptions import IMAPClientAbortError
+from imapclient.exceptions import IMAPClientAbortError, IMAPClientError
 
 from kanmail.log import logger
 
@@ -58,8 +58,8 @@ class ImapConnectionWrapper(object):
 
                     return ret
 
-                # Network issues/IMAP aborts - both should fixed by reconnect
-                except (IMAPClientAbortError, socket_error) as e:
+                # Network issues/IMAP aborts - should fixed by reconnect
+                except (IMAPClientError, IMAPClientAbortError, socket_error) as e:
                     attempts += 1
                     self.config.log(
                         'critical',
