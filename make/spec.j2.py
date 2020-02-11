@@ -53,13 +53,13 @@ exe = EXE(  # noqa: F821
 
 {% if platform_name == 'mac' %}  # noqa
     console=False,
-    icon='{{ root_dir }}/make/Kanmail.icns',
 {% elif platform_name == 'nix64' %}  # noqa
     runtime_tmpdir=None,
     console=True,
 {% elif platform_name == 'win' %}  # noqa
     runtime_tmpdir=None,
     console=False,
+    icon='{{ root_dir }}/make/Kanmail.ico',
 {% endif %}  # noqa
 )
 
