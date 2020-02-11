@@ -5,7 +5,7 @@ from queue import Queue
 from threading import Lock, Thread
 
 from flask import abort
-from werkzeug import ImmutableMultiDict
+from werkzeug.datastructures import ImmutableMultiDict
 
 
 def lock_class_method(func):
