@@ -577,14 +577,6 @@ export default class EmailColumnThread extends React.Component {
         );
     }
 
-    renderBottomBorder() {
-        if (this.props.isLastThread) {
-            return;
-        }
-
-        return <hr />;
-    }
-
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
@@ -643,8 +635,6 @@ export default class EmailColumnThread extends React.Component {
                         {this.renderTrashButton()}
                     </span>
                 </div>
-
-                {this.renderBottomBorder()}
             </div>
         );
     }
