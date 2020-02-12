@@ -9,57 +9,6 @@ section#settings {
         font-size: 14px;
     }
 
-    button {
-        padding: 5px;
-        font-weight: bold;
-        background: @blue;
-        font-size: 14px;
-        border: none;
-        border-radius: @borderRadius;
-        color: white;
-        cursor: pointer;
-
-        &:hover {
-            background: darken(@blue, 10%);
-        }
-
-        &.cancel {
-            background: @orange;
-
-            &:hover {
-                background: darken(@orange, 10%);
-            }
-        }
-
-        &.submit {
-            background: @green;
-
-            &:hover {
-                background: darken(@green, 10%);
-            }
-        }
-
-        &.disabled {
-            background: @lightGrey;
-            cursor: auto;
-        }
-    }
-
-    input {
-        width: 100%;
-        border-radius: @borderRadius;
-        padding: 5px;
-        border: 1px solid #E7E7E7;
-        font-size: 16px;
-
-        input:hover, input:focus {
-            border-color: #D7D7D7;
-        }
-        &:hover, &:focus {
-            border-color: #D7D7D7;
-        }
-    }
-
     div.error {
         color: @orange;
     }
