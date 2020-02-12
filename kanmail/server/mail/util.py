@@ -34,21 +34,22 @@ def format_address(address):
     return '@'.join(bits)
 
 
-def make_contact_tuple(address):
+def make_contact_tuple(address, save):
     name = decode_header(address.name) if address.name else None
     email = format_address(address)
 
     contact = (name, email)
 
-    add_contact(contact)
+    if save:
+        add_contact(contact)
     return contact
 
 
-def make_contacts(addresses):
+def make_contacts(addresses, save=True):
     if not addresses:
         return []
 
-    return [make_contact_tuple(address) for address in addresses]
+    return [make_contact_tuple(address, save=save) for address in addresses]
 
 
 def make_email_headers(account, folder, uid, data, parts):
@@ -92,6 +93,8 @@ def make_email_headers(account, folder, uid, data, parts):
     envelope = data[b'ENVELOPE']
     subject = decode_header(envelope.subject)
 
+    save_contacts = folder.alias_name not in ('spam', 'trash')
+
     return {
         'uid': uid,
         'seq': data[b'SEQ'],
@@ -111,12 +114,12 @@ def make_email_headers(account, folder, uid, data, parts):
         'subject': subject,
 
         # Address data
-        'from': make_contacts(envelope.from_),
-        'to': make_contacts(envelope.to),
-        'send': make_contacts(envelope.sender),
-        'cc': make_contacts(envelope.cc),
-        'bcc': make_contacts(envelope.bcc),
-        'reply_to': make_contacts(envelope.reply_to),
+        'from': make_contacts(envelope.from_, save=save_contacts),
+        'to': make_contacts(envelope.to, save=save_contacts),
+        'send': make_contacts(envelope.sender, save=save_contacts),
+        'cc': make_contacts(envelope.cc, save=save_contacts),
+        'bcc': make_contacts(envelope.bcc, save=save_contacts),
+        'reply_to': make_contacts(envelope.reply_to, save=save_contacts),
 
         # Threading
         'in_reply_to': envelope.in_reply_to,
