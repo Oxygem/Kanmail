@@ -2,9 +2,14 @@ from os import environ, path
 
 from flask import Flask
 from flask.json import JSONEncoder
+from flask_sqlalchemy import SQLAlchemy
 
 from kanmail.log import logger
-from kanmail.settings import CLIENT_ROOT
+from kanmail.settings import (
+    CLIENT_ROOT,
+    CONTACTS_CACHE_DB_FILE,
+    FOLDER_CACHE_DB_FILE,
+)
 
 
 class JsonEncoder(JSONEncoder):
@@ -27,6 +32,14 @@ app.json_encoder = JsonEncoder
 app.config['JSON_SORT_KEYS'] = False
 
 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_BINDS'] = {
+    'contacts': f'sqlite:///{CONTACTS_CACHE_DB_FILE}',
+    'folders': f'sqlite:///{FOLDER_CACHE_DB_FILE}',
+}
+db = SQLAlchemy(app)
+
+
 def boot() -> None:
     logger.debug(f'App client root is: {CLIENT_ROOT}')
 
@@ -40,3 +53,7 @@ def boot() -> None:
     from kanmail.server.views import settings_api  # noqa: F401
     from kanmail.server.views import email_api  # noqa: F401
     from kanmail.server.views import update_api  # noqa: F401
+
+    from kanmail.server.mail.contacts import Contact  # noqa: F401
+
+    db.create_all()

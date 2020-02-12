@@ -1,48 +1,49 @@
-import pickle
-
-from os import path
-from threading import Lock
-
 from pydash import memoize
 
-from kanmail.settings import CONTACTS_CACHE_FILE
+from kanmail.server.app import db
 
-CONTACTS_CACHE_LOCK = Lock()
+
+class Contact(db.Model):
+    __bind_key__ = 'contacts'
+    __tablename__ = 'contacts'
+    __table_args__ = (
+        db.UniqueConstraint('email', 'name'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(300))
+    email = db.Column(db.String(300))
 
 
 @memoize
 def get_contacts():
-    if not path.exists(CONTACTS_CACHE_FILE):
-        return {}
-
-    with CONTACTS_CACHE_LOCK:
-        with open(CONTACTS_CACHE_FILE, 'rb') as f:
-            try:
-                return pickle.loads(f.read())
-            except EOFError:
-                return {}
-
-
-def set_contacts(contacts):
-    data = pickle.dumps(contacts)
-
-    with CONTACTS_CACHE_LOCK:
-        with open(CONTACTS_CACHE_FILE, 'wb') as f:
-            f.write(data)
-
-    # Reset pydash.memoize's cache for next call to get_contacts
-    get_contacts.cache = {}
+    contacts = Contact.query.all()
+    return set(
+        (contact.name, contact.email)
+        for contact in contacts
+    )
 
 
 def add_contact(contact):
-    contacts = get_contacts()
-
     name, email = contact
 
-    if (
-        email not in contacts
-        # If no cached name and name is provided
-        or contacts[email] is None and name is not None
-    ):
-        contacts[email] = name
-        set_contacts(contacts)
+    if 'noreply' in email:
+        return
+
+    if email.startswith('reply'):
+        return
+
+    if contact in get_contacts():
+        return
+
+    new_contact = Contact(
+        name=name,
+        email=email,
+    )
+
+    db.session.add(new_contact)
+    db.session.commit()
+
+    # Reset pydash.memoize's cache for get_contacts
+    get_contacts.cache = {}

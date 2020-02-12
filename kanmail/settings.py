@@ -25,6 +25,9 @@ APP_DIR = get_app_dir(APP_NAME)
 # Cache directory
 CACHE_DIR = path.join(APP_DIR, 'cache')
 
+CONTACTS_CACHE_DB_FILE = path.join(CACHE_DIR, 'contacts.db')
+FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
+
 # Contacts cache filename
 CONTACTS_CACHE_FILE = path.join(CACHE_DIR, '.contacts')
 # Device ID cache filename
