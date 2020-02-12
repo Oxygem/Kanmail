@@ -6,6 +6,7 @@ from kanmail.server.mail import reset_account_folders
 from kanmail.server.mail.folder_cache import bust_all_caches
 from kanmail.settings import (
     get_settings,
+    IS_APP,
     set_cached_window_settings,
     update_settings,
 )
@@ -52,6 +53,9 @@ def api_delete_caches():
 
 @app.route('/api/settings/window', methods=('POST',))
 def api_update_window_settings():
+    if not IS_APP:
+        return jsonify(saved=False)  # success response, but not saved (browser mode)
+
     window_settings = get_main_window_size_position()
     set_cached_window_settings(**window_settings)
     return jsonify(saved=True)
