@@ -69,15 +69,6 @@ def main():
     server_thread.daemon = True
     server_thread.start()
 
-    # Let's hope this thread doesn't fail!
-    monitor_thread = Thread(
-        name='Thread monitor',
-        target=monitor_threads,
-        args=(server_thread,),
-    )
-    monitor_thread.daemon = True
-    monitor_thread.start()
-
     # Register/ping immediately - without caring if it fails
     run_thread(register_or_ping_device)
 
@@ -102,6 +93,16 @@ def main():
         unique_key='main',
     )
 
+    # Let's hope this thread doesn't fail!
+    monitor_thread = Thread(
+        name='Thread monitor',
+        target=monitor_threads,
+        args=(server_thread,),
+    )
+    monitor_thread.daemon = True
+    monitor_thread.start()
+
+    # Start the GUI - this will block until the main window is destroyed
     webview.start(gui=GUI_LIB, debug=DEBUG)
 
     # Main window closed, cleanup/exit
