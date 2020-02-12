@@ -73,18 +73,21 @@ def main():
     run_thread(register_or_ping_device)
 
     # Ensure the webserver is up & running by polling it
-    while True:
+    waits = 0
+    while waits < 10:
         try:
             response = requests.get(f'http://localhost:{SERVER_PORT}/api/ping')
             response.raise_for_status()
         except requests.RequestException as e:
-            sleep(0.1)
             logger.warning(f'Waiting for main window: {e}')
+            sleep(0.1 * waits)
+            waits += 1
         else:
             break
+    else:
+        logger.critical('Webserver did not start properly!')
+        sys.exit(2)
 
-    # First/main call to webview, blocking - when this is quit the threads will
-    # all be killed off (daemon=True).
     create_window(
         width=WINDOW_WIDTH,
         height=WINDOW_HEIGHT,
