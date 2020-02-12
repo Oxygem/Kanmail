@@ -19,7 +19,7 @@ from kanmail.settings import (
     WINDOW_WIDTH,
 )
 from kanmail.version import get_version
-from kanmail.window import create_window
+from kanmail.window import create_window, destroy_main_window
 
 
 def run_server():
@@ -42,7 +42,7 @@ def monitor_threads(*threads):
         for thread in threads:
             if not thread.is_alive():
                 logger.critical(f'Thread: {thread} died, exiting!')
-                webview.destroy_window()
+                destroy_main_window()
         else:
             sleep(0.5)
 

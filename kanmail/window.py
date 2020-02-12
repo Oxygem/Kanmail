@@ -71,6 +71,10 @@ def get_main_window() -> webview.Window:
     return ID_TO_WINDOW[UNIQUE_NAME_TO_ID['main']]
 
 
+def destroy_main_window() -> None:
+    destroy_window(UNIQUE_NAME_TO_ID['main'])
+
+
 def get_main_window_size_position() -> Dict[str, int]:
     window = get_main_window()
 
