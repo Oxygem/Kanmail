@@ -1,0 +1,50 @@
+section#contacts {
+    height: 100%;
+    overflow-y: auto;
+
+    h2 {
+        margin-left: 10px;
+    }
+
+    form.add-contact {
+        margin: 10px;
+
+        div {
+            width: 300px;
+            display: inline-block;
+            margin-right: 20px;
+        }
+    }
+
+    div.contact {
+        padding: 10px;
+        height: 50px;
+
+        &:hover {
+            background: @lightGrey;
+        }
+
+        &:last-child {
+            margin-bottom: 50px;
+        }
+
+        input {
+            width: auto;
+        }
+
+        div {
+            display: inline-block;
+            vertical-align: top;
+            width: 650px;
+        }
+
+        div.text {
+            margin-top: 3px;
+        }
+
+        div.buttons {
+            width: 100px;
+            text-align: right;
+        }
+    }
+}

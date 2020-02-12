@@ -48,11 +48,23 @@ def get_settings():
     )
 
 
+@app.route('/contacts', methods=('GET',))
+def get_contacts_page():
+    contacts = list(get_contacts())
+    contacts = sorted(contacts, key=lambda c: c[0] or '')
+
+    return render_template(
+        'contacts.html',
+        contacts=contacts,
+        **_get_render_data(),
+    )
+
+
 @app.route('/send', methods=('GET',))
 def get_send():
     return render_template(
         'send.html',
-        contacts=get_contacts(),
+        contacts=list(get_contacts()),
         **_get_render_data(),
     )
 

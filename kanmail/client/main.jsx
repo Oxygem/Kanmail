@@ -10,6 +10,7 @@ import ErrorBoundary from 'components/ErrorBoundary.jsx';
 import EmailsApp from 'components/emails/EmailsApp.jsx';
 import SendApp from 'components/send/SendApp.jsx'
 import SettingsApp from 'components/settings/SettingsApp.jsx';
+import ContactsApp from 'components/contacts/ContactsApp.jsx';
 
 import settingsStore from 'stores/settings.js';
 
@@ -50,5 +51,19 @@ if (settingsAppRoot) {
         ReactDOM.render(<ErrorBoundary>
             <SettingsApp settings={settings.originalSettings} />
         </ErrorBoundary>, settingsAppRoot);
+    });
+}
+
+
+const contactsAppRoot = document.querySelector('div[data-contacts-app]');
+
+if (contactsAppRoot) {
+    // Load the settings *then* bootstrap the app into the DOM
+    settingsStore.getSettings().then(() => {
+        console.debug('Settings loaded, bootstrapping contacts app to DOM...');
+        const contacts = JSON.parse(contactsAppRoot.getAttribute('data-contacts'));
+        ReactDOM.render(<ErrorBoundary>
+            <ContactsApp contacts={contacts} />
+        </ErrorBoundary>, contactsAppRoot);
     });
 }

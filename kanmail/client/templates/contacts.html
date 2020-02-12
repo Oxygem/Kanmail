@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Contacts{% endblock %}
+
+{% block app_container %}
+    <div
+        data-contacts-app
+        data-contacts='{{ contacts|tojson }}'
+    ></div>
+{% endblock %}

@@ -42,6 +42,14 @@ export function openSettings() {
     });
 }
 
+export function openContacts() {
+    openWindow('/contacts', {
+        width: 800,
+        height: 600,
+        title: 'Kanmail Contacts',
+    });
+}
+
 export function openLink(link) {
     if (window.KANMAIL_IS_APP) {
         get('/open-link', {
