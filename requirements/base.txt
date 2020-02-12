@@ -7,6 +7,8 @@ git+https://github.com/Fizzadar/pywebview@4597b43ab9c8de351f9238038ad10e58e397a1
 # Server
 click==7.0
 flask==1.0.2
+flask-sqlalchemy==2.4.1
+sqlalchemy==1.3.13
 pydash==4.7.3
 markdown==2.6.9
 mdx-linkify==1.0
