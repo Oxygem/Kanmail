@@ -28,8 +28,6 @@ CACHE_DIR = path.join(APP_DIR, 'cache')
 CONTACTS_CACHE_DB_FILE = path.join(CACHE_DIR, 'contacts.db')
 FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
 
-# Contacts cache filename
-CONTACTS_CACHE_FILE = path.join(CACHE_DIR, '.contacts')
 # Device ID cache filename
 DEVICE_ID_FILE = path.join(CACHE_DIR, '.device_id')
 # Window settings/position cache filename
@@ -47,6 +45,7 @@ LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
 
 # Flag to tell us whether we're running in debug mode
 DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
+DEBUG_SMTP = environ.get('KANMAIL_DEBUG_SMTP') == 'on'
 
 # Flag to tell us whether we're a frozen app (bundled)
 FROZEN = getattr(sys, 'frozen', False)

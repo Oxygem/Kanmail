@@ -10,6 +10,7 @@ from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError
 
 from kanmail.log import logger
+from kanmail.settings import DEBUG_SMTP
 
 DEFAULT_ATTEMPTS = 10
 DEFAULT_CONNECTIONS = 10
@@ -185,7 +186,10 @@ class SmtpConnection(object):
         cls = SMTP_SSL if self.ssl else SMTP
 
         smtp = cls(self.host, self.port)
-        # smtp.set_debuglevel(1)
+
+        if DEBUG_SMTP:
+            smtp.set_debuglevel(1)
+
         smtp.connect(self.host, self.port)
 
         if self.tls:
