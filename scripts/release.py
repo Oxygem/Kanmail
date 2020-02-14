@@ -237,7 +237,10 @@ def build_release(build_only=False, docker=False, build_version=None):
     js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
-        raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
+        if build_only and click.confirm('No JS bundle exists, build it?'):
+            _print_and_run(('yarn', 'run', 'build'))
+        else:
+            raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
     if build_only:
         if build_version:
