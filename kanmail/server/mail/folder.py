@@ -168,28 +168,26 @@ class Folder(object):
         emails = []
 
         # First get/remove any cached headers before fetching
-        got_email_uids = []
+        uids_to_get = []
 
         for uid in email_uids:
             cached_headers = self.cache.get_headers(uid)
             if cached_headers:
-                got_email_uids.append(uid)
                 emails.append(cached_headers)
-
-        for uid in got_email_uids:
-            email_uids.remove(uid)
+            else:
+                uids_to_get.append(uid)
 
         self.log(
             'debug',
-            f'Fetching {len(email_uids)} message headers (+{len(emails)} from cached)',
+            f'Fetching {len(uids_to_get)} message headers (+{len(emails)} from cached)',
         )
 
-        if not email_uids:
+        if not uids_to_get:
             return emails
 
         with self.get_connection() as connection:
             email_headers = connection.fetch(
-                email_uids,
+                uids_to_get,
                 [
                     'FLAGS',
                     'ENVELOPE',
@@ -204,7 +202,7 @@ class Folder(object):
             )
 
         # Fix any dodgy UIDs
-        email_headers = fix_email_uids(email_uids, email_headers)
+        email_headers = fix_email_uids(uids_to_get, email_headers)
 
         for uid, data in email_headers.items():
             parts = parse_bodystructure(data[b'BODYSTRUCTURE'])
