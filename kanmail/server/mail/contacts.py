@@ -44,22 +44,31 @@ def delete_contact(contact):
 
     # Reset pydash.memoize's cache for get_contacts
     get_contacts.cache = {}
+
+
+def add_contact(name, email):
     if 'noreply' in email:
+        return
+
+    if 'no-reply' in email:
+        return
+
+    if 'donotreply' in email:
         return
 
     if email.startswith('reply'):
         return
 
-    if contact in get_contacts():
+    if email.startswith('bounce'):
         return
+
+    if (name, email) in get_contacts():
+        return
+
+    # TODO: improve detection of auto-generated/invalid emails
 
     new_contact = Contact(
         name=name,
         email=email,
     )
-
-    db.session.add(new_contact)
-    db.session.commit()
-
-    # Reset pydash.memoize's cache for get_contacts
-    get_contacts.cache = {}
+    save_contact(new_contact)
