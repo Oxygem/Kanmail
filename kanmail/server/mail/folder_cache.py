@@ -2,12 +2,12 @@ from pickle import (
     dumps as pickle_dumps,
     loads as pickle_loads,
 )
-from threading import Lock
 
 from sqlalchemy.orm.exc import NoResultFound
 
 from kanmail.log import logger
 from kanmail.server.app import db
+from kanmail.server.util import lock_class_method
 from kanmail.settings import CACHE_ENABLED
 
 
@@ -103,22 +103,19 @@ class FolderCache(object):
         self.folder = folder
         self.name = f'{self.folder.account.name}/{self.folder.name}'
 
-        self.lock = Lock()
-        self.folder_cache_item_id = self.get_folder_cache_item().id
-
+    @lock_class_method
     def get_folder_cache_item(self):
-        with self.lock:
-            try:
-                folder_cache_item = FolderCacheItem.query.filter_by(
-                    account_name=self.folder.account.name,
-                    folder_name=self.folder.name,
-                ).one()
-            except NoResultFound:
-                folder_cache_item = FolderCacheItem(
-                    account_name=self.folder.account.name,
-                    folder_name=self.folder.name,
-                )
-                save_cache_item(folder_cache_item)
+        try:
+            folder_cache_item = FolderCacheItem.query.filter_by(
+                account_name=self.folder.account.name,
+                folder_name=self.folder.name,
+            ).one()
+        except NoResultFound:
+            folder_cache_item = FolderCacheItem(
+                account_name=self.folder.account.name,
+                folder_name=self.folder.name,
+            )
+            save_cache_item(folder_cache_item)
 
         return folder_cache_item
 
@@ -164,7 +161,7 @@ class FolderCache(object):
             headers.data = headers_data
         else:
             headers = FolderHeaderCacheItem(
-                folder_id=self.folder_cache_item_id,
+                folder_id=self.get_folder_cache_item().id,
                 uid=uid,
                 data=headers_data,
             )
@@ -174,7 +171,7 @@ class FolderCache(object):
     def get_header_cache_item(self, uid):
         try:
             return FolderHeaderCacheItem.query.filter_by(
-                folder_id=self.folder_cache_item_id,
+                folder_id=self.get_folder_cache_item().id,
                 uid=uid,
             ).one()
         except NoResultFound:
