@@ -17,16 +17,17 @@ class Contact(db.Model):
 
 
 @memoize
-def get_contacts():
+def get_contacts(with_id=False):
     contacts = Contact.query.all()
-    return set(
-        (contact.name, contact.email)
-        for contact in contacts
-    )
 
+    if with_id:
+        def make_contact(c):
+            return (c.id, c.name, c.email)
+    else:
+        def make_contact(c):
+            return (c.name, c.email)
 
-def add_contact(contact):
-    name, email = contact
+    return set(make_contact(contact) for contact in contacts)
 
     if 'noreply' in email:
         return

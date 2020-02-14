@@ -48,12 +48,16 @@ def boot() -> None:
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
         bootstrap_fake_imap()
 
-    from kanmail.server.views import accounts_api  # noqa: F401
     from kanmail.server.views import error  # noqa: F401
-    from kanmail.server.views import settings_api  # noqa: F401
+
+    # API views
+    from kanmail.server.views import accounts_api  # noqa: F401
+    from kanmail.server.views import contacts_api  # noqa: F401
     from kanmail.server.views import email_api  # noqa: F401
+    from kanmail.server.views import settings_api  # noqa: F401
     from kanmail.server.views import update_api  # noqa: F401
 
+    # Database models
     from kanmail.server.mail.contacts import Contact  # noqa: F401
 
     db.create_all()

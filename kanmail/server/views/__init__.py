@@ -50,8 +50,8 @@ def get_settings():
 
 @app.route('/contacts', methods=('GET',))
 def get_contacts_page():
-    contacts = list(get_contacts())
-    contacts = sorted(contacts, key=lambda c: c[0] or '')
+    contacts = list(get_contacts(with_id=True))
+    contacts = sorted(contacts, key=lambda c: c[1] or '')
 
     return render_template(
         'contacts.html',
@@ -82,7 +82,7 @@ def get_send_reply(uid):
     return render_template(
         'send.html',
         reply=reply,
-        contacts=get_contacts(),
+        contacts=list(get_contacts()),
         **_get_render_data(),
     )
 
