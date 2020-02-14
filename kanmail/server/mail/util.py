@@ -38,11 +38,9 @@ def make_contact_tuple(address, save):
     name = decode_header(address.name) if address.name else None
     email = format_address(address)
 
-    contact = (name, email)
-
     if save:
-        add_contact(contact)
-    return contact
+        add_contact(name, email)
+    return (name, email)
 
 
 def make_contacts(addresses, save=True):
