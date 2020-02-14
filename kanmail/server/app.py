@@ -1,8 +1,11 @@
 from os import environ, path
+from sqlite3 import Connection as SQLite3Connection
 
 from flask import Flask
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 
 from kanmail.log import logger
 from kanmail.settings import (
@@ -10,6 +13,14 @@ from kanmail.settings import (
     CONTACTS_CACHE_DB_FILE,
     FOLDER_CACHE_DB_FILE,
 )
+
+
+@event.listens_for(Engine, 'connect')
+def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute('PRAGMA foreign_keys=ON;')
+        cursor.close()
 
 
 class JsonEncoder(JSONEncoder):
