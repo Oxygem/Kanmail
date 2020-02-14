@@ -182,7 +182,7 @@ export default class SettingsApp extends React.Component {
                 closeWindow();
                 this.setState({isSaved: true});
             })
-            .catch(err => console.log('SETTING ERROR', err));
+            .catch(err => console.error('SETTING ERROR', err));
     }
 
     handleBustCache = (ev) => {
@@ -190,7 +190,7 @@ export default class SettingsApp extends React.Component {
 
         delete_('/api/settings/cache')
             .then(() => closeWindow())
-            .catch(err => console.log('SETTING ERROR', err));
+            .catch(err => console.error('SETTING ERROR', err));
     }
 
     renderAccounts() {
