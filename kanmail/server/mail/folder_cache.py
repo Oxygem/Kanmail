@@ -1,186 +1,196 @@
-'''
-Kanmail cache.
-
-Namespace/key/value based. The cache folder looks like so:
-
-- /cache
-    - /<namespace>
-        - /<folder-hash>
-            - <key>
-
-The cache keeps track of namespaces it's part of so it can bust itself. Data is
-serialized using pickle.
-'''
-
-from functools import wraps
-from hashlib import sha1
-from os import makedirs, path, remove
 from pickle import (
     dumps as pickle_dumps,
     loads as pickle_loads,
-    UnpicklingError,
 )
-from shutil import rmtree
 from threading import Lock
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from kanmail.log import logger
-from kanmail.settings import CACHE_DIR, CACHE_ENABLED
-
-MAKE_DIRS_LOCK = Lock()
-
-UID_VALIDITY_NAMESPACE = 'uidvalidity'  # uid validity flags
-UIDS_NAMESPACE = 'uids'  # uid lists
-HEADERS_NAMESPACE = 'headers'  # email headers
+from kanmail.server.app import db
+from kanmail.settings import CACHE_ENABLED
 
 
-def bust_all_caches(caches=(UID_VALIDITY_NAMESPACE, UIDS_NAMESPACE, HEADERS_NAMESPACE)):
-    logger.warning(f'Busting entire caches: {caches}!')
+# Database models
+# Folder -> Folderheader -> FolderHeaderPart
+#
 
-    with MAKE_DIRS_LOCK:
-        for folder in (caches):
-            rmtree(path.join(CACHE_DIR, folder))
+class FolderCacheItem(db.Model):
+    '''
+    Store folder UID list and validity.
+    '''
+
+    __bind_key__ = 'folders'
+    __tablename__ = 'folder_cache_item'
+    __table_args__ = (
+        db.UniqueConstraint('account_name', 'folder_name'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    account_name = db.Column(db.String(300), nullable=False)
+    folder_name = db.Column(db.String(300), nullable=False)
+
+    uid_validity = db.Column(db.String(300))
+    uids = db.Column(db.Text)
 
 
-def _make_uid_key(uid):
-    return f'{uid}'
+class FolderHeaderCacheItem(db.Model):
+    '''
+    Email header data, attached to the relevant folder.
+    '''
+
+    __bind_key__ = 'folders'
+    __tablename__ = 'folder_header_cache_item'
+    __table_args__ = (
+        db.UniqueConstraint('uid', 'folder_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    uid = db.Column(db.Integer, nullable=False, index=True)
+    data = db.Column(db.Text, nullable=False)
+
+    folder_id = db.Column(
+        db.Integer,
+        db.ForeignKey('folder_cache_item.id', ondelete='CASCADE'),
+        nullable=False,
+    )
 
 
-def _hash_key(data):
-    if isinstance(data, str):
-        data = data.encode()
+# class FolderHeaderPartCacheItem(db.Model):
+#     '''
+#     Email part (data) cache items, attached to the relevant email header.
+#     '''
 
-    hasher = sha1()
-    hasher.update(data)
-    return hasher.hexdigest()
+#     __bind_key__ = 'folders'
+#     __tablename__ = 'folder_header_part_cache_item'
+#     __table_args__ = (
+#         db.UniqueConstraint('part_number', 'header_uid'),
+#     )
+
+#     id = db.Column(db.Integer, primary_key=True)
+
+#     part_number = db.Column(db.Integer, nullable=False)
+#     data = db.Column(db.Text, nullable=False)
+
+#     header_id = db.Column(
+#         db.Integer,
+#         db.ForeignKey('folder_header_cache_item.id', ondelete='CASCADE'),
+#         nullable=False,
+#     )
 
 
-def _trim(value):
-    value = f'{value}'
-    if len(value) > 80:
-        return f'{value[:77]}...'
-    return value
+def bust_all_caches():
+    if CACHE_ENABLED:
+        logger.warning('Busting all cache items!')
+        FolderCacheItem.query.delete()
+        db.session.commit()
+
+
+def save_cache_item(item):
+    db.session.add(item)
+    db.session.commit()
+
+
+def delete_cache_item(item):
+    db.session.delete(item)
+    db.session.commit()
 
 
 class FolderCache(object):
     def __init__(self, folder):
         self.folder = folder
+        self.name = f'{self.folder.account.name}/{self.folder.name}'
 
-        name = f'{self.folder.account.name}/{self.folder.name}'
+        self.lock = Lock()
+        self.folder_cache_item_id = self.get_folder_cache_item().id
 
-        self.name = name
-        self.namespaces = set()
+    def get_folder_cache_item(self):
+        with self.lock:
+            try:
+                folder_cache_item = FolderCacheItem.query.filter_by(
+                    account_name=self.folder.account.name,
+                    folder_name=self.folder.name,
+                ).one()
+            except NoResultFound:
+                folder_cache_item = FolderCacheItem(
+                    account_name=self.folder.account.name,
+                    folder_name=self.folder.name,
+                )
+                save_cache_item(folder_cache_item)
+
+        return folder_cache_item
 
     def log(self, method, message):
         func = getattr(logger, method)
         func(f'[Folder cache: {self.name}]: {message}')
-
-    # Cache implementation
-    #
-
-    def make_cache_dirname(self, namespace):
-        return path.join(CACHE_DIR, namespace, _hash_key(self.name))
-
-    def make_cache_filename(self, namespace, uid):
-        cache_dir = self.make_cache_dirname(namespace)
-        uid = _hash_key(_make_uid_key(uid))
-        return path.join(cache_dir, uid)
-
-    def ensure_cache_dir(self, namespace):
-        cache_dir = self.make_cache_dirname(namespace)
-
-        with MAKE_DIRS_LOCK:
-            if not path.exists(cache_dir):
-                self.log('debug', f'create namespace: {namespace}')
-                makedirs(cache_dir)
-
-    def populate_namespaces(func):
-        @wraps(func)
-        def decorated(self, namespace, *args, **kwargs):
-            # We *always* cache UID validity or it means we refetch emails every
-            # sync. Realistically the cache is only disabled in dev.
-            if not CACHE_ENABLED and namespace != UID_VALIDITY_NAMESPACE:
-                return
-            self.namespaces.add(namespace)
-            return func(self, namespace, *args, **kwargs)
-        return decorated
-
-    @populate_namespaces
-    def delete(self, namespace, key):
-
-        filename = self.make_cache_filename(namespace, key)
-        if path.exists(filename):
-            self.log('debug', f'delete: {namespace}/{key}')
-            remove(filename)
-
-    @populate_namespaces
-    def set(self, namespace, key, value):
-        self.ensure_cache_dir(namespace)
-
-        filename = self.make_cache_filename(namespace, key)
-
-        self.log('debug', f'write {namespace}/{key}={_trim(value)}')
-
-        with open(filename, 'wb') as f:
-            f.write(pickle_dumps(value))
-
-    @populate_namespaces
-    def get(self, namespace, key):
-        filename = self.make_cache_filename(namespace, key)
-
-        if not path.exists(filename):
-            return None
-
-        try:
-            with open(filename, 'rb') as f:
-                pickle_data = f.read()
-            data = pickle_loads(pickle_data)
-
-        except (EOFError, UnpicklingError) as e:
-            self.log(
-                'warning',
-                f'{e.__class__.__name__} raised reading {namespace}/{key}: {e}',
-            )
-            return
-
-        return data
 
     def bust(self):
         if not CACHE_ENABLED:
             return
 
         self.log('warning', 'busting the cache!')
-
-        for namespace in self.namespaces:
-            folder_name = self.make_cache_dirname(namespace)
-            if path.exists(folder_name):
-                self.log('debug', f'delete namespace: {namespace}')
-                rmtree(folder_name)
+        delete_cache_item(self.get_folder_cache_item())
 
     # Get/set shortcuts
     #
 
     def set_uid_validity(self, uid_validity):
-        self.set(UID_VALIDITY_NAMESPACE, 'uid_validity', uid_validity)
+        folder_cache_item = self.get_folder_cache_item()
+        folder_cache_item.uid_validity = uid_validity
+        save_cache_item(folder_cache_item)
 
     def get_uid_validity(self):
-        return self.get(UID_VALIDITY_NAMESPACE, 'uid_validity')
+        uid_validity = self.get_folder_cache_item().uid_validity
+        if uid_validity:
+            return int(uid_validity)
 
     def set_uids(self, uids):
-        return self.set(UIDS_NAMESPACE, 'uids', uids)
+        folder_cache_item = self.get_folder_cache_item()
+        folder_cache_item.uids = pickle_dumps(uids)
+        save_cache_item(folder_cache_item)
 
     def get_uids(self):
-        return self.get(UIDS_NAMESPACE, 'uids')
+        uids = self.get_folder_cache_item().uids
+        if uids:
+            return pickle_loads(uids)
 
     def set_headers(self, uid, headers):
-        return self.set(HEADERS_NAMESPACE, uid, headers)
+        headers_data = pickle_dumps(headers)
 
-    def get_headers(self, uid):
-        return self.get(HEADERS_NAMESPACE, uid)
+        headers = self.get_header_cache_item(uid)
+        if headers:
+            headers.data = headers_data
+        else:
+            headers = FolderHeaderCacheItem(
+                folder_id=self.folder_cache_item_id,
+                uid=uid,
+                data=headers_data,
+            )
+
+        save_cache_item(headers)
+
+    def get_header_cache_item(self, uid):
+        try:
+            return FolderHeaderCacheItem.query.filter_by(
+                folder_id=self.folder_cache_item_id,
+                uid=uid,
+            ).one()
+        except NoResultFound:
+            pass
 
     def delete_headers(self, uid):
-        return self.delete(HEADERS_NAMESPACE, uid)
+        headers = self.get_header_cache_item(uid)
+        if headers:
+            delete_cache_item(headers)
+
+    def get_headers(self, uid):
+        headers = self.get_header_cache_item(uid)
+        if headers:
+            return pickle_loads(headers.data)
 
     def get_parts(self, uid):
-        headers = self.get(HEADERS_NAMESPACE, uid)
+        headers = self.get_headers(uid)
         if headers:
             return headers['parts']
