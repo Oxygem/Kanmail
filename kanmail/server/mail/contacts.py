@@ -29,6 +29,21 @@ def get_contacts(with_id=False):
 
     return set(make_contact(contact) for contact in contacts)
 
+
+def save_contact(contact):
+    db.session.add(contact)
+    db.session.commit()
+
+    # Reset pydash.memoize's cache for get_contacts
+    get_contacts.cache = {}
+
+
+def delete_contact(contact):
+    db.session.delete(contact)
+    db.session.commit()
+
+    # Reset pydash.memoize's cache for get_contacts
+    get_contacts.cache = {}
     if 'noreply' in email:
         return
 
