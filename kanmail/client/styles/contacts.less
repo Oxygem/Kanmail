@@ -6,11 +6,20 @@ section#contacts {
         margin-left: 10px;
     }
 
+    div.search {
+        display: inline-block;
+        width: 250px;
+        margin-left: 10px;
+        padding-right: 10px;
+        border-right: 1px solid @lightGrey;
+    }
+
     form.add-contact {
         margin: 10px;
+        display: inline-block;
 
         div {
-            width: 300px;
+            width: 250px;
             display: inline-block;
             margin-right: 20px;
         }
@@ -35,7 +44,10 @@ section#contacts {
         div {
             display: inline-block;
             vertical-align: top;
-            width: 650px;
+        }
+
+        div.form, div.text {
+            width: 75%;
         }
 
         div.text {
@@ -43,7 +55,7 @@ section#contacts {
         }
 
         div.buttons {
-            width: 100px;
+            width: 25%;
             text-align: right;
         }
     }

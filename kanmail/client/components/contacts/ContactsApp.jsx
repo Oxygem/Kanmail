@@ -3,111 +3,59 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import HeaderBar from 'components/HeaderBar.jsx';
+import Contact from 'components/contacts/Contact.jsx';
+import AddNewContactForm from 'components/contacts/AddNewContactForm.jsx';
 
-
-class Contact extends React.Component {
-    static propTypes = {
-        email: PropTypes.string.isRequired,
-        name: PropTypes.string,
-    }
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            editing: false,
-            name: props.name,
-            email: props.email,
-        };
-    }
-
-    toggleEdit = () => {
-        this.setState({
-            editing: !this.state.editing,
-            deleteConfirm: false,
-        });
-    }
-
-    updateState = (key, ev) => {
-        this.setState({
-            [key]: ev.target.value,
-        });
-    }
-
-    handleClickDelete = () => {
-        if (!this.state.deleteConfirm) {
-            this.setState({
-                deleteConfirm: true,
-            });
-            return;
-        }
-    }
-
-    renderFormOrText() {
-        if (!this.state.editing) {
-            if (this.props.name) {
-                return <div className="text">{this.props.name} ({this.props.email})</div>;
-            }
-
-            return <div className="text">{this.props.email}</div>;
-        }
-
-        return (
-            <div>
-                <input
-                    type="text"
-                    value={this.state.name || ''}
-                    onChange={_.partial(this.updateState, 'name')}
-                />
-                <input
-                    type="email"
-                    value={this.state.email}
-                    onChange={_.partial(this.updateState, 'email')}
-                />
-            </div>
-        );
-    }
-
-    renderButtons() {
-        if (!this.state.editing) {
-            return (
-                <div>
-                    <button onClick={this.toggleEdit}>Edit</button>&nbsp;
-                    <button onClick={this.handleClickDelete} className="cancel">
-                        {this.state.deleteConfirm ? 'Are you SURE?' : 'Delete'}
-                    </button>
-                </div>
-            );
-        }
-
-        return (
-            <div>
-                <button className="submit">Update</button>&nbsp;
-                <button onClick={this.toggleEdit}>Cancel</button>
-            </div>
-        );
-    }
-
-    render() {
-        return (
-            <div className="contact">
-                {this.renderFormOrText()}
-                <div className="buttons">
-                    {this.renderButtons()}
-                </div>
-            </div>
-        );
-    }
-}
 
 export default class ContactsApp extends React.Component {
     static propTypes = {
         contacts: PropTypes.array.isRequired,
     }
 
-    renderContactList() {
-        return _.map(this.props.contacts, ([name, email]) => (
-            <Contact name={name} email={email} key={`${email}-${name}`} />
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            contacts: props.contacts,
+            contactsFilter: '',
+        };
+    }
+
+    addNewContact = (id, name, email) => {
+        const contacts = this.state.contacts;
+        contacts.unshift([id, name, email]);
+        this.setState({contacts});
+    }
+
+    deleteContact = (idToDelete) => {
+        const contacts = _.filter(this.state.contacts, ([id]) => id !== idToDelete);
+        this.setState({contacts});
+    }
+
+    handleFilter = (ev) => {
+        this.setState({
+            contactsFilter: ev.target.value,
+        });
+    }
+
+    renderContactList = () => {
+        let contacts = this.state.contacts;
+
+        if (this.state.contactsFilter) {
+            const filterText = this.state.contactsFilter.toLowerCase();
+
+            contacts = _.filter(contacts, ([, name, email]) => (
+                (name && name.toLowerCase().indexOf(filterText) >= 0) ||
+                email.toLowerCase().indexOf(filterText) >= 0
+            ));
+        }
+
+        return _.map(contacts, ([id, name, email]) => (
+            <Contact
+                id={id} key={id}
+                name={name} email={email}
+                deleteContact={this.deleteContact}
+            />
         ));
     }
 
@@ -117,22 +65,17 @@ export default class ContactsApp extends React.Component {
                 <HeaderBar />
 
                 <section id="contacts">
-                    <h2>{_.size(this.props.contacts)} Contacts</h2>
-
-                    <form className="add-contact">
-                        <div>
-                            <label htmlFor="name">Name</label>
-                            <input type="text" id="name" />
-                        </div>
-
-                        <div>
-                            <label htmlFor="email">Email</label>
-                            <input type="email" />
-                        </div>
-
-                        <button className="submit">Add contact</button>
-                    </form>
-
+                    <h2>{_.size(this.state.contacts)} Contacts</h2>
+                    <div className="search">
+                        <label htmlFor="search">Filter contacts</label>
+                        <input
+                            type="text"
+                            id="search"
+                            value={this.state.contactsFilter}
+                            onChange={this.handleFilter}
+                        />
+                    </div>
+                    <AddNewContactForm addNewContact={this.addNewContact} />
                     {this.renderContactList()}
                 </section>
             </div>
