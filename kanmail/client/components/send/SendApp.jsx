@@ -414,7 +414,7 @@ export default class SendApp extends React.Component {
             const label = makeContactLabel([name, email]);
             return {
                 label,
-                value: email,
+                value: [name, email],
                 lowercaseLabel: label.toLowerCase(),
             }
         });
