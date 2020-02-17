@@ -88,13 +88,15 @@ def bust_all_caches():
         db.session.commit()
 
 
-def save_cache_item(item):
-    db.session.add(item)
+def save_cache_items(*items):
+    for item in items:
+        db.session.add(item)
     db.session.commit()
 
 
-def delete_cache_item(item):
-    db.session.delete(item)
+def delete_cache_item(*items):
+    for item in items:
+        db.session.delete(item)
     db.session.commit()
 
 
@@ -115,7 +117,7 @@ class FolderCache(object):
                 account_name=self.folder.account.name,
                 folder_name=self.folder.name,
             )
-            save_cache_item(folder_cache_item)
+            save_cache_items(folder_cache_item)
 
         return folder_cache_item
 
@@ -130,13 +132,13 @@ class FolderCache(object):
         self.log('warning', 'busting the cache!')
         delete_cache_item(self.get_folder_cache_item())
 
-    # Get/set shortcuts
+    # Single operations
     #
 
     def set_uid_validity(self, uid_validity):
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uid_validity = uid_validity
-        save_cache_item(folder_cache_item)
+        save_cache_items(folder_cache_item)
 
     def get_uid_validity(self):
         uid_validity = self.get_folder_cache_item().uid_validity
@@ -146,7 +148,7 @@ class FolderCache(object):
     def set_uids(self, uids):
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uids = pickle_dumps(uids)
-        save_cache_item(folder_cache_item)
+        save_cache_items(folder_cache_item)
 
     def get_uids(self):
         uids = self.get_folder_cache_item().uids
@@ -166,7 +168,7 @@ class FolderCache(object):
                 data=headers_data,
             )
 
-        save_cache_item(headers)
+        save_cache_items(headers)
 
     def get_header_cache_item(self, uid):
         try:
