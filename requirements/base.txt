@@ -16,7 +16,7 @@ dnspython==1.15.0
 defusedxml==0.5.0
 tld==0.9.1
 requests==2.20.0
-pyupdater==3.1.1  # must match version in ./development.txt
+pyupdater==3.1.1
 
 # IMAPClient==2.1.0 - pending 2.2.0
 git+https://github.com/mjs/imapclient@580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87
