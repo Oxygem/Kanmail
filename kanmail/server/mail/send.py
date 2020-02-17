@@ -1,3 +1,4 @@
+from email.headerregistry import Address
 from email.message import EmailMessage
 from mimetypes import guess_type
 from os import path
@@ -5,18 +6,19 @@ from os import path
 from kanmail.log import logger
 from kanmail.version import get_version
 
-from .contacts import get_contacts
 from .util import markdownify
 
 
 def _make_address(obj):
+    name = ''
+    email = obj
+
     if isinstance(obj, (tuple, list)):
-        return '{0} <{1}>'.format(*obj)
-    else:
-        contacts = get_contacts()
-        if obj in contacts:
-            return _make_address((contacts[obj], obj))
-    return obj
+        name, email = obj
+        name = name or ''
+
+    username, domain = email.rsplit('@', 1)
+    return Address(name, username, domain)
 
 
 def _ensure_multiple(item):
@@ -46,17 +48,18 @@ def send_email(
     cc = _ensure_multiple(cc)
     bcc = _ensure_multiple(bcc)
 
-    to_addresses = to + cc + bcc
-
     message = EmailMessage()
 
     message['X-Mailer'] = f'Kanmail v{get_version()}'
 
     message['From'] = _make_address(from_)
-    message['To'] = ', '.join(_make_address(a) for a in to)
+    message['To'] = tuple(_make_address(a) for a in to)
 
     if cc:
-        message['Cc'] = ', '.join(_make_address(a) for a in cc)
+        message['Cc'] = tuple(_make_address(a) for a in cc)
+
+    if bcc:
+        message['Bcc'] = tuple(_make_address(a) for a in bcc)
 
     if subject:
         message['Subject'] = subject
@@ -98,6 +101,6 @@ def send_email(
     with smtp_connection.get_connection() as smtp:
         logger.debug((
             f'Send email via SMTP/{smtp_connection}: '
-            f'{subject}, from {from_} => {to_addresses}'
+            f'{subject}, from {message["From"]} => {message["To"]}'
         ))
-        smtp.sendmail(from_, to_addresses, message.as_string())
+        smtp.send_message(message)
