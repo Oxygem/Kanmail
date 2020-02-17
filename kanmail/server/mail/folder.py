@@ -169,9 +169,10 @@ class Folder(object):
 
         # First get/remove any cached headers before fetching
         uids_to_get = []
+        uid_to_cached_headers = self.cache.batch_get_headers(email_uids)
 
         for uid in email_uids:
-            cached_headers = self.cache.get_headers(uid)
+            cached_headers = uid_to_cached_headers.get(uid)
             if cached_headers:
                 emails.append(cached_headers)
             else:
@@ -203,13 +204,15 @@ class Folder(object):
 
         # Fix any dodgy UIDs
         email_headers = fix_email_uids(uids_to_get, email_headers)
+        uid_to_headers = {}
 
         for uid, data in email_headers.items():
             parts = parse_bodystructure(data[b'BODYSTRUCTURE'])
             headers = make_email_headers(self.account, self, uid, data, parts)
-
-            self.cache.set_headers(uid, headers)
             emails.append(headers)
+            uid_to_headers[uid] = headers
+
+        self.cache.batch_set_headers(uid_to_headers)
 
         return emails
 

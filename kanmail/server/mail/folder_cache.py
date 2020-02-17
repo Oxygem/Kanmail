@@ -193,3 +193,38 @@ class FolderCache(object):
         headers = self.get_headers(uid)
         if headers:
             return headers['parts']
+
+    # Batch operations
+    #
+
+    def batch_get_headers(self, uids):
+        matched_headers = (
+            FolderHeaderCacheItem.query
+            .filter_by(folder_id=self.get_folder_cache_item().id)
+            .filter(FolderHeaderCacheItem.uid.in_(uids))
+        )
+
+        return {
+            header.uid: pickle_loads(header.data)
+            for header in matched_headers
+        }
+
+    def batch_set_headers(self, uid_to_headers):
+        existing_headers = self.batch_get_headers(uid_to_headers.keys())
+        items_to_save = []
+
+        for uid, headers in uid_to_headers.items():
+            headers_data = pickle_dumps(headers)
+
+            existing_header = existing_headers.get(uid)
+            if existing_header:
+                existing_header.data = headers_data
+                items_to_save.append(existing_header)
+            else:
+                items_to_save.append(FolderHeaderCacheItem(
+                    folder_id=self.get_folder_cache_item().id,
+                    uid=uid,
+                    data=headers_data,
+                ))
+
+        save_cache_items(*items_to_save)
