@@ -3,6 +3,7 @@
 
 // Nicks: #5F42DA;
 @darkGrey: #343838;
+@midGrey: #A7A7A7;
 @lightGrey: #E7E7E7;
 
 @blue: #4498C4;
@@ -157,6 +158,12 @@ header {
     width: 49%;
 }
 
+.flex {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
 
 
 /*
@@ -192,6 +199,10 @@ button {
         }
     }
 
+    &.inactive {
+        background: @midGrey;
+    }
+
     &.disabled {
         background: @lightGrey;
         cursor: auto;
@@ -208,7 +219,12 @@ input {
     input:hover, input:focus {
         border-color: #D7D7D7;
     }
+
     &:hover, &:focus {
         border-color: #D7D7D7;
+    }
+
+    &.inline, &[type=checkbox] {
+        width: auto;
     }
 }

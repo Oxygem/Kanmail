@@ -13,6 +13,10 @@ section#settings {
         color: @orange;
     }
 
+    div.hidden {
+        display: none;
+    }
+
     button.main-button {
         padding: 15px;
         margin-left: 10px;
@@ -119,10 +123,18 @@ section#settings {
 
         label {
             display: block;
+
+            &.checkbox {
+                display: inline-block;
+            }
         }
 
-        button {
-            margin-left: 5px;
+        // button {
+        //     margin-left: 5px;
+        // }
+
+        div.top-bar {
+            margin-bottom: 20px;
         }
 
         div.right {
@@ -134,5 +146,9 @@ section#settings {
         input#name {
             width: 300px;
         }
+    }
+
+    form.account {
+        padding-bottom: 20px;
     }
 }

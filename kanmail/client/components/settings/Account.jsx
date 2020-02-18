@@ -10,6 +10,7 @@ import { post } from 'util/requests.js';
 const getInitialState = (props) => {
     return {
         editing: props.alwaysEditing || false,
+        editingTab: 'address',
         deleteConfirm: false,
 
         error: props.error,
@@ -268,9 +269,18 @@ export default class Account extends React.Component {
         if (this.state.editing) classes.push('active');
         if (this.props.alwaysEditing) classes.push('new');
 
+        const getTabButtonClass = tabName => (
+            this.state.editingTab == tabName ? 'submit' : 'inactive'
+        );
+
+        const setTab = (tabName, ev) => {
+            ev.preventDefault();
+            this.setState({editingTab: tabName});
+        };
+
         return (
             <form className={classes.join(' ')}>
-                <div className="wide">
+                <div className="wide top-bar">
                     <div className="right">
                         <button
                             type="submit"
@@ -290,63 +300,113 @@ export default class Account extends React.Component {
                         onChange={(ev) => this.setState({accountId: ev.target.value})}
                     />
                     <div className="error">{!this.state.errorType && this.state.error}</div>
+
+                    <div className="wide">
+                        <button
+                            className={getTabButtonClass('address')}
+                            onClick={_.partial(setTab, 'address')}
+                        >Addresses</button>
+                        <button
+                            className={getTabButtonClass('mailbox')}
+                            onClick={_.partial(setTab, 'mailbox')}
+                        >Mailboxes</button>
+                        <button
+                            className={getTabButtonClass('imap')}
+                            onClick={_.partial(setTab, 'imap')}
+                        >Incoming server</button>
+                        <button
+                            className={getTabButtonClass('smtp')}
+                            onClick={_.partial(setTab, 'smtp')}
+                        >Outgoing server</button>
+                    </div>
                 </div>
 
-                <div className="quarter">
-                    <h3>Addresses</h3>
-                    {this.renderAddresses()}
+                <div className={this.state.editingTab == 'address' ? 'wide' : 'hidden'}>
+                    <div className="flex wide">{this.renderAddresses()}</div>
                     <button className="submit" onClick={this.handleAddAddress}>
                         Add Address
                     </button>
                 </div>
 
-                <div className="quarter">
-                    <h3>IMAP Settings</h3>
+                <div className={this.state.editingTab == 'mailbox' ? 'wide' : 'hidden'}>
+                    <div className="flex wide">{this.renderFolderSettings()}</div>
+                </div>
+
+                <div className={this.state.editingTab == 'imap' ? 'wide' : 'hidden'}>
                     <div className="error">{this.state.errorType === 'imap' && this.state.error}</div>
-                    <label htmlFor="imapSettings-host">host</label>
-                    {this.renderInput('imapSettings', 'host')}
-                    <label htmlFor="imapSettings-port">port</label>
-                    {this.renderInput('imapSettings', 'port')}
-                    <label htmlFor="imapSettings-username">username</label>
-                    {this.renderInput('imapSettings', 'username')}
-                    <label htmlFor="imapSettings-password">password</label>
-                    {this.renderInput('imapSettings', 'password', {
-                        type: 'password',
-                        placeholder: 'enter to change'
-                    })}
-                    <label htmlFor="imapSettings-ssl">ssl?</label>
-                    {this.renderInput('imapSettings', 'ssl', {
-                        type: 'checkbox',
-                    })}
+                    <div className="flex wide">
+                        <div className="half">
+                            <label htmlFor="imapSettings-host">Hostname</label>
+                            {this.renderInput('imapSettings', 'host')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="imapSettings-port">Port</label>
+                            {this.renderInput('imapSettings', 'port')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="imapSettings-username">Username</label>
+                            {this.renderInput('imapSettings', 'username')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="imapSettings-password">Password</label>
+                            {this.renderInput('imapSettings', 'password', {
+                                type: 'password',
+                                placeholder: 'enter to change'
+                            })}
+                        </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="imapSettings-ssl"
+                            >SSL?</label>
+                            {this.renderInput('imapSettings', 'ssl', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                    </div>
                 </div>
 
-                <div className="quarter">
-                    <h3>SMTP Settings</h3>
+                <div className={this.state.editingTab == 'smtp' ? 'wide' : 'hidden'}>
                     <div className="error">{this.state.errorType === 'smtp' && this.state.error}</div>
-                    <label htmlFor="smtpSettings-host">host</label>
-                    {this.renderInput('smtpSettings', 'host')}
-                    <label htmlFor="smtpSettings-port">port</label>
-                    {this.renderInput('smtpSettings', 'port')}
-                    <label htmlFor="smtpSettings-username">username</label>
-                    {this.renderInput('smtpSettings', 'username')}
-                    <label htmlFor="smtpSettings-password">password</label>
-                    {this.renderInput('smtpSettings', 'password', {
-                        type: 'password',
-                        placeholder: 'enter to change',
-                    })}
-                    <label htmlFor="smtpSettings-ssl">ssl?</label>
-                    {this.renderInput('smtpSettings', 'ssl', {
-                        type: 'checkbox',
-                    })}
-                    <label htmlFor="smtpSettings-tls">tls?</label>
-                    {this.renderInput('smtpSettings', 'tls', {
-                        type: 'checkbox',
-                    })}
-                </div>
-
-                <div className="quarter">
-                    <h3>Folder Settings</h3>
-                    {this.renderFolderSettings()}
+                    <div className="flex wide">
+                        <div className="half">
+                            <label htmlFor="smtpSettings-host">Hostname</label>
+                            {this.renderInput('smtpSettings', 'host')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="smtpSettings-port">Port</label>
+                            {this.renderInput('smtpSettings', 'port')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="smtpSettings-username">Username</label>
+                            {this.renderInput('smtpSettings', 'username')}
+                        </div>
+                        <div className="half">
+                            <label htmlFor="smtpSettings-password">Password</label>
+                            {this.renderInput('smtpSettings', 'password', {
+                                type: 'password',
+                                placeholder: 'enter to change',
+                            })}
+                        </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="smtpSettings-ssl"
+                            >Use SSL?</label>
+                            {this.renderInput('smtpSettings', 'ssl', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="smtpSettings-tls"
+                            >Use TLS?</label>
+                            {this.renderInput('smtpSettings', 'tls', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                    </div>
                 </div>
             </form>
         );
