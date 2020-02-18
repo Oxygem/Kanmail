@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import { BaseStore } from 'stores/base.jsx';
 
-import { get, put } from 'util/requests.js';
+import { get, post } from 'util/requests.js';
 
 
 function arrayMove(arr, fromIndex, toIndex) {
@@ -30,7 +30,7 @@ class SettingsStore extends BaseStore {
 
     updateColumnsTriggerState() {
         // Save the new list of columns via the API before updating
-        return put('/api/settings', {
+        return post('/api/settings', {
             columns: this.props.columns,
         }).then(() => {
             this.triggerUpdate();

@@ -201,6 +201,16 @@ def get_style_setting(key: str, default: Optional[dict] = None) -> Union[None, s
     return get_settings()['style'].get(key, default)
 
 
+def overwrite_settings(settings: dict) -> list:
+    # "Merge" the settings to get the changed key list
+    current_settings = get_settings()
+    changed_keys = _merge_settings(current_settings, settings)
+
+    # Now just save the un-merged original
+    set_settings(settings)
+    return changed_keys
+
+
 def update_settings(settings_updates: dict) -> list:
     settings = get_settings()
     changed_keys = _merge_settings(settings, settings_updates)

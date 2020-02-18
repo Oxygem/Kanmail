@@ -7,6 +7,7 @@ from kanmail.server.mail.folder_cache import bust_all_caches
 from kanmail.settings import (
     get_settings,
     IS_APP,
+    overwrite_settings,
     set_cached_window_settings,
     update_settings,
 )
@@ -21,11 +22,11 @@ def api_get_settings():
     )
 
 
-@app.route('/api/settings', methods=('POST',))
+@app.route('/api/settings', methods=('PUT',))
 def api_set_settings():
     request_data = request.get_json()
 
-    changed_keys = update_settings(request_data)
+    changed_keys = overwrite_settings(request_data)
 
     # If sync days changes we need to nuke the caches
     if 'system.sync_days' in changed_keys:
@@ -37,7 +38,7 @@ def api_set_settings():
     return jsonify(saved=True)
 
 
-@app.route('/api/settings', methods=('PUT',))
+@app.route('/api/settings', methods=('POST',))
 def api_update_settings():
     request_data = request.get_json()
     update_settings(request_data)

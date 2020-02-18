@@ -8,7 +8,7 @@ import Account from 'components/settings/Account.jsx';
 import keyboard from 'keyboard.js';
 import { closeWindow } from 'window.js';
 
-import { delete_, get, post } from 'util/requests.js';
+import { delete_, get, post, put } from 'util/requests.js';
 
 
 const newAccountState = {
@@ -177,7 +177,7 @@ export default class SettingsApp extends React.Component {
             columns: this.props.settings.columns,
         };
 
-        post('/api/settings', newSettings)
+        put('/api/settings', newSettings)
             .then(() => {
                 closeWindow();
                 this.setState({isSaved: true});
