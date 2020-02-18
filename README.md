@@ -7,7 +7,7 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 ## Technical Details
 
 + Build on MacOS (beta), tested with Linux & Windows (alpha)
-+ Developed using Gmail & Outlook
++ Developed using Gmail, Outlook & Fastmail
 + Should be compabile with other email providers (uses IMAP/SMTP)
 + Python server / JavaScript web interface
 + Considered in "beta" - used as my main email client for >1yr
