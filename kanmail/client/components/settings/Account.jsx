@@ -15,6 +15,7 @@ const getInitialState = (props) => {
         error: props.error,
         errorType: props.errorType,
 
+        accountId: props.accountId,
         imapSettings: _.clone(props.accountSettings.imap_connection) || {},
         smtpSettings: _.clone(props.accountSettings.smtp_connection) || {},
         folderSettings: _.clone(props.accountSettings.folders) || {},
@@ -143,6 +144,7 @@ export default class Account extends React.Component {
                     folders: this.state.folderSettings,
                     contacts: filteredContacts,
                 },
+                this.state.accountId,  // handles renaming
             );
             if (!this.state.alwaysEditing) {
                 this.resetState();
@@ -255,7 +257,7 @@ export default class Account extends React.Component {
                             </button>
                         </div>
 
-                        <strong>{this.props.accountId}</strong><br />
+                        <strong>{this.state.accountId}</strong><br />
                         {this.state.imapSettings.username}
                     </div>
                 </div>
@@ -281,7 +283,12 @@ export default class Account extends React.Component {
                             onClick={this.props.alwaysEditing ? this.props.deleteAccount : this.toggleSettings}
                         ><i className="fa fa-times"></i></button>
                     </div>
-                    <strong>{this.props.accountId}</strong>
+                    <input
+                        className="inline"
+                        type="text"
+                        value={this.state.accountId}
+                        onChange={(ev) => this.setState({accountId: ev.target.value})}
+                    />
                     <div className="error">{!this.state.errorType && this.state.error}</div>
                 </div>
 

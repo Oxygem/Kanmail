@@ -57,12 +57,18 @@ export default class SettingsApp extends React.Component {
         });
     }
 
-    updateAccount = (accountId, newSettings) => {
+    updateAccount = (accountId, newSettings, newAccountId=null) => {
         if (!this.state.accounts[accountId]) {
             throw Error('nope');
         }
 
         const newAccounts = this.state.accounts;
+
+        if (newAccountId) {  // if we're renaming first remove the old account
+            delete newAccounts[accountId];
+            accountId = newAccountId;
+        }
+
         newAccounts[accountId] = newSettings;
 
         this.setState({
