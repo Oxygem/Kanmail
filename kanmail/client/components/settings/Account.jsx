@@ -37,14 +37,14 @@ class AccountAddress extends React.Component {
         const { contactTuple } = this.props;
 
         return (
-            <div>
-                <label>name</label>
+            <div className="half">
+                <label>Name</label>
                 <input
                     type="text"
                     value={contactTuple[0]}
                     onChange={this.props.updateName}
                 />
-                <label>email</label>
+                <label>Email</label>
                 <input
                     type="text"
                     value={contactTuple[1]}
@@ -197,14 +197,18 @@ export default class Account extends React.Component {
 
     renderFolderSettings() {
         return _.map(ALIAS_FOLDERS, folder => (
-            <div key={folder}>
-                <label htmlFor={`folderSettings-${folder}`}>{folder}</label>
+            <div className="half" key={folder}>
+                <label htmlFor={`folderSettings-${folder}`}>{_.upperFirst(folder)}</label>
                 {this.renderInput('folderSettings', folder)}
             </div>
         ));
     }
 
     renderAddresses() {
+        if (!this.state.contactSettings.length) {
+            return 'No addresses!';
+        }
+
         return _.map(this.state.contactSettings, (contactTuple, i) => {
             const updateName = (ev) => {
                 const { contactSettings } = this.state;
