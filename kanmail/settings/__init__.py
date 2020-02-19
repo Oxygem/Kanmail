@@ -11,6 +11,9 @@ from pydash import memoize
 
 from kanmail.log import logger, setup_logging
 
+from .model import get_default_settings, validate_settings
+
+
 APP_NAME = 'Kanmail'
 
 SERVER_PORT = 4420
@@ -59,7 +62,7 @@ CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
 
 # Get the client root directory - if we're frozen (by pyinstaller) this is relative
 # to the executable, otherwise ./client.
-CLIENT_ROOT = path.abspath(path.join(path.dirname(__file__), 'client'))
+CLIENT_ROOT = path.abspath(path.join(path.dirname(__file__), '..', 'client'))
 if FROZEN:
     CLIENT_ROOT = sys._MEIPASS
 
@@ -132,30 +135,7 @@ class PyUpdaterConfig(object):  # noqa: E302
 # "App"/user settings
 #
 
-def get_default_settings() -> dict:
-    return {
-        # Account key -> account details
-        'accounts': {},
-        # Columns (IMAP folders) to show in the UI
-        'columns': [],
-        # System/sync settings
-        'system': {
-            # Number of emails to download at once for non-inbox/columns
-            'batch_size': 50,
-            # Number of batches to sync initially, per column
-            'initial_batches': 3,
-            # Number of days email to sync (0=all)
-            'sync_days': 0,
-            # Number of ms between email syncs
-            'sync_interval': 60000,
-            # Number of ms to hold archive/trash actions before executing them - during
-            # which you can undo them.
-            'undo_ms': 5000,
-        },
-    }
-
-
-def _merge_settings(base_config: dict, new_config: dict, key_prefix=None) -> list:
+def _merge_settings(base_config: dict, new_config: dict, key_prefix: str = None) -> list:
     changed_keys = []
 
     for key, value in new_config.items():
@@ -219,6 +199,8 @@ def update_settings(settings_updates: dict) -> list:
 
 
 def set_settings(new_settings: dict) -> None:
+    validate_settings(new_settings)
+
     logger.debug(f'Writing new settings: {new_settings}')
     json_data = json.dumps(new_settings, indent=4)
 
