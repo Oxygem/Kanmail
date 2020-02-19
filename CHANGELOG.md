@@ -1,3 +1,74 @@
+# v1.2002191933
+
+Big release with lots of changes; highlights:
+- contact manager, less spammy contacts
+- rebuild cache with increased performance/less disk write
+- tidy up settings
+- test/validate working with fastmail
+
+Changes:
+- Don't use save dialog (broken?) when downloading files.
+- Remove unused view.
+- Save copies of emails sent if the `save_sent_copies` setting is true.
+- Add `Date` header to emails.
+- Don't assume emails have dates.
+- Remove unused `Folder.delete_messages` method.
+- Rename variable for explicitness.
+- Don't store contacts w/o a name.
+- Move actual sending of messages into account class.
+- Rename `send.py` -> `message.py`.
+- Add `save_sent_copies` folder setting to the settings app.
+- Implement error handling on settings save failures.
+- Rename `type` -> `method` in JS request util.
+- Ensure the settings app respects strict settings model.
+- Implement a settings model with validation.
+- Tidy up settings account edit.
+- Redo account settings with tabs.
+- Make it possible to rename accounts.
+- Update readme w/fastmail tested.
+- Add server support doc.
+- Sort out the settings API: separate overwrite from update.
+- Make `HeaderBar` reflect the header background style setting.
+- Return both name + email when selecting addresses in the send app.
+- Use the `email.headerregistry` package for addresses.
+- Fix contact manager form styles.
+- Remove sidebar borders.
+- Implement & use batch get/set header functions for the folder cache.
+- Modify save/delete cache methods to take multiple objects.
+- Explicitly define pyupdater-s3-plugin requirement.
+- Don't cache the folder ID.
+- Offer to build JS bundle when building only.
+- Reimplement the folder cache using sqlite.
+- Enable foreign keys in sqlite.
+- Fix folder pagination: don't mutate passed in UID list.
+- Add `flake8-quotes` development requirement.
+- Update `add_contact` function usage.
+- Finish `ContactsApp` component.
+- Improve add contact bounce/noreply email detection.
+- Add save/delete contact functions.
+- Add `KANMAIL_DEBUG_SMTP` environment variable flag.
+- Finish contacts API views.
+- Log settings errors as console errors, not log.
+- Add contacts window/page with stub management methods.
+- Fix send app loading of contact list.
+- Remove borders from column styles.
+- Add flask-sqlalchemy/sqlalchemy requirement.
+- Save contacts using sqlite/sqlalchemy.
+- Move form styles out of settings style.
+- Don't wait indefinitely the server to start.
+- Don't start monitor thread until after the server boots.
+- Add/use `destroy_main_window` function.
+- Remove email borders.
+- Don't save contacts from emails in spam/trash.
+- Don't save window settings in server mode.
+- Add Windows icon.
+- Update werkzeug `ImmutableDict` import.
+- Capture/retry additional `ImapClientError`'s.
+- Improve sidebar style of "update complete" text.
+- Remove restart device api/util.
+- Expand docker docs to include volume.
+- Fix writing of changelog.
+
 # v1.2002061815
 
 Changes:
