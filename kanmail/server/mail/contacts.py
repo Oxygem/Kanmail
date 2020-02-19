@@ -47,6 +47,9 @@ def delete_contact(contact):
 
 
 def add_contact(name, email):
+    if not name:
+        return
+
     if 'noreply' in email:
         return
 
