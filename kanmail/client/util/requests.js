@@ -8,7 +8,7 @@ import requestStore from 'stores/request.js';
 let currentCriticalRequestNonce = null;
 
 
-function handleReponse(response, criticalRequestNonce=false) {
+function handleReponse(response, method, criticalRequestNonce=false) {
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
         throw new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
     }
@@ -39,8 +39,8 @@ function handleReponse(response, criticalRequestNonce=false) {
                 requestStore.addRequestError(data);
             }
 
-            const error = new Error(`Error fetching: ${response.url}`);
-            error.data = body;
+            const error = new Error(`Error fetching: ${method} ${response.url}`);
+            error.data = data;
             throw error;
         });
     }
@@ -53,8 +53,8 @@ function handleReponse(response, criticalRequestNonce=false) {
 }
 
 
-function get_or_delete(type, url, query={}, criticalRequestNonce=false) {
-    console.debug(`Requesting: ${type} ${url}?:`, query, criticalRequestNonce);
+function get_or_delete(method, url, query={}, criticalRequestNonce=false) {
+    console.debug(`Requesting: ${method} ${url}?:`, query, criticalRequestNonce);
 
     const uri = URI(url);
 
@@ -64,11 +64,11 @@ function get_or_delete(type, url, query={}, criticalRequestNonce=false) {
 
     return (
         fetch(uri.query(query), {
-            method: type,
+            method,
         })
         .then(response => {
-            console.debug(`Response to ${type} ${url}`, response);
-            return handleReponse(response, criticalRequestNonce);
+            console.debug(`Response to ${method} ${url}`, response);
+            return handleReponse(response, method, criticalRequestNonce);
         })
     );
 }
@@ -78,8 +78,8 @@ export const get = _.partial(get_or_delete, 'GET');
 export const delete_ = _.partial(get_or_delete, 'DELETE');
 
 
-function post_or_put(type, url, data, criticalRequestNonce=false) {
-    console.debug(`Requesting: ${type} ${url} with: `, data, criticalRequestNonce);
+function post_or_put(method, url, data, criticalRequestNonce=false) {
+    console.debug(`Requesting: ${method} ${url} with: `, data, criticalRequestNonce);
 
     const uri = URI(url);
 
@@ -89,15 +89,15 @@ function post_or_put(type, url, data, criticalRequestNonce=false) {
 
     return (
         fetch(uri, {
-            method: type,
+            method,
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json',
             },
         })
         .then(response => {
-            console.debug(`Response to ${type} ${url}`, response);
-            return handleReponse(response, criticalRequestNonce);
+            console.debug(`Response to ${method} ${url}`, response);
+            return handleReponse(response, method, criticalRequestNonce);
         })
     );
 }
