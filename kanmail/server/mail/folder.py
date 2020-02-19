@@ -426,16 +426,8 @@ class Folder(object):
 
         return emails
 
-    # @lock_class_method
-    # def delete_emails(self, email_uids):
-    #     '''
-    #     Flag emails as deleted within this folder.
-    #     '''
-
-    #     self.log('debug', f'Deleting {len(email_uids)} ({email_uids}) emails')
-
-    #     with self.get_connection() as connection:
-    #         connection.delete_messages(email_uids)
+    # Functions that affect emails, but not any of the class internals
+    #
 
     def move_emails(self, email_uids, new_folder):
         '''
@@ -456,9 +448,6 @@ class Folder(object):
         with self.get_connection() as connection:
             connection.copy(email_uids, new_folder)
             connection.delete_messages(email_uids)
-
-    # Functions that affect emails, but not any of the class internals
-    #
 
     def copy_emails(self, email_uids, new_folder):
         '''
