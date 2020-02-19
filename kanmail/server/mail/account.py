@@ -64,14 +64,14 @@ class Account(object):
 
         return folder_names
 
-    def get_folder(self, folder, query=None):
+    def get_folder(self, folder_alias, query=None):
         '''
         Get a Folder object for this account.
         '''
 
-        folder_name = folder
-        if folder in self.settings['folders']:
-            folder_name = self.settings['folders'][folder]
+        folder_name = folder_alias
+        if folder_alias in self.settings['folders']:
+            folder_name = self.settings['folders'][folder_alias]
 
         # Is this a temporary query-based folder?
         cache = self.query_folders if query else self.folders
@@ -79,7 +79,7 @@ class Account(object):
 
         if cache_key not in cache:
             cache[cache_key] = Folder(
-                folder_name, folder,
+                folder_name, folder_alias,
                 account=self,
                 query=query,
             )
