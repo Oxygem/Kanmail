@@ -338,6 +338,13 @@ export default class Account extends React.Component {
                 </div>
 
                 <div className={this.state.editingTab == 'mailbox' ? 'wide' : 'hidden'}>
+                    <label
+                        className="checkbox"
+                        htmlFor="folderSettings-save_sent_copies"
+                    >Save copies of sent mail in the sent folder?</label>
+                    {this.renderInput('folderSettings', 'save_sent_copies', {
+                        'type': 'checkbox'
+                    })}
                     <div className="flex wide">{this.renderFolderSettings()}</div>
                 </div>
 
