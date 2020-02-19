@@ -93,6 +93,10 @@ def make_email_headers(account, folder, uid, data, parts):
 
     save_contacts = folder.alias_name not in ('spam', 'trash')
 
+    date = None
+    if envelope.date:
+        date = envelope.date.isoformat()
+
     return {
         'uid': uid,
         'seq': data[b'SEQ'],
@@ -108,7 +112,7 @@ def make_email_headers(account, folder, uid, data, parts):
         'folder_name': folder.alias_name,
 
         # Envelope data
-        'date': envelope.date.isoformat(),
+        'date': date,
         'subject': subject,
 
         # Address data
