@@ -2,7 +2,6 @@ from os import path
 
 from flask import jsonify, make_response, request
 
-from kanmail import settings
 from kanmail.server.app import app
 from kanmail.server.mail import (
     copy_folder_emails,
@@ -17,7 +16,8 @@ from kanmail.server.mail import (
     unstar_folder_emails,
 )
 from kanmail.server.util import get_list_or_400, get_or_400
-from kanmail.window import create_save_dialog, get_main_window
+from kanmail.settings import IS_APP
+from kanmail.window import get_main_window
 
 
 @app.route('/api/folders', methods=('GET',))
@@ -119,15 +119,8 @@ def api_download_account_email_part(account, folder, uid, part_number):
     Download a specific part of an email by account/folder/UID.
     '''
 
-    local_filename = create_save_dialog(
-        path.expanduser(path.join('~', 'Downloads')),
-        request.args['filename'],
-    )
-
-    if local_filename is None:
-        return jsonify(saved=False, cancelled=True)
-
-    local_filename = local_filename[0]
+    downloads_folder = path.expanduser(path.join('~', 'Downloads'))
+    local_filename = path.join(downloads_folder, request.args['filename'])
 
     mime_type, data = get_folder_email_part(
         account, folder, uid, part_number,
@@ -226,7 +219,7 @@ def api_send_account_email(account_key):
     )
 
     # Tell the main window to reload the sent folder
-    if settings.IS_APP:
+    if IS_APP:
         window = get_main_window()
         window.evaluate_js('window.mainEmailStore.syncFolderEmails("sent")')
 
