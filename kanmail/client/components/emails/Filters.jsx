@@ -23,7 +23,6 @@ const folderLinkTarget = {
 
     drop(props, monitor) {
         const { messageUids, oldColumn, accountName } = monitor.getItem();
-        console.log('DROPPED', oldColumn, accountName, props);
 
         const emailStore = getEmailStore();
 
@@ -153,7 +152,10 @@ export default class Filters extends React.Component {
             return null;
         }
 
-        sidebarFolders = sidebarFolders.split(',');
+        if (_.isString(sidebarFolders)) {
+            sidebarFolders = sidebarFolders.split(',');
+        }
+
         return this.renderFolderLinks(sidebarFolders);
     }
 

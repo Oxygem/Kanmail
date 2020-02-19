@@ -108,8 +108,13 @@ export default class Account extends React.Component {
     }
 
     handleUpdate = (settingsKey, key, ev) => {
+        let value = ev.target.value;
+        if (value && ev.target.type === 'number') {
+            value = parseInt(value);
+        }
+
         const target = this.state[settingsKey];
-        target[key] = ev.target.value;
+        target[key] = value;
 
         this.setState({
             [settingsKey]: target,
@@ -345,7 +350,9 @@ export default class Account extends React.Component {
                         </div>
                         <div className="half">
                             <label htmlFor="imapSettings-port">Port</label>
-                            {this.renderInput('imapSettings', 'port')}
+                            {this.renderInput('imapSettings', 'port', {
+                                'type': 'number',
+                            })}
                         </div>
                         <div className="half">
                             <label htmlFor="imapSettings-username">Username</label>
@@ -379,7 +386,9 @@ export default class Account extends React.Component {
                         </div>
                         <div className="half">
                             <label htmlFor="smtpSettings-port">Port</label>
-                            {this.renderInput('smtpSettings', 'port')}
+                            {this.renderInput('smtpSettings', 'port', {
+                                type: 'number',
+                            })}
                         </div>
                         <div className="half">
                             <label htmlFor="smtpSettings-username">Username</label>
