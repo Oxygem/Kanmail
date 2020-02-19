@@ -14,6 +14,7 @@ import { delete_, get, post, put } from 'util/requests.js';
 const newAccountState = {
     showAdvancedSettings: false,
     isSaving: false,
+    saveError: null,
 
     // Add account phase 1 - name/username/password autoconfig form
     addingAccount: false,
@@ -188,7 +189,7 @@ export default class SettingsApp extends React.Component {
                 closeWindow();
                 this.setState({isSaved: true});
             })
-            .catch(err => console.error('SETTING ERROR', err));
+            .catch(err => this.setState({saveError: err}));
     }
 
     handleBustCache = (ev) => {
@@ -350,7 +351,14 @@ export default class SettingsApp extends React.Component {
 
     renderSaveButton() {
         if (this.state.isSaving) {
-            const text = this.state.isSaved ? 'Settings saved, please close this window & reload the main one' : 'Saving...';
+            let text = 'Saving...';
+
+            if (this.state.saveError) {
+                text = `Error saving settings: ${this.state.saveError.data.errorMessage}`;
+            } else if (this.state.isSaved) {
+                text = 'Settings saved, please close this window & reload the main one';
+            }
+
             return (
                 <button
                     type="submit"
