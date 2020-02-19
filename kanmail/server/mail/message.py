@@ -1,5 +1,6 @@
 from email.headerregistry import Address
 from email.message import EmailMessage
+from email.utils import formatdate
 from mimetypes import guess_type
 from os import path
 
@@ -49,6 +50,7 @@ def make_email_message(
     message = EmailMessage()
 
     message['X-Mailer'] = f'Kanmail v{get_version()}'
+    message['Date'] = formatdate()
 
     message['From'] = _make_address(from_)
     message['To'] = tuple(_make_address(a) for a in to)
