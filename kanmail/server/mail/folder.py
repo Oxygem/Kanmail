@@ -429,6 +429,10 @@ class Folder(object):
     # Functions that affect emails, but not any of the class internals
     #
 
+    def append_email_message(self, email_message):
+        with self.account.get_imap_connection() as connection:
+            connection.append(self.name, email_message, flags=(SEEN_FLAG,))
+
     def move_emails(self, email_uids, new_folder):
         '''
         Move (copy + delete) emails (by UID) from this folder to another.
