@@ -177,26 +177,6 @@ def api_copy_account_emails(account, folder):
     return jsonify(copied=True)
 
 
-# @app.route('/api/emails/<account>/<folder>/delete', methods=('POST',))
-# def api_delete_account_emails(account, folder):
-#     '''
-#     Delete emails from a folder in a given account.
-#     '''
-
-#     from time import sleep
-#     from flask import abort
-
-#     sleep(5)
-#     abort(500)
-
-#     request_data = request.get_json()
-#     message_uids = get_or_400(request_data, 'message_uids')
-
-#     delete_folder_emails(account, folder, message_uids)
-
-#     return jsonify(deleted=True)
-
-
 @app.route('/api/emails/<account>/<folder>/star', methods=('POST',))
 def api_star_account_emails(account, folder):
     '''
