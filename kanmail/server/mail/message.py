@@ -3,7 +3,6 @@ from email.message import EmailMessage
 from mimetypes import guess_type
 from os import path
 
-from kanmail.log import logger
 from kanmail.version import get_version
 
 from .util import markdownify
@@ -31,8 +30,7 @@ def _ensure_multiple(item):
     return item
 
 
-def send_email(
-    smtp_connection,
+def make_email_message(
     from_,
     to=None, cc=None, bcc=None,
     subject=None, text=None, html=None,
@@ -97,10 +95,4 @@ def send_email(
                     filename=path.basename(attachment),
                 )
 
-    # Send the email!
-    with smtp_connection.get_connection() as smtp:
-        logger.debug((
-            f'Send email via SMTP/{smtp_connection}: '
-            f'{subject}, from {message["From"]} => {message["To"]}'
-        ))
-        smtp.send_message(message)
+    return message

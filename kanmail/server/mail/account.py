@@ -2,7 +2,7 @@ from kanmail.log import logger
 
 from .connection import ImapConnectionPool, SmtpConnection
 from .folder import Folder
-from .send import send_email
+from .message import make_email_message
 
 
 class Account(object):
@@ -100,4 +100,12 @@ class Account(object):
         return folder.name
 
     def send_email(self, **send_kwargs):
-        return send_email(self.smtp_connection, **send_kwargs)
+        message = make_email_message(**send_kwargs)
+        subject = send_kwargs.get('subject')
+
+        with self.smtp_connection.get_connection() as smtp:
+            logger.debug((
+                f'Send email via SMTP/{self.smtp_connection}: '
+                f'{subject}, from {message["From"]} => {message["To"]}'
+            ))
+            smtp.send_message(message)
