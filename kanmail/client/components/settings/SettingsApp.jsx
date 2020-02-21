@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
+import { Creatable } from 'react-select';
 
 import HeaderBar from 'components/HeaderBar.jsx';
 import Account from 'components/settings/Account.jsx';
@@ -46,6 +47,14 @@ export default class SettingsApp extends React.Component {
             styleSettings: props.settings.style || {},
             ...newAccountState,
         };
+
+        const sidebarFolderOptions = _.map(
+            this.state.styleSettings.sidebar_folders,
+            folder => ({label: folder, value: folder}),
+        );
+
+        this.state.initialSidebarFolderOptions = sidebarFolderOptions;
+        this.state.styleSettings.sidebar_folders = sidebarFolderOptions;
     }
 
     resetState = () => {
@@ -154,18 +163,21 @@ export default class SettingsApp extends React.Component {
         });
     }
 
-    handleSettingUpdate = (stateKey, key, ev) => {
-        let value = ev.target.value;
-        if (value && ev.target.type === 'number') {
-            value = parseInt(value);
-        }
-
+    handleSettingUpdate = (stateKey, key, value) => {
         const settings = this.state[stateKey];
         settings[key] = value;
 
         this.setState({
             [stateKey]: settings,
         });
+    }
+
+    handleInputUpdate = (stateKey, key, ev) => {
+        let value = ev.target.value;
+        if (value && ev.target.type === 'number') {
+            value = parseInt(value);
+        }
+        return this.handleSettingUpdate(stateKey, key, value);
     }
 
     handleSaveSettings = (ev) => {
@@ -180,9 +192,14 @@ export default class SettingsApp extends React.Component {
         const newSettings = {
             accounts: this.state.accounts,
             system: this.state.systemSettings,
-            style: this.state.styleSettings,
+            style: _.clone(this.state.styleSettings),
             columns: this.props.settings.columns,
         };
+
+        newSettings.style.sidebar_folders = _.map(
+            newSettings.style.sidebar_folders,
+            option => option.value,
+        );
 
         put('/api/settings', newSettings)
             .then(() => {
@@ -314,7 +331,7 @@ export default class SettingsApp extends React.Component {
                     id="batch_size"
                     value={this.state.systemSettings.batch_size}
                     onChange={_.partial(
-                        this.handleSettingUpdate,
+                        this.handleInputUpdate,
                         'systemSettings', 'batch_size',
                     )}
                 />
@@ -329,7 +346,7 @@ export default class SettingsApp extends React.Component {
                     id="initial_batches"
                     value={this.state.systemSettings.initial_batches}
                     onChange={_.partial(
-                        this.handleSettingUpdate,
+                        this.handleInputUpdate,
                         'systemSettings', 'initial_batches',
                     )}
                 />
@@ -403,7 +420,7 @@ export default class SettingsApp extends React.Component {
                             id="header_background"
                             value={this.state.styleSettings.header_background}
                             onChange={_.partial(
-                                this.handleSettingUpdate,
+                                this.handleInputUpdate,
                                 'styleSettings', 'header_background',
                             )}
                         />
@@ -414,16 +431,20 @@ export default class SettingsApp extends React.Component {
                                 comma separated folder names to show in the sidebar
                             </small>
                         </label>
-                        <input
-                            required
-                            type="text"
-                            id="sidebar_folders"
-                            value={this.state.styleSettings.sidebar_folders}
-                            onChange={_.partial(
-                                this.handleSettingUpdate,
-                                'styleSettings', 'sidebar_folders',
-                            )}
-                        />
+                        <div class="select-wrapper">
+                            <Creatable
+                                isMulti
+                                defaultOptions
+                                cacheOptions
+                                classNamePrefix="react-select"
+                                options={this.state.initialSidebarFolderOptions}
+                                value={this.state.styleSettings.sidebar_folders}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'sidebar_folders',
+                                )}
+                            />
+                        </div>
                     </div>
 
                     <div className="settings" id="style">
@@ -437,7 +458,7 @@ export default class SettingsApp extends React.Component {
                             id="undo_ms"
                             value={this.state.systemSettings.undo_ms}
                             onChange={_.partial(
-                                this.handleSettingUpdate,
+                                this.handleInputUpdate,
                                 'systemSettings', 'undo_ms',
                             )}
                         />
@@ -454,7 +475,7 @@ export default class SettingsApp extends React.Component {
                             id="sync_interval"
                             value={this.state.systemSettings.sync_interval}
                             onChange={_.partial(
-                                this.handleSettingUpdate,
+                                this.handleInputUpdate,
                                 'systemSettings', 'sync_interval',
                             )}
                         />
@@ -472,7 +493,7 @@ export default class SettingsApp extends React.Component {
                             id="sync_days"
                             value={this.state.systemSettings.sync_days}
                             onChange={_.partial(
-                                this.handleSettingUpdate,
+                                this.handleInputUpdate,
                                 'systemSettings', 'sync_days',
                             )}
                         />
