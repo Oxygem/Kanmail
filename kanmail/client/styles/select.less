@@ -1,0 +1,56 @@
+/*
+    React select overrides */
+
+div.react-select__control {
+    background: transparent;
+    border-radius: @borderRadius;
+    border: 1px solid @formBorderGrey;
+    min-height: 0;
+    box-shadow: none;
+    font-size: 14px;
+    padding: 0 7px;
+
+    &:hover {
+        border-color: @formBorderGreyHover;
+    }
+}
+
+div.react-select__control--is-focused {
+    border-color: @formBorderGreyActive !important;
+}
+
+span.react-select__indicator-separator {
+    margin-right: 5px;
+    background: @formBorderGrey;
+}
+
+div.react-select__menu {
+    border-radius: 0;
+    border: 1px solid @formBorderGreyHover;
+    box-shadow: none;
+    margin: 0;
+}
+
+div.react-select__option {
+    padding: 0 8px;
+}
+
+div.react-select__input {
+    margin-left: -2px;
+}
+
+div.react-select__value-container {
+    height: 30px;
+    overflow-y: auto;
+}
+
+div.react-select__value-container,
+div.react-select__indicator,
+div.react-select__menu-notice {
+    padding: 0;
+}
+
+div.react-select__multi-value__label {
+    margin: 1px;
+    padding: 0;
+}
