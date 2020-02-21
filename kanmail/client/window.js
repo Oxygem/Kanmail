@@ -22,8 +22,7 @@ export function openWindow(path, options) {
     if (window.KANMAIL_IS_APP) {
         get('/open-window', {
             url: path,
-            width: options.width,
-            height: options.height,
+            ...options,
         });
     } else {
         window.open(
@@ -36,6 +35,7 @@ export function openWindow(path, options) {
 
 export function openSettings() {
     openWindow('/settings', {
+        unique_key: 'settings',
         width: 800,
         height: 600,
         title: 'Kanmail Settings',
@@ -44,6 +44,7 @@ export function openSettings() {
 
 export function openContacts() {
     openWindow('/contacts', {
+        unique_key: 'contacts',
         width: 800,
         height: 600,
         title: 'Kanmail Contacts',
