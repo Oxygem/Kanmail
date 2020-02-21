@@ -323,7 +323,7 @@ export default class SettingsApp extends React.Component {
                 </h2>
                 <label htmlFor="batch_size">
                     Batch size
-                    <small>number of emails to fetch at once</small>
+                    <small>Number of emails to fetch at once.</small>
                 </label>
                 <input
                     required
@@ -354,7 +354,7 @@ export default class SettingsApp extends React.Component {
                 <label>
                     Clear cache
                     <small>
-                        any settings changes will be lost,<br />
+                        Any settings changes will be lost,<br />
                         will immediately reload the app
                     </small>
                 </label>
@@ -413,7 +413,7 @@ export default class SettingsApp extends React.Component {
                         <h2>Appearance</h2>
                         <label htmlFor="header_background">
                             Header background
-                            <small>header background colour</small>
+                            <small>Header background colour</small>
                         </label>
                         <input
                             type="text"
@@ -428,10 +428,10 @@ export default class SettingsApp extends React.Component {
                         <label htmlFor="sidebar_folders">
                             Sidebar folders
                             <small>
-                                comma separated folder names to show in the sidebar
+                                Folders to show in the sidebar
                             </small>
                         </label>
-                        <div class="select-wrapper">
+                        <div className="select-wrapper">
                             <Creatable
                                 isMulti
                                 defaultOptions
@@ -451,7 +451,7 @@ export default class SettingsApp extends React.Component {
                         <h2>Sync</h2>
                         <label htmlFor="undo_ms">
                             Undo time (ms)
-                            <small>length of time to undo actions</small>
+                            <small>Length of time to undo actions</small>
                         </label>
                         <input
                             type="number"
@@ -466,7 +466,7 @@ export default class SettingsApp extends React.Component {
                         <label htmlFor="sync_interval">
                             Update interval (ms)
                             <small>
-                                how often to fetch new emails
+                                How often to fetch new emails
                             </small>
                         </label>
                         <input
@@ -483,7 +483,7 @@ export default class SettingsApp extends React.Component {
                         <label htmlFor="sync_days">
                             Sync days
                             <small>
-                                days of email to sync (0 = all)<br />
+                                Days of email to sync (0 = all)<br />
                                 note: this does not affect search
                             </small>
                         </label>
