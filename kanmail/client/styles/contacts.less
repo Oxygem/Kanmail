@@ -1,7 +1,4 @@
 section#contacts {
-    height: 100%;
-    overflow-y: auto;
-
     h2 {
         margin-left: 10px;
     }
@@ -25,16 +22,22 @@ section#contacts {
         }
     }
 
+    div#contact-list {
+        overflow-y: auto;
+        position: absolute;
+        top: 170px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid @lightGrey;
+    }
+
     div.contact {
         padding: 10px;
         height: 50px;
 
         &:hover {
-            background: @lightGrey;
-        }
-
-        &:last-child {
-            margin-bottom: 50px;
+            background: @lightestGrey;
         }
 
         input {

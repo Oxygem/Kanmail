@@ -76,7 +76,7 @@ export default class ContactsApp extends React.Component {
                         />
                     </div>
                     <AddNewContactForm addNewContact={this.addNewContact} />
-                    {this.renderContactList()}
+                    <div id="contact-list">{this.renderContactList()}</div>
                 </section>
             </div>
         );
