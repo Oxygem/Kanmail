@@ -6,8 +6,8 @@ import sys
 sys.path.append('.')  # noqa: E402
 os.environ['KANMAIL_MODE'] = 'server'  # noqa: E402
 
-from kanmail import settings
 from kanmail.server.app import app, boot
+from kanmail.settings.constants import DEBUG, SERVER_PORT
 
 
 # Bootstrap the server
@@ -17,6 +17,6 @@ boot()
 app.run(
     host='0.0.0.0',
     threaded=True,
-    debug=settings.DEBUG,
-    port=settings.SERVER_PORT,
+    debug=DEBUG,
+    port=SERVER_PORT,
 )

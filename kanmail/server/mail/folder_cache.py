@@ -8,7 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from kanmail.log import logger
 from kanmail.server.app import db
 from kanmail.server.util import lock_class_method
-from kanmail.settings import CACHE_ENABLED
+from kanmail.settings.constants import CACHE_ENABLED
 
 
 # Database models

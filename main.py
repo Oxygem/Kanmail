@@ -9,14 +9,11 @@ import webview
 from kanmail.device import register_or_ping_device
 from kanmail.log import logger
 from kanmail.server.app import app, boot
-from kanmail.settings import (
+from kanmail.settings import get_window_settings
+from kanmail.settings.constants import (
     DEBUG,
     GUI_LIB,
     SERVER_PORT,
-    WINDOW_HEIGHT,
-    WINDOW_LEFT,
-    WINDOW_TOP,
-    WINDOW_WIDTH,
 )
 from kanmail.version import get_version
 from kanmail.window import create_window, destroy_main_window
@@ -89,11 +86,8 @@ def main():
         sys.exit(2)
 
     create_window(
-        width=WINDOW_WIDTH,
-        height=WINDOW_HEIGHT,
-        x=WINDOW_LEFT,
-        y=WINDOW_TOP,
         unique_key='main',
+        **get_window_settings(),
     )
 
     # Let's hope this thread doesn't fail!

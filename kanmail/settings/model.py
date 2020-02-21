@@ -3,6 +3,8 @@ import uuid
 from typing import Optional
 
 
+KEY = uuid.uuid4().hex
+
 CONNECTION_DEFAULTS = {
     'username': str,
     'password': str,
@@ -10,8 +12,6 @@ CONNECTION_DEFAULTS = {
     'port': int,
     'ssl': bool,
 }
-
-KEY = uuid.uuid4().hex
 
 MODEL = {
     'columns': [str],
@@ -79,6 +79,7 @@ def _validate_key(value, spec, path):
     if isinstance(spec, list):
         if not isinstance(value, list):
             raise _make_type_error(value, spec, path)
+
         for i, s in enumerate(spec):
             _validate_key(value[i], s, path)
         return
@@ -86,7 +87,6 @@ def _validate_key(value, spec, path):
     if isinstance(spec, tuple):
         spec = spec[0]
 
-    if not isinstance(value, spec):
         raise _make_type_error(value, spec, path)
 
 

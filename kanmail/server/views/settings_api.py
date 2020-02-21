@@ -1,16 +1,15 @@
 from flask import jsonify, request
 
-from kanmail import settings
 from kanmail.server.app import app
 from kanmail.server.mail import reset_account_folders
 from kanmail.server.mail.folder_cache import bust_all_caches
 from kanmail.settings import (
     get_settings,
-    IS_APP,
     overwrite_settings,
-    set_cached_window_settings,
+    set_window_settings,
     update_settings,
 )
+from kanmail.settings.constants import IS_APP, SETTINGS_FILE
 from kanmail.window import get_main_window_size_position, reload_main_window
 
 
@@ -18,7 +17,7 @@ from kanmail.window import get_main_window_size_position, reload_main_window
 def api_get_settings():
     return jsonify(
         settings=get_settings(),
-        settings_file=settings.SETTINGS_FILE,
+        settings_file=SETTINGS_FILE,
     )
 
 
@@ -58,5 +57,5 @@ def api_update_window_settings():
         return jsonify(saved=False)  # success response, but not saved (browser mode)
 
     window_settings = get_main_window_size_position()
-    set_cached_window_settings(**window_settings)
+    set_window_settings(**window_settings)
     return jsonify(saved=True)

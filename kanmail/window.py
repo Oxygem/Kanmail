@@ -4,7 +4,7 @@ from uuid import uuid4
 import webview
 
 from kanmail.log import logger
-from kanmail.settings import FRAMELESS, IS_APP, SERVER_PORT
+from kanmail.settings.constants import FRAMELESS, IS_APP, SERVER_PORT
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows

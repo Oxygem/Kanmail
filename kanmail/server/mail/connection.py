@@ -10,7 +10,7 @@ from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError
 
 from kanmail.log import logger
-from kanmail.settings import DEBUG_SMTP
+from kanmail.settings.constants import DEBUG_SMTP
 
 DEFAULT_ATTEMPTS = 10
 DEFAULT_CONNECTIONS = 10

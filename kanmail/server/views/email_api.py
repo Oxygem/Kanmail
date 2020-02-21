@@ -16,7 +16,7 @@ from kanmail.server.mail import (
     unstar_folder_emails,
 )
 from kanmail.server.util import get_list_or_400, get_or_400
-from kanmail.settings import IS_APP
+from kanmail.settings.constants import IS_APP
 from kanmail.window import get_main_window
 
 

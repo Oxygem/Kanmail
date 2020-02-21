@@ -8,7 +8,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from kanmail.log import logger
-from kanmail.settings import (
+from kanmail.settings.constants import (
     CLIENT_ROOT,
     CONTACTS_CACHE_DB_FILE,
     FOLDER_CACHE_DB_FILE,

@@ -13,7 +13,7 @@ from pyupdater.client import Client as PyUpdaterClient
 from requests.exceptions import ConnectionError, HTTPError
 
 from kanmail.log import logger
-from kanmail.settings import (
+from kanmail.settings.constants import (
     APP_NAME,
     DEVICE_ID_FILE,
     FROZEN,

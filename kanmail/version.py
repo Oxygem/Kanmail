@@ -5,7 +5,7 @@ from typing import Dict
 
 from pydash import memoize
 
-from kanmail.settings import CLIENT_ROOT
+from kanmail.settings.constants import CLIENT_ROOT
 
 
 @memoize

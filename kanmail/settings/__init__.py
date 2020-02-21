@@ -1,82 +1,26 @@
 import json
 import pickle
-import platform
-import sys
 
-from os import environ, makedirs, path
+from os import makedirs, path
 from typing import Optional, Union
 
-from click import get_app_dir
 from pydash import memoize
 
 from kanmail.log import logger, setup_logging
 
+from .constants import (
+    APP_DIR,
+    CACHE_DIR,
+    DEBUG,
+    DEFAULT_WINDOW_HEIGHT,
+    DEFAULT_WINDOW_LEFT,
+    DEFAULT_WINDOW_TOP,
+    DEFAULT_WINDOW_WIDTH,
+    LOG_FILE,
+    SETTINGS_FILE,
+    WINDOW_CACHE_FILE,
+)
 from .model import get_default_settings, validate_settings
-
-
-APP_NAME = 'Kanmail'
-
-SERVER_PORT = 4420
-
-
-# App directory/filenames
-#
-
-# "App" directory for this user - settings/logs/cache go here
-APP_DIR = get_app_dir(APP_NAME)
-
-# Cache directory
-CACHE_DIR = path.join(APP_DIR, 'cache')
-
-CONTACTS_CACHE_DB_FILE = path.join(CACHE_DIR, 'contacts.db')
-FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
-
-# Device ID cache filename
-DEVICE_ID_FILE = path.join(CACHE_DIR, '.device_id')
-# Window settings/position cache filename
-WINDOW_CACHE_FILE = path.join(CACHE_DIR, '.window_position')
-
-# Settings JSON filename
-SETTINGS_FILE = path.join(APP_DIR, 'settings.json')
-
-# Log filename
-LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
-
-
-# Environment flags
-#
-
-# Flag to tell us whether we're running in debug mode
-DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
-DEBUG_SMTP = environ.get('KANMAIL_DEBUG_SMTP') == 'on'
-
-# Flag to tell us whether we're a frozen app (bundled)
-FROZEN = getattr(sys, 'frozen', False)
-
-# Flag to tell us whether we're running as an app (frozen or not)
-IS_APP = environ.get('KANMAIL_MODE', 'app') == 'app'
-
-# Flag to tell us whether to disable the cache
-CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
-
-
-# Get the client root directory - if we're frozen (by pyinstaller) this is relative
-# to the executable, otherwise ./client.
-CLIENT_ROOT = path.abspath(path.join(path.dirname(__file__), '..', 'client'))
-if FROZEN:
-    CLIENT_ROOT = sys._MEIPASS
-
-
-# Platform specific interface settings
-PLATFORM = platform.system()
-FRAMELESS = IS_APP and PLATFORM == 'Darwin'
-
-platform_to_gui = {
-    'Darwin': 'cocoa',
-    'Linux': 'gtk',
-    'Windows': 'winforms',
-}
-GUI_LIB = platform_to_gui[PLATFORM]
 
 
 # Bootstrap logging before we use logging!
@@ -91,51 +35,14 @@ setup_logging(debug=DEBUG, log_file=LOG_FILE)
 logger.debug(f'App dir set to: {APP_DIR}')
 
 
-# Window settings
-#
-
-WINDOW_WIDTH = 1400
-WINDOW_HEIGHT = 800
-WINDOW_LEFT = 0
-WINDOW_TOP = 0
-
-# Get any cached window settings
-if path.exists(WINDOW_CACHE_FILE):
-    with open(WINDOW_CACHE_FILE, 'rb') as f:
-        data = pickle.loads(f.read())
-    logger.debug(f'Loaded window settings: {data}')
-    for k, v in data.items():
-        locals()[k] = v
-
-
-# Server settings
-#
-
-UPDATE_SERVER = 'https://updates.kanmail.io'
-LICENSE_SERVER = 'https://license.kanmail.io'
-
-if DEBUG:
-    UPDATE_SERVER = environ.get(
-        'KANMAIL_UPDATE_SERVER',
-        'http://localhost:5000/updates',
-    )
-    LICENSE_SERVER = environ.get(
-        'KANMAIL_LICENSE_SERVER',
-        'http://localhost:5000',
-    )
-
-class PyUpdaterConfig(object):  # noqa: E302
-    PUBLIC_KEY = 'c++zSv15DkOJItm9YoUvIbUBXZZaVWF8YheJlMoU0HU'
-    COMPANY_NAME = 'Oxygem'
-    APP_NAME = APP_NAME
-    UPDATE_URLS = [UPDATE_SERVER]
-    MAX_DOWNLOAD_RETRIES = 3
-
-
 # "App"/user settings
 #
 
-def _merge_settings(base_config: dict, new_config: dict, key_prefix: str = None) -> list:
+def _merge_settings(
+    base_config: dict,
+    new_config: dict,
+    key_prefix: str = None,
+) -> list:
     changed_keys = []
 
     for key, value in new_config.items():
@@ -211,12 +118,36 @@ def set_settings(new_settings: dict) -> None:
     get_settings.cache = {}
 
 
-def set_cached_window_settings(width: int, height: int, left: int, top: int) -> None:
+def get_window_settings() -> dict:
+    settings = {
+        'width': DEFAULT_WINDOW_WIDTH,
+        'height': DEFAULT_WINDOW_HEIGHT,
+        'x': DEFAULT_WINDOW_LEFT,
+        'y': DEFAULT_WINDOW_TOP,
+    }
+
+    if path.exists(WINDOW_CACHE_FILE):
+        with open(WINDOW_CACHE_FILE, 'rb') as f:
+            data = pickle.loads(f.read())
+        logger.debug(f'Loaded window settings: {data}')
+
+        for key, value in data.items():
+            if key.startswith('WINDOW_'):  # COMPAT w/old style
+                key = key.split('_')[1].lower()
+                logger.warning(f'Updated old window setting: WINDOW_{key} -> {key}')
+
+            if key in settings:
+                settings[key] = value
+
+    return settings
+
+
+def set_window_settings(width: int, height: int, left: int, top: int) -> None:
     window_settings = {
-        'WINDOW_WIDTH': width,
-        'WINDOW_HEIGHT': height,
-        'WINDOW_LEFT': left,
-        'WINDOW_TOP': top,
+        'width': width,
+        'height': height,
+        'left': left,
+        'top': top,
     }
 
     logger.debug(f'Writing window settings: {window_settings}')
