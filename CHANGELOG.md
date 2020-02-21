@@ -1,3 +1,13 @@
+# v1.2002211810
+
+Changes:
+- Make the form on contacts page top sticky.
+- Label copy tidy on settings.
+- Only allow one contacts/settings window at once.
+- Use more less variables.
+- Turn the sidebar folder list into a proper multiselect in settings.
+- Move react select styles into own file.
+
 # v1.2002191933
 
 Big release with lots of changes; highlights:
