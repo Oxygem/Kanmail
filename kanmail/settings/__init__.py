@@ -80,11 +80,17 @@ def get_settings() -> dict:
     return settings
 
 
-def get_system_setting(key: str, default: Optional[dict] = None) -> Union[None, str, int]:
+def get_system_setting(
+    key: str,
+    default: Optional[dict] = None,
+) -> Union[None, str, int]:
     return get_settings()['system'].get(key, default)
 
 
-def get_style_setting(key: str, default: Optional[dict] = None) -> Union[None, str, int]:
+def get_style_setting(
+    key: str,
+    default: Optional[dict] = None,
+) -> Union[None, str, int]:
     return get_settings()['style'].get(key, default)
 
 
