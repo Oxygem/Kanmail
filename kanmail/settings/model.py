@@ -87,6 +87,7 @@ def _validate_key(value, spec, path):
     if isinstance(spec, tuple):
         spec = spec[0]
 
+    if not isinstance(value, spec):
         raise _make_type_error(value, spec, path)
 
 
