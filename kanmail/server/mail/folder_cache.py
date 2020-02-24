@@ -136,6 +136,7 @@ class FolderCache(object):
     #
 
     def set_uid_validity(self, uid_validity):
+        self.log('debug', f'Save UID validity: {uid_validity}')
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uid_validity = uid_validity
         save_cache_items(folder_cache_item)
@@ -146,6 +147,7 @@ class FolderCache(object):
             return int(uid_validity)
 
     def set_uids(self, uids):
+        self.log('debug', f'Saving {len(uids)} UIDs')
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uids = pickle_dumps(uids)
         save_cache_items(folder_cache_item)
@@ -156,6 +158,8 @@ class FolderCache(object):
             return pickle_loads(uids)
 
     def set_headers(self, uid, headers):
+        self.log('debug', f'Set headers for UID {uid}: {headers}')
+
         headers_data = pickle_dumps(headers)
 
         headers = self.get_header_cache_item(uid)
@@ -198,6 +202,8 @@ class FolderCache(object):
     #
 
     def batch_get_headers(self, uids):
+        self.log('debug', f'Batch get {len(uids)} headers')
+
         matched_headers = (
             FolderHeaderCacheItem.query
             .filter_by(folder_id=self.get_folder_cache_item().id)
@@ -210,6 +216,8 @@ class FolderCache(object):
         }
 
     def batch_set_headers(self, uid_to_headers):
+        self.log('debug', f'Batch set {len(uid_to_headers)} headers')
+
         existing_headers = self.batch_get_headers(uid_to_headers.keys())
         items_to_save = []
 

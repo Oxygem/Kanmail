@@ -1,5 +1,6 @@
 from pydash import memoize
 
+from kanmail.log import logger
 from kanmail.server.app import db
 
 
@@ -31,6 +32,8 @@ def get_contacts(with_id=False):
 
 
 def save_contact(contact):
+    logger.debug(f'Saving contact: {contact}')
+
     db.session.add(contact)
     db.session.commit()
 
@@ -39,6 +42,8 @@ def save_contact(contact):
 
 
 def delete_contact(contact):
+    logger.debug(f'Deleting contact: {contact}')
+
     db.session.delete(contact)
     db.session.commit()
 
@@ -68,6 +73,7 @@ def is_valid_contact(name, email):
 
 def add_contact(name, email):
     if not is_valid_contact(name, email):
+        logger.debug(f'Not saving invalid contact: ({name} {email})')
         return
 
     if (name, email) in get_contacts():
