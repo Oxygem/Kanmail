@@ -46,29 +46,32 @@ def delete_contact(contact):
     get_contacts.cache = {}
 
 
-def add_contact(name, email):
+def is_valid_contact(name, email):
+    # TODO: improve detection of auto-generated/invalid emails
+
     if not name:
-        return
+        return False
 
-    if 'noreply' in email:
-        return
-
-    if 'no-reply' in email:
-        return
-
-    if 'donotreply' in email:
-        return
+    if any(s in email for s in (
+        'noreply', 'no-reply', 'donotreply',
+    )):
+        return False
 
     if email.startswith('reply'):
-        return
+        return False
 
     if email.startswith('bounce'):
+        return False
+
+    return True
+
+
+def add_contact(name, email):
+    if not is_valid_contact(name, email):
         return
 
     if (name, email) in get_contacts():
         return
-
-    # TODO: improve detection of auto-generated/invalid emails
 
     new_contact = Contact(
         name=name,
