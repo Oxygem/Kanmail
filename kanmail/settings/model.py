@@ -123,3 +123,30 @@ def validate_settings(
 
         else:
             _validate_key(value, target_spec, target_path)
+
+
+def fix_any_old_setings(settings: dict):
+    style_settings = settings.get('style')
+    if style_settings:
+        # Fix for settings.style.sidebar_folders changing from str -> list
+        # pre v1.2002191933
+        sidebar_folders = style_settings.get('sidebar_folders')
+        if isinstance(sidebar_folders, str):
+            style_settings['sidebar_folders'] = [sidebar_folders]
+
+    for account_settings in settings.get('accounts', {}).values():
+        # Fix for settings.accounts.<name>.imap_connection.port changing from str -> int
+        # pre v1.2002191933
+        imap_settings = account_settings.get('imap_connection')
+        if imap_settings:
+            imap_port = imap_settings.get('port')
+            if isinstance(imap_port, str):
+                imap_settings['port'] = int(imap_port)
+
+        # Fix for settings.accounts.<name>.smtp_connection.port changing from str -> int
+        # pre v1.2002191933
+        smtp_settings = account_settings.get('smtp_connection')
+        if smtp_settings:
+            smtp_port = smtp_settings.get('port')
+            if isinstance(smtp_port, str):
+                smtp_settings['port'] = int(smtp_port)

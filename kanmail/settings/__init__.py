@@ -20,7 +20,7 @@ from .constants import (
     SETTINGS_FILE,
     WINDOW_CACHE_FILE,
 )
-from .model import get_default_settings, validate_settings
+from .model import fix_any_old_setings, get_default_settings, validate_settings
 
 
 # Bootstrap logging before we use logging!
@@ -72,6 +72,8 @@ def get_settings() -> dict:
             data = file.read()
 
         user_settings = json.loads(data)
+        fix_any_old_setings(user_settings)
+
         logger.debug(f'Loaded settings: {user_settings}')
 
         # Merge the user settings ontop of the defaults
