@@ -92,6 +92,7 @@ class EmailColumn extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
         threads: PropTypes.array,
+        hiddenThreadHashes: PropTypes.array.isRequired,
         accountName: PropTypes.string,
         mainColumn: PropTypes.string, // name of the *current* main column
         isMainColumn: PropTypes.bool,
@@ -235,10 +236,12 @@ class EmailColumn extends React.Component {
         return _.filter(
             this.props.threads,
             thread => {
+                const accountKey = thread[0].account_name;
+
                 // If this thread isn't in the selected account, ignore
                 if (
                     this.props.accountName
-                    && thread[0].account_name !== this.props.accountName
+                    && accountKey !== this.props.accountName
                 ) {
                     return false;
                 }
@@ -251,6 +254,11 @@ class EmailColumn extends React.Component {
                         _.includes(this.props.columns, folderName)
                     ),
                 )) {
+                    return false;
+                }
+
+                // If this email has been hidden (ie, is/will be moving elsewhere)
+                if (this.props.hiddenThreadHashes.has(thread.hash)) {
                     return false;
                 }
 

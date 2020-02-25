@@ -86,7 +86,16 @@ class ColumnStore extends BaseStore {
         this.folderName = folderName;
         this.props = {
             threads: null,
+            hiddenThreadHashes: new Set(),
         };
+    }
+
+    hideThread(thread) {
+        this.props.hiddenThreadHashes.add(thread.hash);
+    }
+
+    showThread(thread) {
+        this.props.hiddenThreadHashes.delete(thread.hash);
     }
 
     setThreads(threads, forceUpdate=false) {
