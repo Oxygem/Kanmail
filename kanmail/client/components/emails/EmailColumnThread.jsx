@@ -308,7 +308,7 @@ export default class EmailColumnThread extends React.Component {
         const thread = this.props.thread;
         const accountKey = thread[0].account_name;
 
-        const allMessageFolderUids = _.filter(
+        const allMessageFolderUids = _.pickBy(
             getThreadFolderMessageIds(thread),
             (uids, folderName) => folderFilter === null || folderFilter(folderName)
         );
