@@ -112,7 +112,8 @@ def api_test_new_account_settings():
     username = request_data['username']
     password = request_data['password']
 
-    status, folders_or_error = False, (None, 'Could not autoconfigure')
+    status = False
+    folders_or_error = (None, 'Could not autoconfigure')
 
     did_autoconf, account_settings = get_autoconf_settings(username, password)
 
