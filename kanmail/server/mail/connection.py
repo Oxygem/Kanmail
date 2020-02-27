@@ -8,6 +8,7 @@ from time import time
 
 from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError
+from keyring import get_password
 
 from kanmail.log import logger
 from kanmail.settings.constants import DEBUG_SMTP
@@ -17,12 +18,20 @@ DEFAULT_CONNECTIONS = 10
 DEFAULT_TIMEOUT = 10
 
 
+class ConnectionSettingsError(ValueError):
+    account = None
+
+    def __init__(self, account, *args, **kwargs):
+        self.account = account
+        super().__init__(*args, **kwargs)
+
+
 class ImapConnectionError(OSError):
     account = None
 
     def __init__(self, account, *args, **kwargs):
         self.account = account
-        super(ImapConnectionError, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class ImapConnectionWrapper(object):
@@ -113,9 +122,12 @@ class ImapConnectionWrapper(object):
 
 
 class ImapConnectionPool(object):
+    password = None
+
     def __init__(
-        self, account, host, port, username, password,
-        ssl=True, timeout=DEFAULT_TIMEOUT,
+        self, account, host, port, username,
+        ssl=True,
+        timeout=DEFAULT_TIMEOUT,
         max_connections=DEFAULT_CONNECTIONS,
         max_attempts=DEFAULT_ATTEMPTS,
     ):
@@ -123,7 +135,6 @@ class ImapConnectionPool(object):
         self.host = host
         self.port = port
         self.username = username
-        self.password = password
         self.ssl = ssl
         self.timeout = timeout
         self.max_attempts = max_attempts
@@ -132,17 +143,23 @@ class ImapConnectionPool(object):
 
         # Push/start all the connections
         for _ in range(max_connections):
-            self.pool.put(self.create_connection())
+            self.pool.put(ImapConnectionWrapper(self))
 
     def log(self, method, message):
         func = getattr(logger, method)
         func(f'[Account: {self.account}]: {message}')
 
-    def create_connection(self):
-        return ImapConnectionWrapper(self)
-
     @contextmanager
     def get_connection(self, selected_folder=None):
+        if not self.password:
+            self.password = get_password(self.host, self.username)
+
+        if not self.password:
+            raise ConnectionSettingsError(
+                self.account,
+                'Missing IMAP password! Please re-enter your password in settings.',
+            )
+
         connection = self.pool.get()
         self.log('debug', f'Got connection from pool: {self.pool.qsize()} (-1)')
 
@@ -164,12 +181,13 @@ class ImapConnectionPool(object):
 
 
 class SmtpConnection(object):
-    def __init__(self, account, host, port, username, password, ssl=True, tls=False):
+    password = None
+
+    def __init__(self, account, host, port, username, ssl=True, tls=False):
         self.account = account
         self.host = host
         self.port = port
         self.username = username
-        self.password = password
         self.ssl = ssl
         self.tls = tls
 
@@ -178,6 +196,15 @@ class SmtpConnection(object):
 
     @contextmanager
     def get_connection(self):
+        if not self.password:
+            self.password = get_password(self.host, self.username)
+
+        if not self.password:
+            raise ConnectionSettingsError(
+                self.account,
+                'Missing SMTP password! Please re-enter your password in settings.',
+            )
+
         server_string = (
             f'{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})'
         )

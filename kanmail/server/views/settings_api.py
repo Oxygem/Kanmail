@@ -1,4 +1,5 @@
 from flask import jsonify, request
+from keyring import set_password
 
 from kanmail.server.app import app
 from kanmail.server.mail import reset_accounts
@@ -21,9 +22,20 @@ def api_get_settings():
     )
 
 
+def _extract_password(obj):
+    if not obj or not all(k in obj for k in ('host', 'username', 'password')):
+        return
+
+    set_password(obj['host'], obj['username'], obj['password'])
+
+
 @app.route('/api/settings', methods=('PUT',))
 def api_set_settings():
     request_data = request.get_json()
+
+    for account in request_data.get('accounts', {}).values():
+        _extract_password(account.get('imap_settings'))
+        _extract_password(account.get('smtp_settings'))
 
     changed_keys = overwrite_settings(request_data)
 

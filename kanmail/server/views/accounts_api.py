@@ -5,7 +5,7 @@ from kanmail.server.app import app
 from kanmail.server.mail import Account
 from kanmail.server.mail.autoconf import get_autoconf_settings
 
-CONNECTION_KEYS = ('host', 'port', 'username', 'password')
+CONNECTION_KEYS = ('host', 'port', 'username')
 
 
 def _get_folders(connection):
