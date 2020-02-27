@@ -50,15 +50,11 @@ class Folder(object):
         # Set of UIDs we've "seen" - ie ones not to return again
         self.seen_email_uids = set()
 
-        # If we exist on the server, fetch (possibly from cache) and set UID list
-        try:
-            self.get_and_set_email_uids()
-            self.check_exists()
-        except (ImapConnectionError, IMAPClientError):
-            if self.email_uids:  # we had UIDs in cache, we *probably* exist
-                self.exists = True
-            else:
-                self.exists = False
+        if self.check_exists():
+            try:
+                self.get_and_set_email_uids()
+            except (ImapConnectionError, IMAPClientError):
+                pass
 
     def check_exists(self):
         '''
