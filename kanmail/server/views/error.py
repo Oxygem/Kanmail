@@ -2,7 +2,7 @@ from flask import jsonify, make_response
 
 from kanmail.log import logger
 from kanmail.server.app import app
-from kanmail.server.mail.connection import ImapConnectionError
+from kanmail.server.mail.connection import ConnectionSettingsError, ImapConnectionError
 
 
 @app.errorhandler(400)
@@ -30,6 +30,18 @@ def error_method_not_allowed(e):
         error_name=e.name,
         error_message=e.description,
     ), 405)
+
+
+@app.errorhandler(ConnectionSettingsError)
+def error_connection_exception(e):
+    error_name = e.__class__.__name__
+    message = f'{e} (account={e.account})'
+    logger.exception(f'Network exception in view: {message}')
+    return make_response(jsonify(
+        status_code=400,
+        error_name=error_name,
+        error_message=message,
+    ), 400)
 
 
 @app.errorhandler(ImapConnectionError)
