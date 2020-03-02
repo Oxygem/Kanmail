@@ -71,16 +71,17 @@ def is_valid_contact(name, email):
     return True
 
 
-def add_contact(name, email):
-    if not is_valid_contact(name, email):
-        logger.debug(f'Not saving invalid contact: ({name} {email})')
-        return
+def add_contacts(contacts):
+    for name, email in contacts:
+        if not is_valid_contact(name, email):
+            logger.debug(f'Not saving invalid contact: ({name} {email})')
+            return
 
-    if (name, email) in get_contacts():
-        return
+        if (name, email) in get_contacts():
+            return
 
-    new_contact = Contact(
-        name=name,
-        email=email,
-    )
-    save_contact(new_contact)
+        new_contact = Contact(
+            name=name,
+            email=email,
+        )
+        save_contact(new_contact)

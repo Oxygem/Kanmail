@@ -10,7 +10,7 @@ from mdx_linkify.mdx_linkify import LinkifyExtension
 
 from kanmail.log import logger
 
-from .contacts import add_contact
+from .contacts import add_contacts
 
 
 def markdownify(text):
@@ -34,20 +34,17 @@ def format_address(address):
     return '@'.join(bits)
 
 
-def make_contact_tuple(address, save):
+def make_contact_tuple(address):
     name = decode_header(address.name) if address.name else None
     email = format_address(address)
-
-    if save:
-        add_contact(name, email)
     return (name, email)
 
 
-def make_contacts(addresses, save=True):
+def make_contacts(addresses):
     if not addresses:
         return []
 
-    return [make_contact_tuple(address, save=save) for address in addresses]
+    return [make_contact_tuple(address) for address in addresses]
 
 
 def make_email_headers(account, folder, uid, data, parts):
@@ -91,11 +88,21 @@ def make_email_headers(account, folder, uid, data, parts):
     envelope = data[b'ENVELOPE']
     subject = decode_header(envelope.subject)
 
-    save_contacts = folder.alias_name not in ('spam', 'trash')
-
     date = None
     if envelope.date:
         date = envelope.date.isoformat()
+
+    from_ = make_contacts(envelope.from_)
+    to = make_contacts(envelope.to)
+    send = make_contacts(envelope.sender)
+    cc = make_contacts(envelope.cc)
+    bcc = make_contacts(envelope.bcc)
+    reply_to = make_contacts(envelope.reply_to)
+
+    save_contacts = folder.alias_name not in ('spam', 'trash')
+    if save_contacts:
+        all_contacts = set((*from_, *to, *send, *cc, *bcc, *reply_to))
+        add_contacts(all_contacts)
 
     return {
         'uid': uid,
@@ -116,12 +123,12 @@ def make_email_headers(account, folder, uid, data, parts):
         'subject': subject,
 
         # Address data
-        'from': make_contacts(envelope.from_, save=save_contacts),
-        'to': make_contacts(envelope.to, save=save_contacts),
-        'send': make_contacts(envelope.sender, save=save_contacts),
-        'cc': make_contacts(envelope.cc, save=save_contacts),
-        'bcc': make_contacts(envelope.bcc, save=save_contacts),
-        'reply_to': make_contacts(envelope.reply_to, save=save_contacts),
+        'from': from_,
+        'to': to,
+        'send': send,
+        'cc': cc,
+        'bcc': bcc,
+        'reply_to': reply_to,
 
         # Threading
         'in_reply_to': envelope.in_reply_to,
