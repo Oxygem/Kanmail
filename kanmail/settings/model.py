@@ -128,6 +128,8 @@ def validate_settings(
 
 
 def fix_any_old_setings(settings: dict):
+    has_changed = False
+
     style_settings = settings.get('style')
     if style_settings:
         # Fix for settings.style.sidebar_folders changing from str -> list
@@ -135,6 +137,7 @@ def fix_any_old_setings(settings: dict):
         sidebar_folders = style_settings.get('sidebar_folders')
         if isinstance(sidebar_folders, str):
             style_settings['sidebar_folders'] = [sidebar_folders]
+            has_changed = True
 
     for account_settings in settings.get('accounts', {}).values():
         # Fix for settings.accounts.<name>.imap_connection.port changing from str -> int
@@ -144,12 +147,14 @@ def fix_any_old_setings(settings: dict):
             imap_port = imap_settings.get('port')
             if isinstance(imap_port, str):
                 imap_settings['port'] = int(imap_port)
+                has_changed = True
 
             # Fix for removing passwords from on-disk settings
             # pre v1.2002211810
             password = imap_settings.pop('password', None)
             if password:
                 set_password(imap_settings['host'], imap_settings['username'], password)
+                has_changed = True
 
         # Fix for settings.accounts.<name>.smtp_connection.port changing from str -> int
         # pre v1.2002191933
@@ -158,9 +163,13 @@ def fix_any_old_setings(settings: dict):
             smtp_port = smtp_settings.get('port')
             if isinstance(smtp_port, str):
                 smtp_settings['port'] = int(smtp_port)
+                has_changed = True
 
             # Fix for removing passwords from on-disk settings
             # pre v1.2002211810
             password = smtp_settings.pop('password', None)
             if password:
                 set_password(smtp_settings['host'], smtp_settings['username'], password)
+                has_changed = True
+
+    return has_changed
