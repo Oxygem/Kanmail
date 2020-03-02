@@ -122,10 +122,10 @@ class ImapConnectionWrapper(object):
 
 
 class ImapConnectionPool(object):
-    password = None
-
     def __init__(
-        self, account, host, port, username,
+        self, account,
+        host, port, username,
+        password=None,
         ssl=True,
         timeout=DEFAULT_TIMEOUT,
         max_connections=DEFAULT_CONNECTIONS,
@@ -135,6 +135,7 @@ class ImapConnectionPool(object):
         self.host = host
         self.port = port
         self.username = username
+        self.password = password
         self.ssl = ssl
         self.timeout = timeout
         self.max_attempts = max_attempts
@@ -181,13 +182,18 @@ class ImapConnectionPool(object):
 
 
 class SmtpConnection(object):
-    password = None
-
-    def __init__(self, account, host, port, username, ssl=True, tls=False):
+    def __init__(
+        self, account,
+        host, port, username,
+        password=None,
+        ssl=True,
+        tls=False,
+    ):
         self.account = account
         self.host = host
         self.port = port
         self.username = username
+        self.password = password
         self.ssl = ssl
         self.tls = tls
 
