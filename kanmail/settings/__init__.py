@@ -72,7 +72,9 @@ def get_settings() -> dict:
             data = file.read()
 
         user_settings = json.loads(data)
-        fix_any_old_setings(user_settings)
+        has_changed = fix_any_old_setings(user_settings)
+        if has_changed:
+            set_settings(user_settings)
 
         logger.debug(f'Loaded settings: {user_settings}')
 
