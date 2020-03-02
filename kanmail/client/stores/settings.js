@@ -3,13 +3,7 @@ import _ from 'lodash';
 import { BaseStore } from 'stores/base.jsx';
 
 import { get, post } from 'util/requests.js';
-
-
-function arrayMove(arr, fromIndex, toIndex) {
-    const element = arr[fromIndex];
-    arr.splice(fromIndex, 1);
-    arr.splice(toIndex, 0, element);
-}
+import { arrayMove } from 'util/array.js';
 
 
 class SettingsStore extends BaseStore {
