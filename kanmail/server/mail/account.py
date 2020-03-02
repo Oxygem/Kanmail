@@ -18,16 +18,10 @@ class Account(object):
         self.settings = settings
 
         # Setup/wrap IMAP connection
-        self.connection_pool = ImapConnectionPool(
-            self,
-            **settings['imap_connection'],
-        )
+        self.connection_pool = ImapConnectionPool(self, **settings['imap_connection'])
 
         # Prepare SMTP connection getter
-        self.smtp_connection = SmtpConnection(
-            self,
-            **settings['smtp_connection'],
-        )
+        self.smtp_connection = SmtpConnection(self, **settings['smtp_connection'])
 
     def __str__(self):
         return self.name
