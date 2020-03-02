@@ -201,9 +201,7 @@ class FolderCache(object):
     # Batch operations
     #
 
-    def batch_get_headers(self, uids):
-        self.log('debug', f'Batch get {len(uids)} headers')
-
+    def batch_get_header_items(self, uids):
         matched_headers = (
             FolderHeaderCacheItem.query
             .filter_by(folder_id=self.get_folder_cache_item().id)
@@ -211,14 +209,22 @@ class FolderCache(object):
         )
 
         return {
-            header.uid: pickle_loads(header.data)
+            header.uid: header
             for header in matched_headers
+        }
+
+    def batch_get_headers(self, uids):
+        self.log('debug', f'Batch get {len(uids)} headers')
+
+        return {
+            uid: pickle_loads(header.data)
+            for uid, header in self.batch_get_header_items(uids).items()
         }
 
     def batch_set_headers(self, uid_to_headers):
         self.log('debug', f'Batch set {len(uid_to_headers)} headers')
 
-        existing_headers = self.batch_get_headers(uid_to_headers.keys())
+        existing_headers = self.batch_get_header_items(uid_to_headers.keys())
         items_to_save = []
 
         for uid, headers in uid_to_headers.items():
