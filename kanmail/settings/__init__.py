@@ -156,8 +156,8 @@ def set_window_settings(width: int, height: int, left: int, top: int) -> None:
     window_settings = {
         'width': width,
         'height': height,
-        'left': left,
-        'top': top,
+        'x': left,
+        'y': top,
     }
 
     logger.debug(f'Writing window settings: {window_settings}')
