@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import { get, post } from 'util/requests';
 
 
@@ -7,7 +9,7 @@ function saveWindowPosition() {
 
 
 export function createWindowPositionHandlers() {
-    window.addEventListener('resize', saveWindowPosition);
+    window.addEventListener('resize', _.debounce(saveWindowPosition, 100));
 }
 
 
