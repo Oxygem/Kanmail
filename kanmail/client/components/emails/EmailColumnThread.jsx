@@ -344,7 +344,7 @@ export default class EmailColumnThread extends React.Component {
             });
 
             return Promise.all(requests).then(() => {
-                emailStore.processEmailChanges();
+                emailStore.processEmailChanges({noTriggerUpdate: true});
             }).catch((e) => {
                 undoMove({error: true});
                 throw e;  // re-throw for the requestStore to capture

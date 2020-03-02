@@ -377,7 +377,7 @@ export default class BaseEmails {
             );
 
             // Push to the column and meta stores
-            store.setThreads(threads, forceUpdate);
+            store.setThreads(threads, {...options, forceUpdate});
             _.each(
                 this.meta[columnName],
                 (meta, accountKey) => metaStore.setAccountMeta(accountKey, meta),

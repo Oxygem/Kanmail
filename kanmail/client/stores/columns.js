@@ -98,12 +98,12 @@ class ColumnStore extends BaseStore {
         this.props.hiddenThreadHashes.delete(thread.hash);
     }
 
-    setThreads(threads, forceUpdate=false) {
+    setThreads(threads, options={}) {
         let changed = false;
 
         // Shortcut: update if no threads or #threads changes
         if (
-            forceUpdate
+            options.forceUpdate
             || _.isNull(this.props.threads)
             || threads.length !== this.props.threads.length
         ) {
@@ -130,7 +130,10 @@ class ColumnStore extends BaseStore {
 
         if (changed) {
             this.props.threads = threads;
-            this.triggerUpdate();
+
+            if (!options.noTriggerUpdate) {
+                this.triggerUpdate();
+            }
         } else {
             console.debug(`Skipping update for ${this.folderName} as no changes detected`);
         }
