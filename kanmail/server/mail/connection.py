@@ -7,7 +7,7 @@ from socket import error as socket_error
 from time import time
 
 from imapclient import IMAPClient
-from imapclient.exceptions import IMAPClientAbortError, IMAPClientError
+from imapclient.exceptions import IMAPClientAbortError, IMAPClientError, LoginError
 from keyring import get_password
 
 from kanmail.log import logger
@@ -69,7 +69,12 @@ class ImapConnectionWrapper(object):
                     return ret
 
                 # Network issues/IMAP aborts - should fixed by reconnect
-                except (IMAPClientError, IMAPClientAbortError, socket_error) as e:
+                except (
+                    IMAPClientError,
+                    IMAPClientAbortError,
+                    LoginError,
+                    socket_error,
+                ) as e:
                     attempts += 1
                     self.config.log(
                         'critical',
