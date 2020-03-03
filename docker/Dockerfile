@@ -1,6 +1,6 @@
 FROM python:3.6-alpine
 
-ARG PACKAGES='gcc make git musl-dev libc-dev'
+ARG PACKAGES='gcc make git musl-dev libc-dev libffi-dev libressl-dev'
 
 ADD ./requirements /opt/kanmail/requirements
 
