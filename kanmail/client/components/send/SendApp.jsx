@@ -121,8 +121,13 @@ export default class SendApp extends React.Component {
             }
 
             let replyAccount;
-            const accountName = props.message.account_name;
-            const accountContacts = this.props.accounts[accountName].contacts;
+
+            const account = _.find(
+                this.props.accounts,
+                account => account.name === props.message.account_name,
+            );
+            const accountName = account.name;
+            const accountContacts = account.contacts;
 
             if (accountContacts && accountContacts.length > 0) {
                 replyAccount = makeAccountContactOption(
@@ -177,13 +182,11 @@ export default class SendApp extends React.Component {
         }
     }
 
-    getDefaultAccount = (accountName) => {
-        const smtpUsername = (
-            this.props.accounts[accountName].smtp_connection.username
-        );
-
+    getDefaultAccount = (accountIndex) => {
+        const account = this.props.accounts[accountIndex];
+        const smtpUsername = account.smtp_connection.username;
         return makeAccountContactOption(
-            accountName,
+            account.name,
             [smtpUsername, smtpUsername],
         );
     }
@@ -394,17 +397,17 @@ export default class SendApp extends React.Component {
     render() {
         const accountOptions = _.reduce(
             this.props.accounts,
-            (memo, key, accountName) => {
-                const accountContacts = this.props.accounts[accountName].contacts;
+            (memo, account, accountIndex) => {
+                const accountContacts = this.props.accounts[accountIndex].contacts;
                 if (accountContacts && accountContacts.length > 0) {
                     return _.concat(memo, _.map(
                         accountContacts,
                         nameEmail => makeAccountContactOption(
-                            accountName, nameEmail,
+                            account.name, nameEmail,
                         ),
                     ));
                 }
-                memo.push(this.getDefaultAccount(accountName));
+                memo.push(this.getDefaultAccount(accountIndex));
                 return memo;
             },
             [],

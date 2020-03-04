@@ -10,6 +10,7 @@ import keyboard from 'keyboard.js';
 import { closeWindow } from 'window.js';
 
 import { delete_, get, post, put } from 'util/requests.js';
+import { arrayMove } from 'util/array.js';
 
 
 const newAccountState = {
@@ -61,37 +62,29 @@ export default class SettingsApp extends React.Component {
         this.setState(newAccountState);
     }
 
-    deleteAccount = (accountId) => {
-        this.setState({
-            accounts: _.omit(this.state.accounts, accountId),
-        });
+    deleteAccount = (accountIndex) => {
+        const accounts = _.filter(this.state.accounts, (_, i) => i !== accountIndex);
+        this.setState({accounts});
     }
 
-    updateAccount = (accountId, newSettings, newAccountId=null) => {
-        if (!this.state.accounts[accountId]) {
+    updateAccount = (accountIndex, newSettings) => {
+        if (!this.state.accounts[accountIndex]) {
             throw Error('nope');
         }
 
-        const newAccounts = this.state.accounts;
-
-        if (newAccountId) {  // if we're renaming first remove the old account
-            delete newAccounts[accountId];
-            accountId = newAccountId;
-        }
-
-        newAccounts[accountId] = newSettings;
-
-        this.setState({
-            accounts: newAccounts,
-        });
+        const accounts = this.state.accounts;
+        accounts[accountIndex] = newSettings;
+        this.setState({accounts});
     }
 
-    completeAddNewAccount = (accountId, newSettings) => {
-        const newAccounts = this.state.accounts;
-        newAccounts[accountId] = newSettings;
+    completeAddNewAccount = (name, newSettings) => {
+        newSettings.name = name;
+
+        const accounts = this.state.accounts;
+        accounts.push(newSettings);
 
         this.setState({
-            accounts: newAccounts,
+            accounts,
             ...newAccountState,
         });
 
@@ -114,13 +107,6 @@ export default class SettingsApp extends React.Component {
         ) {
             this.setState({
                 newAccountError: 'Missing name, email or password!',
-            });
-            return;
-        }
-
-        if (this.state.accounts[this.state.newAccountName]) {
-            this.setState({
-                newAccountError: `There is already an account called ${this.state.newAccountName}`,
             });
             return;
         }
@@ -217,14 +203,22 @@ export default class SettingsApp extends React.Component {
             .catch(err => console.error('SETTING ERROR', err));
     }
 
+    handleMoveAccount = (index, position) => {
+        const accounts = this.state.accounts;
+        arrayMove(accounts, index, index + position);
+        this.setState({accounts});
+    }
+
     renderAccounts() {
-        return _.map(this.state.accounts, (accountSettings, accountId) => (
+        return _.map(this.state.accounts, (accountSettings, i) => (
             <Account
-                key={accountId}
-                accountId={accountId}
+                key={`${i}-${accountSettings.name}`}
+                accountIndex={i}
                 accountSettings={accountSettings}
                 deleteAccount={this.deleteAccount}
                 updateAccount={this.updateAccount}
+                moveUp={_.partial(this.handleMoveAccount, i, -1)}
+                moveDown={_.partial(this.handleMoveAccount, i, 1)}
             />
         ));
     }

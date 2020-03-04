@@ -1,7 +1,6 @@
 import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
-import settingsStore from 'stores/settings.js';
 import { getColumnMetaStore } from 'stores/columns.js';
 
 import BaseEmails from 'stores/emails/base.js';
@@ -26,7 +25,7 @@ class MainEmails extends BaseEmails {
         const requests = [];
 
         // For each account, fetch the emails
-        _.each(_.keys(settingsStore.props.accounts), accountKey => (
+        _.each(this.getAccountKeys(), accountKey => (
             requests.push(this.syncEmails(accountKey, folderName, options))
         ));
 
@@ -95,7 +94,7 @@ class MainEmails extends BaseEmails {
         const requests = [];
 
         // For each account, fetch the emails
-        _.each(_.keys(settingsStore.props.accounts), accountKey => (
+        _.each(this.getAccountKeys(), accountKey => (
             requests.push(this.getEmails(accountKey, folderName, options))
         ));
 

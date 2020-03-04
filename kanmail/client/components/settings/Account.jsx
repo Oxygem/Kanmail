@@ -63,10 +63,12 @@ class AccountAddress extends React.Component {
 
 export default class Account extends React.Component {
     static propTypes = {
-        accountId: PropTypes.string,
+        accountIndex: PropTypes.number.isRequired,
         accountSettings: PropTypes.object.isRequired,
         deleteAccount: PropTypes.func.isRequired,
         updateAccount: PropTypes.func.isRequired,
+        moveUp: PropTypes.func.isRequired,
+        moveDown: PropTypes.func.isRequired,
         alwaysEditing: PropTypes.bool,
     }
 
@@ -103,7 +105,7 @@ export default class Account extends React.Component {
             return;
         }
 
-        this.props.deleteAccount(this.props.accountId);
+        this.props.deleteAccount(this.props.accountIndex);
         return;
     }
 
@@ -143,14 +145,14 @@ export default class Account extends React.Component {
             );
 
             this.props.updateAccount(
-                this.props.accountId,
+                this.props.accountIndex,
                 {
                     imap_connection: this.state.imapSettings,
                     smtp_connection: this.state.smtpSettings,
                     folders: this.state.folderSettings,
                     contacts: filteredContacts,
+                    name: this.state.name,
                 },
-                this.state.accountId,  // handles renaming
             );
             if (!this.state.alwaysEditing) {
                 this.resetState();
@@ -259,6 +261,7 @@ export default class Account extends React.Component {
                 <div className="account">
                     <div className="wide">
                         <div className="right">
+                        <strong>{this.state.name}</strong><br />
                             <button onClick={this.toggleSettings}>
                                 <i className="fa fa-cog"></i>
                             </button>
@@ -267,7 +270,6 @@ export default class Account extends React.Component {
                             </button>
                         </div>
 
-                        <strong>{this.state.accountId}</strong><br />
                         {this.state.imapSettings.username}
                     </div>
                 </div>
@@ -305,8 +307,8 @@ export default class Account extends React.Component {
                     <input
                         className="inline"
                         type="text"
-                        value={this.state.accountId}
-                        onChange={(ev) => this.setState({accountId: ev.target.value})}
+                        value={this.state.name}
+                        onChange={(ev) => this.setState({name: ev.target.value})}
                     />
                     <div className="error">{!this.state.errorType && this.state.error}</div>
 

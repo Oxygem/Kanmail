@@ -31,8 +31,9 @@ MODEL = {
         'header_background': str,
         'sidebar_folders': [str],
     },
-    'accounts': {
-        KEY: {
+    'accounts': [
+        {
+            'name': str,
             'imap_connection': {
                 **CONNECTION_DEFAULTS,
             },
@@ -48,7 +49,7 @@ MODEL = {
                 [str, str],
             ],
         },
-    },
+    ],
 }
 
 
@@ -81,10 +82,9 @@ def _validate_key(value, spec, path):
     if isinstance(spec, list):
         if not isinstance(value, list):
             raise _make_type_error(value, spec, path)
-
         for i, s in enumerate(spec):
             _validate_key(value[i], s, path)
-        return
+            return
 
     if isinstance(spec, tuple):
         spec = spec[0]
@@ -98,6 +98,18 @@ def validate_settings(
     spec: dict = MODEL,
     path: Optional[list] = None,
 ) -> None:
+    if not isinstance(settings, dict):
+        return _validate_key(settings, spec, path)
+
+    accounts = settings.get('accounts')
+    if accounts:
+        account_names = set()
+        for account in accounts:
+            account_name = account['name']
+            if account_name in account_names:
+                raise ValueError('Cannot have duplicate account names!')
+            account_names.add(account_name)
+
     path = path or []
     any_key = KEY in spec
 
@@ -121,7 +133,7 @@ def validate_settings(
             if not isinstance(target_spec, list):
                 raise _make_type_error(value, target_spec, path)
             for v in value:
-                _validate_key(v, target_spec[0], target_path)
+                validate_settings(v, target_spec[0], target_path)
 
         else:
             _validate_key(value, target_spec, target_path)
@@ -139,7 +151,17 @@ def fix_any_old_setings(settings: dict):
             style_settings['sidebar_folders'] = [sidebar_folders]
             has_changed = True
 
-    for account_settings in settings.get('accounts', {}).values():
+    # "Fix" for settings.accounts used to be a dict, now  a list for ordering
+    # pre v1.2002211810
+    accounts = settings.get('accounts')
+    if isinstance(accounts, dict):
+        settings['accounts'] = [
+            {'name': account_key, **account}
+            for account_key, account in accounts.items()
+        ]
+        has_changed = True
+
+    for account_settings in settings.get('accounts', []):
         # Fix for settings.accounts.<name>.imap_connection.port changing from str -> int
         # pre v1.2002191933
         imap_settings = account_settings.get('imap_connection')

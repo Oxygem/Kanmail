@@ -16,27 +16,20 @@ def connect_all():
         return key, Account(key, settings)
 
     with GET_ACCOUNTS_LOCK:
-        accounts = execute_threaded(make_account, [
-            (key, settings)
-            for key, settings in get_settings()['accounts'].items()
-            if key not in ACCOUNTS
-        ])
-
-        for key, account in accounts:
-            ACCOUNTS[key] = account
+        ACCOUNTS.update(execute_threaded(make_account, [
+            (settings['name'], settings)
+            for settings in get_settings()['accounts']
+            if settings['name'] not in ACCOUNTS
+        ]))
 
 
 def get_accounts():
-    # Ensure we're connected to all configured accounts
     connect_all()
-
     return ACCOUNTS.values()
 
 
 def get_account(key):
-    # Ensure we're connected to all configured accounts
     connect_all()
-
     return ACCOUNTS[key]
 
 

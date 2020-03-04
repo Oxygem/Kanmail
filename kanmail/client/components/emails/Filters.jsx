@@ -160,10 +160,13 @@ export default class Filters extends React.Component {
     }
 
     renderAccounts() {
-        return _.map(_.keys(this.props.accounts), key => (
-            <li key={key} className={this.props.accountName === key ? 'active': ''}><a
-                onClick={_.partial(this.setAccountFilter, key)}>
-                <i className="fa fa-google"></i> {key}
+        return _.map(this.props.accounts, account => (
+            <li
+                key={account.name}
+                className={this.props.accountName === account.name ? 'active': ''}
+            ><a
+                onClick={_.partial(this.setAccountFilter, account.name)}>
+                <i className="fa fa-google"></i> {account.name}
             </a></li>
         ));
     }

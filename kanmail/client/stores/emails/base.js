@@ -4,6 +4,7 @@ import { ALIAS_FOLDERS } from 'constants.js';
 import { messageThreader } from 'threading.js';
 
 import requestStore from 'stores/request.js';
+import settingsStore from 'stores/settings.js';
 
 import {
     getColumnStore,
@@ -30,6 +31,10 @@ export default class BaseEmails {
 
         // Initialise emails/meta objects
         this.reset()
+    }
+
+    getAccountKeys() {
+        return _.map(settingsStore.props.accounts, account => account.name);
     }
 
     /*

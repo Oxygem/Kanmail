@@ -1,7 +1,6 @@
 import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
-import settingsStore from 'stores/settings.js';
 import { getColumnMetaStore } from 'stores/columns.js';
 
 import BaseEmails from 'stores/emails/base.js';
@@ -36,7 +35,7 @@ class SearchEmails extends BaseEmails {
         const requests = [];
 
         // For each account, search for matching emails
-        _.each(_.keys(settingsStore.props.accounts), accountKey => {
+        _.each(this.getAccountKeys(), accountKey => {
             requests.push(this.searchEmails(accountKey, folderName, options))
         });
 
