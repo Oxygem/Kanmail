@@ -33,7 +33,13 @@ def _extract_password(obj):
 def api_set_settings():
     request_data = request.get_json()
 
-    for account in request_data.get('accounts', {}).values():
+    account_keys = set()
+    for account in request_data.get('accounts', []):
+        name = account['name']
+        if name in account_keys:
+            raise ValueError('Cannot have more than one account with the same name!')
+
+        account_keys.add(name)
         _extract_password(account.get('imap_settings'))
         _extract_password(account.get('smtp_settings'))
 
