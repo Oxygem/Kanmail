@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from functools import wraps
 from queue import Queue
 from threading import Lock, Thread

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from contextlib import contextmanager
 from queue import LifoQueue
 from smtplib import SMTP, SMTP_SSL
