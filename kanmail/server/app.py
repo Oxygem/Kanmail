@@ -59,6 +59,8 @@ def boot() -> None:
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
         bootstrap_fake_imap()
 
+    from kanmail import secrets  # noqa: F401
+
     from kanmail.server.views import error  # noqa: F401
 
     # API views
