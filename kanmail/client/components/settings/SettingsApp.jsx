@@ -5,31 +5,13 @@ import { Creatable } from 'react-select';
 
 import HeaderBar from 'components/HeaderBar.jsx';
 import Account from 'components/settings/Account.jsx';
+import NewAccountForm from 'components/settings/NewAccountForm.jsx';
 
 import keyboard from 'keyboard.js';
 import { closeWindow } from 'window.js';
 
-import { delete_, get, post, put } from 'util/requests.js';
+import { delete_, put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
-
-
-const newAccountState = {
-    showAdvancedSettings: false,
-    isSaving: false,
-    saveError: null,
-
-    // Add account phase 1 - name/username/password autoconfig form
-    addingAccount: false,
-    newAccountName: '',
-    newAccountUsername: '',
-    newAccountPassword: '',
-    newAccountError: null,
-
-    // Add account phase 2 - manual config if auto fails
-    isLoadingNewAccount: false,
-    configuringNewAccount: false,
-    newAccountSettings: null,
-}
 
 
 export default class SettingsApp extends React.Component {
@@ -46,7 +28,6 @@ export default class SettingsApp extends React.Component {
             accounts: props.settings.accounts,
             systemSettings: props.settings.system || {},
             styleSettings: props.settings.style || {},
-            ...newAccountState,
         };
 
         const sidebarFolderOptions = _.map(
@@ -56,10 +37,6 @@ export default class SettingsApp extends React.Component {
 
         this.state.initialSidebarFolderOptions = sidebarFolderOptions;
         this.state.styleSettings.sidebar_folders = sidebarFolderOptions;
-    }
-
-    resetState = () => {
-        this.setState(newAccountState);
     }
 
     deleteAccount = (accountIndex) => {
@@ -77,70 +54,19 @@ export default class SettingsApp extends React.Component {
         this.setState({accounts});
     }
 
-    completeAddNewAccount = (name, newSettings) => {
+    addAccount = (name, newSettings) => {
         newSettings.name = name;
 
         const accounts = this.state.accounts;
         accounts.push(newSettings);
 
-        this.setState({
-            accounts,
-            ...newAccountState,
-        });
-
-        this.reset();
+        this.setState({accounts});
     }
 
-    toggleAddAccount = () => {
-        this.setState({
-            addingAccount: !this.state.addingAccount,
-        });
-    }
-
-    handleAddAccount = (ev) => {
-        ev.preventDefault();
-
-        if (
-            !this.state.newAccountName ||
-            !this.state.newAccountUsername ||
-            !this.state.newAccountPassword
-        ) {
-            this.setState({
-                newAccountError: 'Missing name, email or password!',
-            });
-            return;
-        }
-
-        const data = {
-            username: this.state.newAccountUsername,
-            password: this.state.newAccountPassword,
-        };
-
-        const handleSettings = (data) => {
-            if (data.connected) {
-                this.completeAddNewAccount(
-                    this.state.newAccountName,
-                    data.settings,
-                );
-                return;
-            }
-
-            this.setState({
-                isLoadingNewAccount: false,
-                configuringNewAccount: true,
-                newAccountSettings: data.settings,
-                newAccountError: data.error_message,
-                newAccountErrorType: data.error_type,
-            });
-        }
-
-        this.setState({isLoadingNewAccount: true});
-
-        // Post to new endpoint - hopefully it will autoconfigure and connect itself
-        post('/api/settings/account/new', data)
-            .then(handleSettings)
-            .catch(err => handleSettings(err.data),
-        );
+    moveAccount = (index, position) => {
+        const accounts = this.state.accounts;
+        arrayMove(accounts, index, index + position);
+        this.setState({accounts});
     }
 
     handleUpdate = (stateKey, ev) => {
@@ -170,6 +96,9 @@ export default class SettingsApp extends React.Component {
         ev.preventDefault();
 
         if (this.state.isSaving) {
+            if (this.state.saveError) {
+                this.setState({isSaving: false, saveError: null});
+            }
             return;
         }
 
@@ -203,92 +132,19 @@ export default class SettingsApp extends React.Component {
             .catch(err => console.error('SETTING ERROR', err));
     }
 
-    handleMoveAccount = (index, position) => {
-        const accounts = this.state.accounts;
-        arrayMove(accounts, index, index + position);
-        this.setState({accounts});
-    }
-
     renderAccounts() {
         return _.map(this.state.accounts, (accountSettings, i) => (
             <Account
                 key={`${i}-${accountSettings.name}`}
                 accountIndex={i}
+                connected={true}
                 accountSettings={accountSettings}
                 deleteAccount={this.deleteAccount}
                 updateAccount={this.updateAccount}
-                moveUp={_.partial(this.handleMoveAccount, i, -1)}
-                moveDown={_.partial(this.handleMoveAccount, i, 1)}
+                moveUp={_.partial(this.moveAccount, i, -1)}
+                moveDown={_.partial(this.moveAccount, i, 1)}
             />
         ));
-    }
-
-    renderNewAccountForm() {
-        if (!this.state.addingAccount) {
-            return <button className="submit" onClick={this.toggleAddAccount}>
-                Add new account
-            </button>;
-        }
-
-        if (this.state.configuringNewAccount) {
-            return <Account
-                key={this.state.newAccountName}
-                alwaysEditing={true}
-                accountId={this.state.newAccountName}
-                accountSettings={this.state.newAccountSettings}
-                error={this.state.newAccountError}
-                errorType={this.state.newAccountErrorType}
-                deleteAccount={this.resetState}
-                updateAccount={this.completeAddNewAccount}
-            />
-        }
-
-        // <button>Add Gmail Account</button>
-        // <button>Add Outlook Account</button>
-
-        return <div className="new-account">
-            <form>
-                <h3>New Account</h3>
-                <div className="error">{this.state.newAccountError}</div>
-                <div>
-                    <label htmlFor="name">Account Name</label>
-                    <input
-                        id="name"
-                        value={this.state.newAccountName}
-                        onChange={_.partial(this.handleUpdate, 'newAccountName')}
-                    />
-                </div>
-                <div>
-                    <label htmlFor="username">Email</label>
-                    <input
-                        id="username"
-                        value={this.state.newAccountUsername}
-                        onChange={_.partial(this.handleUpdate, 'newAccountUsername')}
-                    />
-                </div>
-
-                <div>
-                    <label htmlFor="password">Password</label>
-                    <input
-                        id="password"
-                        type="password"
-                        value={this.state.newAccountPassword}
-                        onChange={_.partial(this.handleUpdate, 'newAccountPassword')}
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
-                    onClick={this.handleAddAccount}
-                >Add Account</button>
-
-                <button className="cancel" onClick={this.toggleAddAccount}>
-                    <i className="fa fa-times" />
-                </button>
-            </form>
-            <p><strong>Gmail users:</strong> you will need to <a onClick={() => get('/open-link', {url: 'https://myaccount.google.com/apppasswords'})}>create an app password</a> to use with Kanmail.</p>
-        </div>;
     }
 
     renderAdvancedSettings() {
@@ -362,18 +218,24 @@ export default class SettingsApp extends React.Component {
 
     renderSaveButton() {
         if (this.state.isSaving) {
-            let text = 'Saving...';
+            let text;
+            const classes = ['main-button'];
 
             if (this.state.saveError) {
                 text = `Error saving settings: ${this.state.saveError.data.errorMessage}`;
+                classes.push('inactive');
             } else if (this.state.isSaved) {
                 text = 'Settings saved, please close this window & reload the main one';
+                classes.push('disabled');
+            } else {
+                text = 'Saving...';
+                classes.push('disabled');
             }
 
             return (
                 <button
                     type="submit"
-                    className="main-button disabled"
+                    className={classes.join(' ')}
                     onClick={this.handleSaveSettings}
                 >{text}</button>
             );
@@ -399,7 +261,7 @@ export default class SettingsApp extends React.Component {
                         <small>Changes will not be saved until you save all settings at the bottom of the page.</small>
                         {this.renderAccounts()}
                         <div id="add-account">
-                            {this.renderNewAccountForm()}
+                            <NewAccountForm addAccount={this.addAccount} />
                         </div>
                     </div>
 

@@ -8,21 +8,37 @@ import { post } from 'util/requests.js';
 
 
 const getInitialState = (props) => {
-    return {
+    const state = {
         editing: props.alwaysEditing || false,
-        editingTab: 'address',
+        editingTab: props.alwaysEditing ? 'imap' : 'address',
         deleteConfirm: false,
 
         error: props.error,
         errorType: props.errorType,
 
+        isSaving: false,
+
         accountId: props.accountId,
-        imapSettings: _.clone(props.accountSettings.imap_connection) || {},
-        smtpSettings: _.clone(props.accountSettings.smtp_connection) || {},
-        folderSettings: _.clone(props.accountSettings.folders) || {},
-        contactSettings: _.clone(props.accountSettings.contacts) || [],
+
+        name: '',
+        imapSettings: {},
+        smtpSettings: {},
+        folderSettings: {},
+        contactSettings: [],
+
+        connected: props.connected,
     };
-}
+
+    if (props.accountSettings) {
+        state.name = props.accountSettings.name,
+        state.imapSettings = _.clone(props.accountSettings.imap_connection);
+        state.smtpSettings = _.clone(props.accountSettings.smtp_connection);
+        state.folderSettings = _.clone(props.accountSettings.folders) || {};
+        state.contactSettings = _.clone(props.accountSettings.contacts) || [];
+    }
+
+    return state;
+};
 
 
 class AccountAddress extends React.Component {
@@ -77,19 +93,23 @@ export default class Account extends React.Component {
         this.state = getInitialState(props);
     }
 
-    resetState() {
+    resetState = () => {
         const state = getInitialState(this.props);
         this.setState(state);
     }
 
-    toggleSettings = (ev) => {
+    handleClickCancel = (ev) => {
         ev.preventDefault();
 
-        if (this.state.editing) {
-            this.resetState();
-            return;
+        if (this.props.alwaysEditing) {
+            this.props.deleteAccount();
         }
 
+        this.resetState();
+    }
+
+    handleClickEdit = (ev) => {
+        ev.preventDefault();
         this.setState({
             editing: true,
         });
@@ -135,6 +155,8 @@ export default class Account extends React.Component {
     handleTestConnection = (ev) => {
         ev.preventDefault();
 
+        this.setState({isSaving: true});
+
         post('/api/settings/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
@@ -154,13 +176,18 @@ export default class Account extends React.Component {
                     name: this.state.name,
                 },
             );
+
+            this.setState({connected: true});
+
             if (!this.state.alwaysEditing) {
                 this.resetState();
             }
         }).catch(error => {
             this.setState({
-                error: error.data.error_message,
-                errorType: error.data.error_type,
+                error: error.data.errorMessage,
+                errorType: error.data.errorName,
+                isSaving: false,
+                connected: false,
             });
         });
     }
@@ -255,30 +282,70 @@ export default class Account extends React.Component {
         });
     }
 
+    renderViewButtons() {
+        if (this.state.deleteConfirm) {
+            return (
+                <div className="right">
+                    <button onClick={this.handleClickCancel}>Cancel</button>
+                    &nbsp;
+                    <button
+                        className="cancel"
+                        onClick={this.handleClickDelete}
+                    >Are you SURE?</button>
+                </div>
+            );
+        }
+
+        if (!this.state.editing) {
+            return (
+                <div className="right">
+                    <button onClick={this.props.moveUp} className="inactive">
+                        <i className="fa fa-arrow-up"></i>
+                    </button>
+                    &nbsp;
+                    <button onClick={this.props.moveDown} className="inactive">
+                        <i className="fa fa-arrow-down"></i>
+                    </button>
+                    &nbsp;
+                    <button onClick={this.handleClickEdit}>
+                        Edit
+                    </button>
+                    &nbsp;
+                    <button onClick={this.handleClickDelete} className="cancel">
+                        {this.state.deleteConfirm ? 'Are you SURE?' : 'Delete'}
+                    </button>
+                </div>
+            );
+        }
+    }
+
+    renderConnectedText() {
+        if (this.state.connected) {
+            return <small className="connected">connected</small>;
+        } else {
+            return <small className="not-connected">no connection</small>;
+        }
+    }
+
     render() {
         if (!this.state.editing) {
             return (
                 <div className="account">
                     <div className="wide">
-                        <div className="right">
-                        <strong>{this.state.name}</strong><br />
-                            <button onClick={this.toggleSettings}>
-                                <i className="fa fa-cog"></i>
-                            </button>
-                            <button onClick={this.handleClickDelete} className="cancel">
-                                {this.state.deleteConfirm ? 'Are you SURE?' : 'Delete'}
-                            </button>
-                        </div>
-
+                        {this.renderViewButtons()}
+                        <strong>{this.state.name}</strong>
+                        &nbsp;
+                        {this.renderConnectedText()}
+                        <br />
                         {this.state.imapSettings.username}
                     </div>
                 </div>
             );
         }
 
-        const classes = ['account'];
-        if (this.state.editing) classes.push('active');
-        if (this.props.alwaysEditing) classes.push('new');
+        const formClasses = ['account'];
+        if (this.state.editing) formClasses.push('active');
+        if (this.props.alwaysEditing) formClasses.push('new');
 
         const getTabButtonClass = tabName => (
             this.state.editingTab == tabName ? 'submit' : 'inactive'
@@ -289,20 +356,25 @@ export default class Account extends React.Component {
             this.setState({editingTab: tabName});
         };
 
+        const saveButtonClasses = ['submit'];
+        if (this.state.isSaving) {
+            saveButtonClasses.push('disabled');
+        }
+
         return (
-            <form className={classes.join(' ')}>
+            <form className={formClasses.join(' ')}>
                 <div className="wide top-bar">
                     <div className="right">
                         <button
                             type="submit"
-                            className="submit"
+                            className={saveButtonClasses.join(' ')}
                             onClick={this.handleTestConnection}
-                        >{this.props.alwaysEditing ? 'Create & Add Account' : 'Update Account'}</button>
+                        >{this.props.alwaysEditing ? 'Add account' : 'Update account'}</button>
+                        &nbsp;
                         <button
                             type="submit"
-                            className="cancel"
-                            onClick={this.props.alwaysEditing ? this.props.deleteAccount : this.toggleSettings}
-                        ><i className="fa fa-times"></i></button>
+                            onClick={this.props.alwaysEditing ? this.props.deleteAccount : this.handleClickCancel}
+                        >Cancel</button>
                     </div>
                     <input
                         className="inline"
@@ -310,21 +382,27 @@ export default class Account extends React.Component {
                         value={this.state.name}
                         onChange={(ev) => this.setState({name: ev.target.value})}
                     />
-                    <div className="error">{!this.state.errorType && this.state.error}</div>
+                    &nbsp;
+                    {this.renderConnectedText()}
+
+                    <div className="error">{this.state.error}</div>
 
                     <div className="wide">
-                        <button
+                        {this.props.alwaysEditing || <button
                             className={getTabButtonClass('address')}
                             onClick={_.partial(setTab, 'address')}
-                        >Addresses</button>
-                        <button
+                        >Addresses</button>}
+                        &nbsp;
+                        {this.props.alwaysEditing || <button
                             className={getTabButtonClass('mailbox')}
                             onClick={_.partial(setTab, 'mailbox')}
-                        >Mailboxes</button>
+                        >Mailboxes</button>}
+                        &nbsp;
                         <button
                             className={getTabButtonClass('imap')}
                             onClick={_.partial(setTab, 'imap')}
                         >Incoming server</button>
+                        &nbsp;
                         <button
                             className={getTabButtonClass('smtp')}
                             onClick={_.partial(setTab, 'smtp')}
@@ -335,7 +413,7 @@ export default class Account extends React.Component {
                 <div className={this.state.editingTab == 'address' ? 'wide' : 'hidden'}>
                     <div className="flex wide">{this.renderAddresses()}</div>
                     <button className="submit" onClick={this.handleAddAddress}>
-                        Add Address
+                        Add address
                     </button>
                 </div>
 

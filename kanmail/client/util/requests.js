@@ -29,6 +29,7 @@ function handleReponse(response, method, criticalRequestNonce=false) {
                 body = JSON.parse(body);
                 data.errorMessage = body.error_message;
                 data.errorName = body.error_name;
+                data.json = body;
             } catch(e) {
                 data.jsonError = e;
             }

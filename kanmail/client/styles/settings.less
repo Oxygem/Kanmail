@@ -94,7 +94,7 @@ section#settings {
             margin-bottom: 0;
         }
 
-        small {
+        > small {
             display: block;
             margin-left: 10px;
         }
@@ -108,6 +108,14 @@ section#settings {
         background: @lightestGrey;
         padding: 10px;
         margin: 0;
+
+        small.connected {
+            color: green;
+        }
+
+        small.not-connected {
+            color: red;
+        }
 
         &.active {
             background: @lightGrey;
@@ -140,7 +148,7 @@ section#settings {
         div.right {
             float: right;
             text-align: right;
-            width: 20%;
+            width: 25%;
         }
 
         input#name {

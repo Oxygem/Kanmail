@@ -127,10 +127,10 @@ def api_test_new_account_settings():
         account_settings['folders'] = folders_or_error
         return jsonify(connected=True, settings=account_settings)
 
-    error_type, error_message = folders_or_error
+    error_name, error_message = folders_or_error
     return jsonify(
         connected=False,
         settings=account_settings,
-        error_type=error_type,
+        error_name=error_name,
         error_message=error_message,
     ), 400
