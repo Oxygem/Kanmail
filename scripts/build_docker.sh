@@ -2,4 +2,4 @@
 
 set -ex
 
-scripts/release.py --build-only --docker
+scripts/build_release.py --build-only --docker $@
