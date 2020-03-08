@@ -73,8 +73,8 @@ export default class NewAccountForm extends React.Component {
                 isLoadingNewAccount: false,
                 configuringNewAccount: true,
                 newAccountSettings: data.json.settings,
-                newAccountError: data.error_message,
-                newAccountErrorType: data.error_type,
+                newAccountError: data.errorMessage,
+                newAccountErrorType: data.errorName,
             });
         }
 
