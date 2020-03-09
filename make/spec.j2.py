@@ -17,7 +17,11 @@ a = Analysis(  # noqa: F821
         # TLD names
         (r'{{ tld_package_dir }}/res/effective_tld_names.dat.txt', 'tld/res'),
     ],
-    hiddenimports=[],
+    hiddenimports=[
+    {%- if platform_name == 'win' -%}  # noqa
+        'win32timezone',
+    {%- endif -%}  # noqa
+    ],
     hookspath=[
         r'{{ pyupdater_package_dir }}/hooks',
     ],
