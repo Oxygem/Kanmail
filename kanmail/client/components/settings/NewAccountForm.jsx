@@ -66,6 +66,7 @@ export default class NewAccountForm extends React.Component {
                     this.state.newAccountName,
                     data.settings,
                 );
+                this.resetState();
                 return;
             }
 
