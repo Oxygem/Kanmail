@@ -237,9 +237,10 @@ export default class EmailColumnThread extends React.Component {
 
         // Mark the emails as read in the global email store
         if (this.state.unread) {
-            getEmailStore().setEmailsRead(_.map(this.props.thread, message => (
-                `${message.account_name}-${message.message_id}`
-            )));
+            getEmailStore().setEmailsRead(_.map(
+                this.props.thread,
+                email => email.accountMessageId,
+            ));
         }
 
         // Set as open (triggers highlight)
