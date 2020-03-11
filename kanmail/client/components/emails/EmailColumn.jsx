@@ -73,7 +73,7 @@ export default class EmailColumnWrapper extends React.Component {
         // folder we want to listen for changes on.
         const WrappedEmailColumn = subscribe(
             getColumnStore(this.props.id),
-            filterStore,
+            [filterStore, ['accountName']],
             settingsStore,
         )(EmailColumn);
 
@@ -94,7 +94,6 @@ class EmailColumn extends React.Component {
         threads: PropTypes.array,
         hiddenThreadHashes: PropTypes.array.isRequired,
         accountName: PropTypes.string,
-        mainColumn: PropTypes.string, // name of the *current* main column
         isMainColumn: PropTypes.bool,
         systemSettings: PropTypes.object.isRequired,
         columns: PropTypes.array.isRequired,

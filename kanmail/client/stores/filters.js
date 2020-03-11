@@ -19,13 +19,13 @@ class FilterStore extends BaseStore {
 
     setAccountFilter(accountName) {
         this.props.accountName = accountName;
-        this.triggerUpdate();
+        this.triggerUpdate(['accountName']);
     }
 
     setMainColumn(columnName) {
         if (this.props.mainColumn !== columnName) {
             this.props.mainColumn = columnName;
-            this.triggerUpdate();
+            this.triggerUpdate(['mainColumn']);
         }
     }
 }
