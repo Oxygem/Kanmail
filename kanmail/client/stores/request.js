@@ -67,13 +67,13 @@ class RequestStore extends BaseStore {
 
                 // Now we simply resolve/reject the outer promise returning
                 // the actual request promise.
-                request.then(() => {
+                request.then(response => {
                     completeRequest();
-                    resolve(request);
+                    resolve(response);
                 });
-                request.catch(() => {
+                request.catch(e => {
                     completeRequest();
-                    reject(request);
+                    reject(e);
                 });
             }
 
