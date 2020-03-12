@@ -142,6 +142,7 @@ class ThreadStore extends BaseStore {
         });
 
         this.props.fetching = true;
+        this.triggerUpdate();
 
         // Once all loaded, assign all the emails and trigger the update
         Promise.all(requests).then(() => {
