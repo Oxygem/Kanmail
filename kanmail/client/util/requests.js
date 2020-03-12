@@ -57,8 +57,6 @@ function handleReponse(response, method, criticalRequestNonce=false) {
 
 
 function get_or_delete(method, url, query={}, criticalRequestNonce=false) {
-    console.debug(`Requesting: ${method} ${url}?:`, query, criticalRequestNonce);
-
     const uri = URI(url);
 
     if (criticalRequestNonce) {
@@ -69,10 +67,7 @@ function get_or_delete(method, url, query={}, criticalRequestNonce=false) {
         fetch(uri.query(query), {
             method,
         })
-        .then(response => {
-            console.debug(`Response to ${method} ${url}`, response);
-            return handleReponse(response, method, criticalRequestNonce);
-        })
+        .then(response => handleReponse(response, method, criticalRequestNonce))
     );
 }
 
@@ -82,8 +77,6 @@ export const delete_ = _.partial(get_or_delete, 'DELETE');
 
 
 function post_or_put(method, url, data, criticalRequestNonce=false) {
-    console.debug(`Requesting: ${method} ${url} with: `, data, criticalRequestNonce);
-
     const uri = URI(url);
 
     if (criticalRequestNonce) {
@@ -98,10 +91,7 @@ function post_or_put(method, url, data, criticalRequestNonce=false) {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => {
-            console.debug(`Response to ${method} ${url}`, response);
-            return handleReponse(response, method, criticalRequestNonce);
-        })
+        .then(response => handleReponse(response, method, criticalRequestNonce))
     );
 }
 
