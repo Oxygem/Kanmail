@@ -10,7 +10,9 @@ let currentCriticalRequestNonce = null;
 
 function handleReponse(response, method, criticalRequestNonce=false) {
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
-        throw new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
+        const error = new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
+        error.criticalRequestNonceFailure = true;
+        throw error;
     }
 
     if (!response.ok) {
