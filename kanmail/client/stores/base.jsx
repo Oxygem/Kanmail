@@ -72,8 +72,11 @@ export class BaseStore {
         this.apps.push([app, propNames]);
     }
 
-    unsubscribe(app, propNames) {
-        this.apps = _.without(this.apps, [app, propNames]);
+    unsubscribe(app) {
+        this.apps = _.filter(
+            this.apps,
+            ([component,]) => component !== app,
+        );
     }
 
     triggerUpdate(updatedPropNames) {
