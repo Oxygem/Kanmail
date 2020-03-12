@@ -28,8 +28,7 @@ import { subscribe } from 'stores/base.jsx';
 export default class EmailsApp extends React.Component {
     static propTypes = {
         columns: PropTypes.array.isRequired,
-        accounts: PropTypes.object.isRequired,
-        settingsFile: PropTypes.string.isRequired,
+        accounts: PropTypes.array.isRequired,
         systemSettings: PropTypes.object.isRequired,
         folderNames: PropTypes.array,
     }
@@ -125,6 +124,7 @@ export default class EmailsApp extends React.Component {
                 name={columnName}
                 getPreviousColumn={getPreviousColumn}
                 getNextColumn={getNextColumn}
+                isMainColumn={false}
                 ref={ref => columnRefs[i] = ref}
             />);
         });

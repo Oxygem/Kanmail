@@ -103,7 +103,7 @@ export default class Filters extends React.Component {
     static propTypes = {
         mainColumn: PropTypes.string.isRequired,
         filterStore: PropTypes.object.isRequired,
-        accounts: PropTypes.object.isRequired,
+        accounts: PropTypes.array.isRequired,
         updateReady: PropTypes.bool.isRequired,
         updateDownloading: PropTypes.bool.isRequired,
         styleSettings: PropTypes.object.isRequired,

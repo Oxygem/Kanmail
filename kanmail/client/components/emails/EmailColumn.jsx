@@ -92,9 +92,9 @@ class EmailColumn extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
         threads: PropTypes.array,
-        hiddenThreadHashes: PropTypes.array.isRequired,
+        hiddenThreadHashes: PropTypes.object.isRequired,
         accountName: PropTypes.string,
-        isMainColumn: PropTypes.bool,
+        isMainColumn: PropTypes.bool.isRequired,
         systemSettings: PropTypes.object.isRequired,
         columns: PropTypes.array.isRequired,
 
