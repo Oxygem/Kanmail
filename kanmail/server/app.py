@@ -44,6 +44,7 @@ app.config['JSON_SORT_KEYS'] = False
 
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'connect_args': {'timeout': 30}}
 app.config['SQLALCHEMY_BINDS'] = {
     'contacts': f'sqlite:///{CONTACTS_CACHE_DB_FILE}',
     'folders': f'sqlite:///{FOLDER_CACHE_DB_FILE}',
