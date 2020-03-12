@@ -95,7 +95,15 @@ export default class EmailColumnThread extends React.Component {
     constructor(props) {
         super(props);
 
-        const { starred, unread, archived } = this.props.thread;
+        const { starred, archived } = this.props.thread;
+        let { unread } = this.props.thread;
+
+        // Read the emails via the column store, just in case we re-render the column
+        const columnStore = getColumnStore(this.props.columnId);
+        columnStore.readThread(this.props.thread);
+        if (columnStore.props.readThreadHashes.has(this.props.thread.hash)) {
+            unread = false;
+        }
 
         this.mouseMoveEvents = 0;
 
@@ -241,6 +249,10 @@ export default class EmailColumnThread extends React.Component {
                 this.props.thread,
                 email => email.accountMessageId,
             ));
+
+            // Read the emails via the column store, just in case we re-render the column
+            const columnStore = getColumnStore(this.props.columnId);
+            columnStore.readThread(this.props.thread);
         }
 
         // Set as open (triggers highlight)
