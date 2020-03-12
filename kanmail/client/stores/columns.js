@@ -86,13 +86,9 @@ class ColumnStore extends BaseStore {
         this.folderName = folderName;
         this.props = {
             threads: null,
+            hiddenThreadHashes: new Set(),
+            readThreadHashes: new Set(),
         };
-        this.resetCaches();
-    }
-
-    resetCaches() {
-        this.props.hiddenThreadHashes = new Set();
-        this.props.readThreadHashes = new Set();
     }
 
     readThread(thread) {
@@ -142,7 +138,6 @@ class ColumnStore extends BaseStore {
 
             if (!options.noTriggerUpdate) {
                 this.triggerUpdate();
-                this.resetCaches();
             }
         } else {
             console.debug(`Skipping update for ${this.folderName} as no changes detected`);
