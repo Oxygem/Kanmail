@@ -106,9 +106,8 @@ def create_send():
 def open_link():
     link = request.args['url']
 
-    if IS_APP:
-        if webbrowser.open(link):
-            return '', 204
+    if webbrowser.open(link):
+        return '', 204
 
     logger.critical(f'Failed to open browser link: {link}!')
     return abort(500, 'Could not open link!')

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { openLink, openWindow } from 'window.js';
+import { openFile, openLink, openWindow } from 'window.js';
 import requestStore from 'stores/request.js';
 import { cleanHtml } from 'util/html.js';
 import { post } from 'util/requests.js';
@@ -27,6 +27,11 @@ class ThreadMessageAttachment extends React.Component {
     }
 
     handleClick = () => {
+        if (this.state.downloaded) {
+            openFile(this.state.downloadedFilename);
+            return;
+        }
+
         const { part, partId } = this.props;
         const { account_name, folder_name, uid } = this.props.message;
 

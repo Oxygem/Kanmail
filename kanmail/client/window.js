@@ -62,3 +62,9 @@ export function openLink(link) {
         window.open(link);
     }
 }
+
+export function openFile(filename) {
+    get('/open-link', {
+        url: `file://${filename}`,
+    });
+}
