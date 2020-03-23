@@ -122,6 +122,16 @@ def api_download_account_email_part(account, folder, uid, part_number):
     downloads_folder = path.expanduser(path.join('~', 'Downloads'))
     local_filename = path.join(downloads_folder, request.args['filename'])
 
+    if path.exists(local_filename):
+        extension = None
+        if '.' in local_filename:
+            local_filename, extension = local_filename.rsplit('.', 1)
+
+        local_filename = f'{local_filename}-1'
+
+        if extension:
+            local_filename = f'{local_filename}.{extension}'
+
     mime_type, data = get_folder_email_part(
         account, folder, uid, part_number,
     )
