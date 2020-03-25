@@ -1,3 +1,60 @@
+# v1.2003251947
+
+Changes:
+- Don't overwrite existing files when downloading attachments.
+- After downloading an attachment, second click opens it (if possible).
+- Remove pointless logging in requests util.
+- Properly handle (ignore) invalid critical request responses in thread.
+- Trigger thread store update when fetching.
+- Actually pass back the data/error from request store responses.
+- Revert "Reset the hidden/read thread caches on column stores when updating."
+- Fixup missing/incorrect prop types.
+- Reset the hidden/read thread caches on column stores when updating.
+- Fix unsubscribe from store.
+- Track/cache read threads in the column store.
+- Set 30s timeout on sqlite to fix/reduce database lock exceptions.
+- Make email columns only listen for `accountName` filter prop changes.
+- Make it possible to subscribe to individual store props.
+- Fix key used to flag email threads as read.
+- Reset state after adding a new account.
+- Add `win32timezone` hidden import on Windows.
+- Rename `scripts/release.py` -> `scripts/build_release.py`.
+- Correct error data variables when adding a new account.
+- Tidy up the add account process and error handling.
+- Downgrade keyring to `19.2.0` and add `keyrings.alt`.
+- Add secrets module to setup keyring.
+- Don't allow multiple accounts with the same name.
+- Change settings `accounts` from a dict to a list.
+- Remove unnecessary `__future__` imports.
+- Install libssl + libffi.
+- Remove stale settings doc.
+- Move `arrayMove` into `util/array.js`.
+- Add contacts in batches.
+- Formatting.
+- Flag whether changes have been made when fixing old settings.
+- Correct window settings: (left -> x, top -> y).
+- Re-save  settings if we fix/migrate old formats.
+- Fix batch get headers usage.
+- Also capture `LoginError` in IMAP connection retries.
+- Put password back as an allowed connection kwarg.
+- Debounce saving window settings.
+- Don't trigger updates after thread delete.
+- Add error view for missing password exception.
+- Add a conversion for old in-settings-file passwords -> keyring.
+- Get/set IMAP/SMTP passwords using keyring.
+- Add keyring requirement.
+- Properly reset all account classes on settings update.
+- Fix folder initialisation checking whether a folder exists.
+- Formatting.
+- Use correct function: `pickBy` for objects (not `filter`).
+- Flag threads as hidden in the column store when moving.
+- Add fix any old settings function.
+- Fix incorrect check when validating settings keys with defaults.
+- Formatting tidy up.
+- Add logging to the folder cache and contacts modules.
+- Separate contact validation into a function.
+- Separate out settings constants.
+
 # v1.2002211810
 
 Changes:
