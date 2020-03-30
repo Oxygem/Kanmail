@@ -176,7 +176,7 @@ def prepare_release():
     click.echo()
 
 
-def build_release(build_only=False, docker=False, build_version=None):
+def build_release(release=False, docker=False, build_version=None):
     system_type = 'Docker' if docker else platform.system()
 
     if system_type == 'Darwin' and not CODESIGN_KEY_NAME:
@@ -187,25 +187,25 @@ def build_release(build_only=False, docker=False, build_version=None):
     js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
-        if build_only and click.confirm('No JS bundle exists, build it?'):
+        if not release and click.confirm('No JS bundle exists, build it?'):
             print_and_run(('yarn', 'run', 'build'))
         else:
             raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
-    if build_only:
+    if release:
+        version = _get_release_version()
+    else:
         if build_version:
             version = build_version
         else:
             version = _generate_version()
-    else:
-        version = _get_release_version()
 
     click.echo(f'--> building v{version} on {system_type}')
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = _generate_spec(version)
 
-    if build_only:
+    if not release:
         _write_version_data(version)
 
     if docker:
@@ -237,7 +237,7 @@ def build_release(build_only=False, docker=False, build_version=None):
     click.echo()
     click.echo(f'Kanmail v{version} for {system_type} built!')
 
-    if build_only:
+    if not release:
         click.echo('Single build complete...')
         return
 
@@ -296,39 +296,38 @@ def complete_release():
 
 @click.command()
 @click.option('--complete', is_flag=True, default=False)
-@click.option('--build-only', is_flag=True, default=False)
+@click.option('--release', is_flag=True, default=False)
 @click.option('--docker', is_flag=True, default=False)
 @click.option('--version', default=None)
-def release(complete, build_only, docker, version):
+def release(complete, release, docker, version):
     click.echo()
     click.echo('### Kanmail release script')
     click.echo()
 
     version_lock_exists = path.exists(TEMP_VERSION_LOCK_FILENAME)
 
-    if complete:
-        if build_only:
-            raise click.UsageError('Cannot have --build-only and --complete!')
+    if complete and not release:
+        raise click.UsageError('Cannot have --complete without --release!')
 
-        if not version_lock_exists:
-            raise click.UsageError(
-                f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
-            )
+    if complete and not version_lock_exists:
+        raise click.UsageError(
+            f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
+        )
 
         click.echo('--> [3/3] completeing relase')
         complete_release()
         return
 
     # If the version lock exists we're actually building for a given platform
-    if version_lock_exists or build_only:
-        if build_only and version_lock_exists:
-            raise click.UsageError('Cannot --build-only when preparing a release!')
+    if version_lock_exists or not release:
+        if version_lock_exists and not release:
+            raise click.UsageError('Cannot build when preparing a release!')
 
-        if version and not build_only:
-            raise click.UsageError('Cannot --version without --build-only!')
+        if version and release:
+            raise click.UsageError('Cannot --version with --release!')
 
         click.echo('--> [2*/3] building release')
-        build_release(build_only=build_only, docker=docker, build_version=version)
+        build_release(release=release, docker=docker, build_version=version)
         return
 
     # No version lock so let's create one and prepare start-of-release

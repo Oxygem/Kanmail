@@ -2,4 +2,4 @@
 
 set -ex
 
-python -m make --build-only $@
+python -m make $@

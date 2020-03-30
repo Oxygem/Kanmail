@@ -2,4 +2,4 @@
 
 set -ex
 
-python -m make $@
+python -m make --release $@
