@@ -2,4 +2,4 @@
 
 set -ex
 
-scripts/build_release.py $@
+python -m make $@

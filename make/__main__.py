@@ -4,9 +4,7 @@ import json
 import platform
 
 from datetime import datetime
-from os import environ, makedirs, path, remove, symlink
-from shutil import rmtree
-from subprocess import check_output, run
+from os import makedirs, path, remove
 
 import click
 import pyupdater
@@ -15,32 +13,21 @@ import tld
 
 from jinja2 import Template
 
-MAJOR_VERSION = 1
-
-ROOT_DIRNAME = path.normpath(path.join(path.abspath(path.dirname(__file__)), '..'))
-DIST_DIRNAME = path.join(ROOT_DIRNAME, 'dist')
-MAKE_DIRNAME = path.join(ROOT_DIRNAME, 'make')
-
-TEMP_VERSION_LOCK_FILENAME = path.join(DIST_DIRNAME, '.release_version_lock')
-TEMP_SPEC_FILENAME = path.join(DIST_DIRNAME, '.spec')
-TEMP_CHANGELOG_FILENAME = path.join(DIST_DIRNAME, '.changelog')
-
-VERSION_DATA_FILENAME = path.join(DIST_DIRNAME, 'version.json')
-
-DOCKER_NAME = 'fizzadar/kanmail'
-
-CODESIGN_KEY_NAME = environ.get('CODESIGN_KEY_NAME')
-GITHUB_API_TOKEN = environ.get('GITHUB_API_TOKEN')
-
-
-def _print_and_run(command):
-    click.echo(f'--> {command}')
-    return run(command, check=True)
-
-
-def _print_and_check_output(command):
-    click.echo(f'--> {command}')
-    return check_output(command)
+from .macos import codesign_and_notarize
+from .settings import (
+    CODESIGN_KEY_NAME,
+    DIST_DIRNAME,
+    DOCKER_NAME,
+    GITHUB_API_TOKEN,
+    MAJOR_VERSION,
+    MAKE_DIRNAME,
+    ROOT_DIRNAME,
+    TEMP_CHANGELOG_FILENAME,
+    TEMP_SPEC_FILENAME,
+    TEMP_VERSION_LOCK_FILENAME,
+    VERSION_DATA_FILENAME,
+)
+from .util import print_and_check_output, print_and_run
 
 
 def _get_pyupdater_package_dir():
@@ -96,11 +83,11 @@ def _generate_spec(version):
 
 
 def _get_git_changes():
-    previous_tag = _print_and_check_output((
+    previous_tag = print_and_check_output((
         'git', 'describe', '--abbrev=0', '--tags',
     )).strip().decode()
 
-    git_changes = _print_and_check_output((
+    git_changes = print_and_check_output((
         'git', 'log', '--oneline', '--pretty=%s', f'{previous_tag}..HEAD',
     )).strip().decode().split('\n')
 
@@ -158,43 +145,6 @@ def _write_release_version(version):
         f.write(version)
 
 
-def _macos_codesign(version):
-    new_builds_dir = path.join('pyu-data', 'new')
-
-    filename = path.join(new_builds_dir, f'Kanmail-mac-{version}.tar.gz')
-    _print_and_run(('gtar', '-C', new_builds_dir, '-xzf', filename))
-
-    # "Fix" invalid files/symlinks from pyupdater
-    # See: https://github.com/JMSwag/PyUpdater/issues/139
-    # Basically - anything in Resources that's also in MacOS - remove in MacOS
-    # and replace with symlink to the Resources copy.
-    app_name = 'Kanmail.app'
-    app_dir = path.join(new_builds_dir, app_name)
-    macos_dir = path.join(app_dir, 'Contents', 'MacOS')
-    resources_dir = path.join(app_dir, 'Contents', 'Resources')
-
-    # First *copy* the base_library.zip into Contents/Resources so that below
-    # we remove the original and replace with a symlink. Fixes codesign issues,
-    # see: https://github.com/pyinstaller/pyinstaller/issues/3550
-    _print_and_run((
-        'mv',
-        path.join(macos_dir, 'base_library.zip'),
-        resources_dir,
-    ))
-
-    symlink(
-        path.join('..', 'Resources', 'base_library.zip'),
-        path.join(macos_dir, 'base_library.zip'),
-    )
-
-    # Sign it and re-tar!
-    _print_and_run(('codesign', '-s', CODESIGN_KEY_NAME, '--deep', app_dir))
-    _print_and_run(('gtar', '-C', new_builds_dir, '-zcf', filename, app_name))
-
-    # Remove the app now we've tar-ed it up
-    rmtree(app_dir)
-
-
 def prepare_release():
     version = _generate_version()
     git_changes = _get_git_changes()
@@ -211,7 +161,7 @@ def prepare_release():
     _create_new_changelog(version, git_changes)
 
     click.echo('--> building clientside bundle')
-    _print_and_run(('yarn', 'run', 'build'))
+    print_and_run(('yarn', 'run', 'build'))
 
     if not path.isdir(DIST_DIRNAME):
         makedirs(DIST_DIRNAME)
@@ -238,7 +188,7 @@ def build_release(build_only=False, docker=False, build_version=None):
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
         if build_only and click.confirm('No JS bundle exists, build it?'):
-            _print_and_run(('yarn', 'run', 'build'))
+            print_and_run(('yarn', 'run', 'build'))
         else:
             raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
@@ -259,7 +209,7 @@ def build_release(build_only=False, docker=False, build_version=None):
         _write_version_data(version)
 
     if docker:
-        _print_and_run((
+        print_and_run((
             'docker',
             'build',
             '--pull',
@@ -270,7 +220,7 @@ def build_release(build_only=False, docker=False, build_version=None):
             '.',
         ))
     else:
-        _print_and_run((
+        print_and_run((
             'pyupdater',
             'build',
             f'--app-version={version}',
@@ -282,7 +232,7 @@ def build_release(build_only=False, docker=False, build_version=None):
 
         # Now use `codesign` to sign the package with a Developer ID
         if system_type == 'Darwin':
-            _macos_codesign(version)
+            codesign_and_notarize(version)
 
     click.echo()
     click.echo(f'Kanmail v{version} for {system_type} built!')
@@ -310,8 +260,8 @@ def complete_release():
 
     release_version = _get_release_version()
 
-    _print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
-    _print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
+    print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
+    print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
 
     if not click.confirm((
         f'Are you SURE v{release_version} is ready to release '
@@ -320,19 +270,19 @@ def complete_release():
         raise click.Abort('User is not sure!')
 
     _write_new_changelog()
-    _print_and_run(('git', 'add', 'CHANGELOG.md'))
-    _print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
-    _print_and_run((
+    print_and_run(('git', 'add', 'CHANGELOG.md'))
+    print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
+    print_and_run((
         'git', 'tag',
         '-a', f'v{release_version}',
         '-m', f'v{release_version}',
     ))
 
-    _print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
-    _print_and_run(('pyupdater', 'upload', '--service', 's3'))
+    print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
+    print_and_run(('pyupdater', 'upload', '--service', 's3'))
 
-    _print_and_run(('git', 'push'))
-    _print_and_run(('git', 'push', '--tags'))
+    print_and_run(('git', 'push'))
+    print_and_run(('git', 'push', '--tags'))
 
     _create_github_release(release_version)
 
@@ -341,7 +291,7 @@ def complete_release():
     click.echo(f'--> Kanmail v{release_version} released!')
 
     if click.confirm(f'Run scripts/clean.sh?', default=True):
-        _print_and_run(('scripts/clean.sh',))
+        print_and_run(('scripts/clean.sh',))
 
 
 @click.command()
