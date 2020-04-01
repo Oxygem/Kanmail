@@ -215,8 +215,6 @@ def build_release(release=False, docker=False, build_version=None):
             '--pull',
             '-t',
             f'kanmail:{version}',
-            '-f',
-            'docker/Dockerfile',
             '.',
         ))
     else:
