@@ -33,6 +33,7 @@ def codesign(app_dir):
         '--deep',
         '--timestamp',
         '--options', 'runtime',
+        '--entitlements', 'make/entitlements.plist',
         '--sign', CODESIGN_KEY_NAME,
         app_dir,
     ))
