@@ -258,7 +258,7 @@ def complete_release():
 
     release_version = _get_release_version()
 
-    print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
+    print_and_run(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
     print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
 
     if not click.confirm((
