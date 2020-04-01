@@ -85,11 +85,11 @@ def _generate_spec(version):
 def _get_git_changes():
     previous_tag = print_and_check_output((
         'git', 'describe', '--abbrev=0', '--tags',
-    )).strip().decode()
+    ))
 
     git_changes = print_and_check_output((
         'git', 'log', '--oneline', '--pretty=%s', f'{previous_tag}..HEAD',
-    )).strip().decode().split('\n')
+    )).splitlines()
 
     return '\n'.join([f'- {change}' for change in git_changes])
 

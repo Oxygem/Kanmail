@@ -10,4 +10,8 @@ def print_and_run(command):
 
 def print_and_check_output(command):
     click.echo(f'--> {command}')
-    return check_output(command)
+    return (
+        check_output(command)
+        .decode()  # bytes -> str
+        .strip()
+    )
