@@ -246,11 +246,11 @@ def build_release(release=False, docker=False, build_version=None):
         return
 
     click.echo((
-        f'--> run {click.style("scripts/release.py", bold=True)} '
+        f'--> run {click.style("make release", bold=True)} '
         'to build on another platform'
     ))
     click.echo((
-        f'--> run {click.style("scripts/release.py --complete", bold=True)} '
+        f'--> run {click.style("make release-complete", bold=True)} '
         'to complete the release'
     ))
     click.echo()
@@ -294,8 +294,8 @@ def complete_release():
     remove(TEMP_VERSION_LOCK_FILENAME)
     click.echo(f'--> Kanmail v{release_version} released!')
 
-    if click.confirm(f'Run scripts/clean.sh?', default=True):
-        print_and_run(('scripts/clean.sh',))
+    if click.confirm(f'Run make clean?', default=True):
+        print_and_run(('make', 'clean'))
 
 
 @click.command()
