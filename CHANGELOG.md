@@ -1,3 +1,16 @@
+# v1.2004031156
+
+Changes:
+- Add check for notarize envar on MacOS.
+- Add entitlements.plist for MacOS codesigning.
+- First pass implementation at MacOS notarization during build.
+- Print and run > print and check output for docker inspect.
+- Handle strip/decode in the util.
+- Move `Dockerfile` to the top directory.
+- Replace scripts with a `Makefile`.
+- Swap `--build-only` for `--release` so the default is build, not release.
+- Split `scripts/build_release.py` into a module under `make`.
+
 # v1.2003251947
 
 Changes:
