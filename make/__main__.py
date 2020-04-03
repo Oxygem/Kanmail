@@ -21,6 +21,7 @@ from .settings import (
     GITHUB_API_TOKEN,
     MAJOR_VERSION,
     MAKE_DIRNAME,
+    NOTARIZE_PASSWORD_KEYCHAIN_NAME,
     ROOT_DIRNAME,
     TEMP_CHANGELOG_FILENAME,
     TEMP_SPEC_FILENAME,
@@ -179,10 +180,15 @@ def prepare_release():
 def build_release(release=False, docker=False, build_version=None):
     system_type = 'Docker' if docker else platform.system()
 
-    if system_type == 'Darwin' and not CODESIGN_KEY_NAME:
-        raise click.ClickException(
-            'No `CODESIGN_KEY_NAME` environment variable provided!',
-        )
+    if system_type == 'Darwin':
+        for key, value in (
+            ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
+            ('NOTARIZE_PASSWORD_KEYCHAIN_NAME', NOTARIZE_PASSWORD_KEYCHAIN_NAME),
+        ):
+            if not value:
+                raise click.ClickException(
+                    f'No `{key}` environment variable provided!',
+                )
 
     js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
     js_bundle_exists = path.exists(js_bundle_filename)
