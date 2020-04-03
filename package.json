@@ -21,7 +21,7 @@
     "eslint-plugin-react": "^7.4.0",
     "immutability-helper": "^2.4.0",
     "immutable": "^3.8.2",
-    "less": "^2.7.2",
+    "less": "^3",
     "less-loader": "^4.0.5",
     "lodash": "^4.17.10",
     "moment": "^2.22.2",
