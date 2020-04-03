@@ -7,6 +7,9 @@ docker:
 release:
 	python -m make --release
 
+release-complete:
+	python -m make --release --complete
+
 clean:
 	rm -rf dist/*
 	rm -f dist/.release_version_lock
