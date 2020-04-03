@@ -318,6 +318,7 @@ def release(complete, release, docker, version):
             f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
         )
 
+    if complete:
         click.echo('--> [3/3] completeing relase')
         complete_release()
         return
