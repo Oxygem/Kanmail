@@ -17,7 +17,7 @@ from kanmail.settings.constants import (
     APP_NAME,
     DEVICE_ID_FILE,
     FROZEN,
-    LICENSE_SERVER,
+    LICENSE_SERVER_URL,
     PyUpdaterConfig,
 )
 from kanmail.version import get_version, get_version_data
@@ -45,12 +45,12 @@ def register_or_ping_device() -> None:
 
     try:
         if existing_device_id:
-            response = requests.post(f'{LICENSE_SERVER}/api/v1/ping', data={
+            response = requests.post(f'{LICENSE_SERVER_URL}/api/v1/ping', data={
                 'device_id': existing_device_id,
                 'version': get_version(),
             })
         else:
-            response = requests.post(f'{LICENSE_SERVER}/api/v1/register')
+            response = requests.post(f'{LICENSE_SERVER_URL}/api/v1/register')
     except ConnectionError as e:
         logger.warning(f'Could not connect to license server: {e}')
         return

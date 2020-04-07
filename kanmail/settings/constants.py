@@ -79,15 +79,15 @@ GUI_LIB = platform_to_gui[PLATFORM]
 # Server settings
 #
 
-UPDATE_SERVER = 'https://updates.kanmail.io'
-LICENSE_SERVER = 'https://license.kanmail.io'
+UPDATE_SERVER_URL = 'https://updates.kanmail.io'
+LICENSE_SERVER_URL = 'https://license.kanmail.io'
 
 if DEBUG:
-    UPDATE_SERVER = environ.get(
+    UPDATE_SERVER_URL = environ.get(
         'KANMAIL_UPDATE_SERVER',
         'http://localhost:5000/updates',
     )
-    LICENSE_SERVER = environ.get(
+    LICENSE_SERVER_URL = environ.get(
         'KANMAIL_LICENSE_SERVER',
         'http://localhost:5000',
     )
@@ -96,5 +96,5 @@ class PyUpdaterConfig(object):  # noqa: E302
     PUBLIC_KEY = 'c++zSv15DkOJItm9YoUvIbUBXZZaVWF8YheJlMoU0HU'
     COMPANY_NAME = 'Oxygem'
     APP_NAME = APP_NAME
-    UPDATE_URLS = [UPDATE_SERVER]
+    UPDATE_URLS = [UPDATE_SERVER_URL]
     MAX_DOWNLOAD_RETRIES = 3
