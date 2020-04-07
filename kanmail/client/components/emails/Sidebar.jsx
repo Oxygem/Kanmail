@@ -56,7 +56,7 @@ export default class Sidebar extends React.Component {
                 <Filters />
 
                 <footer>
-                    <a onClick={() => openLink('https://github.com/Fizzadar/Kanmail')}>
+                    <a onClick={() => openLink(window.KANMAIL_WEBSITE_URL)}>
                         Kanmail v{window.KANMAIL_VERSION}
                     </a>
                     {window.KANMAIL_DEBUG && ' (debug)'}

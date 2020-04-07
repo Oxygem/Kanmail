@@ -79,6 +79,7 @@ GUI_LIB = platform_to_gui[PLATFORM]
 # Server settings
 #
 
+WEBSITE_URL = 'https://kanmail.io'
 UPDATE_SERVER_URL = 'https://updates.kanmail.io'
 LICENSE_SERVER_URL = 'https://license.kanmail.io'
 
