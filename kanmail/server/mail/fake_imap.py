@@ -97,6 +97,7 @@ def make_key(key):
 
 class FakeIMAPClient(object):
     _current_folder = None
+    _has_searched = False
 
     def __init__(self, *args, **kwargs):
         logger.debug(f'Creating fake IMAP: ({args}, {kwargs})')
@@ -107,6 +108,9 @@ class FakeIMAPClient(object):
     def login(self, username, password):
         random_sleep()
 
+    def folder_exists(self, folder_name):
+        return True
+
     def select_folder(self, folder_name):
         self._current_folder = folder_name
 
@@ -115,7 +119,9 @@ class FakeIMAPClient(object):
 
     def search(self, query):
         random_sleep()
-        return FAKE_IMAPCLIENT_UIDS
+        if not self._has_searched:
+            return FAKE_IMAPCLIENT_UIDS
+        return []
 
     def fetch(self, uids, keys):
         random_sleep()
@@ -129,6 +135,12 @@ class FakeIMAPClient(object):
             )
 
         return responses
+
+    def copy(self, uids, new_folder):
+        pass
+
+    def delete_messages(self, uids):
+        pass
 
 
 def bootstrap_fake_imap():
