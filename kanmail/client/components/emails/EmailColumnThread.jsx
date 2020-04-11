@@ -193,15 +193,6 @@ export default class EmailColumnThread extends React.Component {
         return this.state.trashing || this.state.archiving;
     }
 
-    getAddressList() {
-        return _.uniq(_.reduce(this.props.thread, (memo, message) => {
-            memo = _.concat(memo, _.map(message.from, address => (
-                formatAddress(address, true)
-            )));
-            return memo;
-        }, []));
-    }
-
     /*
         Hover states/handling
     */
@@ -595,10 +586,19 @@ export default class EmailColumnThread extends React.Component {
         );
     }
 
+    renderAddresses() {
+        const uniqueAddresses = _.uniqBy(_.reduce(this.props.thread, (memo, message) => {
+            memo = _.concat(memo, _.map(message.from, address => address));
+            return memo;
+        }, []), address => address[1]);
+
+        return _.map(uniqueAddresses, address => formatAddress(address, true)).join(', ');
+    }
+
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
-        const addresses = this.getAddressList();
+        const addresses = this.renderAddresses();
 
         const classNames = ['email'];
 
@@ -632,7 +632,7 @@ export default class EmailColumnThread extends React.Component {
                     <span className="date">
                         {formatDate(latestEmail.date)}
                     </span>
-                    {addresses.join(', ')}
+                    {addresses}
                 </h5>
                 <h4>
                     {latestEmail.subject}
