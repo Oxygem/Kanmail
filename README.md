@@ -1,6 +1,9 @@
-# Kanmail
+<h1>
+    <img src="./docs/static/icon-pink.png" width="28px" />
+    Kanmail
+</h1>
 
-An email client that functions like a kanban board, for Mac/Windows/Linux/Docker. [**Download the latest release here**](https://github.com/Fizzadar/Kanmail/releases/latest).
+An email client that functions like a kanban board, for Mac/Windows/Linux/Docker. [**Download the latest release here**](https://kanmail.io/download).
 
 ![](./screenshot.png)
 

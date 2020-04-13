@@ -1,4 +1,7 @@
-# Kanmail Documentation
+<h1>
+    <img src="./static/icon-pink.png" width="28px" />
+    Kanmail Documentation
+</h1>
 
 Welcome to the Kanmail user documentation.
 
