@@ -390,6 +390,6 @@ export default class BaseEmails {
         });
 
         const renderTaken = (performance.now() - renderStart).toFixed(2);
-        console.debug(`${emails.length} Emails processed in ${processTaken}ms and rendered in ${renderTaken}ms`);
+        console.info(`${emails.length} Emails processed in ${processTaken}ms and rendered in ${renderTaken}ms`);
     }
 }
