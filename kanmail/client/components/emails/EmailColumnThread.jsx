@@ -116,41 +116,6 @@ export default class EmailColumnThread extends React.Component {
         }
     }
 
-    // See below as to why we have to use this unsafe(ish) method
-    UNSAFE_componentWillReceiveProps(nextProps) {
-        // Ensure that we match any thread props - these are copied to state so that
-        // we can star/read/archive a thread without actually re-rendering the entire
-        // column, just this component.
-        const { starred, unread, archived } = nextProps.thread;
-
-        this.setState({
-            starred: starred,
-            unread: unread,
-            archived: archived,
-        });
-    }
-
-    // static getDerivedStateFromProps(props, state) {
-    //     // NOTE: this method is *useless* because it triggers every render, not just
-    //     // when receving props from above. React is annoying.
-    //
-    //     // Ensure that we match any thread props - these are copied to state so that
-    //     // we can star/read/archive a thread without actually re-rendering the entire
-    //     // column, just this component.
-    //     const { starred, unread, archived } = props.thread;
-    //     if (
-    //         state.starred !== starred
-    //         || state.unread !== unread
-    //         || state.archived !== archived
-    //     ) {
-    //         return {
-    //             starred,
-    //             unread,
-    //             archived,
-    //         }
-    //     }
-    // }
-
     componentDidUpdate(prevProps) {
         // If we're open and the thread changed, reopen
         if (
@@ -168,6 +133,24 @@ export default class EmailColumnThread extends React.Component {
             });
 
             threadStore.loadThread(this.props.thread);
+        }
+
+        // We want to detect when *props update*, but not state. This effectively
+        // reimplements the deprecated & "unsafe" componentWillReceiveProps.
+        const prevThreadProps = _.pick(prevProps.thread, ['starred', 'unread', 'archived']);
+        const threadProps = _.pick(this.props.thread, ['starred', 'unread', 'archived']);
+        if (_.isEqual(prevThreadProps, threadProps)) {
+            return;
+        }
+
+        // If our state doesn't match the latest props, update
+        const { starred, unread, archived } = this.props.thread;
+        if (
+            this.state.starred !== starred
+            || this.state.unread !== unread
+            || this.state.archived !== archived
+        ) {
+            this.setState({unread, starred, archived});
         }
     }
 
