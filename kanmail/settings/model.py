@@ -93,6 +93,15 @@ def _validate_key(value, spec, path):
         raise _make_type_error(value, spec, path)
 
 
+def validate_unique_accounts(accounts):
+    account_names = set()
+    for account in accounts:
+        account_name = account['name']
+        if account_name in account_names:
+            raise ValueError('Cannot have duplicate account names!')
+        account_names.add(account_name)
+
+
 def validate_settings(
     settings: dict = None,
     spec: dict = MODEL,
@@ -101,14 +110,7 @@ def validate_settings(
     if not isinstance(settings, dict):
         return _validate_key(settings, spec, path)
 
-    accounts = settings.get('accounts')
-    if accounts:
-        account_names = set()
-        for account in accounts:
-            account_name = account['name']
-            if account_name in account_names:
-                raise ValueError('Cannot have duplicate account names!')
-            account_names.add(account_name)
+    validate_unique_accounts(settings.get('accounts', []))
 
     path = path or []
     any_key = KEY in spec

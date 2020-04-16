@@ -11,6 +11,7 @@ from kanmail.settings import (
     update_settings,
 )
 from kanmail.settings.constants import IS_APP, SETTINGS_FILE
+from kanmail.settings.model import validate_unique_accounts
 from kanmail.window import get_main_window_size_position, reload_main_window
 
 
@@ -26,20 +27,17 @@ def _extract_password(obj):
     if not obj or not all(k in obj for k in ('host', 'username', 'password')):
         return
 
-    set_password(obj['host'], obj['username'], obj['password'])
+    set_password(obj['host'], obj['username'], obj.pop('password'))
 
 
 @app.route('/api/settings', methods=('PUT',))
 def api_set_settings():
     request_data = request.get_json()
 
-    account_keys = set()
-    for account in request_data.get('accounts', []):
-        name = account['name']
-        if name in account_keys:
-            raise ValueError('Cannot have more than one account with the same name!')
+    accounts = request_data.get('accounts', [])
+    validate_unique_accounts(accounts)
 
-        account_keys.add(name)
+    for account in accounts:
         _extract_password(account.get('imap_settings'))
         _extract_password(account.get('smtp_settings'))
 
