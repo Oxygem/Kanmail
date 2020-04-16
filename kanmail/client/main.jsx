@@ -15,7 +15,7 @@ import ContactsApp from 'components/contacts/ContactsApp.jsx';
 import settingsStore from 'stores/settings.js';
 
 
-const appRoot = document.querySelector('div[data-root-app]');
+const appRoot = document.querySelector('div[data-emails-app]');
 
 if (appRoot) {
     // Load the settings *then* bootstrap the app into the DOM
