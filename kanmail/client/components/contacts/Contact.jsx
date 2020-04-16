@@ -34,6 +34,8 @@ export default class Contact extends React.Component {
         this.setState({
             editing: false,
             deleteConfirm: false,
+            name: this.props.name,
+            email: this.props.email,
         });
     }
 
