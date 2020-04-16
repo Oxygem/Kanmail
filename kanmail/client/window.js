@@ -56,6 +56,15 @@ export function openContacts() {
     });
 }
 
+export function openLicense() {
+    openWindow('/license', {
+        unique_key: 'license',
+        title: 'Kanmail License',
+        width: 540,
+        height: 340,
+    });
+}
+
 export function openLink(link) {
     if (window.KANMAIL_IS_APP) {
         get('/open-link', {
