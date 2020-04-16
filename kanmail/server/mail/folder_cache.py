@@ -105,16 +105,21 @@ class FolderCache(object):
         self.folder = folder
         self.name = f'{self.folder.account.name}/{self.folder.name}'
 
+        # Use user@host for the cache key, so we invalidate when accounts are changed
+        # TODO: cache cleanup
+        imap_settings = self.folder.account.settings['imap_connection']
+        self.cache_key = f'{imap_settings["username"]}@{imap_settings["host"]}'
+
     @lock_class_method
     def get_folder_cache_item(self):
         try:
             folder_cache_item = FolderCacheItem.query.filter_by(
-                account_name=self.folder.account.name,
+                account_name=self.cache_key,
                 folder_name=self.folder.name,
             ).one()
         except NoResultFound:
             folder_cache_item = FolderCacheItem(
-                account_name=self.folder.account.name,
+                account_name=self.cache_key,
                 folder_name=self.folder.name,
             )
             save_cache_items(folder_cache_item)
