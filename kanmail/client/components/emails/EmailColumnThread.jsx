@@ -567,19 +567,22 @@ export default class EmailColumnThread extends React.Component {
         );
     }
 
-    renderAddresses() {
-        const uniqueAddresses = _.uniqBy(_.reduce(this.props.thread, (memo, message) => {
-            memo = _.concat(memo, _.map(message.from, address => address));
-            return memo;
-        }, []), address => address[1]);
-
-        return _.map(uniqueAddresses, address => formatAddress(address, true)).join(', ');
-    }
-
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
-        const addresses = this.renderAddresses();
+
+        const uniqueAddresses = _.uniqBy(
+            _.reduce(this.props.thread, (memo, message) => {
+                memo = _.concat(memo, _.map(message.from, address => address));
+                return memo;
+            }, []),
+            address => address[1],
+        );
+
+        const addresses = _.map(
+            uniqueAddresses,
+            address => formatAddress(address, true),
+        ).join(', ');
 
         const classNames = ['email'];
 
@@ -624,7 +627,7 @@ export default class EmailColumnThread extends React.Component {
                     &nbsp;/&nbsp;
                     <i className="fa fa-envelope-o"></i> {thread.length}
                     &nbsp;/&nbsp;
-                    <i className="fa fa-user-o"></i> {addresses.length}
+                    <i className="fa fa-user-o"></i> {uniqueAddresses.length}
                     {this.renderAttachmentCount()}
 
                     <span className="buttons">
