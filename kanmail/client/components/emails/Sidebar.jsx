@@ -25,11 +25,7 @@ export default class Sidebar extends React.Component {
     }
 
     openSend = () => {
-        openWindow('/send', {
-            title: 'Kanmail: compose email',
-            width: 800,
-            height: 600,
-        });
+        openWindow('/send', {title: 'Kanmail: compose email'});
     }
 
     render() {
