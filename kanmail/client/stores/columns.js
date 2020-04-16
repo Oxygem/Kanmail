@@ -95,12 +95,20 @@ class ColumnStore extends BaseStore {
         this.props.readThreadHashes.add(thread.hash);
     }
 
+    hasReadThread(thread) {
+        return this.props.readThreadHashes.has(thread.hash);
+    }
+
     hideThread(thread) {
         this.props.hiddenThreadHashes.add(thread.hash);
     }
 
     showThread(thread) {
         this.props.hiddenThreadHashes.delete(thread.hash);
+    }
+
+    hasHiddenThread(thread) {
+        this.props.hiddenThreadHashes.has(thread.hash);
     }
 
     setThreads(threads, options={}) {

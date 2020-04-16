@@ -257,7 +257,7 @@ class EmailColumn extends React.Component {
                 }
 
                 // If this email has been hidden (ie, is/will be moving elsewhere)
-                if (this.props.hiddenThreadHashes.has(thread.hash)) {
+                if (getColumnStore(this.props.id).hasHiddenThread(thread)) {
                     return false;
                 }
 

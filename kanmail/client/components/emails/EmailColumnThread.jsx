@@ -99,9 +99,7 @@ export default class EmailColumnThread extends React.Component {
         let { unread } = this.props.thread;
 
         // Read the emails via the column store, just in case we re-render the column
-        const columnStore = getColumnStore(this.props.columnId);
-        columnStore.readThread(this.props.thread);
-        if (columnStore.props.readThreadHashes.has(this.props.thread.hash)) {
+        if (getColumnStore(this.props.columnId).hasReadThread(this.props.thread)) {
             unread = false;
         }
 
