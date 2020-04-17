@@ -26,7 +26,7 @@ def get_ispdb_confg(domain):
                 continue
 
             imap_settings['host'] = incoming.find('hostname').text
-            imap_settings['port'] = incoming.find('port').text
+            imap_settings['port'] = int(incoming.find('port').text)
             imap_settings['ssl'] = incoming.find('socketType').text == 'SSL'
             break
 
@@ -35,7 +35,7 @@ def get_ispdb_confg(domain):
                 continue
 
             smtp_settings['host'] = outgoing.find('hostname').text
-            smtp_settings['port'] = outgoing.find('port').text
+            smtp_settings['port'] = int(outgoing.find('port').text)
 
             socket_type = outgoing.find('socketType').text
             smtp_settings['ssl'] = socket_type == 'SSL'
