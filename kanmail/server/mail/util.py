@@ -47,7 +47,7 @@ def make_contacts(addresses):
     return [make_contact_tuple(address) for address in addresses]
 
 
-def make_email_headers(account, folder, uid, data, parts):
+def make_email_headers(account, folder, uid, data, parts, save_contacts=True):
     # Parse references header into list of reference message IDs
     headers = extract_headers(
         data[b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]'],
@@ -99,7 +99,6 @@ def make_email_headers(account, folder, uid, data, parts):
     bcc = make_contacts(envelope.bcc)
     reply_to = make_contacts(envelope.reply_to)
 
-    save_contacts = folder.alias_name not in ('spam', 'trash')
     if save_contacts:
         all_contacts = set((*from_, *to, *send, *cc, *bcc, *reply_to))
         add_contacts(all_contacts)

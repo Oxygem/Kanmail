@@ -204,7 +204,10 @@ class Folder(object):
 
         for uid, data in email_headers.items():
             parts = parse_bodystructure(data[b'BODYSTRUCTURE'])
-            headers = make_email_headers(self.account, self, uid, data, parts)
+            headers = make_email_headers(
+                self.account, self, uid, data, parts,
+                save_contacts=self.alias_name not in ('spam', 'trash'),
+            )
             emails.append(headers)
             uid_to_headers[uid] = headers
 
