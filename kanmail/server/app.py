@@ -65,11 +65,14 @@ def boot() -> None:
     from kanmail.server.views import error  # noqa: F401
 
     # API views
-    from kanmail.server.views import accounts_api  # noqa: F401
-    from kanmail.server.views import contacts_api  # noqa: F401
-    from kanmail.server.views import email_api  # noqa: F401
-    from kanmail.server.views import settings_api  # noqa: F401
-    from kanmail.server.views import update_api  # noqa: F401
+    from kanmail.server.views import (  # noqa: F401
+        accounts_api,
+        contacts_api,
+        email_api,
+        license_api,
+        settings_api,
+        update_api,
+    )
 
     # Database models
     from kanmail.server.mail.contacts import Contact  # noqa: F401
