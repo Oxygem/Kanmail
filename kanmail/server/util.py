@@ -22,7 +22,7 @@ def get_or_400(obj: ImmutableMultiDict, key: str) -> dict:
     data = obj.get(key)
 
     if not data:
-        abort(400)
+        abort(400, f'missing data: {key}')
 
     return data
 
