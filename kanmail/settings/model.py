@@ -2,8 +2,6 @@ import uuid
 
 from typing import Optional
 
-from keyring import set_password
-
 
 KEY = uuid.uuid4().hex
 
@@ -142,6 +140,10 @@ def validate_settings(
 
 
 def fix_any_old_setings(settings: dict):
+    # Inline to prevent circular reference
+    # TODO: consider moving this function into it's own file
+    from kanmail.secrets import set_password
+
     has_changed = False
 
     style_settings = settings.get('style')
@@ -177,7 +179,7 @@ def fix_any_old_setings(settings: dict):
             # pre v1.2002211810
             password = imap_settings.pop('password', None)
             if password:
-                set_password(imap_settings['host'], imap_settings['username'], password)
+                set_password('account', imap_settings['host'], imap_settings['username'], password)
                 has_changed = True
 
         # Fix for settings.accounts.<name>.smtp_connection.port changing from str -> int
@@ -193,7 +195,7 @@ def fix_any_old_setings(settings: dict):
             # pre v1.2002211810
             password = smtp_settings.pop('password', None)
             if password:
-                set_password(smtp_settings['host'], smtp_settings['username'], password)
+                set_password('account', smtp_settings['host'], smtp_settings['username'], password)
                 has_changed = True
 
     return has_changed

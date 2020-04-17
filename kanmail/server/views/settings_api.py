@@ -1,6 +1,6 @@
 from flask import jsonify, request
-from keyring import set_password
 
+from kanmail.secrets import set_password
 from kanmail.server.app import app
 from kanmail.server.mail import reset_accounts
 from kanmail.server.mail.folder_cache import bust_all_caches
@@ -27,7 +27,7 @@ def _extract_password(obj):
     if not obj or not all(k in obj for k in ('host', 'username', 'password')):
         return
 
-    set_password(obj['host'], obj['username'], obj.pop('password'))
+    set_password('account', obj['host'], obj['username'], obj.pop('password'))
 
 
 @app.route('/api/settings', methods=('PUT',))

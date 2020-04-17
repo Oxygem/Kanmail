@@ -6,9 +6,9 @@ from time import time
 
 from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError, LoginError
-from keyring import get_password
 
 from kanmail.log import logger
+from kanmail.secrets import get_password
 from kanmail.settings.constants import DEBUG_SMTP
 
 DEFAULT_ATTEMPTS = 10
@@ -156,7 +156,7 @@ class ImapConnectionPool(object):
     @contextmanager
     def get_connection(self, selected_folder=None):
         if not self.password:
-            self.password = get_password(self.host, self.username)
+            self.password = get_password('account', self.host, self.username)
 
         if not self.password:
             raise ConnectionSettingsError(
@@ -206,7 +206,7 @@ class SmtpConnection(object):
     @contextmanager
     def get_connection(self):
         if not self.password:
-            self.password = get_password(self.host, self.username)
+            self.password = get_password('account', self.host, self.username)
 
         if not self.password:
             raise ConnectionSettingsError(
