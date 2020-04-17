@@ -37,6 +37,16 @@ export default class BaseEmails {
         return _.map(settingsStore.props.accounts, account => account.name);
     }
 
+    getAccountsByName() {
+        return _.reduce(
+            settingsStore.props.accounts,
+            (memo, account) => {
+                memo[account.name] = account;
+                return memo;
+            }, {},
+        );
+    }
+
     /*
         Functions to be implemented by child classes.
     */
@@ -112,6 +122,8 @@ export default class BaseEmails {
             `Adding ${emails.length} emails to ${accountKey}/${folderName}`,
         );
 
+        const accountsByName = this.getAccountsByName();
+
         _.each(emails, email => {
             // Get the account-unique messageID
             const accountMessageId = `${accountKey}-${email.message_id}`;
@@ -130,6 +142,7 @@ export default class BaseEmails {
 
             // New email - setup it's folderUids and so on
             } else {
+                email.account = accountsByName[accountKey];
                 email.accountMessageId = accountMessageId;
                 email.folderUids = {
                     [folderName]: email.uid,

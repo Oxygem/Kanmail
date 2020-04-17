@@ -5,6 +5,7 @@ import { DropTarget } from 'react-dnd';
 
 import { ALIAS_FOLDERS, ALIAS_TO_ICON } from 'constants.js';
 import { openSettings, openContacts, openLicense } from 'window.js';
+
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
@@ -12,7 +13,9 @@ import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 import mainEmailStore from 'stores/emails/main.js';
+
 import { capitalizeFirstLetter } from 'util/string.js';
+import { getAccountIconName } from 'util/accounts.js';
 
 
 const folderLinkTarget = {
@@ -164,9 +167,8 @@ export default class Filters extends React.Component {
             <li
                 key={account.name}
                 className={this.props.accountName === account.name ? 'active': ''}
-            ><a
-                onClick={_.partial(this.setAccountFilter, account.name)}>
-                <i className="fa fa-google"></i> {account.name}
+            ><a onClick={_.partial(this.setAccountFilter, account.name)}>
+                <i className={`fa fa-${getAccountIconName(account)}`}></i> {account.name}
             </a></li>
         ));
     }

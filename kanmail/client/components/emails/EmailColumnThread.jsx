@@ -12,6 +12,7 @@ import threadStore from 'stores/thread.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { getColumnStore } from 'stores/columns.js';
 
+import { getAccountIconName } from 'util/accounts.js';
 import { formatAddress, formatDate } from 'util/string.js';
 
 
@@ -623,7 +624,8 @@ export default class EmailColumnThread extends React.Component {
                 </h4>
                 <p>{latestEmail.excerpt}</p>
                 <div className="meta">
-                    <i className="fa fa-google"></i> {latestEmail.account_name}
+                    <i className={`fa fa-${getAccountIconName(latestEmail.account)}`}></i>
+                    &nbsp;{latestEmail.account_name}
                     &nbsp;/&nbsp;
                     <i className="fa fa-envelope-o"></i> {thread.length}
                     &nbsp;/&nbsp;
