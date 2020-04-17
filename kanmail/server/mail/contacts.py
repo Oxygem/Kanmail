@@ -68,6 +68,9 @@ def is_valid_contact(name, email):
     if email.startswith('bounce'):
         return False
 
+    if ' via ' in name:
+        return False
+
     return True
 
 
