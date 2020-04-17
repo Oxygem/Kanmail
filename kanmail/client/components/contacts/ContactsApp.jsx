@@ -65,7 +65,7 @@ export default class ContactsApp extends React.Component {
                 <HeaderBar />
 
                 <section id="contacts">
-                    <h2>{_.size(this.state.contacts)} Contacts</h2>
+                    <h2>{_.size(this.state.contacts).toLocaleString()} Contacts</h2>
                     <div className="search">
                         <label htmlFor="search">Filter contacts</label>
                         <input
