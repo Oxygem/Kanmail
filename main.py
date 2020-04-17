@@ -6,7 +6,7 @@ from time import sleep
 import requests
 import webview
 
-from kanmail.device import register_or_ping_device
+from kanmail.license import validate_or_remove_license
 from kanmail.log import logger
 from kanmail.server.app import app, boot
 from kanmail.settings import get_window_settings
@@ -66,8 +66,7 @@ def main():
     server_thread.daemon = True
     server_thread.start()
 
-    # Register/ping immediately - without caring if it fails
-    run_thread(register_or_ping_device)
+    run_thread(validate_or_remove_license)
 
     # Ensure the webserver is up & running by polling it
     waits = 0

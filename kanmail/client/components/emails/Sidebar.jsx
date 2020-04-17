@@ -5,7 +5,7 @@ import Filters from 'components/emails/Filters.jsx';
 import SidebarHeader from 'components/emails/SidebarHeader.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
 
-import { openWindow } from 'window.js';
+import { openLicense, openLink, openWindow } from 'window.js';
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 
@@ -52,9 +52,13 @@ export default class Sidebar extends React.Component {
                 <Filters />
 
                 <footer>
-                    {window.KANMAIL_LICENSED ? 'Licensed': 'Unlicensed'} &middot; Beta<br />
+                    <a onClick={openLicense}>
+                        {window.KANMAIL_LICENSED ? 'Licensed': 'Unlicensed'}
+                    </a> &middot; Beta<br />
 
-                    Kanmail v{window.KANMAIL_VERSION} {window.KANMAIL_DEBUG && '(debug)'}
+                    <a onClick={() => openLink(window.KANMAIL_WEBSITE_URL)}>
+                        Kanmail v{window.KANMAIL_VERSION}
+                    </a> {window.KANMAIL_DEBUG && '(debug)'}
 
                     <FooterStatus />
                 </footer>

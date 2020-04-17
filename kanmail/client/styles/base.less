@@ -39,6 +39,7 @@
 }
 
 .no-select {
+    cursor: default;
     user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -215,21 +216,23 @@ button {
         background: @lightGrey;
         cursor: auto;
     }
+
+    &.main-button {
+        padding: 15px;
+        font-size: 16px;
+    }
 }
 
-input {
+input, textarea {
     width: 100%;
     border-radius: @borderRadius;
     padding: 5px;
-    border: 1px solid #E7E7E7;
+    border: 1px solid @formBorderGrey;
     font-size: 16px;
 
-    input:hover, input:focus {
-        border-color: #D7D7D7;
-    }
-
     &:hover, &:focus {
-        border-color: #D7D7D7;
+        border-color: @formBorderGreyHover;
+        outline: none;
     }
 
     &.inline, &[type=checkbox] {

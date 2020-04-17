@@ -11,6 +11,7 @@ import EmailsApp from 'components/emails/EmailsApp.jsx';
 import SendApp from 'components/send/SendApp.jsx'
 import SettingsApp from 'components/settings/SettingsApp.jsx';
 import ContactsApp from 'components/contacts/ContactsApp.jsx';
+import LicenseApp from 'components/license/LicenseApp.jsx';
 
 import settingsStore from 'stores/settings.js';
 
@@ -65,5 +66,18 @@ if (contactsAppRoot) {
         ReactDOM.render(<ErrorBoundary>
             <ContactsApp contacts={contacts} />
         </ErrorBoundary>, contactsAppRoot);
+    });
+}
+
+
+const licenseAppRoot = document.querySelector('div[data-license-app]');
+
+if (licenseAppRoot) {
+    // Load the settings *then* bootstrap the app into the DOM
+    settingsStore.getSettings().then(() => {
+        console.debug('Settings loaded, bootstrapping license app to DOM...');
+        ReactDOM.render(<ErrorBoundary>
+            <LicenseApp />
+        </ErrorBoundary>, licenseAppRoot);
     });
 }

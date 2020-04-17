@@ -28,13 +28,14 @@ CACHE_DIR = path.join(APP_DIR, 'cache')
 CONTACTS_CACHE_DB_FILE = path.join(CACHE_DIR, 'contacts.db')
 FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
 
-# Device ID cache filename
-DEVICE_ID_FILE = path.join(CACHE_DIR, '.device_id')
 # Window settings/position cache filename
 WINDOW_CACHE_FILE = path.join(CACHE_DIR, '.window_position')
 
 # Settings JSON filename
 SETTINGS_FILE = path.join(APP_DIR, 'settings.json')
+
+# License JSON filename
+LICENSE_FILE = path.join(APP_DIR, 'license.json')
 
 # Log filename
 LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
@@ -80,18 +81,21 @@ GUI_LIB = platform_to_gui[PLATFORM]
 #
 
 WEBSITE_URL = 'https://kanmail.io'
+
 UPDATE_SERVER_URL = 'https://updates.kanmail.io'
-LICENSE_SERVER_URL = 'https://license.kanmail.io'
+LICENSE_SERVER_URL = 'https://keys.oxygem.com'
+
+# Kanmail v1 app
+LICENSE_SERVER_APP_TOKEN = '9AB769CBB209428A81F102C69715DEB5'
 
 if DEBUG:
-    UPDATE_SERVER_URL = environ.get(
-        'KANMAIL_UPDATE_SERVER',
-        'http://localhost:5000/updates',
-    )
-    LICENSE_SERVER_URL = environ.get(
-        'KANMAIL_LICENSE_SERVER',
-        'http://localhost:5000',
-    )
+    # Kanmail v1 testing app
+    LICENSE_SERVER_APP_TOKEN = 'A7BB82CDB48546F69C0C1E6F45C28FCB'
+
+    # Make it possible to override these in dev for local testing
+    UPDATE_SERVER_URL = environ.get('KANMAIL_UPDATE_SERVER_URL', UPDATE_SERVER_URL)
+    LICENSE_SERVER_URL = environ.get('KANMAIL_LICENSE_SERVER_URL', LICENSE_SERVER_URL)
+
 
 class PyUpdaterConfig(object):  # noqa: E302
     PUBLIC_KEY = 'c++zSv15DkOJItm9YoUvIbUBXZZaVWF8YheJlMoU0HU'

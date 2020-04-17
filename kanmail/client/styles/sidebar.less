@@ -168,7 +168,11 @@ section#sidebar {
         width: @sidebarWidth;
 
         a {
-            color: #A7A7A7;
+            color: @lightTextGrey;
+
+            &:hover {
+                color: @lightestTextGrey;
+            }
         }
 
         div#footer-status {

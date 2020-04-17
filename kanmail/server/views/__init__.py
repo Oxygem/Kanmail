@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from flask import abort, jsonify, render_template, request
 
+from kanmail.license import check_get_license_email
 from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
@@ -14,7 +15,6 @@ from kanmail.settings.constants import (
     FRAMELESS,
     FROZEN,
     IS_APP,
-    LICENSED,
     WEBSITE_URL,
 )
 from kanmail.version import get_version
@@ -32,11 +32,11 @@ def api_ping():
 def _get_render_data():
     return {
         'version': get_version(),
+        'license_email': check_get_license_email(),
         'frozen': FROZEN,
         'debug': DEBUG,
         'is_app': IS_APP,
         'frameless': FRAMELESS,
-        'licensed': LICENSED,
         'website_url': WEBSITE_URL,
     }
 
@@ -45,6 +45,14 @@ def _get_render_data():
 def get_index():
     return render_template(
         'index.html',
+        **_get_render_data(),
+    )
+
+
+@app.route('/license', methods=('GET',))
+def get_license():
+    return render_template(
+        'license.html',
         **_get_render_data(),
     )
 

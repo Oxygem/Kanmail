@@ -8,7 +8,7 @@ import Account from 'components/settings/Account.jsx';
 import NewAccountForm from 'components/settings/NewAccountForm.jsx';
 
 import keyboard from 'keyboard.js';
-import { closeWindow } from 'window.js';
+import { closeWindow, openLicense } from 'window.js';
 
 import { delete_, put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
@@ -171,6 +171,7 @@ export default class SettingsApp extends React.Component {
                         <i className="red fa fa-exclamation-triangle" /> danger zone
                     </small>
                 </h2>
+
                 <label htmlFor="batch_size">
                     Batch size
                     <small>Number of emails to fetch at once.</small>
@@ -212,6 +213,19 @@ export default class SettingsApp extends React.Component {
                     className="cancel"
                     onClick={this.handleBustCache}
                 >Clear the cache</button>
+
+                {window.KANMAIL_LICENSED && <div className="no-input">
+                    <label>
+                        Update license
+                        <small>
+                            Change or remove the license key
+                        </small>
+                    </label>
+                    <button
+                        className=""
+                        onClick={openLicense}
+                    >Open license settings</button>
+                </div>}
             </div>
         );
     }
