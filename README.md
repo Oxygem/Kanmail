@@ -9,6 +9,12 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the `docs` directory**](./docs).
 
+## License
+
+Before continuing it is important to note that Kanmail is **open source but not free**. Kanmail is available for free download for evaluation; for continued use of Kanmail a [**license should be purchased**](https://kanmail.io/license).
+
+We welcome pull requests, you will be required to sign [the Oxygem CLA](https://gist.github.com/Fizzadar/6093499cccdcac7a4d83698516f9cafa) before they can be merged to protect both our and your rights. We also offer free license keys to contributors on a case by case basis, email [hello@oxygem.com](mailto:hello@oxygem.com).
+
 ## Technical Details
 
 + Build on MacOS (beta), tested with Linux & Windows (alpha)
