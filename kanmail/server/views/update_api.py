@@ -1,7 +1,7 @@
 from flask import abort, jsonify
 
-from kanmail.device import check_device_update, update_device
 from kanmail.server.app import app
+from kanmail.update import check_device_update, update_device
 from kanmail.version import get_version
 
 
