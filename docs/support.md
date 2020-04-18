@@ -1,3 +1,5 @@
+[← back to docs](./README.md)
+
 # Support
 
 Need help using Kanmail or have an issue?

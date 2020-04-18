@@ -1,3 +1,5 @@
+[← back to docs](./README.md)
+
 # Docker
 
 In addition to the desktop clients it is possible to run Kanmail as a service using Docker. This will allow you to view Kanmail via a browser of your choice.

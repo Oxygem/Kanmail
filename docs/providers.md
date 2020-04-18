@@ -1,6 +1,8 @@
+[← back to docs](./README.md)
+
 # Email Providers
 
-Kanmail _should_ be compatible with any email provider/server that provides `IMAP` and `SMTP`. The following page lists tested providers/servers along with any specific instructions or limitations.
+Kanmail _should_ be compatible with any email provider/server that provides `IMAP` and `SMTP`. This page lists tested providers/servers along with any specific instructions, features or limitations.
 
 + [**Gmail**](#gmail)
 + [**Gmail (Gapps)**](#gmail-gapps)
