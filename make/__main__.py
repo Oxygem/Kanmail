@@ -180,7 +180,7 @@ def prepare_release():
 def build_release(release=False, docker=False, build_version=None):
     system_type = 'Docker' if docker else platform.system()
 
-    if system_type == 'Darwin':
+    if release and system_type == 'Darwin':
         for key, value in (
             ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
             ('NOTARIZE_PASSWORD_KEYCHAIN_NAME', NOTARIZE_PASSWORD_KEYCHAIN_NAME),
@@ -235,7 +235,7 @@ def build_release(release=False, docker=False, build_version=None):
         ))
 
         # Now use `codesign` to sign the package with a Developer ID
-        if system_type == 'Darwin':
+        if release and system_type == 'Darwin':
             codesign_and_notarize(version)
 
     click.echo()
