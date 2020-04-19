@@ -7,23 +7,20 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 
 ![](./screenshot.png)
 
++ Build on MacOS (beta), tested with Linux & Windows (alpha)
++ Developed using Gmail, Outlook & Fastmail
++ Should be compabile with other email providers (uses IMAP/SMTP)
++ Considered in "beta" - used as my main email client for >1yr
+
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the `docs` directory**](./docs).
 
-## License
+## ©️ License
 
 Before continuing it is important to note that Kanmail is **open source but not free**. Kanmail is available for free download for evaluation; for continued use of Kanmail a [**license should be purchased**](https://kanmail.io/license).
 
 We welcome pull requests, but note you will be contributing to a non-free project. You will be required to sign [the Oxygem CLA](https://gist.github.com/Fizzadar/6093499cccdcac7a4d83698516f9cafa) before any contributions can be merged. We offer free license keys to contributors, please email [hello@oxygem.com](mailto:hello@oxygem.com) for more information.
 
-## Technical Details
-
-+ Build on MacOS (beta), tested with Linux & Windows (alpha)
-+ Developed using Gmail, Outlook & Fastmail
-+ Should be compabile with other email providers (uses IMAP/SMTP)
-+ Python server / JavaScript web interface
-+ Considered in "beta" - used as my main email client for >1yr
-
-## Development
+## 🛠️ Development
 
 ### Setup your system
 
@@ -37,7 +34,7 @@ To build/release you'll need to intsall GNU tar, which can be done with brew:
 brew install gnu-tar
 ```
 
-### Linux (Ubuntu)
+#### Linux (Ubuntu)
 
 For `qt` to install properly you'll need:
 
@@ -86,7 +83,7 @@ Note that the webserver does not auto-reload when running in app mode.
 Version numbers are generated at build in the date-based format: `MAJOR.YYMMDDhhmm`.
 
 
-## Syncing
+## 🔄 Syncing
 
 Kanmail syncs email using the IMAP protocol. Instead of implementing a "complete sync engine" (one which attempts to keep a local copy of the server data), Kanmail uses a cache and loads data on demand. This simplifies the implementation but makes it hard/impossible to behave as an offline email client.
 
