@@ -1,6 +1,6 @@
 import json
 
-from os import path, unlink
+from os import path
 from typing import Optional
 
 import requests
@@ -18,6 +18,46 @@ from kanmail.settings.constants import (
 
 class LicenseActivationError(Exception):
     pass
+
+
+def read_license_file_data() -> dict:
+    if not path.exists(LICENSE_FILE):
+        return {}
+
+    try:
+        with open(LICENSE_FILE, 'r+') as f:  # license file must be writeable
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f'Could not load license file: {e}')
+
+    return {}
+
+
+def write_license_file_data(data: dict) -> None:
+    with open(LICENSE_FILE, 'w') as f:
+        json.dump(data, f)
+
+
+def add_email_to_license_file(email: str) -> None:
+    license_data = read_license_file_data()
+    license_data[LICENSE_SERVER_APP_TOKEN] = email
+    write_license_file_data(license_data)
+
+
+def remove_email_from_license_file() -> None:
+    license_data = read_license_file_data()
+    license_data.pop(LICENSE_SERVER_APP_TOKEN, None)
+    write_license_file_data(license_data)
+
+
+def get_email_from_license_file() -> str:
+    try:
+        with open(LICENSE_FILE, 'r+') as f:  # license file must be writeable
+            license_data = json.load(f)
+    except Exception:
+        return
+
+    return license_data.get(LICENSE_SERVER_APP_TOKEN)
 
 
 def activate_license(email: str, token: str) -> bool:
@@ -45,8 +85,7 @@ def activate_license(email: str, token: str) -> bool:
     data = response.json()
     device_token = data['deviceToken']
 
-    with open(LICENSE_FILE, 'w') as f:
-        json.dump({'license_email': email}, f)
+    add_email_to_license_file(email)
 
     combined_token = f'{token}:{device_token}'
     set_password('license', LICENSE_SERVER_APP_TOKEN, email, combined_token)
@@ -61,16 +100,10 @@ def check_get_license_email() -> Optional[str]:
     Note: this *does not* check the license against the key server.
     '''
 
-    if not path.exists(LICENSE_FILE):
+    license_email = get_email_from_license_file()
+    if not license_email:
         return
 
-    try:
-        with open(LICENSE_FILE, 'r+') as f:  # license file must be writeable
-            license_data = json.load(f)
-    except Exception:
-        return
-
-    license_email = license_data.get('license_email')
     combined_token = get_password('license', LICENSE_SERVER_APP_TOKEN, license_email)
 
     if combined_token:
@@ -80,7 +113,7 @@ def check_get_license_email() -> Optional[str]:
 def remove_license():
     license_email = check_get_license_email()
     delete_password('license', LICENSE_SERVER_APP_TOKEN, license_email)
-    unlink(LICENSE_FILE)
+    remove_email_from_license_file()
 
 
 def validate_or_remove_license() -> None:
@@ -93,8 +126,6 @@ def validate_or_remove_license() -> None:
 
     license_email = check_get_license_email()
     if not license_email:
-        if path.exists(LICENSE_FILE):
-            unlink(LICENSE_FILE)
         return
 
     logger.debug(f'Validating license for {license_email}...')
