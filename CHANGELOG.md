@@ -1,3 +1,53 @@
+# v1.2004231151
+
+First release to include licensing. Also loads of bugs fixed :)
+
+Changes:
+- Tidy up license file handling to support multiple app tokens.
+- Don't codesign/notarize unless making a release build.
+- Readme tidy up.
+- Improve docs/readme.
+- Fix empty/loading column states.
+- Hide overflowing text in contact list.
+- Implement account specific icons.
+- Return autoconf ports as integers.
+- Move whether to save contacts into the folder class.
+- Don't save contacts with " via " in the name.
+- Fixup boot imports.
+- Add message to abort in `get_or_400`.
+- Add wrappers around keyring functions and improve the naming.
+- Rename device module -> update.
+- Implement license key elements.
+- Nice formatting for contact count.
+- Add license info to the readme.
+- Add license sidebar link + footer updates.
+- Use default size for send windows.
+- Use info log for post-process console message.
+- Rename emailss app root element ID.
+- Update screenshot.
+- De-dupe validating no duplicate accounts.
+- Use imap user + host to identify folder caches.
+- Add default window width/height.
+- Fix address count in column thread.
+- Remove `UNSAFE_componentWillReceiveProps` code.
+- Use store functions to check thread hashes.
+- Reset contact state after cancelling edit.
+- New Mac/Win icons.
+- Add new logo, add to readme titles.
+- New colour palette and default pink.
+- Tidy up address list rendering, add support for avatars.
+- Docs improvements.
+- Updated screenshot.
+- Move technical docs into the readme.
+- Expand some of the fake IMAP client functionality.
+- Add website URL constant.
+- Update constant names.
+- Update yarn lockfile with less & upgraded dependencies.
+- Upgrade less to v3.
+- Bump pyupdater s3 plugin.
+- Correct print statements in make.
+- Add `release-complete` make job.
+
 # v1.2004031156
 
 Changes:
