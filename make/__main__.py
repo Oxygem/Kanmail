@@ -220,7 +220,7 @@ def build_release(release=False, docker=False, build_version=None):
             'build',
             '--pull',
             '-t',
-            f'kanmail:{version}',
+            f'{DOCKER_NAME}:{version}',
             '.',
         ))
     else:
