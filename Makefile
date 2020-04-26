@@ -4,6 +4,9 @@ client:
 docker:
 	python -m make --docker
 
+docker-release:
+	python -m make --docker --release
+
 release:
 	python -m make --release
 
