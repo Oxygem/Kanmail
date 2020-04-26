@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "author": "Nick Barrett <pointlessrambler@gmail.com>",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.6",
