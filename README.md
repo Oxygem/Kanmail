@@ -9,7 +9,7 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 
 + Build on MacOS (beta), tested with Linux & Windows (alpha)
 + Developed using Gmail, Outlook & Fastmail
-+ Should be compabile with other email providers (uses IMAP/SMTP)
++ Should be compatible with other email providers (uses IMAP/SMTP)
 + Considered in "beta" - used as my main email client for >1yr
 
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the `docs` directory**](./docs).
