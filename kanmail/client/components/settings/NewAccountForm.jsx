@@ -167,7 +167,7 @@ export default class NewAccountForm extends React.Component {
                     Cancel
                 </button>
             </form>
-            <p><strong>Gmail users:</strong> you will need to <a onClick={() => get('/open-link', {url: 'https://myaccount.google.com/apppasswords'})}>create an app password</a> to use with Kanmail.</p>
+            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => get('/open-link', {url: 'https://github.com/Oxygem/Kanmail/blob/master/docs/providers.md'})}>list of providers and specific requirements</a></strong> for further information.</p>
         </div>;
     }
 }
