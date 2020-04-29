@@ -18,3 +18,5 @@ export const ALIAS_TO_ICON = {
     'trash': 'trash',
     'spam': 'crosshairs',
 };
+
+export const PROVIDERS_DOC_LINK = 'https://github.com/Oxygem/Kanmail/blob/master/docs/providers.md'
