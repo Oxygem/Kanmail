@@ -1,3 +1,5 @@
+import ssl
+
 from contextlib import contextmanager
 from queue import LifoQueue
 from smtplib import SMTP, SMTP_SSL
@@ -96,10 +98,16 @@ class ImapConnectionWrapper(object):
         )
         self.config.log('debug', f'Connecting to IMAP server: {server_string}')
 
+        ssl_context = ssl.create_default_context()
+        if self.config.ssl_verify_hostname is False:
+            self.config.log('warning', 'Disabling SSL hostname verification!')
+            ssl_context.check_hostname = False
+
         imap = IMAPClient(
             self.config.host,
             port=self.config.port,
             ssl=self.config.ssl,
+            ssl_context=ssl_context,
             timeout=self.config.timeout,
             use_uid=True,
         )
@@ -130,6 +138,7 @@ class ImapConnectionPool(object):
         host, port, username,
         password=None,
         ssl=True,
+        ssl_verify_hostname=True,
         timeout=DEFAULT_TIMEOUT,
         max_connections=DEFAULT_CONNECTIONS,
         max_attempts=DEFAULT_ATTEMPTS,
@@ -140,6 +149,7 @@ class ImapConnectionPool(object):
         self.username = username
         self.password = password
         self.ssl = ssl
+        self.ssl_verify_hostname = ssl_verify_hostname
         self.timeout = timeout
         self.max_attempts = max_attempts
 
@@ -151,7 +161,7 @@ class ImapConnectionPool(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[Account: {self.account}]: {message}')
+        func(f'[IMAP Account: {self.account}]: {message}')
 
     @contextmanager
     def get_connection(self, selected_folder=None):
@@ -190,6 +200,7 @@ class SmtpConnection(object):
         host, port, username,
         password=None,
         ssl=True,
+        ssl_verify_hostname=True,
         tls=False,
     ):
         self.account = account
@@ -198,10 +209,15 @@ class SmtpConnection(object):
         self.username = username
         self.password = password
         self.ssl = ssl
+        self.ssl_verify_hostname = ssl_verify_hostname
         self.tls = tls
 
     def __str__(self):
         return f'{self.host}:{self.port}'
+
+    def log(self, method, message):
+        func = getattr(logger, method)
+        func(f'[SMTP Account: {self.account}]: {message}')
 
     @contextmanager
     def get_connection(self):
@@ -217,11 +233,17 @@ class SmtpConnection(object):
         server_string = (
             f'{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})'
         )
-        logger.debug(f'Connecting to SMTP server: {server_string}')
+        self.log('debug', f'Connecting to SMTP server: {server_string}')
 
-        cls = SMTP_SSL if self.ssl else SMTP
+        if self.ssl:
+            ssl_context = ssl.create_default_context()
+            if self.ssl_verify_hostname is False:
+                self.log('warning', 'Disabling SSL hostname verification!')
+                ssl_context.check_hostname = False
 
-        smtp = cls(self.host, self.port)
+            smtp = SMTP_SSL(self.host, self.port, context=ssl_context)
+        else:
+            smtp = SMTP(self.host, self.port)
 
         if DEBUG_SMTP:
             smtp.set_debuglevel(1)

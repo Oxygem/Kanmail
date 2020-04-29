@@ -11,6 +11,7 @@ CONNECTION_DEFAULTS = {
     'host': str,
     'port': int,
     'ssl': bool,
+    'ssl_verify_hostname': bool,
 }
 
 MODEL = {
@@ -182,6 +183,12 @@ def fix_any_old_setings(settings: dict):
                 set_password('account', imap_settings['host'], imap_settings['username'], password)
                 has_changed = True
 
+            # Populate default SSL verify hostname (advanced users can disable)
+            # pre (including) v1.2004231151
+            if 'ssl_verify_hostname' not in imap_settings:
+                imap_settings['ssl_verify_hostname'] = True
+                has_changed = True
+
         # Fix for settings.accounts.<name>.smtp_connection.port changing from str -> int
         # pre v1.2002191933
         smtp_settings = account_settings.get('smtp_connection')
@@ -196,6 +203,12 @@ def fix_any_old_setings(settings: dict):
             password = smtp_settings.pop('password', None)
             if password:
                 set_password('account', smtp_settings['host'], smtp_settings['username'], password)
+                has_changed = True
+
+            # Populate default SSL verify hostname (advanced users can disable)
+            # pre (including) v1.2004231151
+            if 'ssl_verify_hostname' not in smtp_settings:
+                smtp_settings['ssl_verify_hostname'] = True
                 has_changed = True
 
     return has_changed
