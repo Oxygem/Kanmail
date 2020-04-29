@@ -231,13 +231,13 @@ export default class SettingsApp extends React.Component {
     }
 
     renderSaveButton() {
-        if (this.state.isSaving) {
-            let text;
-            const classes = ['main-button'];
+        let text = <span>Save all settings <i className="fa fa-arrow-right" /></span>;
+        const classes = ['main-button'];
 
+        if (this.state.isSaving) {
             if (this.state.saveError) {
                 text = `Error saving settings: ${this.state.saveError.data.errorMessage}`;
-                classes.push('inactive');
+                classes.push('error');
             } else if (this.state.isSaved) {
                 text = 'Settings saved, please close this window & reload the main one';
                 classes.push('disabled');
@@ -245,28 +245,22 @@ export default class SettingsApp extends React.Component {
                 text = 'Saving...';
                 classes.push('disabled');
             }
-
-            return (
-                <button
-                    type="submit"
-                    className={classes.join(' ')}
-                    onClick={this.handleSaveSettings}
-                >{text}</button>
-            );
+        } else {
+            classes.push('submit');
         }
 
         return (
             <button
                 type="submit"
-                className="main-button submit"
+                className={classes.join(' ')}
                 onClick={this.handleSaveSettings}
-            >Save all settings &rarr;</button>
+            >{text}</button>
         );
     }
 
     render() {
         return (
-            <div>
+            <div className="no-select">
                 <HeaderBar />
 
                 <section id="settings">
