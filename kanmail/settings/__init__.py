@@ -1,6 +1,7 @@
 import json
 import pickle
 
+from copy import deepcopy
 from os import makedirs, path
 from typing import Optional, Union
 
@@ -98,9 +99,13 @@ def get_style_setting(
     return get_settings()['style'].get(key, default)
 
 
+def get_settings_copy():
+    return deepcopy(get_settings())
+
+
 def overwrite_settings(settings: dict) -> list:
     # "Merge" the settings to get the changed key list
-    current_settings = get_settings()
+    current_settings = get_settings_copy()
     changed_keys = _merge_settings(current_settings, settings)
 
     # Now just save the un-merged original
@@ -109,7 +114,7 @@ def overwrite_settings(settings: dict) -> list:
 
 
 def update_settings(settings_updates: dict) -> list:
-    settings = get_settings()
+    settings = get_settings_copy()
     changed_keys = _merge_settings(settings, settings_updates)
     set_settings(settings)
     return changed_keys
