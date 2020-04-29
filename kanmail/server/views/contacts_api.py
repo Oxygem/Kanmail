@@ -1,7 +1,7 @@
-from flask import jsonify, request
+from flask import abort, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
-from kanmail.server.app import app, db
+from kanmail.server.app import app
 from kanmail.server.mail.contacts import Contact, delete_contact, save_contact
 from kanmail.server.util import get_or_400
 
@@ -18,7 +18,11 @@ def api_post_contacts():
         name=get_or_400(request_data, 'name'),
         email=get_or_400(request_data, 'email'),
     )
-    save_contact(new_contact)
+
+    try:
+        save_contact(new_contact)
+    except IntegrityError:
+        abort(400, 'This contact already exists')
 
     return jsonify(added=True, id=new_contact.id)
 
@@ -37,10 +41,8 @@ def api_put_contact(contact_id):
 
     try:
         save_contact(contact)
-    # If a duplicate of the updated contact exists, just remove this one
     except IntegrityError:
-        db.session.rollback()
-        delete_contact(contact)
+        abort(400, 'This contact already exists')
 
     return jsonify(updated=True)
 
