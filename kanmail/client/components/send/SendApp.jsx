@@ -64,8 +64,8 @@ function getFilename(path) {
 @subscribe(settingsStore)
 export default class SendApp extends React.Component {
     static propTypes = {
-        accounts: PropTypes.object.isRequired,
-        contacts: PropTypes.object.isRequired,
+        accounts: PropTypes.array.isRequired,
+        contacts: PropTypes.array.isRequired,
         message: PropTypes.object,
     }
 
@@ -73,15 +73,15 @@ export default class SendApp extends React.Component {
         super(props);
 
         let defaultAccount;
-        const firstAccount  = _.keys(props.accounts)[0];
-        const firstAccountContacts = this.props.accounts[firstAccount].contacts;
+        const firstAccountName  = props.accounts[0].name;
+        const firstAccountContacts = this.props.accounts[0].contacts;
 
         if (firstAccountContacts && firstAccountContacts.length > 0) {
             defaultAccount = makeAccountContactOption(
-                firstAccount, firstAccountContacts[0],
+                firstAccountName, firstAccountContacts[0],
             );
         } else {
-            defaultAccount = this.getDefaultAccount(firstAccount);
+            defaultAccount = this.getDefaultAccount(0);
         }
 
         const includeQuote = this.props.message ? true : false;
@@ -104,10 +104,6 @@ export default class SendApp extends React.Component {
             replyToMessageId: null,
             replyToMessageReferences: null,
             replyToQuoteHtml: null,
-
-            sending: false,
-            errorName: null,
-            errorMessage: null,
         }
 
         if (props.message) {
@@ -122,10 +118,11 @@ export default class SendApp extends React.Component {
 
             let replyAccount;
 
-            const account = _.find(
+            const accountIndex = _.findIndex(
                 this.props.accounts,
                 account => account.name === props.message.account_name,
             );
+            const account = props.accounts[accountIndex];
             const accountName = account.name;
             const accountContacts = account.contacts;
 
@@ -134,7 +131,7 @@ export default class SendApp extends React.Component {
                     accountName, accountContacts[0],
                 );
             } else {
-                replyAccount = this.getDefaultAccount(accountName);
+                replyAccount = this.getDefaultAccount(accountIndex);
             }
 
             let to = [];
@@ -210,12 +207,17 @@ export default class SendApp extends React.Component {
         })
     }
 
-    handleSubmit = (ev) => {
+    handleSendEmail = (ev) => {
         ev.preventDefault();
 
-        if (this.state.sending) {
+        if (this.state.isSending) {
+            if (this.state.saveError) {
+                this.setState({isSending: false, saveError: null});
+            }
             return;
         }
+
+        this.setState({isSending: true});
 
         const emailData = _.pick(this.state, [
             'subject',
@@ -240,28 +242,12 @@ export default class SendApp extends React.Component {
         const accountTuple = this.state.accountContact.value;
         emailData.from = [accountTuple[1], accountTuple[2]];
 
-        this.setState({
-            sending: true,
-        });
-
-        post(`/api/emails/${accountTuple[0]}`, emailData).then(() => {
-            closeWindow();
-        }).catch((e) => {
-            const errorData = e.data;
-
-            if (errorData) {
-                this.setState({
-                    sending: false,
-                    errorName: errorData.error_name,
-                    errorMessage: errorData.error_message,
-                });
-            } else {
-                this.setState({
-                    errorName: 'Unknown',
-                    errorMessage: 'Unexpected error, plese reload Kanmail!',
-                })
-            }
-        });
+        post(`/api/emails/${accountTuple[0]}`, emailData)
+            .then(() => {
+                closeWindow();
+                this.setState({isSent: true});
+            })
+            .catch((err) => this.setState({saveError: err}));
     }
 
     handleSelectChange = (field, item) => {
@@ -354,25 +340,30 @@ export default class SendApp extends React.Component {
     }
 
     renderSendButton() {
-        const buttonClasses = ['send-button'];
-        let buttonText = this.state.sending ? 'Sending...' : 'Send';
+        let text = <span>Send email <i className="fa fa-arrow-right" /></span>;
+        const classes = ['send-button'];
 
-        if (this.state.errorName || this.state.errorMessage) {
-            buttonText = `${this.state.errorName}: ${this.state.errorMessage}`;
-            buttonClasses.push('error');
-        }
-
-        if (this.state.sending) {
-            buttonClasses.push('sending');
+        if (this.state.isSending) {
+            if (this.state.saveError) {
+                text = `Error sending email: ${this.state.saveError.data.errorMessage}`;
+                classes.push('error');
+            } else if (this.state.isSent) {
+                text = 'Email sent, please close this window';
+                classes.push('disabled');
+            } else {
+                text = <span>Sending email <i className="fa fa-spin fa-refresh" /></span>;
+                classes.push('disabled');
+            }
+        } else {
+            classes.push('submit');
         }
 
         return (
             <button
                 type="submit"
-                className={buttonClasses.join(' ')}
-            >
-                <i className={`fa ${this.state.sending ? 'fa-spin fa-refresh' : 'fa-envelope'}`}></i> {buttonText}
-            </button>
+                className={classes.join(' ')}
+                onClick={this.handleSendEmail}
+            >{text}</button>
         );
     }
 
@@ -445,7 +436,7 @@ export default class SendApp extends React.Component {
             <section id="new-email">
                 <HeaderBar />
 
-                <form onSubmit={this.handleSubmit}>
+                <form>
                     <div className="third">
                         <label htmlFor="account">Account</label>
                         <Select
