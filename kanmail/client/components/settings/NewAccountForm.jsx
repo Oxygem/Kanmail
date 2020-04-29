@@ -4,7 +4,10 @@ import PropTypes from 'prop-types';
 
 import Account from 'components/settings/Account.jsx';
 
-import { get, post } from 'util/requests.js';
+import { PROVIDERS_DOC_LINK } from 'constants.js';
+import { openLink } from 'window.js';
+
+import { post } from 'util/requests.js';
 
 
 const getInitialState = () => ({
@@ -167,7 +170,7 @@ export default class NewAccountForm extends React.Component {
                     Cancel
                 </button>
             </form>
-            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => get('/open-link', {url: 'https://github.com/Oxygem/Kanmail/blob/master/docs/providers.md'})}>list of providers and specific requirements</a></strong> for further information.</p>
+            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.</p>
         </div>;
     }
 }
