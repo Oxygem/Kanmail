@@ -2,7 +2,8 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { ALIAS_FOLDERS } from 'constants.js';
+import { ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from 'constants.js';
+import { openLink } from 'window.js';
 
 import { post } from 'util/requests.js';
 
@@ -452,7 +453,7 @@ export default class Account extends React.Component {
                                 placeholder: 'enter to change'
                             })}
                         </div>
-                        <div className="half">
+                        <div className="quarter">
                             <label
                                 className="checkbox"
                                 htmlFor="imapSettings-ssl"
@@ -461,6 +462,22 @@ export default class Account extends React.Component {
                                 type: 'checkbox',
                             })}
                         </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="imapSettings-ssl_verify_hostname"
+                            >
+                                <span className="red">Advanced</span>&nbsp; (<a onClick={(ev) => {
+                                    ev.preventDefault();
+                                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
+                                }}>more info</a>):
+                                <br />Verify SSL hostname?
+                            </label>
+                            {this.renderInput('imapSettings', 'ssl_verify_hostname', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                        <div className="quarter"></div>
                     </div>
                 </div>
 
@@ -488,7 +505,16 @@ export default class Account extends React.Component {
                                 placeholder: 'enter to change',
                             })}
                         </div>
-                        <div className="half">
+                        <div className="quarter">
+                            <label
+                                className="checkbox"
+                                htmlFor="smtpSettings-tls"
+                            >Use TLS?</label>
+                            {this.renderInput('smtpSettings', 'tls', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                        <div className="quarter">
                             <label
                                 className="checkbox"
                                 htmlFor="smtpSettings-ssl"
@@ -500,9 +526,14 @@ export default class Account extends React.Component {
                         <div className="half">
                             <label
                                 className="checkbox"
-                                htmlFor="smtpSettings-tls"
-                            >Use TLS?</label>
-                            {this.renderInput('smtpSettings', 'tls', {
+                                htmlFor="smtpSettings-ssl_verify_hostname"
+                            >
+                                <span className="red">Advanced</span> (<a onClick={(ev) => {
+                                    ev.preventDefault();
+                                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
+                                }}>more info</a>):
+                                <br />Verify SSL hostname?</label>
+                            {this.renderInput('smtpSettings', 'ssl_verify_hostname', {
                                 type: 'checkbox',
                             })}
                         </div>
