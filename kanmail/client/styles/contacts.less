@@ -5,10 +5,13 @@ section#contacts {
 
     div.search {
         display: inline-block;
-        width: 200px;
+        width: 644px;
         margin-left: 10px;
         padding-right: 10px;
-        border-right: 1px solid @lightGrey;
+    }
+
+    button.add-contact {
+        margin-left: 10px;
     }
 
     form.add-contact {
@@ -25,11 +28,15 @@ section#contacts {
     div#contact-list {
         overflow-y: auto;
         position: absolute;
-        top: 170px;
+        top: 140px;
         bottom: 0;
         left: 0;
         right: 0;
         border-top: 1px solid @lightGrey;
+
+        &.form-open {
+            top: 200px;
+        }
     }
 
     div.contact {

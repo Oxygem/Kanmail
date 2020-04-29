@@ -121,7 +121,7 @@ export default class LicenseApp extends React.Component {
     }
 
     render() {
-        return <div>
+        return <div className="no-select">
             <HeaderBar />
 
             <section id="license">

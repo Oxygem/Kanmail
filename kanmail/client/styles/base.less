@@ -171,6 +171,10 @@ header {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+
+    &.justify-left {
+        justify-content: left;
+    }
 }
 
 
@@ -206,6 +210,10 @@ button {
         &:hover {
             background: darken(@green, 10%);
         }
+    }
+
+    &.error {
+        background: @orange;
     }
 
     &.inactive {
