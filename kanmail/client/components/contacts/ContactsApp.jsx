@@ -38,6 +38,10 @@ export default class ContactsApp extends React.Component {
         });
     }
 
+    toggleForm = () => {
+        this.setState({newContactFormOpen: !this.state.newContactFormOpen});
+    }
+
     renderContactList = () => {
         let contacts = this.state.contacts;
 
@@ -61,22 +65,29 @@ export default class ContactsApp extends React.Component {
 
     render() {
         return (
-            <div>
+            <div className="no-select">
                 <HeaderBar />
 
                 <section id="contacts">
                     <h2>{_.size(this.state.contacts).toLocaleString()} Contacts</h2>
                     <div className="search">
-                        <label htmlFor="search">Filter contacts</label>
                         <input
                             type="text"
                             id="search"
                             value={this.state.contactsFilter}
                             onChange={this.handleFilter}
+                            placeholder="Filter contacts..."
                         />
                     </div>
-                    <AddNewContactForm addNewContact={this.addNewContact} />
-                    <div id="contact-list">{this.renderContactList()}</div>
+                    <AddNewContactForm
+                        addNewContact={this.addNewContact}
+                        toggleForm={this.toggleForm}
+                        isOpen={this.state.newContactFormOpen}
+                    />
+                    <div
+                        id="contact-list"
+                        className={this.state.newContactFormOpen && 'form-open'}
+                    >{this.renderContactList()}</div>
                 </section>
             </div>
         );

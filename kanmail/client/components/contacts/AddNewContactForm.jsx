@@ -8,11 +8,14 @@ import { post } from 'util/requests.js';
 const getDefaultState = () => ({
     name: '',
     email: '',
+    saveError: null,
 });
 
 
 export default class AddNewContactForm extends React.Component {
     static propTypes = {
+        isOpen: PropTypes.bool.isRequired,
+        toggleForm: PropTypes.func.isRequired,
         addNewContact: PropTypes.func.isRequired,
     }
 
@@ -30,6 +33,11 @@ export default class AddNewContactForm extends React.Component {
     handleClickSubmit = (ev) => {
         ev.preventDefault();
 
+        if (this.state.saveError) {
+            this.setState({saveError: null});
+            return;
+        }
+
         post('/api/contacts', this.state)
             .then(data => {
                 this.props.addNewContact(
@@ -38,11 +46,38 @@ export default class AddNewContactForm extends React.Component {
                     this.state.email,
                 );
                 this.setState(getDefaultState());
+                this.props.toggleForm();
             })
-            .catch(err => console.error('ADD CONTACT ERROR', err));
+            .catch(err => this.setState({saveError: err}));
+    }
+
+    handleClickCancel = () => {
+        this.props.toggleForm();
+        this.setState(getDefaultState());
+    }
+
+    renderSaveButton() {
+        if (this.state.saveError) {
+            return <button
+                className="error"
+                onClick={this.handleClickSubmit}
+            >Error: {this.state.saveError.data.errorMessage}</button>;
+        }
+
+        return <button
+            className="submit"
+            onClick={this.handleClickSubmit}
+        >Add contact</button>;
     }
 
     render() {
+        if (!this.props.isOpen) {
+            return <button
+                className="submit"
+                onClick={this.props.toggleForm}
+            >Add new contact</button>;
+        }
+
         return (
             <form className="add-contact">
                 <div>
@@ -65,10 +100,10 @@ export default class AddNewContactForm extends React.Component {
                     />
                 </div>
 
+                {this.renderSaveButton()}&nbsp;
                 <button
-                    className="submit"
-                    onClick={this.handleClickSubmit}
-                >Add contact</button>
+                    onClick={this.handleClickCancel}
+                >Cancel</button>
             </form>
         );
     }
