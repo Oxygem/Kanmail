@@ -1,8 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import HeaderErrors from 'components/HeaderErrors.jsx';
 import Filters from 'components/emails/Filters.jsx';
-import SidebarHeader from 'components/emails/SidebarHeader.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
 
 import { openLicense, openLink, openWindow } from 'window.js';
@@ -35,7 +35,7 @@ export default class Sidebar extends React.Component {
                     <h1>
                         <span>K-</span>
                         <i className="logo fa fa-envelope-o"></i>
-                        <SidebarHeader />
+                        <HeaderErrors />
                     </h1>
 
                     <div>

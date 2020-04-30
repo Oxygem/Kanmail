@@ -36,64 +36,6 @@ section#sidebar {
                 margin-right: 5px;
             }
         }
-
-        div.sidebar-header {
-            float: right;
-            text-align: right;
-
-            i {
-                line-height: 16px;
-
-                &.error {
-                    color: @orange;
-                }
-            }
-
-            div.icon-wrapper {
-                padding-right: 10px;
-
-                a {
-                    color: white;
-                }
-            }
-
-            div.icon-contents {
-                display: none;
-                position: absolute;
-                width: 600px;
-                border: 5px solid @orange;
-                max-height: 500px;
-                overflow-y: auto;
-                background: white;
-                padding: 5px;
-                z-index: 9;
-                color: black;
-                left: @sidebarWidth;
-                text-align: left;
-
-                p {
-                    margin: 15px 0 10px 0;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid @lightGrey;
-
-                    &:last-child {
-                        border-bottom: none;
-                    }
-
-                    span.meta {
-                        display: block;
-                        font-size: 12px;
-                        line-height: 12px;
-                        color: @darkGrey;
-                    }
-                }
-            }
-
-            div.icon-contents:hover,
-            div.icon-wrapper:hover div.icon-contents {
-                display: block;
-            }
-        }
     }
 
     div#search {

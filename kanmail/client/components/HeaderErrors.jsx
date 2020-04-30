@@ -17,7 +17,7 @@ const renderError = (error, key) => {
 
 
 @subscribe(requestStore)
-export default class SidebarHeader extends Component {
+export default class HeaderErrors extends Component {
     static propTypes = {
         requestErrors: PropTypes.array.isRequired,
         networkErrors: PropTypes.array.isRequired,
@@ -62,7 +62,7 @@ export default class SidebarHeader extends Component {
 
     render() {
         return (
-            <div className="sidebar-header">
+            <div className="header-errors">
                 {this.renderRequestErrors()}
                 {this.renderNetworkErrorIcon()}
             </div>
