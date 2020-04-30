@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 
-import json
 import platform
 
-from datetime import datetime
-from os import makedirs, path, remove
+from os import environ, makedirs, path, remove
 
 import click
-import pyupdater
-import requests
-import tld
-
-from jinja2 import Template
 
 from .macos import codesign_and_notarize
 from .settings import (
@@ -19,136 +12,29 @@ from .settings import (
     DIST_DIRNAME,
     DOCKER_NAME,
     GITHUB_API_TOKEN,
-    MAJOR_VERSION,
-    MAKE_DIRNAME,
     NOTARIZE_PASSWORD_KEYCHAIN_NAME,
-    ROOT_DIRNAME,
-    TEMP_CHANGELOG_FILENAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
     VERSION_DATA_FILENAME,
 )
-from .util import print_and_check_output, print_and_run
-
-
-def _get_pyupdater_package_dir():
-    return path.dirname(pyupdater.__file__)
-
-
-def _get_tld_package_dir():
-    return path.dirname(tld.__file__)
-
-
-def _generate_version():
-    date_version = datetime.now().strftime('%y%m%d%H%M')
-    return f'{MAJOR_VERSION}.{date_version}'
-
-
-def _write_version_data(version):
-    channel = 'stable'
-
-    # Write the version to the dist directory to be injected into the bundle
-    version_data = json.dumps({
-        'version': version,
-        'channel': channel,
-    })
-    with open(VERSION_DATA_FILENAME, 'w') as f:
-        f.write(version_data)
-
-
-def _generate_spec(version):
-    system_to_platform = {
-        'Darwin': 'mac',
-        'Linux': 'nix64',
-        'Windows': 'win',
-    }
-    platform_name = system_to_platform.get(platform.system())
-
-    if not platform_name:
-        raise NotImplementedError('This platform is not supported!')
-
-    with open(path.join(MAKE_DIRNAME, 'spec.j2.py'), 'r') as f:
-        template_data = f.read()
-    template = Template(template_data)
-
-    with open(TEMP_SPEC_FILENAME, 'w') as f:
-        f.write(template.render({
-            'root_dir': ROOT_DIRNAME,
-            'version': version,
-            'platform_name': platform_name,
-            'pyupdater_package_dir': _get_pyupdater_package_dir(),
-            'tld_package_dir': _get_tld_package_dir(),
-        }))
-
-    return TEMP_SPEC_FILENAME
-
-
-def _get_git_changes():
-    previous_tag = print_and_check_output((
-        'git', 'describe', '--abbrev=0', '--tags',
-    ))
-
-    git_changes = print_and_check_output((
-        'git', 'log', '--oneline', '--pretty=%s', f'{previous_tag}..HEAD',
-    )).splitlines()
-
-    return '\n'.join([f'- {change}' for change in git_changes])
-
-
-def _create_new_changelog(version, git_changes):
-    new_changelog = f'# v{version}\n\nChanges:\n{git_changes}\n\n'
-    new_changelog = click.edit(new_changelog)
-
-    if not new_changelog:
-        raise click.BadParameter('Invalid changelog!')
-
-    with open(TEMP_CHANGELOG_FILENAME, 'w') as f:
-        f.write(new_changelog)
-
-
-def _get_new_changelog():
-    with open(TEMP_CHANGELOG_FILENAME, 'r') as f:
-        return f.read()
-
-
-def _write_new_changelog():
-    new_changelog = _get_new_changelog()
-
-    with open('CHANGELOG.md', 'r') as f:
-        current_changelog = f.read()
-
-    changelog = f'{new_changelog}{current_changelog}'
-    with open('CHANGELOG.md', 'w') as f:
-        f.write(changelog)
-
-
-def _create_github_release(version):
-    response = requests.post(
-        'https://api.github.com/repos/fizzadar/Kanmail/releases',
-        json={
-            'tag_name': f'v{version}',
-            'body': _get_new_changelog(),
-        },
-        headers={
-            'Authorization': f'token {GITHUB_API_TOKEN}',
-        },
-    )
-    response.raise_for_status()
-
-
-def _get_release_version():
-    with open(TEMP_VERSION_LOCK_FILENAME, 'r') as f:
-        return f.read().strip()
-
-
-def _write_release_version(version):
-    with open(TEMP_VERSION_LOCK_FILENAME, 'w') as f:
-        f.write(version)
+from .util import (
+    create_github_release,
+    create_new_changelog,
+    generate_spec,
+    generate_version,
+    get_git_changes,
+    get_release_version,
+    print_and_check_output,
+    print_and_run,
+    write_new_changelog,
+    write_release_version,
+    write_version_data,
+)
 
 
 def prepare_release():
-    version = _generate_version()
-    git_changes = _get_git_changes()
+    version = generate_version()
+    git_changes = get_git_changes()
 
     if not click.confirm((
         f'\nGit Changes:\n{git_changes}\n\n'
@@ -159,7 +45,7 @@ def prepare_release():
     click.echo(f'--> preparing v{version} release')
 
     click.echo('--> create changelog')
-    _create_new_changelog(version, git_changes)
+    create_new_changelog(version, git_changes)
 
     click.echo('--> building clientside bundle')
     print_and_run(('yarn', 'run', 'build'))
@@ -168,8 +54,8 @@ def prepare_release():
         makedirs(DIST_DIRNAME)
 
     click.echo(f'--> generate {VERSION_DATA_FILENAME}')
-    _write_release_version(version)
-    _write_version_data(version)
+    write_release_version(version)
+    write_version_data(version)
 
     click.echo()
     click.echo(f'Kanmail v{version} release is prepped!')
@@ -190,6 +76,13 @@ def build_release(release=False, docker=False, build_version=None):
                     f'No `{key}` environment variable provided!',
                 )
 
+        # Refuse to build release unless we're specifically in the special MacOS 10.12 build env
+        if environ.get('MACOSX_DEPLOYMENT_TARGET') != '10.12':
+            raise click.ClickException((
+                'Refusing to build on MacOS where MACOSX_DEPLOYMENT_TARGET is not '
+                'set to 10.12 (need to setup env?).'
+            ))
+
     js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
@@ -199,20 +92,20 @@ def build_release(release=False, docker=False, build_version=None):
             raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
     if release:
-        version = _get_release_version()
+        version = get_release_version()
     else:
         if build_version:
             version = build_version
         else:
-            version = _generate_version()
+            version = generate_version()
 
     click.echo(f'--> building v{version} on {system_type}')
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
-    specfile = _generate_spec(version)
+    specfile = generate_spec(version)
 
     if not release:
-        _write_version_data(version)
+        write_version_data(version)
 
     if docker:
         print_and_run((
@@ -262,7 +155,7 @@ def complete_release():
             'No `GITHUB_API_TOKEN` environment variable provided!',
         )
 
-    release_version = _get_release_version()
+    release_version = get_release_version()
 
     # Check output to hide the JSON dump
     print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
@@ -274,7 +167,7 @@ def complete_release():
     )):
         raise click.Abort('User is not sure!')
 
-    _write_new_changelog()
+    write_new_changelog()
     print_and_run(('git', 'add', 'CHANGELOG.md'))
     print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
     print_and_run((
@@ -289,7 +182,7 @@ def complete_release():
     print_and_run(('git', 'push'))
     print_and_run(('git', 'push', '--tags'))
 
-    _create_github_release(release_version)
+    create_github_release(release_version)
 
     # Finally, remove the release version lock
     remove(TEMP_VERSION_LOCK_FILENAME)
