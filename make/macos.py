@@ -52,7 +52,7 @@ def wait_for_notarization(notarize_request_id):
         if 'Status: in progress' not in notarize_status:
             break
 
-        sleep(5)
+        sleep(15)
 
     return 'Status: success' in notarize_status
 
