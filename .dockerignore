@@ -1,6 +1,5 @@
 *.pyc
 *.log
-.python-version
 
 node_modules/
 

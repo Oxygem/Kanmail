@@ -21,4 +21,4 @@ RUN chown -R kanmail:kanmail /opt/kanmail
 
 USER kanmail
 
-ENTRYPOINT [ "/opt/kanmail/scripts/run_server.py" ] 
+ENTRYPOINT [ "/opt/kanmail/scripts/run_server.py" ]
