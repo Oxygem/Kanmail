@@ -37,7 +37,7 @@ def codesign(app_dir):
         '--sign', CODESIGN_KEY_NAME,
         app_dir,
     ))
-    print_and_run(('codesign', '--verify', app_dir))
+    print_and_run(('codesign', '--deep', '--verify', app_dir))
 
 
 def wait_for_notarization(notarize_request_id):
