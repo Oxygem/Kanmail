@@ -1,3 +1,35 @@
+# v1.2004301944
+
+Building using MacOS 10.12 SDK.
+
+Changes:
+- Expand readme w/OS specific dev + build instructions.
+- Move util functions into make util module.
+- Expand providers doc.
+- Build tidy up.
+- Rename `SidebarHeader` -> `HeaderErrors` component and display in all windows.
+- Form style tweaks.
+- Implement `ssl_verify_hostname=True` connection setting.
+- Better handle duplicate contacts on add/update.
+- Don't update in-memory settings on save error.
+- Refuse emails with no recipients.
+- Add SSL verify hostname IMAP/SMTP settings checkboxes.
+- Fix new blank email account selection and error handling on send button.
+- Update new account link + text.
+- Add providers doc link constant.
+- Tidy settings save button render.
+- Redo new contact form w/error handling.
+- Merge pull request #95 from 0xflotus/patch-1
+- fixed small error
+- Update providers note on add new account form.
+- Correct package.json license.
+- Don't dump the output of docker inspect pre-releasing.
+- Add `docker-release` make command.
+- Correct docker tag when building.
+- Merge pull request #80 from Lerentis/master
+- Correct license terminology (source available) - thank you HN!
+- added Maintainer label and dropped privileges inside container
+
 # v1.2004231151
 
 First release to include licensing. Also loads of bugs fixed :)
