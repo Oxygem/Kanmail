@@ -7,20 +7,30 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 
 ![](./screenshot.png)
 
-+ Build on MacOS (beta), tested with Linux & Windows (alpha)
++ Works on MacOS (beta), Linux (alpha) & Windows (alpha)
 + Developed using Gmail, Outlook & Fastmail
 + Should be compatible with other email providers (uses IMAP/SMTP)
-+ Considered in "beta" - used as my main email client for >1yr
++ Considered in "beta" - used as primary email client for >1yr
 
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the `docs` directory**](./docs).
 
-## ©️ License
++ [License](#license)
++ [Development](#development)
+    * [Setup your system](#setup-your-system)
+    * [Install Python requirements](#install-python-requirements)
+    * [Start the app](#start-the-app)
++ [Building](#building)
+    * [Build environments](#build-environments)
+    * [Doing a build](#doing-a-build)
++ [Syncing](#syncing)
+
+## License
 
 Before continuing it is important to note that Kanmail is **source available but not free**. Kanmail is available for free download for evaluation; for continued use of Kanmail a [**license should be purchased**](https://kanmail.io/license).
 
 We welcome pull requests, but note you will be contributing to a non-free project. You will be required to sign [the Oxygem CLA](https://gist.github.com/Fizzadar/6093499cccdcac7a4d83698516f9cafa) before any contributions can be merged. We offer free license keys to contributors, please email [hello@oxygem.com](mailto:hello@oxygem.com) for more information.
 
-## 🛠️ Development
+## Development
 
 ### Setup your system
 
@@ -61,6 +71,10 @@ pip install -r requirements/development.txt
 pip install -r requirements/[macos|linux|windows].txt
 ```
 
+### Start the app
+
+#### Run as a server
+
 To start the server + webpack-server:
 
 ```
@@ -69,7 +83,10 @@ honcho start
 
 Then go to [http://localhost:4420](https://localhost:4420) to view/develop the app in a browser of your choice.
 
-Or - to start the full windowed app, use:
+
+#### Run as an app
+
+To start the full windowed app, use:
 
 ```
 honcho start -f Procfile-app
@@ -81,6 +98,91 @@ Note that the webserver does not auto-reload when running in app mode.
 ### Releases
 
 Version numbers are generated at build in the date-based format: `MAJOR.YYMMDDhhmm`.
+
+## Building
+
+Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable/usage.html#platform-specific-notes), for maximum compatability Kanmail is ideally built on the _oldest_ systems available. MacOS + Linux builds are forwards, but not backwards, compatible.
+
+Kanmail is currently built on:
+
++ MacOS 10.15 (using 10.12 SDK), compatible with 10.12+
++ Ubuntu 18 64 bit, compatible with libc6 2.27+
++ Windows 10 64 bit, compatible with ?
+
+### Build environments
+
+#### MacOS
+
+Want the oldest SDK possible, Kanmail will be compatible with the SDK version any any newer versions, but nothing older. So target the oldest realistic SDK, currently 10.12 / Sierra. Heavily based on [this gist](https://gist.github.com/phfaist/a5b8a895b003822df5397731f4673042).
+
++ Use [xcodelegacy](https://github.com/devernay/xcodelegacy) to download old OSX SDK files
+
+##### Setup a separate environment
+
+```sh
+export BUILD_ENV_PREFIX=/opt/osx10.12-env
+
+export PATH="$BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin:$BUILD_ENV_PREFIX/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
+
+export MACOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+
+export MACOSX_DEPLOYMENT_TARGET="10.12"
+
+export CFLAGS="-isysroot $MACOSXSDK  -I$MACOSXSDK/System/Library/Frameworks/Tk.framework/Versions/8.5/Headers -I$BUILD_ENV_PREFIX/include "
+export LDFLAGS="-isysroot $MACOSXSDK -L$BUILD_ENV_PREFIX/lib "
+export LD_LIBRARY_PATH="$BUILD_ENV_PREFIX/lib/"
+export CXXFLAGS="-isysroot $MACOSXSDK -I$BUILD_ENV_PREFIX/include "
+export CPPFLAGS="-I$MACOSXSDK/usr/include -I$BUILD_ENV_PREFIX/include -I$BUILD_ENV_PREFIX/include/openssl "
+```
+
+##### OpenSSL
+
+Download & untar `openssl-1.0.2u`.
+
+```sh
+./Configure --prefix=$BUILD_ENV_PREFIX \
+    no-hw no-hw-xxx no-ssl2 no-ssl3 no-zlib zlib-dynamic \
+    shared enable-cms darwin64-x86_64-cc enable-ec_nistp_64_gcc_128 \
+    -isysroot$MACOSXSDK \
+    -mmacosx-version-min=10.12
+make depend
+make
+make install
+```
+
+##### Python
+
+Download & untar `Python-3.7.6`.
+
+```sh
+./configure --prefix=$BUILD_ENV_PREFIX/ \
+    --enable-ipv6 \
+    --enable-framework=$BUILD_ENV_PREFIX/Frameworks/ \
+    --with-openssl=$BUILD_ENV_PREFIX \
+    MACOSX_DEPLOYMENT_TARGET="10.12"
+make
+make install PYTHONAPPSDIR=$BUILD_ENV_PREFIX/Applications
+
+# Tidy up
+cd $BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin
+ln -s python3 python
+```
+
+Using this env should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
+
+#### Linux (Ubuntu)
+
+Want the oldest libc possible. Currently building using Ubuntu 18 which has libc6 2.27, which is pretty recent.
+
+TBC instructions to build on an older libc.
+
+#### Windows
+
+Currently builds on Windows 10. Unsure if compatible with previous versions.
+
+### Doing a build
+
+Building Kanmail should be as simple as running `make`.
 
 
 ## 🔄 Syncing
