@@ -120,6 +120,11 @@ export default class NewAccountForm extends React.Component {
         });
     }
 
+    completeAddNewAccount = (...args) => {
+        this.props.addAccount(...args);
+        this.resetState();
+    }
+
     render() {
         if (!this.state.addingAccount) {
             return <button className="submit" onClick={this.toggleAddAccount}>
