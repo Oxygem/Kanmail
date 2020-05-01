@@ -80,12 +80,12 @@ class AccountAddress extends React.Component {
 
 export default class Account extends React.Component {
     static propTypes = {
-        accountIndex: PropTypes.number.isRequired,
         accountSettings: PropTypes.object.isRequired,
         deleteAccount: PropTypes.func.isRequired,
-        updateAccount: PropTypes.func.isRequired,
-        moveUp: PropTypes.func.isRequired,
-        moveDown: PropTypes.func.isRequired,
+        accountIndex: PropTypes.number,
+        updateAccount: PropTypes.func,
+        moveUp: PropTypes.func,
+        moveDown: PropTypes.func,
         alwaysEditing: PropTypes.bool,
     }
 
@@ -161,7 +161,7 @@ export default class Account extends React.Component {
         post('/api/settings/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
-        }).then(() => {
+        }, {ignoreStatus: [400]}).then(() => {
             const filteredContacts = _.filter(
                 this.state.contactSettings,
                 contactTuple => contactTuple[0].length && contactTuple[1].length,
@@ -214,7 +214,7 @@ export default class Account extends React.Component {
         let handler = _.partial(this.handleUpdate, settingsKey, key);
 
         if (type === 'checkbox') {
-            attributes.checked = value;
+            attributes.checked = value || false;
             handler = _.partial(this.handleCheckboxUpdate, settingsKey, key);
         }
 
@@ -381,6 +381,7 @@ export default class Account extends React.Component {
                         className="inline"
                         type="text"
                         value={this.state.name}
+                        placeholder="Account name"
                         onChange={(ev) => this.setState({name: ev.target.value})}
                     />
                     &nbsp;

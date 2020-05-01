@@ -38,7 +38,7 @@ export default class AddNewContactForm extends React.Component {
             return;
         }
 
-        post('/api/contacts', this.state)
+        post('/api/contacts', this.state, {ignoreStatus: [400]})
             .then(data => {
                 this.props.addNewContact(
                     data.id,

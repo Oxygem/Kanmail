@@ -20,6 +20,7 @@ export default class Contact extends React.Component {
             editing: false,
             name: props.name,
             email: props.email,
+            saveError: null,
         };
     }
 
@@ -46,9 +47,14 @@ export default class Contact extends React.Component {
     }
 
     handleClickUpdate = () => {
-        put(`/api/contacts/${this.props.id}`, this.state)
+        if (this.state.saveError) {
+            this.setState({saveError: null});
+            return;
+        }
+
+        put(`/api/contacts/${this.props.id}`, this.state, {ignoreStatus: [400]})
             .then(() => this.setState({editing: false}))
-            .catch(err => console.error('CONTACT ERROR', err));
+            .catch(err => this.setState({saveError: err}));
     }
 
     handleClickDelete = () => {
@@ -60,8 +66,7 @@ export default class Contact extends React.Component {
         }
 
         delete_(`/api/contacts/${this.props.id}`)
-            .then(() => this.props.deleteContact(this.props.id))
-            .catch(err => console.error('CONTACT ERROR', err));
+            .then(() => this.props.deleteContact(this.props.id));
     }
 
     renderFormOrText() {
@@ -103,6 +108,18 @@ export default class Contact extends React.Component {
         }
 
         if (this.state.editing) {
+            if (this.state.saveError) {
+                return (
+                    <div>
+                        <button
+                            className="error"
+                            onClick={this.handleClickUpdate}
+                        >Error: {this.state.saveError.data.errorMessage}</button>&nbsp;
+                        <button onClick={this.handleClickCancel}>Cancel</button>
+                    </div>
+                );
+            }
+
             return (
                 <div>
                     <button
