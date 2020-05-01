@@ -17,7 +17,7 @@ The rest of this readme focuses on the technical details of Kanmail. For user do
 + [License](#license)
 + [Development](#development)
     * [Setup your system](#setup-your-system)
-    * [Install Python requirements](#install-python-requirements)
+    * [Install requirements](#install-requirements)
     * [Start the app](#start-the-app)
 + [Building](#building)
     * [Build environments](#build-environments)
@@ -59,9 +59,11 @@ Then, _after_ requirements are installed you need to edit [this pyinstaller file
 You'll need the [Visual Studio build tools](https://visualstudio.microsoft.com/downloads/).
 
 
-### Install Python requirements
+### Install requirements
 
-First install the requirements:
+#### Python
+
+Kanmail requires Python `3.7`. Install the Python requirements with `pip`:
 
 ```
 # Generic development requirements
@@ -69,6 +71,14 @@ pip install -r requirements/development.txt
 
 # Platform specific requirements
 pip install -r requirements/[macos|linux|windows].txt
+```
+
+#### JavaScript
+
+Install the JavaScript requirements with `yarn`:
+
+```
+yarn
 ```
 
 ### Start the app
