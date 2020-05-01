@@ -8,7 +8,8 @@ import requestStore from 'stores/request.js';
 let currentCriticalRequestNonce = null;
 
 
-function handleReponse(response, method, criticalRequestNonce=false) {
+function handleReponse(response, method, options) {
+    const criticalRequestNonce = options.criticalRequestNonce;
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
         const error = new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
         error.criticalRequestNonceFailure = true;
@@ -38,7 +39,7 @@ function handleReponse(response, method, criticalRequestNonce=false) {
 
             if (response.status == 503) {
                 requestStore.addNetworkError(data);
-            } else {
+            } else if (!options.ignoreStatus || !_.includes(options.ignoreStatus, response.status)) {
                 requestStore.addRequestError(data);
             }
 
@@ -56,18 +57,18 @@ function handleReponse(response, method, criticalRequestNonce=false) {
 }
 
 
-function get_or_delete(method, url, query={}, criticalRequestNonce=false) {
+function get_or_delete(method, url, query={}, options={}) {
     const uri = URI(url);
 
-    if (criticalRequestNonce) {
-        currentCriticalRequestNonce = criticalRequestNonce;
+    if (options.criticalRequestNonce) {
+        currentCriticalRequestNonce = options.criticalRequestNonce;
     }
 
     return (
         fetch(uri.query(query), {
             method,
         })
-        .then(response => handleReponse(response, method, criticalRequestNonce))
+        .then(response => handleReponse(response, method, options))
     );
 }
 
@@ -76,11 +77,11 @@ export const get = _.partial(get_or_delete, 'GET');
 export const delete_ = _.partial(get_or_delete, 'DELETE');
 
 
-function post_or_put(method, url, data, criticalRequestNonce=false) {
+function post_or_put(method, url, data, options={}) {
     const uri = URI(url);
 
-    if (criticalRequestNonce) {
-        currentCriticalRequestNonce = criticalRequestNonce;
+    if (options.criticalRequestNonce) {
+        currentCriticalRequestNonce = options.criticalRequestNonce;
     }
 
     return (
@@ -91,7 +92,7 @@ function post_or_put(method, url, data, criticalRequestNonce=false) {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => handleReponse(response, method, criticalRequestNonce))
+        .then(response => handleReponse(response, method, options))
     );
 }
 

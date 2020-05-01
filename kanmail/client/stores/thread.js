@@ -133,7 +133,7 @@ class ThreadStore extends BaseStore {
                 `Get email text from ${accountName}/${folderName}`,
                 `/api/emails/${accountName}/${folderName}/text`,
                 {uid: uidList},
-                criticalRequestNonce,
+                {criticalRequestNonce},
             ).then(data => {
                 _.each(data.emails, (email, uid) => emailParts[uid] = email);
             });
