@@ -178,6 +178,13 @@ cd $BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin
 ln -s python3 python
 ```
 
+Finally install the requirements (from source, no binaries):
+
+```sh
+pip3 install pip -U
+pip3 install --no-binary :all: -r requirements/macos.txt
+```
+
 Using this environment should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
 
 #### Linux (Ubuntu)
