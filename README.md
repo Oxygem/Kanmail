@@ -154,7 +154,7 @@ Download & untar `openssl-1.0.2u`.
     no-hw no-hw-xxx no-ssl2 no-ssl3 no-zlib zlib-dynamic \
     shared enable-cms darwin64-x86_64-cc enable-ec_nistp_64_gcc_128 \
     -isysroot$MACOSXSDK \
-    -mmacosx-version-min=10.12
+    -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET
 make depend
 make
 make install
@@ -169,7 +169,7 @@ Download & untar `Python-3.7.6`.
     --enable-ipv6 \
     --enable-framework=$BUILD_ENV_PREFIX/Frameworks/ \
     --with-openssl=$BUILD_ENV_PREFIX \
-    MACOSX_DEPLOYMENT_TARGET="10.12"
+    MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
 make
 make install PYTHONAPPSDIR=$BUILD_ENV_PREFIX/Applications
 
