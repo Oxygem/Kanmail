@@ -4,7 +4,7 @@
 
 Kanmail _should_ be compatible with any email provider/server that provides `IMAP` and `SMTP`. This page lists tested providers/servers along with any specific instructions, features or limitations.
 
-+ [**Gmail / GSuite**](#gmail-gsuite)
++ [**Gmail / GSuite**](#gmail--gsuite)
 + [**Outlook**](#outlook)
 + [**Fastmail**](#fastmail)
 + [**iCloud**](#icloud)
