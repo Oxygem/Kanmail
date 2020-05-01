@@ -74,10 +74,14 @@ def get_autoconf_settings(username, password):
         'imap_connection': {
             'username': username,
             'password': password,
+            'ssl': True,
+            'ssl_verify_hostname': True,
         },
         'smtp_connection': {
             'username': username,
             'password': password,
+            'ssl': True,
+            'ssl_verify_hostname': True,
         },
     }
 
