@@ -36,7 +36,7 @@ We welcome pull requests, but note you will be contributing to a non-free projec
 
 #### MacOS
 
-Python _must_ be configured `--with-framework`. See [this StackOverflow answer](https://stackoverflow.com/a/15752676/352488) to to check whether this is enabled.
+Python _must_ be configured `--with-framework`. See [this StackOverflow answer](https://stackoverflow.com/a/15752676/352488) to check whether this is enabled.
 
 To build/release you'll need to intsall GNU tar, which can be done with brew:
 
@@ -101,7 +101,7 @@ Version numbers are generated at build in the date-based format: `MAJOR.YYMMDDhh
 
 ## Building
 
-Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable/usage.html#platform-specific-notes), for maximum compatability Kanmail is ideally built on the _oldest_ systems available. MacOS + Linux builds are forwards, but not backwards, compatible.
+Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable/usage.html#platform-specific-notes), for maximum compatability Kanmail is ideally built on the _oldest_ systems available. MacOS + Linux builds are forward, but not backward, compatible.
 
 Kanmail is currently built on:
 
@@ -113,7 +113,7 @@ Kanmail is currently built on:
 
 #### MacOS
 
-Want the oldest SDK possible, Kanmail will be compatible with the SDK version any any newer versions, but nothing older. So target the oldest realistic SDK, currently 10.12 / Sierra. Heavily based on [this gist](https://gist.github.com/phfaist/a5b8a895b003822df5397731f4673042).
+Should use the oldest SDK possible. Kanmail will be compatible with the SDK version of any newer versions, but nothing older, so target the oldest realistic SDK, which is currently 10.12 / Sierra. Heavily based on [this gist](https://gist.github.com/phfaist/a5b8a895b003822df5397731f4673042).
 
 + Use [xcodelegacy](https://github.com/devernay/xcodelegacy) to download old OSX SDK files
 
@@ -168,11 +168,11 @@ cd $BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin
 ln -s python3 python
 ```
 
-Using this env should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
+Using this environment should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
 
 #### Linux (Ubuntu)
 
-Want the oldest libc possible. Currently building using Ubuntu 18 which has libc6 2.27, which is pretty recent.
+Should use the oldest libc possible. Currently building using Ubuntu 18 which has libc6 2.27, which is pretty recent.
 
 TBC instructions to build on an older libc.
 
