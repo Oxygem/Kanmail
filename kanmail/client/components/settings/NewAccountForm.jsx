@@ -44,6 +44,23 @@ export default class NewAccountForm extends React.Component {
         this.setState(state);
     }
 
+    handleClickManualAddAccount = () => {
+        this.setState({
+            isLoadingNewAccount: false,
+            configuringNewAccount: true,
+            newAccountSettings: {
+                'imap_connection': {
+                    'ssl': true,
+                    'ssl_verify_hostname': true,
+                },
+                'smtp_connection': {
+                    'ssl': true,
+                    'ssl_verify_hostname': true,
+                },
+            },
+        });
+    }
+
     handleAddAccount = (ev) => {
         ev.preventDefault();
 
@@ -170,7 +187,10 @@ export default class NewAccountForm extends React.Component {
                     Cancel
                 </button>
             </form>
-            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.</p>
+            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.
+                <br /><br />
+                If you would prefer to enter IMAP/SMTP settings by hand, <a onClick={this.handleClickManualAddAccount}>click here</a>.
+            </p>
         </div>;
     }
 }
