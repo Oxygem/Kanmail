@@ -1,3 +1,21 @@
+# v1.2005020754
+
+Changes:
+- Symlink pip as well as python for macos build env.
+- Use `MACOSX_DEPLOYMENT_TARGET` envvar when compiling.
+- Add pip install to MacOS build env.
+- Fix header errors in contacts/settings.
+- Better highlight new account form.
+- Default enable SSL when autoconf fails.
+- Fix adding new accounts after failed autoconf.
+- Add button to skip new account form and go straight to IMAP/SMTP settings.
+- Fix error display in contacts and expected API errors.
+- Move `criticalRequestNonce` argument into options object.
+- Fix TOC link in providers.
+- Add JavaScript requirement install to readme.
+- Merge pull request #103 from jetmore/patch-1
+- Update README.md
+
 # v1.2004301944
 
 Building using MacOS 10.12 SDK.
