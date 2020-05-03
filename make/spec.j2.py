@@ -43,10 +43,11 @@ pyz = PYZ(  # noqa: F821
 exe = EXE(  # noqa: F821
     pyz, a.scripts,
 
-{% if platform_name in ('nix64', 'win') %}  # noqa
-    a.binaries, a.zipfiles, a.datas, [],
-{% elif platform_name == 'mac' %}  # noqa
+{% if platform_name == 'mac' or onedir %}  # noqa
+    [],
     exclude_binaries=True,
+{% elif platform_name in ('nix64', 'win') %}  # noqa
+    a.binaries, a.zipfiles, a.datas, [],
 {% endif %}  # noqa
 
     name='{{ platform_name }}',
@@ -67,14 +68,16 @@ exe = EXE(  # noqa: F821
 {% endif %}  # noqa
 )
 
-{% if platform_name == 'mac' %}  # noqa
+{% if platform_name == 'mac' or onedir %}  # noqa
 coll = COLLECT(  # noqa: F821
     exe, a.binaries, a.zipfiles, a.datas,
     strip=False,
     upx=False,
     name='{{ platform_name }}',
 )
+{% endif %}  # noqa
 
+{% if platform_name == 'mac' %}  # noqa
 app = BUNDLE(  # noqa: F821
     coll,
     name='mac.app',
