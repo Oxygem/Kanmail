@@ -53,7 +53,7 @@ exe = EXE(  # noqa: F821
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
 
 {% if platform_name == 'mac' %}  # noqa
     console=False,
@@ -71,7 +71,7 @@ exe = EXE(  # noqa: F821
 coll = COLLECT(  # noqa: F821
     exe, a.binaries, a.zipfiles, a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     name='{{ platform_name }}',
 )
 
