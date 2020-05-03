@@ -3,7 +3,23 @@ a = Analysis(  # noqa: F821
     pathex=[
         '{{ root_dir }}',
     ],
-    binaries=[],
+    binaries=[
+    {%- if platform_name == 'nix64' -%}  # noqa
+        # Added/hidden
+        ('/usr/lib/x86_64-linux-gnu/libicui18n.so.55', '.'),
+        ('/usr/lib/x86_64-linux-gnu/libwebp.so.5', '.'),
+        ('/usr/lib/x86_64-linux-gnu/libwebpdemux.so.1', '.'),
+
+        ('/usr/lib/x86_64-linux-gnu/libgdk-3.so', '.'),
+        ('/usr/lib/x86_64-linux-gnu/libgtk-3.so', '.'),
+        # Needed?
+        ('/usr/lib/x86_64-linux-gnu/libgirepository-1.0.so', '.'),
+        ('/usr/lib/x86_64-linux-gnu/libwebkit2gtk-4.0.so.37', '.'),
+        ('/usr/lib/x86_64-linux-gnu/libjavascriptcoregtk-4.0.so.18', '.'),
+
+        ('/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0', 'webkit2gtk-4.0'),
+    {%- endif -%}  # noqa
+    ],
     datas=[
         (r'{{ root_dir }}/LICENSE.md', '.'),
         (r'{{ root_dir }}/CHANGELOG.md', '.'),
