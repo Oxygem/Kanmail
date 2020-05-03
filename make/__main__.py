@@ -12,6 +12,7 @@ from .settings import (
     DIST_DIRNAME,
     DOCKER_NAME,
     GITHUB_API_TOKEN,
+    MACOSX_DEPLOYMENT_TARGET,
     NOTARIZE_PASSWORD_KEYCHAIN_NAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
@@ -76,8 +77,8 @@ def build_release(release=False, docker=False, build_version=None):
                     f'No `{key}` environment variable provided!',
                 )
 
-        # Refuse to build release unless we're specifically in the special MacOS 10.12 build env
-        if environ.get('MACOSX_DEPLOYMENT_TARGET') != '10.12':
+        # Refuse to build release unless we're specifically in the special MacOS X build env
+        if environ.get('MACOSX_DEPLOYMENT_TARGET') != MACOSX_DEPLOYMENT_TARGET:
             raise click.ClickException((
                 'Refusing to build on MacOS where MACOSX_DEPLOYMENT_TARGET is not '
                 'set to 10.12 (need to setup env?).'
