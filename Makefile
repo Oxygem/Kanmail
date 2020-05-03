@@ -13,6 +13,16 @@ release:
 release-complete:
 	python -m make --release --complete
 
+client-linux-docker:
+	docker build \
+	    -t kanmail-ubuntu-linux-build \
+	    -f make/Dockerfile-ubuntu-linux-build \
+	    .
+	docker run \
+	    -v `pwd`:/opt/kanmail \
+	    kanmail-ubuntu-linux-build \
+	    make
+
 clean:
 	rm -rf dist/*
 	rm -f dist/.release_version_lock
