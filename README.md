@@ -183,7 +183,7 @@ Finally install the requirements (from source, no binaries):
 
 ```sh
 pip install pip -U
-pip install --no-binary :all: -r requirements/macos.txt
+pip install -r requirements/macos.txt
 ```
 
 Using this environment should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
