@@ -215,6 +215,32 @@ export default class BaseEmails {
         );
     }
 
+    copyEmails = (accountKey, messageUids, oldColumn, newColumn) => {
+        /*
+            Copy emails between folders but don't trigger updates.
+        */
+
+        if (oldColumn === newColumn) {
+            console.debug('Not copying emails to the same folder!');
+            return;
+        }
+
+        console.debug(
+            `Copying ${messageUids.length} messages from \
+"${accountKey}/${oldColumn}" -> \
+"${accountKey}/${newColumn}"`
+        );
+
+        return requestStore.post(
+            `Move emails from ${oldColumn} -> ${newColumn}`,
+            `/api/emails/${accountKey}/${oldColumn}/copy`,
+            {
+                message_uids: messageUids,
+                new_folder: newColumn,
+            },
+        );
+    }
+
     starEmails(accountKey, folderName, messageUids) {
         /*
             Star emails in a given folder but don't trigger any updates.
