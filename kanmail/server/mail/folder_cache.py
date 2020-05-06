@@ -81,6 +81,10 @@ class FolderHeaderCacheItem(db.Model):
 #     )
 
 
+def _make_account_key(settings):
+    imap_settings = settings['imap_connection']
+    return f'{imap_settings["username"]}@{imap_settings["host"]}'
+
 def bust_all_caches():
     if CACHE_ENABLED:
         logger.warning('Busting all cache items!')
@@ -107,8 +111,7 @@ class FolderCache(object):
 
         # Use user@host for the cache key, so we invalidate when accounts are changed
         # TODO: cache cleanup
-        imap_settings = self.folder.account.settings['imap_connection']
-        self.cache_key = f'{imap_settings["username"]}@{imap_settings["host"]}'
+        self.cache_key = _make_account_key(self.folder.account.settings)
 
     @lock_class_method
     def get_folder_cache_item(self):
