@@ -25,7 +25,13 @@ const columnTarget = {
         const { messageUids, oldColumn, accountName } = monitor.getItem();
         const emailStore = getEmailStore();
 
-        emailStore.moveEmails(
+        const accountSettings = settingsStore.getAccountSettings(accountName);
+        let handler = emailStore.moveEmails;
+        if (accountSettings.folders.copy_on_move === true && oldColumn == 'inbox') {
+            handler = emailStore.copyEmails;
+        }
+
+        handler(
             accountName,
             messageUids,
             oldColumn,
