@@ -173,6 +173,7 @@ export default class BaseEmails {
             );
 
             if (!message) {
+                console.warn(`Email not found - already deleted?: ${accountKey}/${folderName}/${uid}!`)
                 return;
             }
 
