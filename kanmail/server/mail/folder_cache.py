@@ -34,6 +34,9 @@ class FolderCacheItem(db.Model):
     uid_validity = db.Column(db.String(300))
     uids = db.Column(db.Text)
 
+    def __str__(self):
+        return f'{self.account_name}/{self.folder_name}'
+
 
 class FolderHeaderCacheItem(db.Model):
     '''
@@ -56,6 +59,9 @@ class FolderHeaderCacheItem(db.Model):
         db.ForeignKey('folder_cache_item.id', ondelete='CASCADE'),
         nullable=False,
     )
+
+    def __str__(self):
+        return f'{self.folder}/{self.uid}'
 
 
 # class FolderHeaderPartCacheItem(db.Model):
