@@ -124,6 +124,11 @@ def api_test_new_account_settings():
         )
 
     if status:
+        # Gmail is the only provider that *always* supports copy from inbox ie
+        # label style IMAP rather than folder style.
+        if account_settings['imap_connection']['host'] == 'imap.gmail.com':
+            folders_or_error['copy_on_move'] = True
+
         account_settings['folders'] = folders_or_error
         return jsonify(connected=True, settings=account_settings)
 
