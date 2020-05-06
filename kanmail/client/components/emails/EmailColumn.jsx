@@ -35,15 +35,20 @@ const columnTarget = {
         // just copied over, as they always appear sequentially). This also
         // triggers the processEmailChanges function. We force this because
         // we might have moved stuff into a folder where it already existed.
-        ).then(() => emailStore.syncFolderEmails(
-            props.id,
-            {
-                forceProcess: true,
-                accountName: accountName,
-                // Tell the backend to expect X messages (and infer if needed!)
-                query: {uid_count: messageUids.length},
-            },
-        ));
+        ).then(() => {
+            emailStore.syncFolderEmails(
+                oldColumn,
+                {accountName: accountName},
+            );
+            emailStore.syncFolderEmails(
+                props.id,
+                {
+                    accountName: accountName,
+                    // Tell the backend to expect X messages (and infer if needed!)
+                    query: {uid_count: messageUids.length},
+                },
+            );
+        });
     },
 };
 

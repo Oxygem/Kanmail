@@ -188,7 +188,7 @@ export default class BaseEmails {
         });
     }
 
-    moveEmails(accountKey, messageUids, oldColumn, newColumn) {
+    moveEmails = (accountKey, messageUids, oldColumn, newColumn) => {
         /*
             Move emails between folders but don't trigger updates.
         */
@@ -211,11 +211,7 @@ export default class BaseEmails {
                 message_uids: messageUids,
                 new_folder: newColumn,
             },
-        ).then(() => {
-            this.deleteEmailsFromAccountFolder(
-                accountKey, oldColumn, messageUids,
-            );
-        });
+        );
     }
 
     starEmails(accountKey, folderName, messageUids) {
