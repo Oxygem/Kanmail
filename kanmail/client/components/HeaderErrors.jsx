@@ -2,15 +2,24 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import { SUPPORT_DOC_LINK } from 'constants.js';
+import { openLink } from 'window.js';
+
 import requestStore from 'stores/request.js';
 import { subscribe } from 'stores/base.jsx';
 
 
 const renderError = (error, key) => {
+    const traceback = error.json.traceback || null;
+    const debugInfo = `URL: ${error.url}
+Status: ${error.status}
+${traceback}`;
+
     return (
         <p key={key}>
             <span className="meta">{error.status}: {error.url}</span>
             {error.errorName}: {error.errorMessage}
+            {traceback && <textarea editable={false} value={debugInfo} />}
         </p>
     );
 }
@@ -31,7 +40,8 @@ export default class HeaderErrors extends Component {
         return (
             <div className="icon-wrapper">
                 <div className="icon-contents">
-                    <strong>Kanmail encountered a serious sync or UI error, click to reload</strong>
+                    <strong>Kanmail encountered a serious sync or UI error.</strong>
+                    <p>Click the icon to reload Kanmail or use the information below to investigate/submit a bug report. <a onClick={() => openLink(SUPPORT_DOC_LINK)}>More information</a>.</p>
                     {_.map(this.props.requestErrors, renderError)}
                 </div>
                 <a onClick={() => window.location.reload()}>

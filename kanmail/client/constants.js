@@ -20,3 +20,4 @@ export const ALIAS_TO_ICON = {
 };
 
 export const PROVIDERS_DOC_LINK = 'https://github.com/Oxygem/Kanmail/blob/master/docs/providers.md'
+export const SUPPORT_DOC_LINK = 'https://github.com/Oxygem/Kanmail/blob/master/docs/support.md'
