@@ -1,3 +1,38 @@
+# v1.2005061610
+
+This release adds "copy on move" for better compatibility with label-style
+providers (Gmail, Fastmail beta).
+
+Also brings in a much improved error display with more information to
+improve debugging, along with a bunch of fixes.
+
+Changes:
+- Add cache cleanup script.
+- Add cache cleanup functions.
+- Add `__str__` methods to folder items.
+- Extract cache key name into function.
+- Better function name.
+- Show traceback infomation in header errors, link to support doc.
+- Include tracebacks for unexpected errors.
+- Handle `copy_on_move` when dragging emails between columns.
+- Default `copy_on_move` true if we're gmail.
+- Add copy emails function to the base email store.
+- Add `copy_on_move` setting.
+- Respect the `options.accountName` filter on sync emails.
+- Log a warning when trying to delete emails that don't exist.
+- When moving emails rely on backend sync to update columns.
+- Remove unused styles.
+- Add `settingsStore.getAccountSettings` function.
+- Fix account settings default (array not object).
+- Fix how we store mapping of account/folder/uid -> email.
+- Make the spec template able to generate onedir pyinstaller bundles.
+- Remove the dist changelog on `make clean`.
+- Remove upx.
+- Move `MACOSX_DEPLOYMENT_TARGET` into settings.
+- Remove `--no-binary` flag as not required/working.
+- Update maintainer label in Dockerfile.
+- Update Docker docs for kanmail user.
+
 # v1.2005020754
 
 Changes:
