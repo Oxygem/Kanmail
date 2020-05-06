@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from kanmail.log import logger
 from kanmail.server.app import db
 from kanmail.server.util import lock_class_method
+from kanmail.settings import get_settings
 from kanmail.settings.constants import CACHE_ENABLED
 
 
@@ -59,6 +60,7 @@ class FolderHeaderCacheItem(db.Model):
         db.ForeignKey('folder_cache_item.id', ondelete='CASCADE'),
         nullable=False,
     )
+    folder = db.relationship('FolderCacheItem')
 
     def __str__(self):
         return f'{self.folder}/{self.uid}'
@@ -90,6 +92,47 @@ class FolderHeaderCacheItem(db.Model):
 def _make_account_key(settings):
     imap_settings = settings['imap_connection']
     return f'{imap_settings["username"]}@{imap_settings["host"]}'
+
+
+def remove_stale_folders():
+    settings = get_settings()
+    accounts = settings['accounts']
+    account_names = set()
+    for account in accounts:
+        account_names.add(_make_account_key(account))
+
+    deleted = 0
+    all_folders = FolderCacheItem.query.all()
+
+    for folder in all_folders:
+        if folder.account_name not in account_names:
+            logger.info(f'Deleting stale cache folder: {folder}')
+            delete_cache_items(folder)
+            deleted += 1
+
+    logger.info(f'Deleted {deleted}/{len(all_folders)} cache folders')
+
+
+def remove_stale_headers():
+    folder_id_to_uids = {}
+
+    for folder in FolderCacheItem.query.all():
+        if folder.uids:
+            folder_id_to_uids[folder.id] = pickle_loads(folder.uids)
+
+    all_headers = FolderHeaderCacheItem.query.all()
+    headers_to_delete = []
+
+    for header in all_headers:
+        if header.uid not in folder_id_to_uids[header.folder_id]:
+            logger.info(f'Deleting stale cache header: {header}')
+            headers_to_delete.append(header)
+
+    if headers_to_delete:
+        delete_cache_items(headers_to_delete)
+
+    logger.info(f'Deleted {len(headers_to_delete)}/{len(all_headers)} cache headers')
+
 
 def bust_all_caches():
     if CACHE_ENABLED:
