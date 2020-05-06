@@ -1,3 +1,5 @@
+import traceback
+
 from flask import jsonify, make_response
 
 from kanmail.log import logger
@@ -60,9 +62,11 @@ def error_network_exception(e):
 def error_unexpected_exception(e):
     error_name = e.__class__.__name__
     message = f'{e}'
+    trace = traceback.format_exc().strip()
     logger.exception(f'Unexpected exception in view: {message}')
     return make_response(jsonify(
         status_code=500,
         error_name=error_name,
         error_message=message,
+        traceback=trace,
     ), 500)
