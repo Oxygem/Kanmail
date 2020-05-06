@@ -93,7 +93,7 @@ export default class BaseEmails {
     }
 
     setEmailForAccountFolder(accountKey, folderName, email) {
-        this.getAccountFolder(accountKey, folderName)[email.uid] = email;
+        this.getAccountFolder(accountKey, folderName)[email.folderUids[folderName]] = email;
     }
 
     getEmailFromAccountFolder(accountKey, folderName, uid) {
