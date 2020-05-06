@@ -70,6 +70,10 @@ class SettingsStore extends BaseStore {
             return this.props;
         });
     }
+
+    getAccountSettings(accountName) {
+        return _.find(this.props.accounts, account => account.name === accountName);
+    }
 }
 
 
