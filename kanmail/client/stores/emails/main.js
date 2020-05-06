@@ -25,7 +25,11 @@ class MainEmails extends BaseEmails {
         const requests = [];
 
         // For each account, fetch the emails
-        _.each(this.getAccountKeys(), accountKey => (
+        const accountKeys = _.filter(
+            this.getAccountKeys(),
+            accountKey => !options.accountName || accountKey === options.accountName,
+        );
+        _.each(accountKeys, accountKey => (
             requests.push(this.syncEmails(accountKey, folderName, options))
         ));
 
