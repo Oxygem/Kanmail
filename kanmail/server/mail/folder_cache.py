@@ -94,7 +94,7 @@ def save_cache_items(*items):
     db.session.commit()
 
 
-def delete_cache_item(*items):
+def delete_cache_items(*items):
     for item in items:
         db.session.delete(item)
     db.session.commit()
@@ -135,7 +135,7 @@ class FolderCache(object):
             return
 
         self.log('warning', 'busting the cache!')
-        delete_cache_item(self.get_folder_cache_item())
+        delete_cache_items(self.get_folder_cache_item())
 
     # Single operations
     #
@@ -191,7 +191,7 @@ class FolderCache(object):
     def delete_headers(self, uid):
         headers = self.get_header_cache_item(uid)
         if headers:
-            delete_cache_item(headers)
+            delete_cache_items(headers)
 
     def get_headers(self, uid):
         headers = self.get_header_cache_item(uid)
