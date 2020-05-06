@@ -332,7 +332,7 @@ def _parse_bodystructure(bodystructure, item_number=None):
             extra_data.update(_parse_bodystructure_list(bodystructure[2]))
 
         for bit in bodystructure[7:]:
-            if isinstance(bit, tuple):
+            if isinstance(bit, tuple) and len(bit) > 1:
                 extra_data.update(_parse_bodystructure_list(bit))
 
         if b'CHARSET' in extra_data:
