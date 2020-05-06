@@ -420,14 +420,33 @@ export default class Account extends React.Component {
                 </div>
 
                 <div className={this.state.editingTab == 'mailbox' ? 'wide' : 'hidden'}>
-                    <label
-                        className="checkbox"
-                        htmlFor="folderSettings-save_sent_copies"
-                    >Save copies of sent mail in the sent folder?</label>
-                    {this.renderInput('folderSettings', 'save_sent_copies', {
-                        'type': 'checkbox'
-                    })}
                     <div className="flex wide">{this.renderFolderSettings()}</div>
+                    <div className="flex wide">
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="folderSettings-save_sent_copies"
+                            >Save copies of sent mail in the sent folder?</label>
+                            {this.renderInput('folderSettings', 'save_sent_copies', {
+                                'type': 'checkbox'
+                            })}
+                        </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
+                                htmlFor="folderSettings-copy_on_move"
+                            >
+                                <span className="red">Advanced</span>&nbsp; (<a onClick={(ev) => {
+                                    ev.preventDefault();
+                                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
+                                }}>more info</a>):
+                                <br />Copy (not move) emails out of the inbox?
+                            </label>
+                            {this.renderInput('folderSettings', 'copy_on_move', {
+                                'type': 'checkbox'
+                            })}
+                        </div>
+                    </div>
                 </div>
 
                 <div className={this.state.editingTab == 'imap' ? 'wide' : 'hidden'}>

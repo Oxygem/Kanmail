@@ -43,6 +43,7 @@ MODEL = {
             'folders': {
                 KEY: str,
                 'save_sent_copies': bool,
+                'copy_on_move': bool,
             },
             'contacts': [
                 [str, str],
