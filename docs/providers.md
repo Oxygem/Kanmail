@@ -38,6 +38,10 @@ Working. Requires an app password, see [the iCloud documentation](https://suppor
 
 Kanmail offers some advanced account settings for more complex connection setups. **Do not change these unless you know what you are doing**.
 
+### Copy (not move) emails out of the inbox
+
+This setting makes Kanmail copy emails from the inbox when dragging them. This works well with label-style email providers (Gmail) such that messages will remain in the inbox with the other folder as a label. These messages will not show up in the inbox in Kanmail.
+
 ### Disable SSL hostname verification
 
 If you _expect_ the SSL certificate hostname not to match, verification can be disabled within the account settings.
