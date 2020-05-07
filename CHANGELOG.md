@@ -1,3 +1,21 @@
+# v1.2005071756
+
+Security & bugfix release.
+
+Changes:
+- Expunge emails after deleting them.
+- Lock `Account.get_folder` to prevent race condition on folder create.
+- Tidy up `__str__` and `log` methods for account/folder/foldercache.
+- Add a session token to prevent CSRF attacks.
+- Merge common error views.
+- Highlight emails flagged as deleted.
+- Apply new drag n' drop method to sidebar folders.
+- Tidy up copy on move information.
+- Don't attempt to parse single item tuples in bodystructure.
+- Expand support doc information.
+- Add copy not move information to providers doc.
+- Create issue templates.
+
 # v1.2005061610
 
 This release adds "copy on move" for better compatibility with label-style
