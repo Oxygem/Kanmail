@@ -355,6 +355,8 @@ export default class BaseEmails {
             }, 'desc');
 
             const allSeen = [];
+            const allDeleted = [];
+
             let allFolderNames = [];
             let allFlags = [];
 
@@ -367,6 +369,7 @@ export default class BaseEmails {
                 allFlags = _.concat(allFlags, message.flags);
 
                 allSeen.push(_.includes(message.flags, '\\Seen'));
+                allDeleted.push(_.includes(message.flags, '\\Deleted'));
             });
 
             allFolderNames = _.uniq(allFolderNames);
@@ -375,6 +378,7 @@ export default class BaseEmails {
             thread.archived = !_.includes(allFolderNames, 'inbox');
             thread.starred = _.includes(allFlags, '\\Flagged');
             thread.unread = _.includes(allSeen, false);
+            thread.deleted = !_.includes(allDeleted, false);
 
             // Also store the list of all folder names and flags for the thread
             thread.allFolderNames = allFolderNames;

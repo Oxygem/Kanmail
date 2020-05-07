@@ -96,7 +96,7 @@ export default class EmailColumnThread extends React.Component {
     constructor(props) {
         super(props);
 
-        const { starred, archived } = this.props.thread;
+        const { starred, archived, deleted } = this.props.thread;
         let { unread } = this.props.thread;
 
         // Read the emails via the column store, just in case we re-render the column
@@ -110,6 +110,7 @@ export default class EmailColumnThread extends React.Component {
             starred: starred,
             unread: unread,
             archived: archived,
+            deleted: deleted,
             locked: false,
             open: false,
             hover: false,
@@ -620,7 +621,7 @@ export default class EmailColumnThread extends React.Component {
                     {addresses}
                 </h5>
                 <h4>
-                    {latestEmail.subject}
+                    {this.state.deleted ? <strike>{latestEmail.subject}</strike> : latestEmail.subject}
                 </h4>
                 <p>{latestEmail.excerpt}</p>
                 <div className="meta">
