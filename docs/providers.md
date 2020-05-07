@@ -40,7 +40,9 @@ Kanmail offers some advanced account settings for more complex connection setups
 
 ### Copy (not move) emails out of the inbox
 
-This setting makes Kanmail copy emails from the inbox when dragging them. This works well with label-style email providers (Gmail) such that messages will remain in the inbox with the other folder as a label. These messages will not show up in the inbox in Kanmail.
+This setting makes Kanmail copy emails **from the inbox** when dragging them to other columns. This will duplicate the message into both folders which works well with label-style email providers (Gmail).
+
+In addition, Kanmail will hide these messages from the inbox when shown in another column.
 
 ### Disable SSL hostname verification
 
