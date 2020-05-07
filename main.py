@@ -13,6 +13,7 @@ from kanmail.settings import get_window_settings
 from kanmail.settings.constants import (
     DEBUG,
     GUI_LIB,
+    SERVER_HOST,
     SERVER_PORT,
 )
 from kanmail.version import get_version
@@ -20,9 +21,12 @@ from kanmail.window import create_window, destroy_main_window
 
 
 def run_server():
+    logger.debug(f'Starting server on {SERVER_HOST}:{SERVER_PORT}')
+
     try:
         boot()
         app.run(
+            host=SERVER_HOST,
             port=SERVER_PORT,
             debug=DEBUG,
             threaded=True,
@@ -72,7 +76,7 @@ def main():
     waits = 0
     while waits < 10:
         try:
-            response = requests.get(f'http://localhost:{SERVER_PORT}/api/ping')
+            response = requests.get(f'http://{SERVER_HOST}:{SERVER_PORT}/ping')
             response.raise_for_status()
         except requests.RequestException as e:
             logger.warning(f'Waiting for main window: {e}')

@@ -1,19 +1,21 @@
 import platform
+import socket
 import sys
 
 from os import environ, path
+from uuid import uuid4
 
 from click import get_app_dir
 
 
 APP_NAME = 'Kanmail'
 
-SERVER_PORT = 4420
-
 DEFAULT_WINDOW_WIDTH = 1400
 DEFAULT_WINDOW_HEIGHT = 800
 DEFAULT_WINDOW_LEFT = 0
 DEFAULT_WINDOW_TOP = 0
+
+SESSION_TOKEN = str(uuid4())
 
 
 # App directory/filenames
@@ -77,7 +79,7 @@ platform_to_gui = {
 GUI_LIB = platform_to_gui[PLATFORM]
 
 
-# Server settings
+# External server settings
 #
 
 WEBSITE_URL = 'https://kanmail.io'
@@ -103,3 +105,19 @@ class PyUpdaterConfig(object):  # noqa: E302
     APP_NAME = APP_NAME
     UPDATE_URLS = [UPDATE_SERVER_URL]
     MAX_DOWNLOAD_RETRIES = 3
+
+
+# Server port settings
+#
+
+SERVER_HOST = '127.0.0.1'
+
+if IS_APP and not DEBUG:
+    # Thanks to: https://stackoverflow.com/a/52012158/352488
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind((SERVER_HOST, 0))
+    sock.listen()
+    environ['WERKZEUG_SERVER_FD'] = str(sock.fileno())
+    SERVER_PORT = sock.getsockname()[1]
+else:
+    SERVER_PORT = 4420
