@@ -15,6 +15,7 @@ from kanmail.settings.constants import (
     FRAMELESS,
     FROZEN,
     IS_APP,
+    SESSION_TOKEN,
     WEBSITE_URL,
 )
 from kanmail.version import get_version
@@ -24,8 +25,8 @@ from kanmail.window import create_open_dialog, create_window, destroy_window
 SEND_WINDOW_DATA = {}
 
 
-@app.route('/api/ping', methods=('GET',))
-def api_ping():
+@app.route('/ping', methods=('GET',))
+def ping():
     return jsonify(ping='pong')
 
 
@@ -38,6 +39,7 @@ def _get_render_data():
         'is_app': IS_APP,
         'frameless': FRAMELESS,
         'website_url': WEBSITE_URL,
+        'session_token': SESSION_TOKEN,
     }
 
 

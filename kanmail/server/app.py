@@ -1,7 +1,7 @@
 from os import environ, path
 from sqlite3 import Connection as SQLite3Connection
 
-from flask import Flask
+from flask import abort, Flask, request
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
@@ -9,9 +9,13 @@ from sqlalchemy.engine import Engine
 
 from kanmail.log import logger
 from kanmail.settings.constants import (
+    APP_NAME,
     CLIENT_ROOT,
     CONTACTS_CACHE_DB_FILE,
+    DEBUG,
     FOLDER_CACHE_DB_FILE,
+    IS_APP,
+    SESSION_TOKEN,
 )
 
 
@@ -35,7 +39,7 @@ class JsonEncoder(JSONEncoder):
 
 
 app = Flask(
-    'kanmail',
+    APP_NAME,
     static_folder=path.join(CLIENT_ROOT, 'static'),
     template_folder=path.join(CLIENT_ROOT, 'templates'),
 )
@@ -50,6 +54,17 @@ app.config['SQLALCHEMY_BINDS'] = {
     'folders': f'sqlite:///{FOLDER_CACHE_DB_FILE}',
 }
 db = SQLAlchemy(app)
+
+
+@app.before_request
+def validate_session_token():
+    if DEBUG and not IS_APP:  # don't apply in full dev mode
+        return
+
+    if request.path.startswith('/api'):
+        session_token = request.headers.get('Kanmail-Session-Token')
+        if session_token != SESSION_TOKEN:
+            abort(401, 'Invalid session token provided!')
 
 
 def boot() -> None:

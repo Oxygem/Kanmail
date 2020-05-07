@@ -13,6 +13,7 @@
         window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
         window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
         window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
+        window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
     </script>
 
     {% if version == '0.0.0dev' %}

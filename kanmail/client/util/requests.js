@@ -67,6 +67,9 @@ function get_or_delete(method, url, query={}, options={}) {
     return (
         fetch(uri.query(query), {
             method,
+            headers: {
+                'Kanmail-Session-Token': window.KANMAIL_SESSION_TOKEN,
+            }
         })
         .then(response => handleReponse(response, method, options))
     );
@@ -90,6 +93,7 @@ function post_or_put(method, url, data, options={}) {
             body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json',
+                'Kanmail-Session-Token': window.KANMAIL_SESSION_TOKEN,
             },
         })
         .then(response => handleReponse(response, method, options))
