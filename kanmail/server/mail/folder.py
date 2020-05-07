@@ -56,6 +56,14 @@ class Folder(object):
             except (ImapConnectionError, IMAPClientError):
                 pass
 
+    def __str__(self):
+        return f'Folder({self.account.name}/{self.name})'
+
+    def __len__(self):
+        if self.exists:
+            return len(self.email_uids)
+        return 0
+
     def check_exists(self):
         '''
         Check whether this folder exists on the server.
@@ -67,14 +75,9 @@ class Folder(object):
         self.exists = exists
         return exists
 
-    def __len__(self):
-        if self.exists:
-            return len(self.email_uids)
-        return 0
-
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[Folder: {self.account.name}/{self.name}]: {message}')
+        func(f'[{self}]: {message}')
 
     @contextmanager
     def get_connection(self):

@@ -24,7 +24,7 @@ class Account(object):
         self.smtp_connection = SmtpConnection(self, **settings['smtp_connection'])
 
     def __str__(self):
-        return self.name
+        return f'Account({self.name})'
 
     def reset(self):
         # Map of folder name -> Folder object

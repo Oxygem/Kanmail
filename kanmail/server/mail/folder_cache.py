@@ -162,6 +162,9 @@ class FolderCache(object):
         # TODO: cache cleanup
         self.cache_key = _make_account_key(self.folder.account.settings)
 
+    def __str__(self):
+        return f'FolderCache({self.name})'
+
     @lock_class_method
     def get_folder_cache_item(self):
         try:
@@ -180,7 +183,7 @@ class FolderCache(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[Folder cache: {self.name}]: {message}')
+        func(f'[{self}]: {message}')
 
     def bust(self):
         if not CACHE_ENABLED:
