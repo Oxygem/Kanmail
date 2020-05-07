@@ -454,6 +454,7 @@ class Folder(object):
         with self.get_connection() as connection:
             connection.copy(email_uids, new_folder)
             connection.delete_messages(email_uids)
+            connection.expunge(email_uids)
 
     def copy_emails(self, email_uids, new_folder):
         '''
