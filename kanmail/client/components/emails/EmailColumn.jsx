@@ -36,11 +36,6 @@ const columnTarget = {
             messageUids,
             oldColumn,
             props.id,
-
-        // Load any new emails for the new column (including the ones we
-        // just copied over, as they always appear sequentially). This also
-        // triggers the processEmailChanges function. We force this because
-        // we might have moved stuff into a folder where it already existed.
         ).then(() => {
             emailStore.syncFolderEmails(
                 oldColumn,
