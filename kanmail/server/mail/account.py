@@ -1,4 +1,5 @@
 from kanmail.log import logger
+from kanmail.server.util import lock_class_method
 
 from .connection import ImapConnectionPool, SmtpConnection
 from .folder import Folder
@@ -58,6 +59,7 @@ class Account(object):
 
         return folder_names
 
+    @lock_class_method  # locked to prevent parallel folder initializations
     def get_folder(self, folder_alias, query=None):
         '''
         Get a Folder object for this account.
