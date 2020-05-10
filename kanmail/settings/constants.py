@@ -22,7 +22,7 @@ SESSION_TOKEN = str(uuid4())
 #
 
 # "App" directory for this user - settings/logs/cache go here
-APP_DIR = get_app_dir(APP_NAME)
+APP_DIR = environ.get('KANMAIL_APP_DIR', get_app_dir(APP_NAME))
 
 # Cache directory
 CACHE_DIR = path.join(APP_DIR, 'cache')
