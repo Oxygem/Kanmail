@@ -120,8 +120,8 @@ export default class NewAccountForm extends React.Component {
         });
     }
 
-    completeAddNewAccount = (...args) => {
-        this.props.addAccount(...args);
+    completeAddNewAccount = (_, accountSettings) => {
+        this.props.addAccount(accountSettings.name, accountSettings);
         this.resetState();
     }
 
