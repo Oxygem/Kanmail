@@ -18,22 +18,9 @@ ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 # Python + pip install
 ADD .python-version /opt/kanmail/.python-version
 ADD requirements /opt/kanmail/requirements
+
 WORKDIR /opt/kanmail
 RUN env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install `cat .python-version` -v
-RUN pip install -r requirements/linux.txt
 
-# staticx \
-#     -l /usr/lib/x86_64-linux-gnu/libwebkit2gtk-4.0.so.37 \
-#     -l /usr/lib/x86_64-linux-gnu/libjavascriptcoregtk-4.0.so.18 \
-#     -l /usr/lib/x86_64-linux-gnu/libicui18n.so.55 \
-#     -l /usr/lib/x86_64-linux-gnu/libwebp.so.5 \
-#     -l /usr/lib/x86_64-linux-gnu/libwebpdemux.so.1 \
-#     -l /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 \
-#     -l /usr/lib/x86_64-linux-gnu/libpng12.so \
-#     -l /usr/lib/x86_64-linux-gnu/libgtk-3.so \
-#     -l /usr/lib/x86_64-linux-gnu/webkit2gtk-4.0 \
-#     -l /usr/lib/x86_64-linux-gnu/libgobject-2.0.so \
-#     -l /usr/lib/x86_64-linux-gnu/libcairo.so.2 \
-#     -l /usr/lib/x86_64-linux-gnu/libcairo-gobject.so \
-#     -l /usr/lib/x86_64-linux-gnu/libgirepository-1.0.so \
-#     pyu-data/new/Kanmail pyu-data/new/Kanmail-static
+RUN pip install pip -U
+RUN pip install -r requirements/linux.txt
