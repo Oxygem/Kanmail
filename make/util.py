@@ -75,7 +75,7 @@ def write_version_data(version):
         f.write(version_data)
 
 
-def generate_spec(version):
+def generate_spec(version, onedir=False):
     system_to_platform = {
         'Darwin': 'mac',
         'Linux': 'nix64',
@@ -97,6 +97,7 @@ def generate_spec(version):
             'platform_name': platform_name,
             'pyupdater_package_dir': _get_pyupdater_package_dir(),
             'tld_package_dir': _get_tld_package_dir(),
+            'onedir': onedir,
         }))
 
     return TEMP_SPEC_FILENAME

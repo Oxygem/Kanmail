@@ -64,7 +64,7 @@ def prepare_release():
     click.echo()
 
 
-def build_release(release=False, docker=False, build_version=None):
+def build_release(release=False, docker=False, build_version=None, onedir=None):
     system_type = 'Docker' if docker else platform.system()
 
     if release and system_type == 'Darwin':
@@ -103,7 +103,7 @@ def build_release(release=False, docker=False, build_version=None):
     click.echo(f'--> building v{version} on {system_type}')
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
-    specfile = generate_spec(version)
+    specfile = generate_spec(version, onedir=onedir)
 
     if not release:
         write_version_data(version)
@@ -197,8 +197,9 @@ def complete_release():
 @click.option('--complete', is_flag=True, default=False)
 @click.option('--release', is_flag=True, default=False)
 @click.option('--docker', is_flag=True, default=False)
+@click.option('--onedir', is_flag=True, default=False)
 @click.option('--version', default=None)
-def release(complete, release, docker, version):
+def release(complete, release, docker, version, onedir):
     click.echo()
     click.echo('### Kanmail release script')
     click.echo()
@@ -226,8 +227,11 @@ def release(complete, release, docker, version):
         if version and release:
             raise click.UsageError('Cannot --version with --release!')
 
+        if onedir and release:
+            raise click.UsageError('Cannot --onedir with --release!')
+
         click.echo('--> [2*/3] building release')
-        build_release(release=release, docker=docker, build_version=version)
+        build_release(release=release, docker=docker, build_version=version, onedir=onedir)
         return
 
     # No version lock so let's create one and prepare start-of-release
