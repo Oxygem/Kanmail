@@ -189,8 +189,8 @@ def complete_release():
     remove(TEMP_VERSION_LOCK_FILENAME)
     click.echo(f'--> Kanmail v{release_version} released!')
 
-    if click.confirm(f'Run make clean?', default=True):
-        print_and_run(('make', 'clean'))
+    if click.confirm(f'Run make/clean.sh?', default=True):
+        print_and_run(('make/clean.sh'))
 
 
 @click.command()

@@ -200,7 +200,7 @@ Currently builds on Windows 10. Unsure if compatible with previous versions.
 
 ### Doing a build
 
-Building Kanmail should be as simple as running `make`.
+Building Kanmail should be as simple as running `python -m make`.
 
 
 ## 🔄 Syncing
