@@ -11,4 +11,4 @@ docker build \
 docker run \
     -v `pwd`:/opt/kanmail \
     kanmail-ubuntu-linux-build \
-    make
+    python -m make $@
