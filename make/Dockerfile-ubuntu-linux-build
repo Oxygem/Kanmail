@@ -6,6 +6,9 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev git ca-certificates pkg-config libcairo2-dev libgirepository1.0-dev libgtk-3-dev libwebkit2gtk-4.0-37 gir1.2-webkit2-4.0
 
+# Remove unncessary stuff
+RUN rm -rf /usr/share/icons /usr/share/themes
+
 # pyenv install
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 ENV HOME /root
