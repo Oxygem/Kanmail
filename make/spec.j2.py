@@ -35,6 +35,32 @@ a = Analysis(  # noqa: F821
 {% endif %}  # noqa
 )
 
+
+{% if platform_name == 'nix64' %}
+# Fixup Linux builds
+# Here we *remove* a lot of the shared libraries Pyinstaller picks up during the
+# analysis. We only include the minimum number of libraries, and rely on the
+# underlying system libraries elsewhere (ie GTK + Webkit). This improves portability
+# and reduces the Linux build size significantly.
+
+def _should_include_binary(binary_tuple):
+    path, _, type_ = binary_tuple
+    if not path.startswith('lib') or path.startswith('lib/'):
+        return True
+
+    lib_name, _ = path.split('.', 1)
+    if lib_name in ('libpython3', 'libcrypto', 'libffi', 'libssl'):
+        return True
+
+    return False
+
+a.binaries = list(filter(_should_include_binary, a.binaries))
+{% endif %}
+
+
+# Generate the executable
+#
+
 pyz = PYZ(  # noqa: F821
     a.pure, a.zipped_data,
     cipher=None,
@@ -68,6 +94,10 @@ exe = EXE(  # noqa: F821
 {% endif %}  # noqa
 )
 
+
+# Generate the directory (for Mac bundle or if --onedir)
+#
+
 {% if platform_name == 'mac' or onedir %}  # noqa
 coll = COLLECT(  # noqa: F821
     exe, a.binaries, a.zipfiles, a.datas,
@@ -76,6 +106,10 @@ coll = COLLECT(  # noqa: F821
     name='{{ platform_name }}',
 )
 {% endif %}  # noqa
+
+
+# Build MacOS app bundle
+#
 
 {% if platform_name == 'mac' %}  # noqa
 app = BUNDLE(  # noqa: F821
