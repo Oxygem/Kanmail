@@ -7,4 +7,5 @@ Welcome to the Kanmail user documentation.
 
 + [**Email Providers**](./providers.md) - list of supported providers and any gotchas
 + [**Docker**](./docker.md) - instructions for running Kanmail-as-a-service using Docker
-+ [**Support**](./support.md) - support instruction
++ [**Linux**](./linux.md) - information on compatibility with Linux distributions
++ [**Support**](./support.md) - support instructions and how to report issues
