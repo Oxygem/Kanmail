@@ -2,7 +2,7 @@
 # The official pywebview has some serious flaws:
 # https://github.com/r0x0r/pywebview/issues/315
 # https://github.com/r0x0r/pywebview/pull/332
-git+https://github.com/Fizzadar/pywebview@4597b43ab9c8de351f9238038ad10e58e397a1a8
+https://github.com/Fizzadar/pywebview/archive/4597b43ab9c8de351f9238038ad10e58e397a1a8.zip
 
 # Server
 click==7.0
@@ -21,7 +21,7 @@ keyring==19.2.0
 keyrings.alt==3.4.0
 
 # IMAPClient==2.1.0 - pending 2.2.0
-git+https://github.com/mjs/imapclient@580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87
+https://github.com/mjs/imapclient/archive/580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87.zip
 
 # Pinned because other packages either miss them or have wrong versions!
 urllib3==1.25.3
