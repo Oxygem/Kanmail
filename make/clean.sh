@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 rm -rf dist/*
 rm -f dist/.release_version_lock
 rm -f dist/.spec
