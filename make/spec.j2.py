@@ -49,7 +49,7 @@ def _should_include_binary(binary_tuple):
         return True
 
     lib_name, _ = path.split('.', 1)
-    if lib_name in ('libpython3', 'libcrypto', 'libffi', 'libssl'):
+    if lib_name in ('libpython3', 'libcrypto', 'libffi', 'libssl', 'libbz2'):
         return True
 
     return False
