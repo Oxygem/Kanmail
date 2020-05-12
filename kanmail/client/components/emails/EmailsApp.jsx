@@ -24,7 +24,7 @@ import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
 
-@subscribe(settingsStore)
+@subscribe([settingsStore, ['columns', 'accounts', 'systemSettings']])
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component {
     static propTypes = {

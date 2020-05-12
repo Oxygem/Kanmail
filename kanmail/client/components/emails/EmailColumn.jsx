@@ -80,7 +80,7 @@ export default class EmailColumnWrapper extends React.Component {
         const WrappedEmailColumn = subscribe(
             getColumnStore(this.props.id),
             [filterStore, ['accountName']],
-            settingsStore,
+            [settingsStore, ['columns', 'systemSettings']],
         )(EmailColumn);
 
         return <WrappedEmailColumn
