@@ -9,19 +9,53 @@ import requestStore from 'stores/request.js';
 import { subscribe } from 'stores/base.jsx';
 
 
-const renderError = (error, key) => {
-    const traceback = error.json.traceback || null;
-    const debugInfo = `URL: ${error.url}
+class RequestError extends Component {
+    static propTypes = {
+        key: PropTypes.string.isRequired,
+        error: PropTypes.object.isRequired,
+    }
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            copied: false,
+        };
+    }
+
+    copyDebugInformation = () => {
+        this.textarea.select();
+        document.execCommand('copy');
+        this.setState({copied: true});
+    }
+
+    render() {
+        const { error } = this.props;
+        const traceback = error.json.traceback || null;
+        const debugInfo = `URL: ${error.url}
 Status: ${error.status}
 ${traceback}`;
 
-    return (
-        <p key={key}>
-            <span className="meta">{error.status}: {error.url}</span>
-            {error.errorName}: {error.errorMessage}
-            {traceback && <textarea editable={false} value={debugInfo} />}
-        </p>
-    );
+        const copyText = this.state.copied ? 'copied!' : 'copy error info';
+
+        return (
+            <p key={this.props.key}>
+                <span className="meta">{error.status}: {error.url}</span>
+                {error.errorName}: {error.errorMessage}
+                <button onClick={this.copyDebugInformation}>{copyText}</button>
+                {traceback && <textarea
+                    editable={false}
+                    value={debugInfo}
+                    ref={(textarea) => {this.textarea = textarea}}
+                />}
+            </p>
+        );
+    }
+}
+
+
+const renderError = (error, key) => {
+    return <RequestError error={error} key={key} />
 }
 
 
@@ -41,7 +75,7 @@ export default class HeaderErrors extends Component {
             <div className="icon-wrapper">
                 <div className="icon-contents">
                     <strong>Kanmail encountered a serious sync or UI error.</strong>
-                    <p>Click the icon to reload Kanmail or use the information below to investigate/submit a bug report. <a onClick={() => openLink(SUPPORT_DOC_LINK)}>More information</a>.</p>
+                    <p>Click the icon to reload Kanmail or use the information below to submit a bug report. <a onClick={() => openLink(SUPPORT_DOC_LINK)}>More information</a>.</p>
                     {_.map(this.props.requestErrors, renderError)}
                 </div>
                 <a onClick={() => window.location.reload()}>
