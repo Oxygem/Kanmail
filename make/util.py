@@ -67,12 +67,16 @@ def write_version_data(version):
     channel = 'stable'
 
     # Write the version to the dist directory to be injected into the bundle
-    version_data = json.dumps({
-        'version': version,
-        'channel': channel,
-    })
     with open(VERSION_DATA_FILENAME, 'w') as f:
-        f.write(version_data)
+        json.dump({
+            'version': version,
+            'channel': channel,
+        }, f)
+
+
+def read_version_data():
+    with open(VERSION_DATA_FILENAME, 'r') as f:
+        return json.load(f)
 
 
 def generate_spec(version, onedir=False):

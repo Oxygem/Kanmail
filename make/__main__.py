@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import platform
 
 from os import environ, makedirs, path, remove
@@ -189,8 +187,8 @@ def complete_release():
     remove(TEMP_VERSION_LOCK_FILENAME)
     click.echo(f'--> Kanmail v{release_version} released!')
 
-    if click.confirm(f'Run make/clean.sh?', default=True):
-        print_and_run(('make/clean.sh'))
+    if click.confirm('Run cleanup?', default=True):
+        print_and_run(('python', '-m', 'make.clean'))
 
 
 @click.command()
@@ -199,9 +197,8 @@ def complete_release():
 @click.option('--docker', is_flag=True, default=False)
 @click.option('--onedir', is_flag=True, default=False)
 @click.option('--version', default=None)
-def release(complete, release, docker, version, onedir):
-    click.echo()
-    click.echo('### Kanmail release script')
+def build_or_release(complete, release, docker, version, onedir):
+    click.echo('### Kanmail build & release script')
     click.echo()
 
     version_lock_exists = path.exists(TEMP_VERSION_LOCK_FILENAME)
@@ -240,4 +237,4 @@ def release(complete, release, docker, version, onedir):
 
 
 if __name__ == '__main__':
-    release()
+    build_or_release()
