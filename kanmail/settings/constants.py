@@ -51,6 +51,7 @@ LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
 # Flag to tell us whether we're running in debug mode
 DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
 DEBUG_SMTP = environ.get('KANMAIL_DEBUG_SMTP') == 'on'
+DEBUG_LOCKS = environ.get('KANMAIL_DEBUG_LOCKS') == 'on'
 
 # Flag to tell us whether we're a frozen app (bundled)
 FROZEN = getattr(sys, 'frozen', False)

@@ -5,6 +5,9 @@ from threading import RLock, Thread
 from flask import abort
 from werkzeug.datastructures import ImmutableMultiDict
 
+from kanmail.log import logger
+from kanmail.settings.constants import DEBUG_LOCKS
+
 
 def lock_class_method(func):
     @wraps(func)
@@ -12,8 +15,13 @@ def lock_class_method(func):
         if not hasattr(self, 'lock'):
             self.lock = RLock()
 
+        if DEBUG_LOCKS:
+            logger.debug(f'Acquire lock for {self}')
         with self.lock:
-            return func(self, *args, **kwargs)
+            return_value = func(self, *args, **kwargs)
+        if DEBUG_LOCKS:
+            logger.debug(f'Release lock for {self}')
+        return return_value
 
     return wrapper
 
