@@ -1,6 +1,6 @@
 from functools import wraps
 from queue import Queue
-from threading import Lock, Thread
+from threading import RLock, Thread
 
 from flask import abort
 from werkzeug.datastructures import ImmutableMultiDict
@@ -10,7 +10,7 @@ def lock_class_method(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, 'lock'):
-            self.lock = Lock()
+            self.lock = RLock()
 
         with self.lock:
             return func(self, *args, **kwargs)
