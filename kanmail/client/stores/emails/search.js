@@ -49,7 +49,7 @@ class SearchEmails extends BaseEmails {
         query.query = this.searchValue;
 
         requestStore.get(
-            `Fetch emails from ${accountKey}/${folderName}`,
+            `Search & fetch emails from ${accountKey}/${folderName}`,
             url, query,
         ).then(data => {
             this.setMetaForAccountFolder(accountKey, folderName, data.meta);
