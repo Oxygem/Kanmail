@@ -24,11 +24,17 @@ div.frameless {
         }
     }
 
-    section#sidebar header {
-        height: @topHeight + @framelessHeight;
+    section#sidebar {
+        header {
+            height: @topHeight + @framelessHeight;
 
-        h1 {
-            padding-top: @framelessHeight;
+            h1 {
+                padding-top: @framelessHeight;
+            }
+        }
+
+        div#filters {
+            top: @topHeight + @framelessHeight;
         }
     }
 }

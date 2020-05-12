@@ -9,6 +9,7 @@ import { openSettings, openContacts, openLicense } from 'window.js';
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
+import folderStore from 'stores/folders.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
@@ -72,6 +73,8 @@ class SidebarFolderLink extends React.Component {
         isOver: PropTypes.bool.isRequired,
         canDrop: PropTypes.bool.isRequired,
         connectDropTarget: PropTypes.func.isRequired,
+
+        pinned: PropTypes.bool,
     }
 
     componentDidUpdate(prevProps) {
@@ -80,6 +83,28 @@ class SidebarFolderLink extends React.Component {
         } else {
             this.containerLi.classList.remove('hover');
         }
+    }
+
+    pinFolder = (ev) => {
+        ev.stopPropagation();
+        settingsStore.addSidebarFolder(this.props.folderName);
+    }
+
+    unpinFolder = (ev) => {
+        ev.stopPropagation();
+        settingsStore.removeSidebarFolder(this.props.folderName);
+    }
+
+    renderPinButton() {
+        if (this.props.pinned === true) {
+            return <i className="pin-button fa fa-bookmark" onClick={this.unpinFolder} />
+        }
+
+        if (this.props.pinned === false) {
+            return <i className="pin-button fa fa-bookmark-o" onClick={this.pinFolder} />
+        }
+
+        return null;
     }
 
     render() {
@@ -94,6 +119,7 @@ class SidebarFolderLink extends React.Component {
                 <a onClick={this.props.handleClick}>
                     <i className={`fa fa-${this.props.iconName}`}></i>
                     {capitalizeFirstLetter(this.props.folderName)}
+                    {this.renderPinButton()}
                 </a>
             </li>
         );
@@ -101,7 +127,7 @@ class SidebarFolderLink extends React.Component {
 }
 
 
-@subscribe(filterStore, settingsStore, updateStore)
+@subscribe(filterStore, settingsStore, updateStore, folderStore)
 export default class Filters extends React.Component {
     static propTypes = {
         mainColumn: PropTypes.string.isRequired,
@@ -110,15 +136,28 @@ export default class Filters extends React.Component {
         updateReady: PropTypes.bool.isRequired,
         updateDownloading: PropTypes.bool.isRequired,
         styleSettings: PropTypes.object.isRequired,
+        folders: PropTypes.array.isRequired,
         accountName: PropTypes.string,
         updateVersion: PropTypes.string,
+    }
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            showAllFolders: false,
+        };
     }
 
     setAccountFilter = (accountName) => {
         this.props.filterStore.setAccountFilter(accountName);
     }
 
-    renderFolderLinks(folders) {
+    toggleShowAllFolders = () => {
+        this.setState({showAllFolders: !this.state.showAllFolders});
+    }
+
+    renderFolderLinks(folders, extraProps) {
         return _.map(folders, folderName => {
             const iconName = ALIAS_TO_ICON[folderName] || 'folder';
             const isActive = this.props.mainColumn === folderName;
@@ -141,6 +180,7 @@ export default class Filters extends React.Component {
                 isActive={isActive}
                 handleClick={handleClick}
                 iconName={iconName}
+                {...extraProps}
             />;
         });
     }
@@ -155,11 +195,44 @@ export default class Filters extends React.Component {
             return null;
         }
 
-        if (_.isString(sidebarFolders)) {
-            sidebarFolders = sidebarFolders.split(',');
+        return this.renderFolderLinks(sidebarFolders);
+    }
+
+    renderShowAllFolders() {
+        if (!this.props.folders || !this.props.folders.length) {
+            return;
         }
 
-        return this.renderFolderLinks(sidebarFolders);
+        if (this.state.showAllFolders) {
+            return <li className="small"><a onClick={this.toggleShowAllFolders}>
+                <i className="fa fa-arrow-up" />Hide {this.props.folders.length} folders
+            </a></li>;
+        }
+
+        return <li className="small"><a onClick={this.toggleShowAllFolders}>
+                <i className="fa fa-arrow-down" />Show {this.props.folders.length} folders
+        </a></li>;
+    }
+
+    renderOtherFolderLinks() {
+        let sidebarFolderNames = this.props.styleSettings.sidebar_folders || [];
+        const sidebarFolders = this.renderFolderLinks(
+            sidebarFolderNames,
+            {pinned: this.state.showAllFolders ? true : null},
+        );
+
+        sidebarFolders.push(this.renderShowAllFolders());
+
+        if (this.state.showAllFolders) {
+            sidebarFolderNames = new Set(sidebarFolderNames);
+            const otherFolderNames = _.filter(
+                this.props.folders,
+                name => !sidebarFolderNames.has(name),
+            );
+            sidebarFolders.push(...this.renderFolderLinks(otherFolderNames, {pinned: false}));
+        }
+
+        return sidebarFolders;
     }
 
     renderAccounts() {
@@ -202,9 +275,9 @@ export default class Filters extends React.Component {
     }
 
     render() {
-        return (<div>
+        return (<div id="filters">
             <ul>{this.renderMainFolderLinks()}</ul>
-            <ul>{this.renderCustomFolderLinks()}</ul>
+            <ul>{this.renderOtherFolderLinks()}</ul>
 
             <ul>
                 <li className={_.isNull(this.props.accountName) ? 'active': ''}><a

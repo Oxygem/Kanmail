@@ -57,6 +57,15 @@ section#sidebar {
         }
     }
 
+    div#filters {
+        overflow: auto;
+        position: fixed;
+        width: @sidebarWidth;
+        left: 0;
+        top: @topHeight;
+        bottom: 78px;
+    }
+
     ul {
         margin: 0 0 20px 0;
         padding: 0;
@@ -97,6 +106,29 @@ section#sidebar {
                 margin-top: -13.5px;
                 font-size: 12px;
             }
+
+            i.pin-button {
+                position: absolute;
+                margin-top: 2px;
+                padding: 5px;
+                right: 0;
+
+                &.fa-bookmark:hover {
+                    color: @orange;
+                }
+                &.fa-bookmark-o:hover {
+                    color: @green;
+                }
+            }
+
+            &.small {
+                font-size: 12px;
+
+                a {
+                    padding: 2px 0 2px 10px;
+                    background: transparent;
+                }
+            }
         }
     }
 
@@ -106,7 +138,7 @@ section#sidebar {
         font-size: 10px;
         color: #666;
         line-height: 16px;
-        padding: 20px 0 10px 10px;
+        padding: 0px 0 10px 10px;
         width: @sidebarWidth;
 
         a {

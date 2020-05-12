@@ -18,7 +18,9 @@ class SettingsStore extends BaseStore {
 
         this.props = {
             columns: [],
-            accounts: {},
+            accounts: [],
+            systemSettings: {},
+            styleSettings: {},
         };
     }
 
@@ -27,7 +29,7 @@ class SettingsStore extends BaseStore {
         return post('/api/settings', {
             columns: this.props.columns,
         }).then(() => {
-            this.triggerUpdate();
+            this.triggerUpdate(['columns']);
         });
     }
 
@@ -53,6 +55,37 @@ class SettingsStore extends BaseStore {
 
     moveColumnRight(name) {
         this.moveColumn(name, 1);
+    }
+
+    updateSidebarFoldersTriggerState() {
+        // Save the new style settings via the API before updating
+        return post('/api/settings', {
+            style: this.props.styleSettings,
+        }).then(() => {
+            this.triggerUpdate(['styleSettings']);
+        });
+    }
+
+    addSidebarFolder(name) {
+        console.log('YAS', this.props.styleSettings.sidebar_folders, name);
+        if (this.props.styleSettings.sidebar_folders.indexOf(name) > -1) {
+            return;
+        }
+
+        this.props.styleSettings.sidebar_folders.push(name);
+        this.updateSidebarFoldersTriggerState();
+    }
+
+    removeSidebarFolder(name) {
+        if (this.props.styleSettings.sidebar_folders.indexOf(name) < 0) {
+            return;
+        }
+
+        this.props.styleSettings.sidebar_folders = _.without(
+            this.props.styleSettings.sidebar_folders,
+            name,
+        );
+        this.updateSidebarFoldersTriggerState();
     }
 
     getSettings() {

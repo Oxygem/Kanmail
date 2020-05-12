@@ -18,7 +18,7 @@ class FolderStore extends BaseStore {
     }
 
     getFolderNames() {
-        requestStore.get('/api/folders').then(data => {
+        requestStore.get('Load folders', '/api/folders').then(data => {
             this.props.folders = data.folders;
             this.triggerUpdate();
         });

@@ -17,6 +17,8 @@ DEFAULT_WINDOW_TOP = 0
 
 SESSION_TOKEN = str(uuid4())
 
+ALIAS_FOLDER_NAMES = ['inbox', 'sent', 'archive', 'drafts', 'trash', 'spam']
+
 
 # App directory/filenames
 #

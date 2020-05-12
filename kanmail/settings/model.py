@@ -2,6 +2,8 @@ import uuid
 
 from typing import Optional
 
+from .constants import ALIAS_FOLDER_NAMES
+
 
 KEY = uuid.uuid4().hex
 
@@ -41,9 +43,14 @@ MODEL = {
                 **CONNECTION_DEFAULTS,
             },
             'folders': {
-                KEY: str,
+                # Folder settings
                 'save_sent_copies': bool,
                 'copy_on_move': bool,
+                # Folder aliases
+                **{
+                    alias: str
+                    for alias in ALIAS_FOLDER_NAMES
+                },
             },
             'contacts': [
                 [str, str],

@@ -54,9 +54,10 @@ def get_all_folders():
         folder_names.extend(names)
         meta[account_name] = {
             'count': len(names),
+            'folders': names,
         }
 
-    return list(set(folder_names)), meta
+    return sorted(list(set(folder_names))), meta
 
 
 def get_folder_emails(

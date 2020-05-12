@@ -1,9 +1,12 @@
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
+from kanmail.settings.constants import ALIAS_FOLDER_NAMES
 
 from .connection import ImapConnectionPool, SmtpConnection
 from .folder import Folder
 from .message import make_email_message
+
+NOSELECT_FLAG = b'\\Noselect'
 
 
 class Account(object):
@@ -53,9 +56,21 @@ class Account(object):
 
         folder_names = []
 
+        # We want to hide any folders mapped to the core alias folder names
+        alias_folders = self.settings['folders']
+        alias_folder_names = [
+            alias_folders[alias]
+            for alias in ALIAS_FOLDER_NAMES
+            if alias in alias_folders
+        ]
+
         with self.get_imap_connection() as connection:
             for flags, delimeter, name in connection.list_folders():
-                folder_names.append(name)
+                if NOSELECT_FLAG in flags:
+                    continue
+
+                if name not in alias_folder_names:
+                    folder_names.append(name)
 
         return folder_names
 
