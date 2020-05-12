@@ -1,3 +1,29 @@
+# v1.2005120955
+
+Changes:
+- Use zip files > git commits in base requirements.
+- Tidy up Linux build Dockerfile.
+- Set -ex in clean script.
+- Link Linux docs.
+- Update Linux docs with latest info.
+- Include `libbz2` in the bundle (fix Fedora).
+- Tidy up Linux doc.
+- Make Linux client script executable.
+- Add Linux doc.
+- Add `KANMAIL_APP_DIR` envvar override.
+- Fix adding a new account after autoconfig fails.
+- Fixup build linux client docker script.
+- Add `make/build_linux_client_docker.sh` script.
+- Implement hack to _remove_ binaries from pyinstaller analysis.
+- Remove `Makefile` and replace with `make/clean.sh`.
+- Remove extra binaries from spec as not needed.
+- Pin mac/linux extra requirements.
+- Remove commented staticx lines.
+- Remove icons/themes from docker build image.
+- Add `--onedir` argument to make scripts.
+- Add `client-linux-docker` make target that builds the Linux client using Docker.
+- Bundle required shared libraries in Linux.
+
 # v1.2005071756
 
 Security & bugfix release.
