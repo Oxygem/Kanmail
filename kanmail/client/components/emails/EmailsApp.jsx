@@ -18,6 +18,7 @@ import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
+import folderStore from 'stores/folders.js';
 import mainEmailStore from 'stores/emails/main.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
@@ -30,7 +31,6 @@ export default class EmailsApp extends React.Component {
         columns: PropTypes.array.isRequired,
         accounts: PropTypes.array.isRequired,
         systemSettings: PropTypes.object.isRequired,
-        folderNames: PropTypes.array,
     }
 
     componentDidMount() {
@@ -38,6 +38,9 @@ export default class EmailsApp extends React.Component {
         keyboard.enable();
         // Create resize/move window position saver handlers
         createWindowPositionHandlers();
+
+        // Kick off a folders load
+        folderStore.getFolderNames();
 
         const {
             initial_batches,
