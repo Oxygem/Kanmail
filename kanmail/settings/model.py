@@ -161,7 +161,7 @@ def fix_any_old_setings(settings: dict):
         # pre v1.2002191933
         sidebar_folders = style_settings.get('sidebar_folders')
         if isinstance(sidebar_folders, str):
-            style_settings['sidebar_folders'] = [sidebar_folders]
+            style_settings['sidebar_folders'] = sidebar_folders.split(',')
             has_changed = True
 
     # "Fix" for settings.accounts used to be a dict, now  a list for ordering
