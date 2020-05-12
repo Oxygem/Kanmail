@@ -36,13 +36,13 @@ export default class FooterStatus extends Component {
         const { fetchRequests, pushRequests, pendingPushRequests } = this.props;
 
         const fetchRequestItems = _.map(fetchRequests, request => {
-            return <p>{request[1]}</p>;
+            return <p key={request[1]}>{request[1]}</p>;
         });
         const pushRequestItems = _.map(pushRequests, request => (
-            <p>{request[1]}</p>
+            <p key={request[1]}>{request[1]}</p>
         ));
         const pendingPushRequestItems = _.map(pendingPushRequests, request => (
-            <p>{request[1]}</p>
+            <p key={request[1]}>{request[1]}</p>
         ));
 
         return (
