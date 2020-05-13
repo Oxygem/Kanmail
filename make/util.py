@@ -32,9 +32,9 @@ def _get_tld_package_dir():
     return path.dirname(tld.__file__)
 
 
-def print_and_run(command):
+def print_and_run(command, **kwargs):
     click.echo(f'--> {command}')
-    return run(command, check=True)
+    return run(command, check=True, **kwargs)
 
 
 def print_and_check_output(command):
