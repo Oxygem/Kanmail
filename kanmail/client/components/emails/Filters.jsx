@@ -204,12 +204,12 @@ export default class Filters extends React.Component {
         }
 
         if (this.state.showAllFolders) {
-            return <li className="small"><a onClick={this.toggleShowAllFolders}>
+            return <li key="show-all" className="small"><a onClick={this.toggleShowAllFolders}>
                 <i className="fa fa-arrow-up" />Hide {this.props.folders.length} folders
             </a></li>;
         }
 
-        return <li className="small"><a onClick={this.toggleShowAllFolders}>
+        return <li key="show-all" className="small"><a onClick={this.toggleShowAllFolders}>
                 <i className="fa fa-arrow-down" />Show {this.props.folders.length} folders
         </a></li>;
     }
