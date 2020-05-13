@@ -26,10 +26,10 @@ def format_address(address):
     bits = []
 
     if address.mailbox:
-        bits.append(address.mailbox.decode())
+        bits.append(decode_string(address.mailbox))
 
     if address.host:
-        bits.append(address.host.decode())
+        bits.append(decode_string(address.host))
 
     return '@'.join(bits)
 
@@ -143,13 +143,13 @@ def decode_header(subject):
     bits = []
 
     if isinstance(subject, bytes):
-        subject = subject.decode()
+        subject = decode_string(subject)
 
     for output, encoding in email.header.decode_header(subject):
         if encoding:
             output = output.decode(encoding)
         elif isinstance(output, bytes):
-            output = output.decode()
+            output = decode_string(output)
 
         bits.append(output)
 
@@ -193,13 +193,10 @@ def decode_string(string, string_meta=None):
             string = b'\n'.join(valid_bits)
 
     if charset:
-        string = string.decode(charset, 'ignore')
+        string = string.decode(charset, 'replace')
 
     if isinstance(string, bytes):
-        try:
-            string = string.decode()
-        except UnicodeDecodeError:
-            pass
+        string = string.decode('utf-8', 'replace')
 
     return string
 
@@ -309,17 +306,17 @@ def _parse_bodystructure(bodystructure, item_number=None):
             ))
 
     else:
-        subtype = bodystructure[1].decode()
-        encoding = bodystructure[5].decode()
+        subtype = decode_string(bodystructure[1])
+        encoding = decode_string(bodystructure[5])
         size = bodystructure[6]
 
         content_id = bodystructure[3]
         if content_id:
-            content_id = content_id.decode()
+            content_id = decode_string(content_id)
             content_id = content_id.strip('<>')
 
         data = {
-            'type': type_or_bodies.decode(),
+            'type': decode_string(type_or_bodies),
             'subtype': subtype,
             'encoding': encoding,
             'content_id': content_id,
@@ -336,15 +333,15 @@ def _parse_bodystructure(bodystructure, item_number=None):
                 extra_data.update(_parse_bodystructure_list(bit))
 
         if b'CHARSET' in extra_data:
-            data['charset'] = extra_data[b'CHARSET'].decode()
+            data['charset'] = decode_string(extra_data[b'CHARSET'])
 
         if b'NAME' in extra_data:
-            data['name'] = extra_data[b'NAME'].decode()
+            data['name'] = decode_string(extra_data[b'NAME'])
 
         any_attachment_data = extra_data.get(b'ATTACHMENT') or extra_data.get(b'INLINE')
         if any_attachment_data:
             if b'FILENAME' in any_attachment_data:
-                data['name'] = any_attachment_data[b'FILENAME'].decode()
+                data['name'] = decode_string(any_attachment_data[b'FILENAME'])
 
         item_number = item_number or 1
         items[item_number] = data
