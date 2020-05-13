@@ -11,7 +11,6 @@ import { subscribe } from 'stores/base.jsx';
 
 class RequestError extends Component {
     static propTypes = {
-        key: PropTypes.string.isRequired,
         error: PropTypes.object.isRequired,
     }
 
@@ -31,31 +30,30 @@ class RequestError extends Component {
 
     render() {
         const { error } = this.props;
-        const traceback = error.json.traceback || null;
+        const traceback = error.json ? (error.json.traceback || null) : null;
         const debugInfo = `URL: ${error.url}
+ErrorName: ${error.errorName}
+ErrorMessage: ${error.errorMessage}
+Kanmail version: ${window.KANMAIL_VERSION}
 Status: ${error.status}
 ${traceback}`;
 
         const copyText = this.state.copied ? 'copied!' : 'copy error info';
 
         return (
-            <p key={this.props.key}>
+            <p>
                 <span className="meta">{error.status}: {error.url}</span>
                 {error.errorName}: {error.errorMessage}
                 <button onClick={this.copyDebugInformation}>{copyText}</button>
-                {traceback && <textarea
-                    editable={false}
+                <textarea
+                    editable="false"
                     value={debugInfo}
+                    readOnly={true}
                     ref={(textarea) => {this.textarea = textarea}}
-                />}
+                />
             </p>
         );
     }
-}
-
-
-const renderError = (error, key) => {
-    return <RequestError error={error} key={key} />
 }
 
 
@@ -76,7 +74,10 @@ export default class HeaderErrors extends Component {
                 <div className="icon-contents">
                     <strong>Kanmail encountered a serious sync or UI error.</strong>
                     <p>Click the icon to reload Kanmail or use the information below to submit a bug report. <a onClick={() => openLink(SUPPORT_DOC_LINK)}>More information</a>.</p>
-                    {_.map(this.props.requestErrors, renderError)}
+                    {_.map(
+                        this.props.requestErrors,
+                        (error, key) => <RequestError error={error} key={key} />,
+                    )}
                 </div>
                 <a onClick={() => window.location.reload()}>
                     <i className="error fa fa-exclamation-triangle"></i> {this.props.requestErrors.length}
@@ -94,7 +95,15 @@ export default class HeaderErrors extends Component {
             <div className="icon-wrapper">
                 <div className="icon-contents">
                     <strong>Kanmail cannot connect! Click to clear!</strong>
-                    {_.map(this.props.networkErrors, renderError)}
+                    {_.map(
+                        this.props.networkErrors,
+                        (error, key) => (
+                            <p key={key}>
+                                <span className="meta">{error.status}: {error.url}</span>
+                                {error.errorName}: {error.errorMessage}
+                            </p>
+                        ),
+                    )}
                 </div>
 
                 <a onClick={() => requestStore.clearNetworkErrors()}>
