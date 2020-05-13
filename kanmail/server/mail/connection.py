@@ -56,7 +56,7 @@ class ImapConnectionWrapper(object):
 
             attempts = 0
 
-            while attempts < self.config.max_attempts:
+            while True:
                 try:
                     ret = func(*args, **kwargs)
 
@@ -75,6 +75,9 @@ class ImapConnectionWrapper(object):
                     LoginError,
                     socket_error,
                 ) as e:
+                    if attempts >= self.config.max_attempts:
+                        raise ImapConnectionError(self.config.account, *e.args)
+
                     attempts += 1
                     self.config.log(
                         'critical',
