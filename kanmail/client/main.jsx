@@ -12,6 +12,7 @@ import SendApp from 'components/send/SendApp.jsx'
 import SettingsApp from 'components/settings/SettingsApp.jsx';
 import ContactsApp from 'components/contacts/ContactsApp.jsx';
 import LicenseApp from 'components/license/LicenseApp.jsx';
+import MetaApp from 'components/meta/MetaApp.jsx';
 
 import settingsStore from 'stores/settings.js';
 
@@ -79,5 +80,19 @@ if (licenseAppRoot) {
         ReactDOM.render(<ErrorBoundary>
             <LicenseApp />
         </ErrorBoundary>, licenseAppRoot);
+    });
+}
+
+
+
+const metaAppRoot = document.querySelector('div[data-meta-app]');
+
+if (metaAppRoot) {
+    // Load the settings *then* bootstrap the app into the DOM
+    settingsStore.getSettings().then(() => {
+        console.debug('Settings loaded, bootstrapping meta app to DOM...');
+        ReactDOM.render(<ErrorBoundary>
+            <MetaApp />
+        </ErrorBoundary>, metaAppRoot);
     });
 }

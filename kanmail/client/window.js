@@ -67,6 +67,17 @@ export function openLicense() {
     });
 }
 
+
+export function openMeta() {
+    openWindow('/meta', {
+        unique_key: 'meta',
+        title: 'Kanmail Meta',
+        width: 300,
+        height: 200,
+    });
+}
+
+
 export function openLink(link) {
     if (window.KANMAIL_IS_APP) {
         get('/open-link', {

@@ -51,6 +51,14 @@ def get_index():
     )
 
 
+@app.route('/meta', methods=('GET',))
+def get_meta():
+    return render_template(
+        'meta.html',
+        **_get_render_data(),
+    )
+
+
 @app.route('/license', methods=('GET',))
 def get_license():
     return render_template(
