@@ -20,6 +20,7 @@ def _wait_for_build(filename):
 
 
 if __name__ == '__main__':
+    print_and_run(('python', '-m', 'make.clean'))
     print_and_run(('python', '-m', 'make', '--release'))
 
     if click.confirm('Build Docker container?'):
