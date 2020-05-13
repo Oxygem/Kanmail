@@ -13,7 +13,7 @@ from kanmail.log import logger
 from kanmail.secrets import get_password
 from kanmail.settings.constants import DEBUG_SMTP
 
-DEFAULT_ATTEMPTS = 10
+DEFAULT_ATTEMPTS = 3
 DEFAULT_CONNECTIONS = 10
 DEFAULT_TIMEOUT = 10
 
