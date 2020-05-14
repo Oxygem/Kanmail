@@ -1,3 +1,32 @@
+# v1.2005140926
+
+Adds dropdown for all folders in sidebar with pin/unpin buttons.
+
+Misc bugfixes (safer string handling, improved locking).
+
+Changes:
+- Fix cleaning * shell arguments.
+- Run clean before starting a release.
+- Use `decode_string` everywhere for safer decoding.
+- Properly raise after failing to connect to IMAP.
+- Drop default connection attempts to 3.
+- Add basic about/meta page.
+- Fix for network header errors.
+- Add missing key prop to show/hide all folders button.
+- Split out header styles.
+- Add copy debug info button to header errors.
+- Limit store subscriptions to reduce email column renders.
+- Load the list of folders on emails app start.
+- Fix missing key error on request store lists.
+- Better request store message when searching.
+- Add `KANMAIL_DEBUG_LOCKS` environment variable.
+- Use an `RLock` for thread class locking.
+- Fix old setting migration (sidebar_folders should be a list).
+- Add all folders to the sidebar w/ability to pin.
+- Make module tidy ups.
+- Add `make/release.py` shortcut script.
+- Move `make/clean.sh` -> `make/clean.py`.
+
 # v1.2005120955
 
 Changes:
