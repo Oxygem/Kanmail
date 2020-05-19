@@ -1,3 +1,12 @@
+# v1.2005191209
+
+Linux only release to fix opening links.
+
+Changes:
+- Inline variables when only used once.
+- Fix open links on Linux.
+- Add stale issue workflow.
+
 # v1.2005140926
 
 Adds dropdown for all folders in sidebar with pin/unpin buttons.
