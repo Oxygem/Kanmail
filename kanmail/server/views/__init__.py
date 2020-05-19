@@ -1,6 +1,6 @@
 import webbrowser
 
-from os import path
+from os import environ, path
 from uuid import uuid4
 
 from flask import abort, jsonify, render_template, request
@@ -133,8 +133,14 @@ def create_send():
 def open_link():
     link = request.args['url']
 
-    if webbrowser.open(link):
-        return '', 204
+    # https://github.com/pyinstaller/pyinstaller/issues/3668
+    xdg_data_dirs = environ.pop('XDG_DATA_DIRS', None)
+    try:
+        if webbrowser.open(link):
+            return '', 204
+    finally:
+        if xdg_data_dirs:
+            environ['XDG_DATA_DIRS'] = xdg_data_dirs
 
     logger.critical(f'Failed to open browser link: {link}!')
     return abort(500, 'Could not open link!')
