@@ -150,20 +150,21 @@ def open_link():
 def open_window():
     link = request.args['url']
 
-    width = int(request.args['width'])
-    height = int(request.args['height'])
-
-    unique_key = request.args.get('unique_key')
-
-    if not create_window(link, width=width, height=height, unique_key=unique_key):
+    if not create_window(
+        link,
+        width=int(request.args['width']),
+        height=int(request.args['height']),
+        unique_key=request.args.get('unique_key'),
+    ):
         return abort(500, f'Could not open {link} window')
     return '', 204
 
 
 @app.route('/close-window', methods=('GET',))
 def close_window():
-    internal_id = request.args['window_id']
-    destroy_window(internal_id)
+    destroy_window(request.args['window_id'])
+    return '', 204
+
 
     return '', 204
 
