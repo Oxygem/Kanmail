@@ -52,11 +52,8 @@ def destroy_window(internal_id: str) -> None:
     window = ID_TO_WINDOW.pop(internal_id, None)
 
     if window:
-        try:
-            window.destroy()
-            return
-        except KeyError:
-            pass
+        window.destroy()
+        return
 
     logger.warning(f'Tried to destroy non-existant window: {internal_id}')
 
