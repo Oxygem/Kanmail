@@ -69,7 +69,8 @@ def validate_session_token():
 
 def boot() -> None:
     logger.debug(f'App client root is: {CLIENT_ROOT}')
-
+    logger.debug(f'App session token is: {SESSION_TOKEN}')
+    
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
