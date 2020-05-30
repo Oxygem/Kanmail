@@ -410,7 +410,7 @@ export default class SendApp extends React.Component {
                 label,
                 value: [name, email],
                 lowercaseLabel: label.toLowerCase(),
-            }
+            };
         });
 
         const modules = {
