@@ -15,6 +15,8 @@ from kanmail.settings.constants import (
     DEBUG,
     FOLDER_CACHE_DB_FILE,
     IS_APP,
+    SERVER_HOST,
+    SERVER_PORT,
     SESSION_TOKEN,
 )
 
@@ -70,7 +72,8 @@ def validate_session_token():
 def boot() -> None:
     logger.debug(f'App client root is: {CLIENT_ROOT}')
     logger.debug(f'App session token is: {SESSION_TOKEN}')
-    
+    logger.debug(f'App server port: http://{SERVER_HOST}:{SERVER_PORT}')
+
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')
         from kanmail.server.mail.fake_imap import bootstrap_fake_imap
