@@ -95,15 +95,11 @@ def destroy_main_window() -> None:
 
 def get_main_window_size_position() -> Dict[str, int]:
     window = get_main_window()
-
-    x, y = window.get_position()
-    width, height = window.get_size()
-
     return {
-        'left': x,
-        'top': y,
-        'width': width,
-        'height': height,
+        'left': window.x,
+        'top': window.y,
+        'width': window.width,
+        'height': window.height,
     }
 
 
