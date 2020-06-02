@@ -36,6 +36,7 @@ def create_window(
     window = webview.create_window(
         'Kanmail', link,
         frameless=FRAMELESS,
+        easy_drag=False,
         text_select=True,
         **kwargs,
     )
@@ -56,6 +57,26 @@ def destroy_window(internal_id: str) -> None:
         return
 
     logger.warning(f'Tried to destroy non-existant window: {internal_id}')
+
+
+def minimize_window(internal_id: str) -> None:
+    window = ID_TO_WINDOW.get(internal_id, None)
+
+    if window:
+        window.minimize()
+        return
+
+    logger.warning(f'Tried to minimize non-existant window: {internal_id}')
+
+
+def maximize_window(internal_id: str) -> None:
+    window = ID_TO_WINDOW.get(internal_id, None)
+
+    if window:
+        window.toggle_fullscreen()
+        return
+
+    logger.warning(f'Tried to maximize non-existant window: {internal_id}')
 
 
 def reload_main_window() -> None:

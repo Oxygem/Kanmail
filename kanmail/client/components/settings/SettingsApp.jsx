@@ -260,7 +260,7 @@ export default class SettingsApp extends React.Component {
 
     render() {
         return (
-            <div className="no-select">
+            <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
                 <HeaderBar />
 
                 <section id="settings">
@@ -366,7 +366,7 @@ export default class SettingsApp extends React.Component {
                     {this.renderAdvancedSettings()}
                     {this.renderSaveButton()}
                 </section>
-            </div>
+            </section>
         );
     }
 }

@@ -7,13 +7,14 @@
 
     <script type="text/javascript">
         window.KANMAIL_VERSION = '{{ version }}';
-        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
-        window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
-        window.KANMAIL_FRAMELESS = {% if frameless %}true{% else %}false{% endif %};
-        window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
+        window.KANMAIL_PLATFORM = '{{ platform }}';
         window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
         window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
         window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
+        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
+        window.KANMAIL_FRAMELESS = {% if frameless %}true{% else %}false{% endif %};
+        window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
+        window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
     </script>
 
     {% if version == '0.0.0dev' %}

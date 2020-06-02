@@ -8,6 +8,7 @@ import keyboard from 'keyboard.js';
 import { createWindowPositionHandlers, openSettings } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
+import DragBar from 'components/DragBar.jsx';
 import Thread from 'components/emails/Thread.jsx';
 import Search from 'components/emails/Search.jsx';
 import Sidebar from 'components/emails/Sidebar.jsx';
@@ -153,18 +154,19 @@ export default class EmailsApp extends React.Component {
             );
         }
 
-        const classNames = ['wrapper'];
+        const classNames = [window.KANMAIL_PLATFORM];
         if (window.KANMAIL_FRAMELESS) {
             classNames.push('frameless');
         }
 
         return (
-            <div className={classNames.join(' ')}>
+            <section className={classNames.join(' ')}>
+                <DragBar />
                 <Sidebar />
                 <Search columnsCount={this.props.columns.length} />
                 {this.renderColumnsSection()}
                 <Thread />
-            </div>
+            </section>
         );
     }
 }

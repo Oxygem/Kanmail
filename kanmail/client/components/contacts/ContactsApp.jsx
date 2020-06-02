@@ -65,7 +65,7 @@ export default class ContactsApp extends React.Component {
 
     render() {
         return (
-            <div className="no-select">
+            <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
                 <HeaderBar />
 
                 <section id="contacts">
@@ -89,7 +89,7 @@ export default class ContactsApp extends React.Component {
                         className={this.state.newContactFormOpen && 'form-open'}
                     >{this.renderContactList()}</div>
                 </section>
-            </div>
+            </section>
         );
     }
 }

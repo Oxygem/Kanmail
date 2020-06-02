@@ -21,7 +21,7 @@ export default class MetaApp extends React.Component {
     }
 
     render() {
-        return <div className="no-select">
+        return <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
             <HeaderBar />
 
             <section id="meta">
@@ -32,6 +32,6 @@ export default class MetaApp extends React.Component {
                     </a>.
                 </p>
             </section>
-        </div>;
+        </section>;
     }
 }

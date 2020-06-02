@@ -121,13 +121,13 @@ export default class LicenseApp extends React.Component {
     }
 
     render() {
-        return <div className="no-select">
+        return <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
             <HeaderBar />
 
             <section id="license">
                 <h2>Kanmail License</h2>
                 {this.renderContent()}
             </section>
-        </div>;
+        </section>;
     }
 }

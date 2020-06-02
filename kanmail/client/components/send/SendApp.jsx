@@ -433,7 +433,7 @@ export default class SendApp extends React.Component {
         if (this.props.message && this.state.includeQuote) editorClasses.push('short');
 
         return (
-            <section id="new-email">
+            <section id="new-email" className={window.KANMAIL_PLATFORM}>
                 <HeaderBar />
 
                 <form>

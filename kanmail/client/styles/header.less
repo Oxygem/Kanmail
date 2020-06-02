@@ -5,12 +5,11 @@ header {
     color: white;
 
     h1#logo {
-        float: right;
+        float: left;
         line-height: 22px;
         display: inline-block;
         margin: 0;
-        padding: 0 5px 0 70px;
-        // background: @blue;
+        padding: 0 5px 0 5px;
         font-size: 16px;
 
         span, i {
@@ -111,5 +110,68 @@ header {
         div.icon-wrapper a {
             color: @textGrey;
         }
+    }
+}
+
+/* Make the logo float right on MacOS, as the control buttons live on the left */
+section.Darwin header h1#logo {
+    float: right;
+}
+
+
+
+/*
+    Drag bar */
+
+div#drag-bar {
+    position: fixed;
+    z-index: 98;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: @dragBarHeight;
+    background: transparent;
+    // background: orange;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+        cursor: grab;
+    }
+
+    a {
+        float: right;
+        color: @lightGrey;
+        font-size: 14px;
+
+        width: 18px;
+        height: 18px;
+        border-radius: 20px;
+        background: transparent;
+        text-align: center;
+
+        margin-top: 2px;
+        margin-right: 5px;
+        padding-top: 1px;
+
+        border: 1px solid transparent;
+
+        &:hover {
+            border-color: #A7A7A7;
+        }
+        &:first-child {
+            margin-right: 5px;
+        }
+
+            i.close {
+                color: @orange;
+            }
+
+            i.minimize {
+                color: @yellow;
+            }
+
+            i.maximize {
+                color: @green;
+            }
     }
 }

@@ -20,6 +20,20 @@ export function closeWindow() {
 }
 
 
+export function minimizeWindow() {
+    const url = new URL(window.location.href);
+    const windowId = url.searchParams.get('window_id');
+    get('/minimize-window', {window_id: windowId});
+}
+
+
+export function maximizeWindow() {
+    const url = new URL(window.location.href);
+    const windowId = url.searchParams.get('window_id');
+    get('/maximize-window', {window_id: windowId});
+}
+
+
 export function openWindow(path, options) {
     if (!options.width) {
         options.width = 800;

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import DragBar from 'components/DragBar.jsx';
 import HeaderErrors from 'components/HeaderErrors.jsx';
 
 import settingsStore from 'stores/settings.js';
@@ -23,13 +24,16 @@ export default class HeaderBar extends React.Component {
 
     render() {
         return (
-            <header style={this.getHeaderStyles()} className="header-bar">
-                <h1 id="logo">
-                    <span>K-</span>
-                    <i className="logo fa fa-envelope-o"></i>
-                    <HeaderErrors />
-                </h1>
-            </header>
+            <div>
+                <DragBar />
+                <header style={this.getHeaderStyles()} className="header-bar">
+                    <h1 id="logo">
+                        <span>K-</span>
+                        <i className="logo fa fa-envelope-o"></i>
+                        <HeaderErrors />
+                    </h1>
+                </header>
+            </div>
         );
     }
 }

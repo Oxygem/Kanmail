@@ -15,11 +15,18 @@ from kanmail.settings.constants import (
     FRAMELESS,
     FROZEN,
     IS_APP,
+    PLATFORM,
     SESSION_TOKEN,
     WEBSITE_URL,
 )
 from kanmail.version import get_version
-from kanmail.window import create_open_dialog, create_window, destroy_window
+from kanmail.window import (
+    create_open_dialog,
+    create_window,
+    destroy_window,
+    maximize_window,
+    minimize_window,
+)
 
 
 SEND_WINDOW_DATA = {}
@@ -34,12 +41,13 @@ def _get_render_data():
     return {
         'version': get_version(),
         'license_email': check_get_license_email(),
-        'frozen': FROZEN,
         'debug': DEBUG,
-        'is_app': IS_APP,
         'frameless': FRAMELESS,
-        'website_url': WEBSITE_URL,
+        'frozen': FROZEN,
+        'is_app': IS_APP,
+        'platform': PLATFORM,
         'session_token': SESSION_TOKEN,
+        'website_url': WEBSITE_URL,
     }
 
 
@@ -166,6 +174,15 @@ def close_window():
     return '', 204
 
 
+@app.route('/minimize-window', methods=('GET',))
+def window_minimize():
+    minimize_window(request.args['window_id'])
+    return '', 204
+
+
+@app.route('/maximize-window', methods=('GET',))
+def window_maximize():
+    maximize_window(request.args['window_id'])
     return '', 204
 
 

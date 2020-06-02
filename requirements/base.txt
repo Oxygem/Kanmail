@@ -1,8 +1,6 @@
 # Client
-# The official pywebview has some serious flaws:
-# https://github.com/r0x0r/pywebview/issues/315
-# https://github.com/r0x0r/pywebview/pull/332
-https://github.com/Fizzadar/pywebview/archive/4597b43ab9c8de351f9238038ad10e58e397a1a8.zip
+# This is https://github.com/r0x0r/pywebview/pull/520
+https://github.com/Fizzadar/pywebview/archive/1d7a5159cc6460aaaa8da5f5ea80ef31c206b104.zip
 
 # Server
 click==7.0
