@@ -1,6 +1,9 @@
+import traceback
+
 from flask import jsonify, request
 from imapclient import imapclient
 
+from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail import Account
 from kanmail.server.mail.autoconf import get_autoconf_settings
@@ -65,6 +68,8 @@ def _test_account_settings(account_settings, get_folders=False):
             if get_folders:
                 folders = _get_folders(connection)
     except Exception as e:
+        trace = traceback.format_exc().strip()
+        logger.debug(f'IMAP connection exception traceback: {trace}')
         return False, ('imap', f'{e}')
 
     # Check SMTP
@@ -72,6 +77,8 @@ def _test_account_settings(account_settings, get_folders=False):
         with new_account.get_smtp_connection() as connection:
             pass
     except Exception as e:
+        trace = traceback.format_exc().strip()
+        logger.debug(f'SMTP connection exception traceback: {trace}')
         return False, ('smtp', f'{e}')
 
     if get_folders:
