@@ -23,6 +23,7 @@ The rest of this readme focuses on the technical details of Kanmail. For user do
     * [Build environments](#build-environments)
     * [Doing a build](#doing-a-build)
 + [Syncing](#syncing)
++ [User Interface](#user-interface)
 
 ## License
 
@@ -220,3 +221,40 @@ Subsequent calls to this API endpoint will load more emails, loading headers fro
 ### Updates (sync emails)
 
 During the lifetime of a running Kanmail app it will periodically request to sync emails with the server. At this time the full UID list is reloaded from the server (failing if offline) and any new email headers are fetched. This endpoint returns new emails and the UIDs of any deleted emails from the UID list.
+
+
+## User Interface
+
+The Kanmail UI consists of a collection of React apps, one per window "category".
+
+### EmailsApp
+
+The main Kanmail window, including the column and email thread views. This is where the interesting stuff lives!
+
+#### Column / thread renders
+
+Rendering columns can be expensive, so Kanmail uses a few "hacks" to reduce the amount of renders required. For example, when archiving or trashing a thread, it's hidden from the user but the underlying component remains in-place. Only the thread component itself updates and the surrounding column does not re-render.
+
+#### Keyboard navigation
+
+Kanmail supports navigating between threads _and_ between columns using the keyboard. To achieve this every thread component contains a reference to access the component above/below (other threads same column) and also the adjacent columns left/right. This is achieved using React references.
+
+### SendApp
+
+The send/reply/forward email window and editor.
+
+### SettingsApp
+
+The settings window. Handles account management as well as general application settings.
+
+### ContactsApp
+
+The contacts window. Handles add/remove/delete contacts API.
+
+### LicenseApp
+
+The license window. Add/remove a license key.
+
+### MetaApp
+
+The meta/about window, includes license information.
