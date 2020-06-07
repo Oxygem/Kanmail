@@ -222,6 +222,7 @@ class EmailColumn extends React.Component {
                 key={thread.hash}
                 thread={thread}
                 threadRef={i}
+                column={this}
                 columnId={this.props.id}
                 isLastThread={isLastThread}
 
@@ -306,6 +307,12 @@ class EmailColumn extends React.Component {
     }
 
     render() {
+        // Reset the temporary column store set classes - these hold information
+        // that lives *between* column renders to show/hide individual threads.
+        // See the README for more information.
+        const columnStore = getColumnStore(this.props.id);
+        columnStore.resetThreadSets();
+
         const { connectDropTarget } = this.props;
         const threads = this.getFilteredEmailThreads();
 
