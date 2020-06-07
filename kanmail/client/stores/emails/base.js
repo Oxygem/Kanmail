@@ -354,6 +354,11 @@ export default class BaseEmails {
                 return date;
             }, 'desc');
 
+            // The hash becomes the key in react so must be unique per thread,
+            // but also not change as new emails come in, so we use the *oldest*
+            // thread message.
+            thread.hash = thread[thread.length - 1].accountMessageId;
+
             const allSeen = [];
             const allDeleted = [];
 
@@ -383,12 +388,6 @@ export default class BaseEmails {
             // Also store the list of all folder names and flags for the thread
             thread.allFolderNames = allFolderNames;
             thread.allFlags = allFlags;
-
-            // The hash becomes the key in react so must be unique per thread,
-            // but also not change as new emails come in (ideally) so we don't
-            // re-render the DOM element and loose the reference (for keyboard).
-            // thread.hash = `${messages[0].subject}-${messages[0].date}`;
-            thread.hash = messages[0].accountMessageId;
 
             // Push the sorted messages (the thread) into the folder/column list
             _.each(allFolderNames, folderName => {
