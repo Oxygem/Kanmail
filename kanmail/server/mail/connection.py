@@ -259,6 +259,9 @@ class SmtpConnection(object):
         if self.tls:
             smtp.starttls()
 
+        # Pending a *Python stdlib bugfix*: https://bugs.python.org/issue29750
+        # username = self.username.encode('utf-8')
+        # password = self.password.encode('utf-8')
         smtp.login(self.username, self.password)
 
         yield smtp
