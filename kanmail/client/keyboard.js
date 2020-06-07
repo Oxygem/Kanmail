@@ -3,6 +3,13 @@ import _ from 'lodash';
 import threadStore from 'stores/thread.js';
 import requestStore from 'stores/request.js';
 
+import {
+    getNextThreadComponent,
+    getPreviousThreadComponent,
+    getNextColumnThreadComponent,
+    getPreviousColumnThreadComponent,
+} from 'util/threads.js';
+
 const keys = {
     // Letters
     Z: 90,
@@ -76,84 +83,40 @@ class Keyboard {
         }
     }
 
-    selectNextThread = () => {
-        let nextThread;
-        let currentComponent = this.currentComponent;
-
-        while (currentComponent) {
-            const nextComponent = currentComponent.props.getNextThread();
-
-            if (!nextComponent || !nextComponent.isBusy()) {
-                nextThread = nextComponent;
-                break;
-            }
-
-            currentComponent = nextComponent;
-        }
-
-        if (nextThread) {
-            this.setThreadComponent(nextThread);
-
-            if (nextThread.element) {
-                ensureInView(nextThread.element, false);
-            }
-
-            if (threadStore.isOpen) {
-                nextThread.handleClick();
-            }
-
-            return true;
-        }
-    }
-
-    selectPreviousThread = () => {
-        let previousThread;
-        let currentComponent = this.currentComponent;
-
-        while (currentComponent) {
-            const previousComponent = currentComponent.props.getPreviousThread();
-
-            if (!previousComponent || !previousComponent.isBusy()) {
-                previousThread = previousComponent;
-                break;
-            }
-
-            currentComponent = previousComponent;
-        }
-
-        if (previousThread) {
-            this.setThreadComponent(previousThread);
-
-            if (previousThread.element) {
-                ensureInView(previousThread.element, true);
-            }
-
-            if (threadStore.isOpen) {
-                previousThread.handleClick();
-            }
-
-            return true;
-        }
-    }
-
-    setOtherColumnThread = (column) => {
-        const threadRefs = column.threadRefs;
-        let wantedThreadRef = this.currentComponent.props.threadRef;
-
-        if (wantedThreadRef >= threadRefs.length) {
-            wantedThreadRef = threadRefs.length - 1;
-        }
-
-        const thread = threadRefs[wantedThreadRef].getDecoratedComponentInstance();
-
+    selectThread = (thread) => {
         if (thread) {
             this.setThreadComponent(thread);
-            ensureInView(thread.element, true);
+
+            if (thread.element) {
+                ensureInView(thread.element, false);
+            }
 
             if (threadStore.isOpen) {
                 thread.handleClick();
             }
+
+            return true;
         }
+    }
+
+    selectNextThread = () => {
+        const nextThread = getNextThreadComponent(this.currentComponent);
+        return this.selectThread(nextThread);
+    }
+
+    selectPreviousThread = () => {
+        const previousThread = getPreviousThreadComponent(this.currentComponent);
+        return this.selectThread(previousThread);
+    }
+
+    selectNextColumnThread = () => {
+        const nextColumnThread = getNextColumnThreadComponent(this.currentComponent);
+        return this.selectThread(nextColumnThread);
+    }
+
+    selectPreviousColumnThread = () => {
+        const previousColumnThread = getPreviousColumnThreadComponent(this.currentComponent);
+        return this.selectThread(previousColumnThread);
     }
 
     handleKeyboardEvents = (ev) => {
@@ -190,6 +153,7 @@ class Keyboard {
 
             // Delete -> trash
             else if (code === keys.DELETE) {
+                threadStore.close();
                 const component = this.currentComponent;
                 this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickTrash(ev);
@@ -197,6 +161,7 @@ class Keyboard {
 
             // Enter -> archive
             else if (code === keys.ENTER) {
+                threadStore.close();
                 const component = this.currentComponent;
                 this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickArchive(ev);
@@ -214,22 +179,12 @@ class Keyboard {
 
             // Arrow left -> previous column
             else if (code == keys.ARROW_LEFT) {
-                const component = this.currentComponent;
-                const previousColumn = component.props.getPreviousColumn();
-
-                if (previousColumn) {
-                    this.setOtherColumnThread(previousColumn);
-                }
+                this.selectPreviousColumnThread();
             }
 
             // Arrow right -> previous column
             else if (code == keys.ARROW_RIGHT) {
-                const component = this.currentComponent;
-                const previousColumn = component.props.getNextColumn();
-
-                if (previousColumn) {
-                    this.setOtherColumnThread(previousColumn);
-                }
+                this.selectNextColumnThread();
             }
         }
     }
