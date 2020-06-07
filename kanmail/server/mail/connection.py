@@ -114,8 +114,11 @@ class ImapConnectionWrapper(object):
             timeout=self.config.timeout,
             use_uid=True,
         )
-        imap.login(self.config.username, self.config.password)
         imap.normalise_times = False
+
+        username = self.config.username.encode('utf-8')
+        password = self.config.password.encode('utf-8')
+        imap.login(username, password)
 
         if self._selected_folder:
             imap.select_folder(self._selected_folder)
