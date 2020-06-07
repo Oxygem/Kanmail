@@ -7,9 +7,9 @@ An email client that functions like a kanban board, for Mac/Windows/Linux/Docker
 
 ![](./screenshot.png)
 
-+ Works on MacOS (beta), Linux (alpha) & Windows (alpha)
++ Works on MacOS, Linux, Windows & Docker
 + Developed using Gmail, Outlook & Fastmail
-+ Should be compatible with other email providers (uses IMAP/SMTP)
++ Should be compatible with [other email providers](./docs/providers.md) (uses IMAP/SMTP)
 + Considered in "beta" - used as primary email client for >1yr
 
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the `docs` directory**](./docs).
@@ -204,7 +204,7 @@ Currently builds on Windows 10. Unsure if compatible with previous versions.
 Building Kanmail should be as simple as running `python -m make`.
 
 
-## 🔄 Syncing
+## Syncing
 
 Kanmail syncs email using the IMAP protocol. Instead of implementing a "complete sync engine" (one which attempts to keep a local copy of the server data), Kanmail uses a cache and loads data on demand. This simplifies the implementation but makes it hard/impossible to behave as an offline email client.
 
