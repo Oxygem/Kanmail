@@ -2,11 +2,13 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { openFile, openLink, openWindow } from 'window.js';
+import { openFile, openLink } from 'window.js';
+
 import requestStore from 'stores/request.js';
+
 import { cleanHtml } from 'util/html.js';
-import { post } from 'util/requests.js';
 import { formatAddress, formatDate } from 'util/string.js';
+import { openReplyToMessageWindow } from 'util/message.js';
 
 
 class ThreadMessageAttachment extends React.Component {
@@ -246,32 +248,16 @@ export default class ThreadMessage extends React.Component {
         }
     }
 
-    handleReplyClick(options) {
-        post('/create-send', options).then((data) => openWindow(data.endpoint, {
-            width: 800,
-            height: 600,
-            title: `Kanmail: reply to ${this.props.message.subject}`,
-        }));
-    }
-
     handleClickReply = () => {
-        this.handleReplyClick({
-            message: this.props.message,
-        });
+        openReplyToMessageWindow(this.props.message);
     }
 
     handleClickReplyAll = () => {
-        this.handleReplyClick({
-            message: this.props.message,
-            reply_all: true,
-        });
+        openReplyToMessageWindow(this.props.message, {reply_all: true});
     }
 
     handleClickForward = () => {
-        this.handleReplyClick({
-            message: this.props.message,
-            forward: true,
-        });
+        openReplyToMessageWindow(this.props.message, {forward: true});
     }
 
     handleClickText = () => {

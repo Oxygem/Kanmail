@@ -4,46 +4,29 @@ import hash from 'object-hash';
 import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
 
+import {
+    getNextThreadComponent,
+    getPreviousThreadComponent,
+    getNextColumnThreadComponent,
+    getPreviousColumnThreadComponent,
+} from 'util/threads.js';
+
 
 function makeDefaults() {
     return {
+        subject: null,
         messages: null,
-        containerWidth: null,
-        containerLeft: null,
         fetching: false,
         fetchingFailed: false,
+        // Open thread handlers
+        handleClickArchive: null,
+        handleClickTrash: null,
+        // Surrounding thread references (arrow controls)
+        nextThread: null,
+        previousThread: null,
+        nextColumnThread: null,
+        previousColumnThread: null,
     };
-}
-
-
-function calculateContainerWidth(columnContainer) {
-    const columnWidth = columnContainer.offsetWidth;
-    const columnLeft = columnContainer.offsetLeft + 150;
-    const windowWidth = window.innerWidth;
-
-    // Max width is 3x column (also ideal width)
-    const maxWidth = 3 * columnWidth;
-
-    let containerWidth;
-    let containerLeft;
-
-    const spaceLeft = columnLeft;
-    const spaceRight = windowWidth - (columnLeft + columnWidth);
-
-    if (spaceRight > spaceLeft) {
-        containerLeft = columnLeft + columnWidth;
-        containerWidth = Math.min(maxWidth, spaceRight);
-    } else {
-        containerWidth = Math.min(maxWidth, spaceLeft);
-        containerLeft = spaceLeft - containerWidth;
-
-        if (containerLeft === 0) {
-            containerLeft = 150;
-            containerWidth -= 150;
-        }
-    }
-
-    return [containerWidth, containerLeft];
 }
 
 
@@ -84,22 +67,38 @@ class ThreadStore extends BaseStore {
         this.props = makeDefaults();
     }
 
-    open(columnContainer, thread, onClose) {
+    open(component, thread, onClose) {
         if (this.isOpen) {
             this.close();
+        }
+
+        const columnContainer = component.props.getColumnContainer();
+
+        const nextComponent = getNextThreadComponent(component);
+        if (nextComponent) {
+            this.props.nextThread = nextComponent.props.thread;
+        }
+        const previousComponent = getPreviousThreadComponent(component);
+        if (previousComponent) {
+            this.props.previousThread = previousComponent.props.thread;
+        }
+        const nextColumnThreadComponent = getNextColumnThreadComponent(component);
+        if (nextColumnThreadComponent) {
+            this.props.nextColumnThread = nextColumnThreadComponent.props.thread;
+        }
+        const previousColumnThreadComponent = getPreviousColumnThreadComponent(component);
+        if (previousColumnThreadComponent) {
+            this.props.previousColumnThread = previousColumnThreadComponent.props.thread;
         }
 
         this.onClose = onClose;
         this.isOpen = true;
 
-        // Calculate the width/left styles of the column
-        [
-            this.props.containerWidth,
-            this.props.containerLeft,
-        ] = calculateContainerWidth(columnContainer);
-
         // Set to empty thread (loading icon)
         this.props.messages = [];
+        this.props.subject = thread[0].subject;
+        this.props.handleClickArchive = component.handleClickArchive;
+        this.props.handleClickTrash = component.handleClickTrash;
         this.triggerUpdate();
 
         // Flag the current column as open and assign so we can remove on close
@@ -197,26 +196,8 @@ class ThreadStore extends BaseStore {
 
         this.isOpen = false;
     }
-
-    onResize = () => {
-        if (!this.isOpen) {
-            return;
-        }
-
-        // Calculate the width/left styles of the column
-        [
-            this.props.containerWidth,
-            this.props.containerLeft,
-        ] = calculateContainerWidth(this.columnContainer);
-
-        this.triggerUpdate();
-    }
 }
 
 
 const threadStore = new ThreadStore();
-
-// Make sure that we re-calculate the thread container on window resize
-window.addEventListener('resize', threadStore.onResize);
-
 export default threadStore;

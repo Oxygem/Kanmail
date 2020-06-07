@@ -1,21 +1,32 @@
 /*
     Threads overlay */
 
+section#thread-background {
+    position: absolute;
+    z-index: 9;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(100, 100, 100, 0.1);
+}
+
 section#thread {
     z-index: 9;
     background: white;
     position: absolute;
-    top: 0;
-    bottom: 0;
-    border: 1px solid @lightestGrey;
-    border-width: 0 1px;
+    top: @topHeight;
+    margin-top: 30px;
+    bottom: 30px;
+    left: @sidebarWidth + 30;
+    right: 30px;
+    box-shadow: 0px 0px 2px 0px @midGrey;
 
     h1 {
-        margin: 0 0 10px 0;
-        padding-top: 28px;
+        margin: 10px 0 10px 0;
         padding-left: 10px;
-        height: @topHeight;
         font-size: 20px;
+        height: 36px;
         background: white;
         border-bottom: 1px solid @lightGrey;
     }
@@ -23,14 +34,79 @@ section#thread {
     section#content {
         overflow-x: hidden;
         overflow-y: scroll;
-        top: @topHeight;
+        top: 46px;
         padding-top: 10px;
         bottom: 0;
         left: 0;
-        right: 0;
+        right: 410px;
         position: absolute;
 
         .scrollbar;
+    }
+
+    section#meta {
+        width: 400px;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        padding: 10px 10px 10px 10px;
+        position: absolute;
+        background: @lightGrey;
+
+        button#close {
+            width: 100%;
+            margin-bottom: 16px;
+
+            &:hover {
+                color: @orange;
+            }
+        }
+
+        button {
+            font-size: 16px;
+        }
+
+        button span {
+            display: block;
+            font-weight: normal;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        div#other-buttons button {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+
+            &:hover {
+                color: @blue;
+            }
+        }
+
+        div#respond-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+
+            button {
+                width: 48%;
+                padding: 10px 0;
+                font-size: 16px;
+                margin-bottom: 10px;
+
+                &:hover {
+                    color: @blue;
+                }
+
+                &.archive:hover {
+                    color: @green;
+                }
+
+                &.trash:hover {
+                    color: @orange;
+                }
+            }
+        }
     }
 
     a.show-all-messages {

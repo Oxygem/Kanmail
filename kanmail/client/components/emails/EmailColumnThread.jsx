@@ -81,6 +81,7 @@ export default class EmailColumnThread extends React.Component {
         thread: PropTypes.array.isRequired,
         connectDragSource: PropTypes.func.isRequired,
         columnId: PropTypes.string.isRequired,
+        threadRef: PropTypes.number.isRequired,
         isLastThread: PropTypes.bool.isRequired,
 
         // Surrounding columns
@@ -236,7 +237,7 @@ export default class EmailColumnThread extends React.Component {
         });
 
         threadStore.open(
-            this.props.getColumnContainer(),
+            this,
             this.props.thread,
             // On close set this thread to an unopened state
             () => {
