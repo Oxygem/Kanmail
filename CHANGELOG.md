@@ -1,3 +1,32 @@
+# v1.2006081025
+
+This release completely rebuilds the thread view, which now appears as
+a popover on top of all the columns/folders. This means it shows up
+consistently rather than jumping around the screen. This also enables
+an improved thread view and controls.
+
+Changes:
+- Add a debug traceback log on account connection tests.
+- Add comment to support unicode SMTP usernames/passwords.
+- Properly encode unicode IMAP usernames/passwords.
+- Rebuild the thread view.
+- Move green into less variable.
+- Fix thread hashing by actually using the *oldest* email.
+- Move logic for finding next/previous thread/column into util.
+- Reset column store temporary hash sets on render.
+- Fix `columnStore.hasHiddenThread` return value.
+- Tidy up readme bits.
+- Add UI docs.
+- Re-capture that keyerror when destroying a window.
+- Fix saving window position/size on Linux/Windows.
+- Upgrade pywebview and use the drag region functionality.
+- Log the server host/port on start (debug).
+- Formatting.
+- Add `.node-version` file.
+- Remove leftover try/except.
+- Log the settion token (debug).
+- Improve new issues page.
+
 # v1.2005191209
 
 Linux only release to fix opening links.
