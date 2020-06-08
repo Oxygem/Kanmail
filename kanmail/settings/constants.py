@@ -72,7 +72,7 @@ if FROZEN:
 
 # Platform specific interface settings
 PLATFORM = platform.system()
-FRAMELESS = IS_APP and PLATFORM == 'Darwin'
+FRAMELESS = IS_APP and PLATFORM == 'Darwin' and environ.get('KANMAIL_FRAMELESS', 'on') == 'on'
 
 platform_to_gui = {
     'Darwin': 'cocoa',
