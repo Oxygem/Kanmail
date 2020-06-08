@@ -53,6 +53,10 @@ export default class DragBar extends React.Component {
     // }
 
     render() {
+        if (!window.KANMAIL_FRAMELESS) {
+            return null;
+        }
+
         return <div id="drag-bar" ref={makeDragElement}></div>;
     }
 }
