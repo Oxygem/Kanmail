@@ -10,13 +10,13 @@ import { openLink } from 'window.js';
 import { post } from 'util/requests.js';
 
 
-const getInitialState = () => ({
+const getInitialState = (props) => ({
     showAdvancedSettings: false,
     isSaving: false,
     saveError: null,
 
     // Add account phase 1 - name/username/password autoconfig form
-    addingAccount: false,
+    addingAccount: props.addingAccount || false,
     newAccountName: '',
     newAccountUsername: '',
     newAccountPassword: '',
@@ -32,6 +32,7 @@ const getInitialState = () => ({
 export default class NewAccountForm extends React.Component {
     static propTypes = {
         addAccount: PropTypes.func.isRequired,
+        hideCancelButton: PropTypes.boolean,
     }
 
     constructor(props) {
@@ -188,11 +189,12 @@ export default class NewAccountForm extends React.Component {
                     onClick={this.handleAddAccount}
                 >Add Account</button>
 
-                <button onClick={this.toggleAddAccount}>
+                {this.props.hideCancelButton || <button onClick={this.toggleAddAccount}>
                     Cancel
-                </button>
+                </button>}
             </form>
-            <p><strong>Note:</strong> Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.
+            <p>
+                <strong>Gmail/iCloud/Fastmail users</strong>: you will need an app password. Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.
                 <br /><br />
                 If you would prefer to enter IMAP/SMTP settings by hand, <a onClick={this.handleClickManualAddAccount}>click here</a>.
             </p>

@@ -5,7 +5,7 @@ import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 
 import keyboard from 'keyboard.js';
-import { createWindowPositionHandlers, openSettings } from 'window.js';
+import { createWindowPositionHandlers } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
 import DragBar from 'components/DragBar.jsx';
@@ -15,6 +15,7 @@ import Sidebar from 'components/emails/Sidebar.jsx';
 import EmailColumn from 'components/emails/EmailColumn.jsx';
 import MainColumn from 'components/emails/MainColumn.jsx';
 import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
+import WelcomeSettings from 'components/emails/WelcomeSettings.jsx';
 
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
@@ -36,7 +37,10 @@ export default class EmailsApp extends React.Component {
 
     componentDidMount() {
         // Enable keyboard controls
-        keyboard.enable();
+        if (!_.isEmpty(this.props.accounts)) {
+            keyboard.enable();
+        }
+
         // Create resize/move window position saver handlers
         createWindowPositionHandlers();
 
@@ -147,11 +151,7 @@ export default class EmailsApp extends React.Component {
 
     render() {
         if (_.isEmpty(this.props.accounts)) {
-            return (
-                <div style={{marginTop: '20px', marginLeft: '10px'}}>
-                    No accounts configured! Please <a onClick={openSettings}>open settings to get started</a>.
-                </div>
-            );
+            return <WelcomeSettings />;
         }
 
         const classNames = [window.KANMAIL_PLATFORM];
