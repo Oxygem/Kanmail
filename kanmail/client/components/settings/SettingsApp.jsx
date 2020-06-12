@@ -4,8 +4,7 @@ import PropTypes from 'prop-types';
 import { Creatable } from 'react-select';
 
 import HeaderBar from 'components/HeaderBar.jsx';
-import Account from 'components/settings/Account.jsx';
-import NewAccountForm from 'components/settings/NewAccountForm.jsx';
+import AccountList from 'components/settings/AccountList.jsx';
 
 import keyboard from 'keyboard.js';
 import { closeWindow, openLicense } from 'window.js';
@@ -132,21 +131,6 @@ export default class SettingsApp extends React.Component {
             .catch(err => console.error('SETTING ERROR', err));
     }
 
-    renderAccounts() {
-        return _.map(this.state.accounts, (accountSettings, i) => (
-            <Account
-                key={`${i}-${accountSettings.name}`}
-                accountIndex={i}
-                connected={true}
-                accountSettings={accountSettings}
-                deleteAccount={this.deleteAccount}
-                updateAccount={this.updateAccount}
-                moveUp={_.partial(this.moveAccount, i, -1)}
-                moveDown={_.partial(this.moveAccount, i, 1)}
-            />
-        ));
-    }
-
     renderAdvancedSettings() {
         if (!this.state.showAdvancedSettings) {
             return (
@@ -264,14 +248,18 @@ export default class SettingsApp extends React.Component {
                 <HeaderBar />
 
                 <section id="settings">
-                    <div id="accounts">
-                        <h2>Accounts</h2>
+                    <div className="settings">
+                        <h2 className="accounts">Accounts</h2>
                         <small>Changes will not be saved until you save all settings at the bottom of the page.</small>
-                        {this.renderAccounts()}
-                        <div id="add-account">
-                            <NewAccountForm addAccount={this.addAccount} />
-                        </div>
                     </div>
+
+                    <AccountList
+                        accounts={this.state.accounts}
+                        addAccount={this.addAccount}
+                        deleteAccount={this.deleteAccount}
+                        updateAccount={this.updateAccount}
+                        moveAccount={this.moveAccount}
+                    />
 
                     <div className="settings" id="style">
                         <h2>Appearance</h2>

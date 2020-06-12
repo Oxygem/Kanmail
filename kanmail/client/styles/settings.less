@@ -5,16 +5,8 @@ section#settings {
     height: 100%;
     overflow-y: auto;
 
-    h2 small {
-        font-size: 14px;
-    }
-
-    div.error {
-        color: @orange;
-    }
-
-    div.hidden {
-        display: none;
+    h2.accounts {
+        margin-bottom: 10px;
     }
 
     button.main-button {
@@ -24,6 +16,9 @@ section#settings {
     }
 
     div.settings {
+        padding-left: 10px;
+        padding-right: 10px;
+
         label {
             width: 30%;
             display: inline-block;
@@ -43,39 +38,7 @@ section#settings {
         }
     }
 
-    div#add-account {
-        padding: 10px;
-
-        div.new-account {
-            form {
-                width: 300px;
-                display: inline-block;
-
-                div {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-            }
-
-            p {
-                display: inline-block;
-                vertical-align: top;
-                margin-left: 20px;
-                color: #666;
-                margin-top: 85px;
-                width: 400px;
-            }
-        }
-
-        button {
-            margin-right: 5px;
-        }
-    }
-
     div#style, div#system {
-        padding-left: 10px;
-        padding-right: 10px;
-
         > input, div.select-wrapper {
             width: 70%;
             display: inline-block;
@@ -88,18 +51,55 @@ section#settings {
         padding-bottom: 10px;
     }
 
-    div#accounts {
-        margin-bottom: 30px;
+    form.account {
+        padding-bottom: 20px;
+    }
+}
 
-        h2 {
-            margin-left: 10px;
-            margin-bottom: 0;
-        }
+section#welcome-settings {
+    margin: 0 auto;
+    width: 820px;
 
-        > small {
-            display: block;
-            margin-left: 10px;
+    h2 {
+        margin-top: 30px;
+    }
+
+    img {
+        vertical-align: middle;
+        margin-top: -10px;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+
+    > p {
+        margin: 15px 10px;
+        font-size: 18px;
+
+        button {
+            margin-top: 10px;
         }
+    }
+}
+
+div#accounts {
+    margin-bottom: 30px;
+
+    h2 {
+        margin-left: 10px;
+        margin-bottom: 0;
+    }
+
+    > small {
+        display: block;
+        margin-left: 10px;
+    }
+
+    div.error {
+        color: @orange;
+    }
+
+    div.hidden {
+        display: none;
     }
 
     .account {
@@ -121,6 +121,7 @@ section#settings {
 
         &.active {
             background: @lightGrey;
+            border: 1px solid @midGrey;
         }
 
         &.new {
@@ -159,7 +160,32 @@ section#settings {
         }
     }
 
-    form.account {
-        padding-bottom: 20px;
+    div#add-account {
+        padding: 10px;
+
+        div.new-account {
+            form {
+                width: 300px;
+                display: inline-block;
+
+                div {
+                    width: 100%;
+                    margin-bottom: 10px;
+                }
+            }
+
+            p {
+                display: inline-block;
+                vertical-align: top;
+                margin-left: 20px;
+                color: #666;
+                margin-top: 85px;
+                width: 400px;
+            }
+        }
+
+        button {
+            margin-right: 5px;
+        }
     }
 }
