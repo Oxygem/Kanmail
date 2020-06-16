@@ -13,13 +13,17 @@ from kanmail.log import logger
 from .contacts import add_contacts
 
 
-def markdownify(text):
-    return markdown(text, extensions=[
+def markdownify(text, linkify=True):
+    extensions = [
         'markdown.extensions.extra',
         'markdown.extensions.nl2br',  # turn newlines into breaks
         'markdown.extensions.sane_lists',
-        LinkifyExtension(),  # pass class for pyinstaller to bundle
-    ])
+    ]
+
+    if linkify:
+        extensions.append(LinkifyExtension())
+
+    return markdown(text, extensions)
 
 
 def format_address(address):
