@@ -1,8 +1,8 @@
 header {
     height: @dragBarHeight;
     background: @pink;
-    position: relative;
     color: white;
+    position: relative;
 
     h1#logo {
         float: left;
@@ -98,17 +98,24 @@ header {
         }
     }
 
-    &.header-bar div.header-errors {
-        margin-top: 20px;
-        position: absolute;
+    &.header-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
 
-        div.icon-contents {
-            margin-left: -600px;
-            left: 0;
-        }
+        div.header-errors {
+            margin-top: 20px;
+            position: absolute;
 
-        div.icon-wrapper a {
-            color: @textGrey;
+            div.icon-contents {
+                margin-left: -600px;
+                left: 0;
+            }
+
+            div.icon-wrapper a {
+                color: @textGrey;
+            }
         }
     }
 }
