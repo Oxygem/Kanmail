@@ -13,6 +13,7 @@ import SettingsApp from 'components/settings/SettingsApp.jsx';
 import ContactsApp from 'components/contacts/ContactsApp.jsx';
 import LicenseApp from 'components/license/LicenseApp.jsx';
 import MetaApp from 'components/meta/MetaApp.jsx';
+import MetaFileApp from 'components/metaFile/MetaFileApp.jsx';
 
 import settingsStore from 'stores/settings.js';
 
@@ -84,7 +85,6 @@ if (licenseAppRoot) {
 }
 
 
-
 const metaAppRoot = document.querySelector('div[data-meta-app]');
 
 if (metaAppRoot) {
@@ -94,5 +94,20 @@ if (metaAppRoot) {
         ReactDOM.render(<ErrorBoundary>
             <MetaApp />
         </ErrorBoundary>, metaAppRoot);
+    });
+}
+
+
+const metaFileAppRoot = document.querySelector('div[data-meta-file-app]');
+
+if (metaFileAppRoot) {
+    // Load the settings *then* bootstrap the app into the DOM
+    settingsStore.getSettings().then(() => {
+        console.debug('Settings loaded, bootstrapping metaFile app to DOM...');
+        const fileTitle = metaFileAppRoot.getAttribute('data-file-title');
+        const fileData = metaFileAppRoot.getAttribute('data-file');
+        ReactDOM.render(<ErrorBoundary>
+            <MetaFileApp fileTitle={fileTitle} fileData={fileData} />
+        </ErrorBoundary>, metaFileAppRoot);
     });
 }

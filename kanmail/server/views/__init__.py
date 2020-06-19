@@ -9,12 +9,14 @@ from kanmail.license import check_get_license_email
 from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import get_contacts
+from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
 from kanmail.settings.constants import (
     DEBUG,
     FRAMELESS,
     FROZEN,
     IS_APP,
+    META_FILE_ROOT,
     PLATFORM,
     SESSION_TOKEN,
     WEBSITE_URL,
@@ -79,6 +81,27 @@ def get_license():
 def get_settings():
     return render_template(
         'settings.html',
+        **_get_render_data(),
+    )
+
+
+@app.route('/meta-file/<filename>', methods=('GET',))
+def get_meta_file(filename):
+    file_path = path.join(META_FILE_ROOT, filename)
+    if not path.exists(file_path):
+        abort(404, 'This file does not exist!')
+
+    with open(file_path, 'r') as f:
+        file_data = f.read()
+
+    file_data = markdownify(file_data, linkify=False)
+    file_title = filename.replace('.md', '').title()
+
+    return render_template(
+        'meta_file.html',
+        filename=filename,
+        file_data=file_data,
+        file_title=file_title,
         **_get_render_data(),
     )
 

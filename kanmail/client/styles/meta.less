@@ -12,20 +12,37 @@ section#license {
     }
 }
 
-section#meta {
-    text-align: center;
-
+section#meta, section#meta-file {
     h2 {
-        margin-top: 50px;
-
         img {
             vertical-align: middle;
             margin-top: -10px;
             margin-right: 10px;
         }
     }
+}
 
-    textarea {
-        height: 100px;
+section#meta {
+    text-align: center;
+
+    h2 {
+        margin-top: 50px;
+    }
+}
+
+section#meta-file {
+    padding: 30px 20px 20px 20px;
+
+    pre, code {
+        background: @lightestGrey;
+        font-size: 16px;
+        font-family: Courier;
+    }
+    code {
+        padding: 1px;
+    }
+    pre::selection, code::selection {
+        background: @green;
+        color: white;
     }
 }

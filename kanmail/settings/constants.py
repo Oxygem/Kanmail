@@ -66,8 +66,10 @@ CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
 # Get the client root directory - if we're frozen (by pyinstaller) this is relative
 # to the executable, otherwise ./client.
 CLIENT_ROOT = path.abspath(path.join(path.dirname(__file__), '..', 'client'))
+META_FILE_ROOT = path.abspath(path.join(path.dirname(__file__), '..', '..'))
 if FROZEN:
     CLIENT_ROOT = sys._MEIPASS
+    META_FILE_ROOT = sys._MEIPASS
 
 
 # Platform specific interface settings
