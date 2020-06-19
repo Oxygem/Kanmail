@@ -10,14 +10,7 @@ import { openLink, openWindow } from 'window.js';
 export default class MetaApp extends React.Component {
     constructor(props) {
         super(props);
-
         keyboard.disable();
-    }
-
-    handleMetaUpdate = (ev) => {
-        this.setState({
-            license: ev.target.value,
-        });
     }
 
     render() {
