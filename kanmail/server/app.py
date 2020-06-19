@@ -91,6 +91,7 @@ def boot() -> None:
         license_api,
         settings_api,
         update_api,
+        window_api,
     )
 
     # Database models
