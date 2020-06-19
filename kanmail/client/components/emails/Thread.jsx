@@ -112,17 +112,6 @@ class Thread extends React.Component {
     renderOtherThreadButtons() {
         const buttons = [];
 
-        if (this.props.nextColumnThread) {
-            buttons.push(<button
-                key="next-column"
-                className="next-column"
-                onClick={keyboard.selectNextColumnThread}
-            >
-                <i className="fa fa-arrow-right" /> Next column
-                <span>{this.props.nextColumnThread[0].subject}</span>
-            </button>);
-        }
-
         if (this.props.previousColumnThread) {
             buttons.push(<button
                 key="previous-column"
@@ -130,7 +119,18 @@ class Thread extends React.Component {
                 onClick={keyboard.selectPreviousColumnThread}
             >
                 <i className="fa fa-arrow-left" /> Previous column
-                <span>{this.props.previousColumnThread[0].subject}</span>
+                <span>{_.truncate(this.props.previousColumnThread[0].subject, {length: 32})}</span>
+            </button>);
+        }
+
+        if (this.props.nextColumnThread) {
+            buttons.push(<button
+                key="next-column"
+                className="next-column"
+                onClick={keyboard.selectNextColumnThread}
+            >
+                <i className="fa fa-arrow-right" /> Next column
+                <span>{_.truncate(this.props.nextColumnThread[0].subject, {length: 32})}</span>
             </button>);
         }
 
@@ -141,7 +141,7 @@ class Thread extends React.Component {
                 onClick={keyboard.selectPreviousThread}
             >
                 <i className="fa fa-arrow-up" /> Previous thread
-                <span>{this.props.previousThread[0].subject}</span>
+                <span>{_.truncate(this.props.previousThread[0].subject, {length: 32})}</span>
             </button>);
         }
 
@@ -152,7 +152,7 @@ class Thread extends React.Component {
                 onClick={keyboard.selectNextThread}
             >
                 <i className="fa fa-arrow-down" /> Next thread
-                <span>{this.props.nextThread[0].subject}</span>
+                <span>{_.truncate(this.props.nextThread[0].subject, {length: 32})}</span>
             </button>);
         }
 

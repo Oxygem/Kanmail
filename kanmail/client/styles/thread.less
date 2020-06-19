@@ -8,7 +8,7 @@ section#thread-background {
     top: 0;
     right: 0;
     bottom: 0;
-    background: rgba(100, 100, 100, 0.1);
+    background: rgba(100, 100, 100, 0.6);
 }
 
 section#thread {
@@ -73,13 +73,19 @@ section#thread {
             margin-top: 4px;
         }
 
-        div#other-buttons button {
-            width: 100%;
-            padding: 5px;
-            margin-bottom: 10px;
+        div#other-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
 
-            &:hover {
-                color: @blue;
+            button {
+                width: 48%;
+                padding: 5px;
+                margin-bottom: 10px;
+
+                &:hover {
+                    color: @blue;
+                }
             }
         }
 
