@@ -34,7 +34,7 @@ export function maximizeWindow() {
 }
 
 
-export function openWindow(path, options) {
+export function openWindow(path, options={}) {
     if (!options.width) {
         options.width = 800;
     }
