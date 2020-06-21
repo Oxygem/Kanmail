@@ -17,7 +17,6 @@ from .settings import (
     MAJOR_VERSION,
     MAKE_DIRNAME,
     ROOT_DIRNAME,
-    TEMP_CHANGELOG_FILENAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
     VERSION_DATA_FILENAME,
@@ -113,18 +112,6 @@ def create_new_changelog(version, git_changes):
 
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
-
-    with open(TEMP_CHANGELOG_FILENAME, 'w') as f:
-        f.write(new_changelog)
-
-
-def get_new_changelog():
-    with open(TEMP_CHANGELOG_FILENAME, 'r') as f:
-        return f.read()
-
-
-def write_new_changelog():
-    new_changelog = get_new_changelog()
 
     with open('CHANGELOG.md', 'r') as f:
         current_changelog = f.read()

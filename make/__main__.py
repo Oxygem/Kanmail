@@ -25,7 +25,6 @@ from .util import (
     get_release_version,
     print_and_check_output,
     print_and_run,
-    write_new_changelog,
     write_release_version,
     write_version_data,
 )
@@ -166,7 +165,6 @@ def complete_release():
     )):
         raise click.Abort('User is not sure!')
 
-    write_new_changelog()
     print_and_run(('git', 'add', 'CHANGELOG.md'))
     print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
     print_and_run((
