@@ -1,3 +1,27 @@
+# v1.2006211645
+
+Changes:
+- Don't close the window when saving onboarding settings!
+- Add top margin on send + welcome settings.
+- Add docs link to issue chooser.
+- Remove temp changelog removal from `make.clean` script.
+- Comment out github release bits as does not work.
+- Write changelog before building.
+- Fix headers for contacts + settings apps.
+- Improve thread overlay styling.
+- Make thread meta 50% opaque unless hovered/active.
+- Split out window API views.
+- Ensure default options on `openWindow` util.
+- Remove pre background color.
+- Allow body scrolling.
+- Remove unused method.
+- Link to changelog/license on meta page.
+- Create `MetaFileApp` to view bundled markdown files.
+- Add `linkify=True` kwarg to `markdownify` util function.
+- Remove unncessary wrapper classes.
+- Implement new welcome/onboarding page with account settings.
+- Break out the account list into it's own component.
+
 # v1.2006081025
 
 This release completely rebuilds the thread view, which now appears as
