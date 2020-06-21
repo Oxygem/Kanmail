@@ -7,13 +7,13 @@ from subprocess import check_output, run
 
 import click
 import pyupdater
-import requests
+# import requests
 import tld
 
 from jinja2 import Template
 
 from .settings import (
-    GITHUB_API_TOKEN,
+    # GITHUB_API_TOKEN,
     MAJOR_VERSION,
     MAKE_DIRNAME,
     ROOT_DIRNAME,
@@ -121,25 +121,25 @@ def create_new_changelog(version, git_changes):
         f.write(changelog)
 
 
-def create_github_release(version):
-    # Swap out the title line in the changelog for a link to the downloads page (tag title is
-    # already shown in github UI).
-    changelog = get_new_changelog()
-    changelog_lines = changelog.splitlines()
-    changelog_lines[0] = '[**Download the latest Kanmail here**](https://kanmail.io/download).'
-    changelog = '\n'.join(changelog)
+# def create_github_release(version):
+#     # Swap out the title line in the changelog for a link to the downloads page (tag title is
+#     # already shown in github UI).
+#     changelog = get_new_changelog()
+#     changelog_lines = changelog.splitlines()
+#     changelog_lines[0] = '[**Download the latest Kanmail here**](https://kanmail.io/download).'
+#     changelog = '\n'.join(changelog)
 
-    response = requests.post(
-        'https://api.github.com/repos/fizzadar/Kanmail/releases',
-        json={
-            'tag_name': f'v{version}',
-            'body': changelog,
-        },
-        headers={
-            'Authorization': f'token {GITHUB_API_TOKEN}',
-        },
-    )
-    response.raise_for_status()
+#     response = requests.post(
+#         'https://api.github.com/repos/fizzadar/Kanmail/releases',
+#         json={
+#             'tag_name': f'v{version}',
+#             'body': changelog,
+#         },
+#         headers={
+#             'Authorization': f'token {GITHUB_API_TOKEN}',
+#         },
+#     )
+#     response.raise_for_status()
 
 
 def get_release_version():
