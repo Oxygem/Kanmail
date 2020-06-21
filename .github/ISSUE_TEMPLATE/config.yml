@@ -3,3 +3,6 @@ contact_links:
 - name: 🛡 License issues
   url: https://kanmail.io/license
   about: Purchase and recover Kanmail licenses.
+- name: 📖 Documentation
+  url: https://github.com/Oxygem/Kanmail/blob/master/docs/README.md
+  about: View the Kanmail user documentation.
