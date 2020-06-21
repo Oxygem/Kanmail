@@ -71,7 +71,6 @@ export default class WelcomeSettings extends React.Component {
 
         put('/api/settings', newSettings)
             .then(() => {
-                closeWindow();
                 this.setState({isSaved: true});
             })
             .catch(err => this.setState({saveError: err}));
