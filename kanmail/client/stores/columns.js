@@ -24,16 +24,10 @@ class ColumnMetaStore extends BaseStore {
     }
 
     setAccountMeta(accountKey, meta) {
-        this.props.counts[accountKey] = meta.count;
-        // const counts = _.reduce(meta, (memo, data, accountKey) => {
-        //     memo[accountKey] = data.count;
-        //     return memo;
-        // }, {});
-
-        // if (!_.isEqual(this.props.counts, counts)) {
-        //     this.props.counts = counts;
-        this.triggerUpdate();
-        // }
+        if (meta.exists) {
+            this.props.counts[accountKey] = meta.count;
+            this.triggerUpdate();
+        }
     }
 
     setSyncing(isSyncing) {
