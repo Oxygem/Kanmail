@@ -32,6 +32,11 @@ export function makeDragElement(element) {
 }
 
 
+export function makeNoDragElement(element) {
+    element.addEventListener('mousedown', ev => ev.stopPropagation());
+}
+
+
 function saveWindowPosition() {
     post('/api/settings/window');
 }
