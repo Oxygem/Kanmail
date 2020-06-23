@@ -3,6 +3,35 @@ import _ from 'lodash';
 import { get, post } from 'util/requests';
 
 
+export function makeDragElement(element) {
+    if (!element) {
+        return;
+    }
+
+    var initialX = 0;
+    var initialY = 0;
+
+    function onMouseMove(ev) {
+        var x = ev.screenX - initialX;
+        var y = ev.screenY - initialY;
+        window.pywebview._bridge.call('moveWindow', [x, y], null);
+    }
+
+    function onMouseUp() {
+        window.removeEventListener('mousemove', onMouseMove);
+    }
+
+    function onMouseDown(ev) {
+        initialX = ev.clientX;
+        initialY = ev.clientY;
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('mousemove', onMouseMove);
+    }
+
+    element.addEventListener('mousedown', onMouseDown);
+}
+
+
 function saveWindowPosition() {
     post('/api/settings/window');
 }
