@@ -153,7 +153,6 @@ class Keyboard {
 
             // Delete -> trash
             else if (code === keys.DELETE) {
-                threadStore.close();
                 const component = this.currentComponent;
                 this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickTrash(ev);
@@ -161,7 +160,6 @@ class Keyboard {
 
             // Enter -> archive
             else if (code === keys.ENTER) {
-                threadStore.close();
                 const component = this.currentComponent;
                 this.selectNextThread() || this.selectPreviousThread();
                 component.handleClickArchive(ev);
