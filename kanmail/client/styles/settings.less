@@ -11,17 +11,17 @@ section#settings {
     }
 
     button.main-button {
-        margin-left: 10px;
+        margin-left: 20px;
         margin-top: 20px;
-        margin-bottom: 50px;
+        margin-bottom: 20px;
     }
 
     div.settings {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 20px;
+        padding-right: 20px;
 
         label {
-            width: 30%;
+            width: 28%;
             display: inline-block;
 
             small {
@@ -41,7 +41,7 @@ section#settings {
 
     div#style, div#system {
         > input, div.select-wrapper {
-            width: 70%;
+            width: 68%;
             display: inline-block;
             margin-bottom: 30px;
         }
@@ -83,10 +83,10 @@ section#welcome-settings {
 }
 
 div#accounts {
+    margin: 0 10px;
     margin-bottom: 30px;
 
     h2 {
-        margin-left: 10px;
         margin-bottom: 0;
     }
 
@@ -110,7 +110,8 @@ div#accounts {
         width: 100%;
         background: @lightestGrey;
         padding: 10px;
-        margin: 0;
+        margin: 0 0 10px 0;
+        border-radius: @borderRadius;
 
         small.connected {
             color: green;
@@ -162,7 +163,7 @@ div#accounts {
     }
 
     div#add-account {
-        padding: 10px;
+        padding: 0 10px 10px 10px;
 
         div.new-account {
             form {

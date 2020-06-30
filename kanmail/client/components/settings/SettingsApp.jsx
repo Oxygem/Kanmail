@@ -68,12 +68,6 @@ export default class SettingsApp extends React.Component {
         this.setState({accounts});
     }
 
-    handleUpdate = (stateKey, ev) => {
-        this.setState({
-            [stateKey]: ev.target.value,
-        });
-    }
-
     handleSettingUpdate = (stateKey, key, value) => {
         const settings = this.state[stateKey];
         settings[key] = value;
@@ -89,6 +83,11 @@ export default class SettingsApp extends React.Component {
             value = parseInt(value);
         }
         return this.handleSettingUpdate(stateKey, key, value);
+    }
+
+    handleCheckboxUpdate = (stateKey, key) => {
+        const value = this.state[stateKey][key];
+        return this.handleSettingUpdate(stateKey, key, !value);
     }
 
     handleSaveSettings = (ev) => {
@@ -277,10 +276,38 @@ export default class SettingsApp extends React.Component {
                             )}
                         />
 
+                        <label htmlFor="group_single_sender_threads">
+                            Group single sender threads
+                            <small>Groups single message threads from the same sender</small>
+                        </label>
+                        <input
+                            type="checkbox"
+                            id="group_single_sender_threads"
+                            checked={this.state.systemSettings.group_single_sender_threads}
+                            onChange={_.partial(
+                                this.handleCheckboxUpdate,
+                                'systemSettings', 'group_single_sender_threads',
+                            )}
+                        />
+
+                        <label htmlFor="load_contact_icons">
+                            Load contact icons
+                            <small>Lookup gravatars and favicons for contacts</small>
+                        </label>
+                        <input
+                            type="checkbox"
+                            id="load_contact_icons"
+                            checked={this.state.systemSettings.load_contact_icons}
+                            onChange={_.partial(
+                                this.handleCheckboxUpdate,
+                                'systemSettings', 'load_contact_icons',
+                            )}
+                        />
+
                         <label htmlFor="sidebar_folders">
                             Sidebar folders
                             <small>
-                                Folders to show in the sidebar
+                                Folders to pin in the sidebar
                             </small>
                         </label>
                         <div className="select-wrapper">
