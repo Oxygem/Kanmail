@@ -17,6 +17,50 @@ function isEmailUnread(email) {
     return !_.includes(email.flags, '\\Seen');
 }
 
+function makeThread(messages) {
+    const thread = _.orderBy(messages, message => {
+        const date = new Date(message.date);
+        return date;
+    }, 'desc');
+
+    // The hash becomes the key in react so must be unique per thread,
+    // but also not change as new emails come in, so we use the *oldest*
+    // thread message.
+    thread.hash = thread[thread.length - 1].accountMessageId;
+
+    const allSeen = [];
+    const allDeleted = [];
+
+    let allFolderNames = [];
+    let allFlags = [];
+
+    _.each(messages, message => {
+        allFolderNames = _.concat(
+            allFolderNames,
+            _.keys(message.folderUids),
+        );
+
+        allFlags = _.concat(allFlags, message.flags);
+
+        allSeen.push(_.includes(message.flags, '\\Seen'));
+        allDeleted.push(_.includes(message.flags, '\\Deleted'));
+    });
+
+    allFolderNames = _.uniq(allFolderNames);
+    allFlags = _.uniq(allFlags);
+
+    thread.archived = !_.includes(allFolderNames, 'inbox');
+    thread.starred = _.includes(allFlags, '\\Flagged');
+    thread.unread = _.includes(allSeen, false);
+    thread.deleted = !_.includes(allDeleted, false);
+
+    // Also store the list of all folder names and flags for the thread
+    thread.allFolderNames = allFolderNames;
+    thread.allFlags = allFlags;
+
+    return thread;
+}
+
 
 export default class BaseEmails {
     /*
@@ -339,7 +383,7 @@ export default class BaseEmails {
         // threader.groupBySubject(rootThread);
 
         // Map of folder name -> emails (list of threads)
-        const folderEmails = {};
+        let folderEmails = {};
 
         _.each(rootThread.children, messageContainer => {
             const messages = messageContainer.flattenChildren() || [];
@@ -349,48 +393,10 @@ export default class BaseEmails {
             }
 
             // Sort the thread messages by date
-            const thread = _.orderBy(messages, message => {
-                const date = new Date(message.date);
-                return date;
-            }, 'desc');
-
-            // The hash becomes the key in react so must be unique per thread,
-            // but also not change as new emails come in, so we use the *oldest*
-            // thread message.
-            thread.hash = thread[thread.length - 1].accountMessageId;
-
-            const allSeen = [];
-            const allDeleted = [];
-
-            let allFolderNames = [];
-            let allFlags = [];
-
-            _.each(messages, message => {
-                allFolderNames = _.concat(
-                    allFolderNames,
-                    _.keys(message.folderUids),
-                );
-
-                allFlags = _.concat(allFlags, message.flags);
-
-                allSeen.push(_.includes(message.flags, '\\Seen'));
-                allDeleted.push(_.includes(message.flags, '\\Deleted'));
-            });
-
-            allFolderNames = _.uniq(allFolderNames);
-            allFlags = _.uniq(allFlags);
-
-            thread.archived = !_.includes(allFolderNames, 'inbox');
-            thread.starred = _.includes(allFlags, '\\Flagged');
-            thread.unread = _.includes(allSeen, false);
-            thread.deleted = !_.includes(allDeleted, false);
-
-            // Also store the list of all folder names and flags for the thread
-            thread.allFolderNames = allFolderNames;
-            thread.allFlags = allFlags;
+            const thread = makeThread(messages);
 
             // Push the sorted messages (the thread) into the folder/column list
-            _.each(allFolderNames, folderName => {
+            _.each(thread.allFolderNames, folderName => {
                 if (!folderEmails[folderName]) {
                     folderEmails[folderName] = [];
                 }
@@ -398,6 +404,52 @@ export default class BaseEmails {
                 folderEmails[folderName].push(thread);
             });
         });
+
+        // EXPERIMENTAL!
+        // Now merge single threads from the same sender
+        if (settingsStore.props.systemSettings.group_single_sender_threads) {
+            const newFolderEmails = {};
+
+            _.each(folderEmails, (threads, folderName) => {
+                const senderToSingleThread = {};
+                const otherThreads = [];
+
+                _.each(threads, thread => {
+                    if (thread.length > 1) {
+                        otherThreads.push(thread);
+                        return;
+                    }
+
+                    const threadKey = `${thread[0].from}-${thread.allFolderNames}`;
+                    if (!senderToSingleThread[threadKey]) {
+                        senderToSingleThread[threadKey] = [];
+                    }
+                    senderToSingleThread[threadKey].push(thread);
+                });
+
+                _.each(senderToSingleThread, singleThreads => {
+                    // We want the first thread object to be the "base" of this thread as this contains
+                    // all the special values we assigned above (unread, etc).
+                    let newThread;
+                    _.each(singleThreads, singleThread => {
+                        if (!newThread) {
+                            newThread = makeThread(_.clone(singleThread));
+                        } else {
+                            _.each(singleThread, message => newThread.push(message));
+                        }
+                    })
+
+                    if (singleThreads.length > 1) {
+                        newThread.mergedThreads = singleThreads.length;
+                    }
+                    otherThreads.push(newThread);
+                });
+
+                newFolderEmails[folderName] = otherThreads;
+            });
+
+            folderEmails = newFolderEmails;
+        }
 
         const processTaken = (performance.now() - processStart).toFixed(2);
 
