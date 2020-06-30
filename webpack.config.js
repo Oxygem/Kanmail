@@ -27,6 +27,9 @@ module.exports = {
     },
     devServer: {
         contentBase: path.join(__dirname, 'kanmail', 'client', 'static'),
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+        },
     },
     resolve: {
         modules: [
