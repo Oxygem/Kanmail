@@ -380,7 +380,9 @@ export default class BaseEmails {
         // Now make the subject -> thread mapping (and group by subject where
         // does not work [mising messages]).
         // TODO: make this work but not group messages w/same top-level subject
-        // threader.groupBySubject(rootThread);
+        if (settingsStore.props.systemSettings.group_threads_by_subject) {
+            threader.groupBySubject(rootThread);
+        }
 
         // Map of folder name -> emails (list of threads)
         let folderEmails = {};
