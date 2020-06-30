@@ -19,20 +19,26 @@ def _wait_for_build(filename):
             click.echo(f'File {filename} not found, please try again.')
 
 
-if __name__ == '__main__':
+@click.command()
+def do_release():
     print_and_run(('python', '-m', 'make.clean'))
     print_and_run(('python', '-m', 'make', '--release'))
 
-    if click.confirm('Build Docker container?'):
+    if click.confirm('Build Docker container?', default=True):
         print_and_run(('python', '-m', 'make', '--docker', '--release'))
 
-    if click.confirm('Build MacOS client? '):
+    if click.confirm('Build MacOS client? ', default=True):
         _wait_for_build('Kanmail-mac-{version}.tar.gz')
 
-    if click.confirm('Build Linux client? '):
+    if click.confirm('Build Linux client? ', default=True):
         _wait_for_build('Kanmail-nix64-{version}.tar.gz')
 
-    if click.confirm('Build Windows client? '):
+    if click.confirm('Build Windows client? ', default=True):
         _wait_for_build('Kanmail-win-{version}.zip')
 
     print_and_run(('python', '-m', 'make', '--release', '--complete'))
+
+
+
+if __name__ == '__main__':
+    do_release()
