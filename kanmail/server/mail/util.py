@@ -160,7 +160,7 @@ def decode_header(subject):
     return ''.join(bits)
 
 
-def decode_string(string, string_meta=None):
+def decode_string(string, string_meta=None, as_str=True):
     encoding = None
     charset = None
 
@@ -199,7 +199,7 @@ def decode_string(string, string_meta=None):
     if charset:
         string = string.decode(charset, 'replace')
 
-    if isinstance(string, bytes):
+    if as_str and isinstance(string, bytes):
         string = string.decode('utf-8', 'replace')
 
     return string

@@ -142,7 +142,7 @@ class Folder(object):
                 continue
 
             data = data[body_keyname]
-            data = decode_string(data, data_meta)
+            data = decode_string(data, data_meta, as_str=False)
 
             emails[uid] = data
 
