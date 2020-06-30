@@ -2,7 +2,6 @@ import React from 'react';
 
 import HeaderBar from 'components/HeaderBar.jsx';
 
-import keyboard from 'keyboard.js';
 import { closeWindow, openLink } from 'window.js';
 
 import { delete_, post } from 'util/requests.js';
@@ -11,8 +10,6 @@ import { delete_, post } from 'util/requests.js';
 export default class LicenseApp extends React.Component {
     constructor(props) {
         super(props);
-
-        keyboard.disable();
 
         this.state = {
             license: '',

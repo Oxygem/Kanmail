@@ -4,18 +4,12 @@ import PropTypes from 'prop-types';
 import HeaderBar from 'components/HeaderBar.jsx';
 
 import img from 'icon-pink.png';
-import keyboard from 'keyboard.js';
 
 
 export default class MetaApp extends React.Component {
     static propTypes = {
         fileTitle: PropTypes.string.isRequired,
         fileData: PropTypes.string.isRequired,
-    }
-
-    constructor(props) {
-        super(props);
-        keyboard.disable();
     }
 
     render() {
