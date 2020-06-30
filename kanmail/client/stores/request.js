@@ -160,10 +160,14 @@ export default requestStore;
 window.onerror = (message, source, lineno, colno, e) => {
     const name = e ? e.name : 'Unknown';
     const errorMessage = e ? e.message : message;
+    const traceback = e ? e.stack : null;
 
     requestStore.addRequestError({
         errorName: `JS error: ${name}`,
         errorMessage: errorMessage,
+        json: {
+            traceback: traceback,
+        },
     });
 
     return false;
