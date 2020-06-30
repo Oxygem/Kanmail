@@ -16,6 +16,13 @@ import { closeWindow } from 'window.js';
 import { cleanHtml } from 'util/html.js'
 import { get, post } from 'util/requests.js'
 
+import Quill from 'quill';
+
+// Use divs > p, see: https://github.com/quilljs/quill/issues/861#issuecomment-239961806
+var Block = Quill.import('blots/block');
+Block.tagName = 'DIV';
+Quill.register(Block, true);
+
 
 function makeContactLabel(contactTuple) {
     if (!contactTuple[0]) {
