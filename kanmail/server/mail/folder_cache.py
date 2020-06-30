@@ -129,7 +129,7 @@ def remove_stale_headers():
             headers_to_delete.append(header)
 
     if headers_to_delete:
-        delete_cache_items(headers_to_delete)
+        delete_cache_items(*headers_to_delete)
 
     logger.info(f'Deleted {len(headers_to_delete)}/{len(all_headers)} cache headers')
 
