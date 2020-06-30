@@ -26,9 +26,11 @@ function collectVisibleThreadComponents(threadRefs) {
     return _.reduce(
         threadRefs,
         (memo, value) => {
-            const component = value.getDecoratedComponentInstance();
-            if (!component.isBusy()) {
-                memo.push(component);
+            if (value) {
+                const component = value.getDecoratedComponentInstance();
+                if (!component.isBusy()) {
+                    memo.push(component);
+                }
             }
             return memo;
         },
