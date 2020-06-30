@@ -64,7 +64,11 @@ def validate_session_token():
         return
 
     if request.path.startswith('/api'):
-        session_token = request.headers.get('Kanmail-Session-Token')
+        # Accept as header (preferred) and query string (images)
+        session_token = request.headers.get(
+            'Kanmail-Session-Token',
+            request.args.get('Kanmail-Session-Token'),
+        )
         if session_token != SESSION_TOKEN:
             abort(401, 'Invalid session token provided!')
 
