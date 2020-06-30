@@ -1,107 +1,42 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
+import randomColor from 'randomcolor';
 
-import { openFile, openLink } from 'window.js';
+import { openLink } from 'window.js';
 
-import requestStore from 'stores/request.js';
+import settingsStore from 'stores/settings.js';
+
+import ThreadMessageAttachment from 'components/emails/ThreadMessageAttachment.jsx';
 
 import { cleanHtml } from 'util/html.js';
 import { formatAddress, formatDate } from 'util/string.js';
 import { openReplyToMessageWindow } from 'util/message.js';
 
 
-class ThreadMessageAttachment extends React.Component {
-    static propTypes = {
-        partId: PropTypes.string.isRequired,
-        part: PropTypes.object.isRequired,
-        message: PropTypes.object.isRequired,
+const emailToColor = {};
+
+function getColorForAddress(address) {
+    const email = address[1];
+    if (!emailToColor[email]) {
+        emailToColor[email] = randomColor();
+    }
+    return emailToColor[email];
+}
+
+function getInitialsFromAddress(address) {
+    const text = address[0] || address[1];
+    const textBits = text.split(' ');
+    if (textBits.length > 1) {
+        return `${textBits[0][0]}${textBits[1][0]}`;
     }
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            downloading: false,
-            downloaded: false,
-            downloadedFilename: null,
-        };
+    const capitalOnlyText = text.replace(/[^A-Z]/g, '');
+    if (capitalOnlyText.length) {
+        return capitalOnlyText;
     }
 
-    handleClick = () => {
-        if (this.state.downloaded) {
-            openFile(this.state.downloadedFilename);
-            return;
-        }
-
-        const { part, partId } = this.props;
-        const { account_name, folder_name, uid } = this.props.message;
-
-        this.setState({
-            downloading: true,
-            downloaded: false, // reset if re-downloading
-        });
-
-        requestStore.get(
-            `Fetch message part in ${account_name}/${folder_name}: ${uid}/${partId}`,
-            `/api/emails/${account_name}/${folder_name}/${uid}/${partId}/download`,
-            {filename: part.name || 'unknown'},
-        ).then(data => {
-            if (data.saved) {
-                this.setState({
-                    downloading: false,
-                    downloaded: true,
-                    downloadedFilename: data.filename,
-                });
-            } else {
-                this.setState({
-                    downloading: false,
-                    downloaded: false,
-                    downloadedFilename: null,
-                });
-            }
-        });
-    }
-
-    renderName() {
-        const { part } = this.props;
-        const name = part.name || 'unknown';
-
-        let nameOrIcon = name;
-        let topMeta = `${part.type}/${part.subtype}`;
-        let bottomMeta = `${part.size} bytes`;
-
-        if (this.state.downloaded) {
-            nameOrIcon = <i className="fa fa-tick"></i>;
-            topMeta = 'File saved to';
-            bottomMeta = this.state.downloadedFilename;
-        } else if (this.state.downloading) {
-            nameOrIcon = <i className="fa fa-cog fa-spin"></i>;
-            topMeta = 'Downloading...';
-        }
-
-        return (
-            <div>
-                {nameOrIcon}
-                <span className="attachment-meta">
-                    {topMeta}<br />
-                    {bottomMeta}
-                </span>
-            </div>
-        );
-    }
-
-    render() {
-        return (
-            <div
-                key={this.props.partId}
-                className="attachment-link"
-                onClick={this.handleClick}
-            >
-                {this.renderName()}
-            </div>
-        );
-    }
+    return text[0];
 }
 
 
@@ -292,11 +227,35 @@ export default class ThreadMessage extends React.Component {
         return _.map(addresses, formatAddress).join(', ');
     }
 
-    renderExtraMeta() {
-        if (!this.state.open) {
-            return;
-        }
+    renderMeta() {
+        const { message } = this.props;
 
+        return (
+            <div className="meta flex" onClick={this.handleClick}>
+                <div className="addresses half">
+                    <div className="avatar" style={{background: getColorForAddress(message.from[0])}}>
+                        {settingsStore.props.systemSettings.load_contact_icons && <img src={`/contact-icon/${message.from[0][1]}`} />}
+                        <span>{getInitialsFromAddress(message.from[0])}</span>
+                    </div>
+                    {this.renderAddresses(message.from)}
+                    <br />
+                    <span className="meta-text">
+                        To: {this.renderAddresses(message.to)}
+                        {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
+                        {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
+                    </span>
+                </div>
+                <div className="date half">
+                    {formatDate(message.date)}
+                    <br />
+                    <span className="meta-text">{message.subject}</span>
+                    {this.renderStar()}
+                </div>
+            </div>
+        );
+    }
+
+    renderControls() {
         const { message } = this.props;
 
         const htmlToggle = message.body.html ? (
@@ -319,7 +278,7 @@ export default class ThreadMessage extends React.Component {
         );
 
         return (
-            <div className="extra-meta">
+            <div className="controls">
                 <span className="right">
                     {htmlToggle}
                     {textToggle}
@@ -340,18 +299,11 @@ export default class ThreadMessage extends React.Component {
                 </span>
 
                 {this.renderFolders()}
-                To: {this.renderAddresses(message.to)}
-                {message.cc.length > 0 ? `CC: ${this.renderAddresses(message.cc)}` : ''}
-                {message.bcc.length > 0 ? `${message.cc ? <br /> : '' }BCC: ${this.renderAddresses(message.bcc)}` : ''}
             </div>
         );
     }
 
     renderBody() {
-        if (!this.state.open) {
-            return;
-        }
-
         const {
             body,
             account_name,
@@ -372,7 +324,7 @@ export default class ThreadMessage extends React.Component {
                 return;
             }
             const cid = img.src.slice(4);
-            img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}`;
+            img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}?Kanmail-Session-Token=${window.KANMAIL_SESSION_TOKEN}`;
         });
 
         return <div
@@ -385,10 +337,6 @@ export default class ThreadMessage extends React.Component {
     }
 
     renderAttachments() {
-        if (!this.state.open) {
-            return;
-        }
-
         return _.map(this.props.message.parts.attachments, partId => {
             const part = this.props.message.parts[partId];
 
@@ -406,16 +354,10 @@ export default class ThreadMessage extends React.Component {
 
         return (
             <div key={message.message_id} className="message">
-                <div className="meta" onClick={this.handleClick}>
-                    {this.renderStar()}
-                    {this.renderAddresses(message.from)}
-                    <span className="right">
-                        {formatDate(message.date)}
-                    </span>
-                </div>
-                {this.renderExtraMeta()}
-                {this.renderBody()}
-                {this.renderAttachments()}
+                {this.renderMeta()}
+                {this.state.open && this.renderControls()}
+                {this.state.open && this.renderBody()}
+                {this.state.open && this.renderAttachments()}
             </div>
         );
     }

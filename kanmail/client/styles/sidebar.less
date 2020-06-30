@@ -13,47 +13,44 @@ section#sidebar {
     header {
         height: @topHeight;
 
-        h1 {
-            margin: 0;
-            padding-left: 10px;
-            font-size: 16px;
-            line-height: 38px;
+        div.search {
+            padding-top: 10px;
+            margin: 0 10px;
+            overflow: hidden;
+            height: @topHeight;
 
-            i {
-                line-height: 38px;
-                font-size: 15px;
+            input {
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: @borderRadius;
+                border: none;
                 color: white;
+                width: @sidebarWidth - 45;
+                font-size: 14px;
+                padding: 9px;
+                transition: width 100ms;
+
+                &::placeholder {
+                    color: @lightGrey;
+                }
+
+                &:focus {
+                    width: @sidebarWidth - 20;
+                }
+
+                &:focus + a.compose {
+                    width: 0;
+                    overflow: hidden;
+                }
             }
         }
 
         a.compose {
             color: white;
-            font-size: 14px;
+            font-size: 20px;
             font-family: Roboto;
-            margin-left: 10px;
-
-            i {
-                margin-right: 5px;
-            }
-        }
-    }
-
-    div#search {
-        input {
-            height: 30px;
-            font-size: 14px;
-            width: 150px;
-            padding: 15px 0 15px 10px;
-            margin: -5px 0 0 0;
-            background: #232727;
-            border: none;
-            border-bottom: 1px solid black;
-            outline: none;
-            color: white;
-
-            &:focus {
-                background: #121616;
-            }
+            float: right;
+            margin-top: 10px;
+            transition: width 100ms;
         }
     }
 
@@ -62,7 +59,7 @@ section#sidebar {
         position: fixed;
         width: @sidebarWidth;
         left: 0;
-        top: @topHeight;
+        top: @topHeight + 5;
         bottom: 78px;
     }
 
@@ -73,11 +70,13 @@ section#sidebar {
         li {
             list-style: none;
             font-size: 14px;
+            margin: 5px 10px;
 
             a, span {
                 padding: 5px 0 5px 10px;
                 display: block;
-                color: #A7A7A7;
+                color: @formBorderGreyActive;
+                border-radius: @borderRadius;
             }
 
             span {
@@ -87,7 +86,7 @@ section#sidebar {
 
             a {
                 &:hover {
-                    background: #232727;
+                    background: @darkestGrey;
                     color: white;
                 }
 
@@ -97,8 +96,8 @@ section#sidebar {
             }
 
             &.active a, &.hover a {
+                background: @darkestGrey;
                 color: white;
-                background: #232727;
             }
 
             i {

@@ -1,20 +1,23 @@
 section.frameless {
-    section#search input {
-        margin-top: @framelessHeight + 4;
-    }
-
-    section#columns {
-        form#add-column {
+    section#sidebar {
+        header {
             height: @topHeight + @framelessHeight;
 
-            div {
-                padding-top: 60px;
+            div.search {
+                padding-top: @framelessHeight + 12;
+                height: @topHeight + @framelessHeight;
             }
         }
 
+        div#filters {
+            top: @topHeight + @framelessHeight + 7;
+        }
+    }
+
+    section#columns {
         div.column {
             h3 {
-                padding-top: @framelessHeight + 40;
+                padding-top: 34px;
                 height: @topHeight + @framelessHeight;
             }
 
@@ -24,21 +27,18 @@ section.frameless {
         }
     }
 
-    section#sidebar {
-        header {
-            height: @topHeight + @framelessHeight;
-
-            h1 {
-                padding-top: @framelessHeight;
-            }
-        }
-
-        div#filters {
-            top: @topHeight + @framelessHeight;
-        }
-    }
-
     section#thread {
-        top: @topHeight + @framelessHeight;
+        h1 {
+            padding-top: 34px;
+            height: @topHeight + @framelessHeight;
+        }
+
+        section#content {
+            top: @topHeight + @framelessHeight + 1;
+        }
+
+        section#meta {
+            padding-top: 34px;
+        }
     }
 }

@@ -8,9 +8,7 @@ import keyboard from 'keyboard.js';
 import { createWindowPositionHandlers } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
-import DragBar from 'components/DragBar.jsx';
 import Thread from 'components/emails/Thread.jsx';
-import Search from 'components/emails/Search.jsx';
 import Sidebar from 'components/emails/Sidebar.jsx';
 import EmailColumn from 'components/emails/EmailColumn.jsx';
 import MainColumn from 'components/emails/MainColumn.jsx';
@@ -21,6 +19,7 @@ import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
 import folderStore from 'stores/folders.js';
+import threadStore from 'stores/thread.js';
 import mainEmailStore from 'stores/emails/main.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
@@ -137,6 +136,7 @@ export default class EmailsApp extends React.Component {
             />);
         });
 
+        threadStore.columnRefs = columnRefs;
         return columnElements;
     }
 
@@ -161,9 +161,7 @@ export default class EmailsApp extends React.Component {
 
         return (
             <section className={classNames.join(' ')}>
-                <DragBar />
                 <Sidebar />
-                <Search columnsCount={this.props.columns.length} />
                 {this.renderColumnsSection()}
                 <Thread />
             </section>

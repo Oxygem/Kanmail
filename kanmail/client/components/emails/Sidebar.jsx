@@ -4,8 +4,15 @@ import PropTypes from 'prop-types';
 import HeaderErrors from 'components/HeaderErrors.jsx';
 import Filters from 'components/emails/Filters.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
+import Search from 'components/emails/Search.jsx';
 
-import { openLicense, openMeta, openWindow } from 'window.js';
+import {
+    openLicense,
+    openMeta,
+    openWindow,
+    makeDragElement,
+    makeNoDragElement,
+} from 'window.js';
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 
@@ -31,20 +38,17 @@ export default class Sidebar extends React.Component {
     render() {
         return (
             <section id="sidebar">
-                <header style={this.getHeaderStyles()}>
-                    <h1>
-                        <span>K-</span>
-                        <i className="logo fa fa-envelope-o"></i>
-                        <HeaderErrors />
-                    </h1>
+                <header style={this.getHeaderStyles()} ref={makeDragElement}>
+                    <HeaderErrors />
+                    <div className="search">
+                        <Search />
 
-                    <div>
                         <a
                             className="compose"
                             onClick={this.openSend}
+                            ref={makeNoDragElement}
                         >
                             <i className="fa fa-pencil-square-o"></i>
-                            New email
                         </a>
                     </div>
                 </header>

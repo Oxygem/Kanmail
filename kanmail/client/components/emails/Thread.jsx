@@ -11,23 +11,20 @@ import { subscribe } from 'stores/base.jsx';
 
 import { openReplyToMessageWindow } from 'util/message.js';
 
-const DEFAULT_MESSAGES_TO_SHOW = 3;
-
 
 class Thread extends React.Component {
     static propTypes = {
-        subject: PropTypes.string.isRequired,
+        thread: PropTypes.array.isRequired,
         messages: PropTypes.array.isRequired,
         fetching: PropTypes.bool.isRequired,
         fetchingFailed: PropTypes.bool.isRequired,
-        // Open thread handlers
-        handleClickArchive: PropTypes.func.isRequired,
-        handleClickTrash: PropTypes.func.isRequired,
         // References to surrounding threads
         nextThread: PropTypes.array,
         previousThread: PropTypes.array,
         nextColumnThread: PropTypes.array,
         previousColumnThread: PropTypes.array,
+        // Used to position the thread according to the width of the left column
+        columnWidth: PropTypes.number.isRequired,
     }
 
     constructor(props) {
@@ -63,7 +60,19 @@ class Thread extends React.Component {
     }
 
     renderTitle() {
-        return <h1>{this.props.subject}</h1>;
+        const { thread } = this.props;
+        const latestEmail = thread[0];
+
+        const uniqueSubjects = _.uniq(_.map(thread, message => message.subject));
+        const subject = thread.mergedThreads ? uniqueSubjects.join(', ') : latestEmail.subject;
+
+        return <h1>
+            {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
+                x{thread.mergedThreads}
+                <span className="tooltip">{thread.mergedThreads} merged threads</span>
+            </span>}
+            {subject}
+        </h1>;
     }
 
     renderContent() {
@@ -79,34 +88,13 @@ class Thread extends React.Component {
             return <p>Failed to fetch thread messages!</p>;
         }
 
-        let showMoreMessagesLinks;
-        let messagesToRender = messages;
-
-        if (
-            !this.state.showAllMessages
-            && messages.length > DEFAULT_MESSAGES_TO_SHOW
-        ) {
-            showMoreMessagesLinks = <a
-                className="show-all-messages"
-                onClick={this.showAllMessages}
-            >Show {messages.length - DEFAULT_MESSAGES_TO_SHOW} more messages</a>;
-            messagesToRender = _.slice(messages, -DEFAULT_MESSAGES_TO_SHOW);
-        }
-
-        const renderedMessages = _.map(messagesToRender, (message, i) => {
+        return _.map(messages, (message, i) => {
             return <ThreadMessage
                 key={message.message_id}
                 message={message}
-                open={(i + 1) === messagesToRender.length}
+                open={(i + 1) === messages.length}
             />;
         });
-
-        return (
-            <div>
-                {showMoreMessagesLinks}
-                {renderedMessages}
-            </div>
-        );
     }
 
     renderOtherThreadButtons() {
@@ -176,10 +164,12 @@ class Thread extends React.Component {
 
     render() {
         return (
-            <section id="thread-background" onClick={this.handleClickClose}>
+            <div>
+                <section id="thread-background" onClick={this.handleClickClose}></section>
                 <section
                     id="thread"
                     onClick={(ev) => ev.stopPropagation()}
+                    style={{marginLeft: this.props.columnWidth}}
                 >
                     {this.renderTitle()}
                     <section id="content">
@@ -191,17 +181,17 @@ class Thread extends React.Component {
                         </button>
                         {this.renderOtherThreadButtons()}
                         <div id="respond-buttons">
-                            <button className="archive" onClick={this.props.handleClickArchive}>
+                            <button className="archive" onClick={keyboard.archiveCurrentThread}>
                                 <i className="fa fa-archive" /> Archive
                             </button>
-                            <button className="trash" onClick={this.props.handleClickTrash}>
+                            <button className="trash" onClick={keyboard.trashCurrentThread}>
                                 <i className="fa fa-trash" /> Trash
                             </button>
                             {this.renderReplyButtons()}
                         </div>
                     </section>
                 </section>
-            </section>
+            </div>
         );
     }
 }

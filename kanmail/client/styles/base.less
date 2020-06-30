@@ -2,6 +2,7 @@
     Variables */
 
 
+@darkestGrey: #232727;
 @darkGrey: #343838;
 @midGrey: #A7A7A7;
 @lightGrey: #E7E7E7;
@@ -17,11 +18,12 @@
 
 @dragBarHeight: 22px;
 
-@topHeight: 67px;
-@framelessHeight: 18px;
+@topHeight: 56px;
+@framelessHeight: 13px;
 
 @sidebarWidth: 150px;
-@borderRadius: 2px;
+@sidebarWidth: 175px;
+@borderRadius: 5px;
 
 @formBorderGrey: @lightGrey;
 @formBorderGreyHover: #D7D7D7;
@@ -42,8 +44,10 @@
 .no-select {
     cursor: default;
     user-select: none;
-    -moz-user-select: none;
-    -webkit-user-select: none;
+}
+
+.no-transition {
+    transition: none !important;
 }
 
 
@@ -220,5 +224,46 @@ input, textarea {
 
     &.inline, &[type=checkbox] {
         width: auto;
+    }
+}
+
+
+/*
+    Other bits ??? */
+
+span.multi-subject {
+    background: @lightGrey;
+    margin-right: 4px;
+    border-radius: 24px;
+    width: 24px;
+    height: 24px;
+    float: left;
+    text-align: center;
+    display: inline-block;
+    font-size: 12px;
+    color: @lightTextGrey;
+}
+
+.tooltip-wrapper {
+    position: relative;
+
+    .tooltip {
+        display: none;
+        position: absolute;
+        background: @darkestGrey;
+        color: @lightestGrey;
+        left: 100%;
+        top: 0;
+        width: auto;
+        border-radius: @borderRadius;
+        white-space: nowrap;
+        margin-left: 5px;
+        margin-top: -5px;
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    &:hover .tooltip {
+        display: block;
     }
 }

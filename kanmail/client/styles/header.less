@@ -23,8 +23,10 @@ header {
     }
 
     div.header-errors {
-        float: right;
         text-align: right;
+        position: absolute;
+        top: 0;
+        right: 0;
 
         i {
             line-height: 16px;
@@ -36,6 +38,8 @@ header {
 
         div.icon-wrapper {
             padding-right: 10px;
+            display: inline-block;
+            position: relative;
 
             a {
                 color: white;
@@ -53,7 +57,7 @@ header {
             padding: 5px;
             z-index: 9999;
             color: black;
-            left: @sidebarWidth;
+            left: 100%;
             text-align: left;
             pointer-events: all;
             user-select: text;
@@ -103,6 +107,7 @@ header {
         top: 0;
         left: 0;
         right: 0;
+        z-index: 9999;
 
         div.header-errors {
             margin-top: 20px;
@@ -138,10 +143,6 @@ div#drag-bar {
     right: 0;
     height: @dragBarHeight;
     background: transparent;
-
-    &:hover {
-        background: rgba(0, 0, 0, 0.05);
-    }
 
     a {
         float: right;

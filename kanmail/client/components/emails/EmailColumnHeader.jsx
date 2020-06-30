@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { ALIAS_FOLDERS } from 'constants.js';
+import { makeDragElement } from 'window.js';
 
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
@@ -125,14 +126,14 @@ class EmailColumnHeader extends React.Component {
 
         return (
             <div className="text">
-                {totalEmails.toLocaleString()} emails / {totalAccounts} accounts
+                {totalEmails.toLocaleString()} emails in {totalAccounts} accounts
             </div>
         );
     }
 
     render() {
         return (
-            <div className="header">
+            <div className="header" ref={makeDragElement}>
                 <h3>
                     {this.renderName()}
                     {this.renderLoadingIcon()}

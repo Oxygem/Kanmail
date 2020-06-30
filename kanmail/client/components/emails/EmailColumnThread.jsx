@@ -345,14 +345,6 @@ export default class EmailColumnThread extends React.Component {
     handleClickArchive = (ev) => {
         ev.stopPropagation();
 
-        if (this.state.open) {
-            threadStore.close();
-        }
-
-        if (this.state.hover) {
-            keyboard.setThreadComponent(null);
-        }
-
         // No double archiving please!
         if (this.state.locked) {
             console.debug('Thread locked, not archiving!');
@@ -383,14 +375,6 @@ export default class EmailColumnThread extends React.Component {
             return;
         }
 
-        if (this.state.open) {
-            threadStore.close();
-        }
-
-        if (this.state.hover) {
-            keyboard.setThreadComponent(null);
-        }
-
         // No double trashing please!
         if (this.state.locked) {
             console.debug('Thread locked, not trashing!');
@@ -416,10 +400,6 @@ export default class EmailColumnThread extends React.Component {
         if (this.props.columnId === 'inbox') {
             console.debug('Thread already in inbox!');
             return;
-        }
-
-        if (this.state.open) {
-            threadStore.close();
         }
 
         if (this.state.hover) {
@@ -495,7 +475,7 @@ export default class EmailColumnThread extends React.Component {
 
         return (
             <a
-                onClick={this.handleClickArchive}
+                onClick={keyboard.archiveCurrentThread}
                 className='archive'
             >
                 <i className={classNames.join(' ')}></i>
@@ -543,7 +523,7 @@ export default class EmailColumnThread extends React.Component {
 
         return (
             <a
-                onClick={this.handleClickTrash}
+                onClick={keyboard.trashCurrentThread}
                 className='trash'
             >
                 <i className={classNames.join(' ')}></i>
@@ -573,6 +553,9 @@ export default class EmailColumnThread extends React.Component {
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
+
+        const uniqueSubjects = _.uniq(_.map(thread, message => message.subject));
+        const subject = thread.mergedThreads ? uniqueSubjects.join(', ') : latestEmail.subject;
 
         const uniqueAddresses = _.uniqBy(
             _.reduce(this.props.thread, (memo, message) => {
@@ -622,17 +605,24 @@ export default class EmailColumnThread extends React.Component {
                     {addresses}
                 </h5>
                 <h4>
-                    {this.state.deleted ? <strike>{latestEmail.subject}</strike> : latestEmail.subject}
+                    {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
+                        x{thread.mergedThreads}
+                        <span className="tooltip">{thread.mergedThreads} merged threads</span>
+                    </span>}
+                    {this.state.deleted ? <strike>{subject}</strike> : subject}
                 </h4>
                 <p>{latestEmail.excerpt}</p>
                 <div className="meta">
                     <i className={`fa fa-${getAccountIconName(latestEmail.account)}`}></i>
                     &nbsp;{latestEmail.account_name}
-                    &nbsp;/&nbsp;
-                    <i className="fa fa-envelope-o"></i> {thread.length}
-                    &nbsp;/&nbsp;
-                    <i className="fa fa-user-o"></i> {uniqueAddresses.length}
-                    {this.renderAttachmentCount()}
+
+                    <span className="extra-meta">
+                        &nbsp;/&nbsp;
+                        <i className="fa fa-envelope-o"></i> {thread.length}
+                        &nbsp;/&nbsp;
+                        <i className="fa fa-user-o"></i> {uniqueAddresses.length}
+                        {this.renderAttachmentCount()}
+                    </span>
 
                     <span className="buttons">
                         {this.renderStarButton()}

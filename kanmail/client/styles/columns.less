@@ -7,7 +7,7 @@
 section#columns {
     display: flex;
     top: 0px;
-    left: 150px;
+    left: @sidebarWidth;
     bottom: 0;
     right: 0;
     position: absolute;
@@ -15,7 +15,6 @@ section#columns {
     .no-select;
 
     form#add-column {
-        background: @lightestGrey;
         height: @topHeight;
         flex: 1;
 
@@ -40,17 +39,26 @@ section#columns {
         position: relative;
         height: 100%;
         border-right: 1px solid @lightestGrey;
+        overflow: hidden;
 
         &.hover {
             opacity: 0.5;
         }
 
+        &.hidden {
+            flex: 0;
+        }
+
+        &.open {
+            max-width: 300px;
+        }
+
         h3 {
             margin: 0;
-            padding: 10px;
-            padding-top: 40px;
-            background: @lightestGrey;
+            padding: 10px 20px;
+            border-bottom: 1px solid @lightestGrey;
             height: @topHeight;
+            padding-top: 18px;
             line-height: 20px;
             position: relative;
             font-size: 20px;
@@ -75,14 +83,13 @@ section#columns {
                     margin-top: 1px;
                     float: right;
                     cursor: pointer;
-                    font-size: 16px;
 
                     i {
-                        margin-right: 3px;
-                        font-size: 14px;
+                        margin-left: 8px;
+                        font-size: 18px;
 
                         &.delete {
-                            font-size: 16px;
+                            font-size: 22px;
                         }
                     }
                 }
@@ -116,6 +123,7 @@ section#columns {
         position: absolute;
         width: 100%;
         top: @topHeight;
+        padding-top: 10px;
         bottom: 0;
         overflow-x: hidden;
 
@@ -130,6 +138,8 @@ section#columns {
 
     div.email {
         padding: 10px;
+        margin: 0 10px 10px 10px;
+        border-radius: @borderRadius;
         cursor: pointer;
         position: relative;
         overflow: hidden;
@@ -139,7 +149,7 @@ section#columns {
         &.hover {
             background: @lightestGrey;
 
-            div.meta {
+            div.meta span.buttons, div.meta span.extra-meta {
                 opacity: 1;
             }
         }
@@ -148,18 +158,20 @@ section#columns {
             z-index: 8;
         }
 
-        &.archiving {
+        &.archiving, &.trashing {
             height: 0;
             padding: 0 10px;
-            background: @green;
+            margin: 0 10px;
             pointer-events: none;
+            overflow: hidden;
+        }
+
+        &.archiving {
+            background: @green;
         }
 
         &.trashing {
-            height: 0;
-            padding: 0 10px;
             background: @orange;
-            pointer-events: none;
         }
 
         &.error {
@@ -217,11 +229,15 @@ section#columns {
         div.meta {
             color: @lightTextGrey;
             font-size: 12px;
-            opacity: 0.5;
+
+            span.extra-meta {
+                opacity: 0.5;
+            }
 
             span.buttons {
                 float: right;
                 font-size: 14px;
+                opacity: 0;
 
                 a {
                     color: @lightTextGrey;

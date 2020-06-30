@@ -6,7 +6,7 @@ section#thread-background {
     z-index: 9;
     left: 0;
     top: 0;
-    right: 0;
+    width: @sidebarWidth;
     bottom: 0;
     background: rgba(100, 100, 100, 0.6);
 }
@@ -15,43 +15,44 @@ section#thread {
     z-index: 9;
     background: white;
     position: absolute;
-    top: @topHeight;
-    margin-top: 30px;
-    bottom: 30px;
-    left: @sidebarWidth + 30;
-    right: 30px;
-    box-shadow: 0px 0px 2px 0px @midGrey;
+    top: 0;
+    bottom: 0;
+    left: @sidebarWidth;
+    right: 0;
+    border-left: 1px solid @lightestGrey;
 
     h1 {
-        margin: 10px 0 10px 0;
-        padding-left: 10px;
+        margin: 0 0 10px 0;
+        padding-left: 20px;
+        padding-top: 20px;
         font-size: 20px;
-        height: 36px;
+        height: @topHeight;
         background: white;
-        border-bottom: 1px solid @lightGrey;
+        border-bottom: 1px solid @lightestGrey;
+        overflow: auto;
     }
 
     section#content {
         overflow-x: hidden;
         overflow-y: scroll;
-        top: 46px;
+        top: @topHeight;
         padding-top: 10px;
         bottom: 0;
         left: 0;
-        right: 410px;
+        right: 375px;
         position: absolute;
 
         .scrollbar;
     }
 
     section#meta {
-        width: 400px;
+        width: 375px;
         right: 0;
         top: 0;
         bottom: 0;
-        padding: 10px 10px 10px 10px;
+        padding: 20px 10px 10px 10px;
         position: absolute;
-        background: @lightGrey;
+        background: @lightestGrey;
 
         button#close {
             width: 100%;
@@ -64,6 +65,7 @@ section#thread {
 
         button {
             font-size: 16px;
+            background: white;
         }
 
         button span {
@@ -134,7 +136,8 @@ section#thread {
 
     div.message {
         margin-bottom: 5px;
-        padding: 0 10px;
+        padding: 0 20px;
+        border-bottom: 1px solid @lightestGrey;
 
         div.content {
             width: 100%;
@@ -142,28 +145,59 @@ section#thread {
         }
 
         div.meta {
-            background: @lightestGrey;
-            padding: 5px;
-            font-size: 14px;
-            color: @lightTextGrey;
+            padding: 10px;
             margin: 0 -5px;
+
+            span.meta-text {
+                font-size: 12px;
+                color: @lightTextGrey;
+            }
 
             .fa-star {
                 color: @blue;
             }
 
-            span.right {
-                float: right;
+            div.date {
+                text-align: right;
+            }
+
+            div.addresses {
+                div.avatar {
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 44px;
+                    line-height: 44px;
+                    text-align: center;
+                    float: left;
+                    margin-right: 5px;
+                    position: relative;
+                    color: white;
+                    text-shadow: 0 0 1px @darkestGrey;
+
+                    span {
+                        position: relative;
+                        z-index: 1;
+                    }
+
+                    img {
+                        position: absolute;
+                        left: 0;
+                        right: 0;
+                        border-radius: 44px;
+                        width: 44px;
+                        height: 44px;
+                    }
+                }
             }
 
             .no-select;
         }
 
-        div.extra-meta {
-            border-bottom: 1px solid @lightestGrey;
+        div.controls {
             width: 100%;
             font-size: 12px;
             color: @lightTextGrey;
+            margin-bottom: 20px;
 
             .no-select;
 

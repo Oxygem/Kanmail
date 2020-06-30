@@ -119,6 +119,22 @@ class Keyboard {
         return this.selectThread(previousColumnThread);
     }
 
+    openCurrentThread = (ev) => {
+        this.currentComponent.handleClick(ev);
+    }
+
+    archiveCurrentThread = (ev) => {
+        const component = this.currentComponent;
+        this.selectNextThread() || this.selectPreviousThread() || threadStore.close();
+        component.handleClickArchive(ev);
+    }
+
+    trashCurrentThread = (ev) => {
+        const component = this.currentComponent;
+        this.selectNextThread() || this.selectPreviousThread() || threadStore.close();
+        component.handleClickTrash(ev);
+    }
+
     handleKeyboardEvents = (ev) => {
         if (this.disabled) {
             return;
@@ -134,7 +150,6 @@ class Keyboard {
 
         ev.preventDefault();
 
-        // Escape
         if (code === keys.ESCAPE) {
             threadStore.close();
             return;
@@ -146,41 +161,27 @@ class Keyboard {
         }
 
         if (this.currentComponent) {
-            // Space -> open
+            // Current component
             if (code === keys.SPACE) {
-                this.currentComponent.handleClick(ev);
+                this.openCurrentThread(ev);
             }
-
-            // Delete -> trash
             else if (code === keys.DELETE) {
-                const component = this.currentComponent;
-                this.selectNextThread() || this.selectPreviousThread();
-                component.handleClickTrash(ev);
+                this.trashCurrentThread(ev);
             }
-
-            // Enter -> archive
             else if (code === keys.ENTER) {
-                const component = this.currentComponent;
-                this.selectNextThread() || this.selectPreviousThread();
-                component.handleClickArchive(ev);
+                this.archiveCurrentThread(ev);
             }
 
-            // Arrow up -> previous thread
+            // Jump to other components
             else if (code === keys.ARROW_UP) {
                 this.selectPreviousThread();
             }
-
-            // Arrow down -> next thread
             else if (code === keys.ARROW_DOWN) {
                 this.selectNextThread();
             }
-
-            // Arrow left -> previous column
             else if (code == keys.ARROW_LEFT) {
                 this.selectPreviousColumnThread();
             }
-
-            // Arrow right -> previous column
             else if (code == keys.ARROW_RIGHT) {
                 this.selectNextColumnThread();
             }

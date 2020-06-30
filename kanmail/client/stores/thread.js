@@ -14,18 +14,17 @@ import {
 
 function makeDefaults() {
     return {
-        subject: null,
+        thread: null,
         messages: null,
         fetching: false,
         fetchingFailed: false,
-        // Open thread handlers
-        handleClickArchive: null,
-        handleClickTrash: null,
         // Surrounding thread references (arrow controls)
         nextThread: null,
         previousThread: null,
         nextColumnThread: null,
         previousColumnThread: null,
+        // Placeholder, holds current width of the left column
+        columnWidth: null,
     };
 }
 
@@ -65,14 +64,47 @@ class ThreadStore extends BaseStore {
 
         this.isOpen = false;
         this.props = makeDefaults();
+
+        this.columnRefs = [];
+        this.columnWidth = null;
+    }
+
+    hideOtherColumns(targetColumn) {
+        const otherColumns = this.columnRefs
+            .map(ref => ref.getDecoratedComponentInstance().getColumnContainer())
+            .filter(container => container !== targetColumn);
+
+        _.each(otherColumns, column => column.classList.add('hidden'));
+    }
+
+    showAllColumns() {
+        const columns = this.columnRefs.map(
+            ref => ref.getDecoratedComponentInstance().getColumnContainer(),
+        );
+
+        _.each(columns, column => column.classList.remove('hidden'));
     }
 
     open(component, thread, onClose) {
+        let width = this.columnWidth;
+        const columnContainer = component.props.getColumnContainer();
+
         if (this.isOpen) {
-            this.close();
+            this.close(true);
+        } else {
+            // If we're already open we just re-use the last known column width
+            width = columnContainer.clientWidth;
+            this.columnWidth = width;
         }
 
-        const columnContainer = component.props.getColumnContainer();
+        // this.originalColumnWidth = columnContainer.clientWidth + 1;
+
+        const maxWidth = window.innerWidth / 4;
+        width = _.min([width, maxWidth]);  // don't let width >1/4 of the screen
+
+        columnContainer.style.maxWidth = width;
+        this.props.columnWidth = width;
+        this.hideOtherColumns(columnContainer);
 
         const nextComponent = getNextThreadComponent(component);
         if (nextComponent) {
@@ -96,9 +128,7 @@ class ThreadStore extends BaseStore {
 
         // Set to empty thread (loading icon)
         this.props.messages = [];
-        this.props.subject = thread[0].subject;
-        this.props.handleClickArchive = component.handleClickArchive;
-        this.props.handleClickTrash = component.handleClickTrash;
+        this.props.thread = thread;
         this.triggerUpdate();
 
         // Flag the current column as open and assign so we can remove on close
@@ -183,11 +213,18 @@ class ThreadStore extends BaseStore {
             return;
         }
 
+        this.showAllColumns();
+
+        const columnWidth = this.props.columnWidth;
+
         this.props = makeDefaults();
+        this.props.columnWidth = columnWidth;
+
         this.triggerUpdate();
 
         if (this.columnContainer) {
             this.columnContainer.classList.remove('open');
+            this.columnContainer.style.maxWidth = 'none';
         }
 
         if (this.onClose) {
