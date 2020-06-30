@@ -4,6 +4,10 @@ import { get, post } from 'util/requests';
 
 
 export function makeDragElement(element) {
+    if (!window.KANMAIL_FRAMELESS) {
+        return;
+    }
+
     if (!element) {
         return;
     }
@@ -33,6 +37,10 @@ export function makeDragElement(element) {
 
 
 export function makeNoDragElement(element) {
+    if (!window.KANMAIL_FRAMELESS) {
+        return;
+    }
+
     element.addEventListener('mousedown', ev => ev.stopPropagation());
 }
 
