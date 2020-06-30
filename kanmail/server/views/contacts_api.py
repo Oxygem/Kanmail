@@ -1,8 +1,11 @@
-from flask import abort, jsonify, request
+from io import BytesIO
+
+from flask import abort, jsonify, request, send_file
 from sqlalchemy.exc import IntegrityError
 
 from kanmail.server.app import app
 from kanmail.server.mail.contacts import Contact, delete_contact, save_contact
+from kanmail.server.mail.icon import get_icon_for_email
 from kanmail.server.util import get_or_400
 
 
@@ -57,3 +60,9 @@ def api_delete_contact(contact_id):
     delete_contact(contact)
 
     return jsonify(deleted=True)
+
+
+@app.route('/contact-icon/<email>', methods=('GET',))
+def api_get_contact_image(email):
+    data, mimetype = get_icon_for_email(email)
+    return send_file(BytesIO(data), mimetype=mimetype)

@@ -17,6 +17,7 @@ from .constants import (
     DEFAULT_WINDOW_LEFT,
     DEFAULT_WINDOW_TOP,
     DEFAULT_WINDOW_WIDTH,
+    ICON_CACHE_DIR,
     LOG_FILE,
     SETTINGS_FILE,
     WINDOW_CACHE_FILE,
@@ -27,7 +28,7 @@ from .model import fix_any_old_setings, get_default_settings, validate_settings
 # Bootstrap logging before we use logging!
 #
 
-for needed_dir in (APP_DIR, CACHE_DIR):
+for needed_dir in (APP_DIR, CACHE_DIR, ICON_CACHE_DIR):
     if not path.exists(needed_dir):
         makedirs(needed_dir)
 
