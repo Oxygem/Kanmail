@@ -1,3 +1,32 @@
+# v1.2007031541
+
+This version brings a *major* update to Kanmail including an
+overhaul of the column and thread designs and a number of
+fixes.
+
+Changes:
+- Fix Quill editor to use `div` instead of `p` for blocks.
+- Fix call to delete header items.
+- Ignore null thread references.
+- Remove pointless keyboard disabling.
+- Major overhaul of main emails app design.
+- Add `randomcolor` npm package.
+- Default yes to all release script prompts.
+- Don't apply dragging functions when not frameless.
+- Add get contact icons + group single threads settings.
+- Enable cross origin access in dev for usable stack traces.
+- Fix incorrect decoding of attachments (leave as bytes).
+- Accept the session token as a URL parameter as well as header.
+- Add API to fetch icons for emails.
+- Rename send app less file.
+- Show JS error tracebacks.
+- Enable merging threads by subject behind a flag.
+- Add logic to enable merging single emails from the same sender.
+- Don't include column meta count if the folder does not exist on the server.
+- Stop closing thread on keyboard shortcuts.
+- Add `makeNoDragElement` function.
+- Move `makeDragElement` into `window.js`.
+
 # v1.2006211645
 
 Changes:
