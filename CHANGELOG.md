@@ -1,3 +1,11 @@
+# v1.2007081733
+
+Changes:
+- Sort the folder list so we group single thread messages properly.
+- Fix drag bar on non-main window.
+- Always render the dragbar.
+- Fix `.no-select` class w/WebKit.
+
 # v1.2007031541
 
 This version brings a *major* update to Kanmail including an
