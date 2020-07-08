@@ -46,7 +46,7 @@ function makeThread(messages) {
         allDeleted.push(_.includes(message.flags, '\\Deleted'));
     });
 
-    allFolderNames = _.uniq(allFolderNames);
+    allFolderNames = _.uniq(allFolderNames).sort();
     allFlags = _.uniq(allFlags);
 
     thread.archived = !_.includes(allFolderNames, 'inbox');
