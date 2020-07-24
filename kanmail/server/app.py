@@ -80,8 +80,8 @@ def boot() -> None:
 
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')
-        from kanmail.server.mail.fake_imap import bootstrap_fake_imap
-        bootstrap_fake_imap()
+        from kanmail.server.mail.connection_mocks import bootstrap_fake_connections
+        bootstrap_fake_connections()
 
     from kanmail import secrets  # noqa: F401
 

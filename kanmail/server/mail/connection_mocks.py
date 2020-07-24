@@ -1,5 +1,9 @@
 '''
-A horrible hacky fake IMAP client - useful for dev on planes :)
+Fake IMAP + SMTP connections for rapid development, even w/o internet.
+
+Useful for building/testing basic email functionality quickly - BUT essential
+to always test with real email services as well, because they all have weird
+qwirks and behaviours to deal with.
 '''
 
 import re
@@ -8,7 +12,7 @@ from datetime import datetime
 from os import environ
 from random import choice
 from time import sleep
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from faker import Faker
 from imapclient.response_types import Address, Envelope
@@ -102,6 +106,9 @@ class FakeIMAPClient(object):
     def __init__(self, *args, **kwargs):
         logger.debug(f'Creating fake IMAP: ({args}, {kwargs})')
 
+    def noop(self):
+        pass
+
     def capabilities(self):
         return []
 
@@ -143,9 +150,9 @@ class FakeIMAPClient(object):
         pass
 
 
-def bootstrap_fake_imap():
-    imap_client_patch = patch(
-        'kanmail.server.mail.connection.IMAPClient',
-        FakeIMAPClient,
-    )
-    imap_client_patch.start()
+def bootstrap_fake_connections():
+    patch('kanmail.server.mail.connection.IMAPClient', FakeIMAPClient).start()
+
+    # TODO stop calling this fake IMAP! IS SMTP
+    patch('kanmail.server.mail.connection.SMTP', MagicMock()).start()
+    patch('kanmail.server.mail.connection.SMTP_SSL', MagicMock()).start()
