@@ -6,7 +6,6 @@ import AccountList from 'components/settings/AccountList.jsx';
 
 import img from 'icon-pink.png';
 import keyboard from 'keyboard.js';
-import { closeWindow } from 'window.js';
 
 import { put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
@@ -20,6 +19,7 @@ export default class WelcomeSettings extends React.Component {
 
         this.state = {
             accounts: [],
+            contactIcons: true,
         };
     }
 
@@ -67,6 +67,9 @@ export default class WelcomeSettings extends React.Component {
 
         const newSettings = {
             accounts: this.state.accounts,
+            system: {
+                load_contact_icons: this.state.contactIcons,
+            },
         };
 
         put('/api/settings', newSettings)
@@ -108,6 +111,24 @@ export default class WelcomeSettings extends React.Component {
         );
     }
 
+    renderContactIconCheckbox() {
+        if (_.isEmpty(this.state.accounts) || this.state.isSaved) {
+            return;
+        }
+
+        return (
+            <small>
+                <input
+                    id="use-contact-icons"
+                    type="checkbox"
+                    checked={this.state.contactIcons}
+                    onChange={() => this.setState({contactIcons: !this.state.contactIcons})}
+                />
+                <label htmlFor="use-contact-icons">Use gravatar & duckduckgo for contact icons?</label>
+            </small>
+        );
+    }
+
     render() {
         return (
             <section className={window.KANMAIL_PLATFORM}>
@@ -117,6 +138,7 @@ export default class WelcomeSettings extends React.Component {
                     <p>
                         Welcome to Kanmail. Setup one or more accounts below to start managing your emails.
                         {this.renderSaveButton()}
+                        {this.renderContactIconCheckbox()}
                     </p>
                     <AccountList
                         accounts={this.state.accounts}
