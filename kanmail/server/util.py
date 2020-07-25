@@ -1,6 +1,7 @@
 from functools import wraps
 from queue import Queue
 from threading import RLock, Thread
+from typing import Optional, Union
 
 from flask import abort
 from werkzeug.datastructures import ImmutableMultiDict
@@ -26,7 +27,7 @@ def lock_class_method(func):
     return wrapper
 
 
-def get_or_400(obj: ImmutableMultiDict, key: str) -> dict:
+def get_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
     data = obj.get(key)
 
     if not data:
@@ -35,7 +36,7 @@ def get_or_400(obj: ImmutableMultiDict, key: str) -> dict:
     return data
 
 
-def get_list_or_400(obj: ImmutableMultiDict, key: str, **kwargs) -> dict:
+def get_list_or_400(obj: ImmutableMultiDict, key: str, **kwargs) -> Optional[list]:
     data = obj.getlist(key, **kwargs)
 
     if not data:

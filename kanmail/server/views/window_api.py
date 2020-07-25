@@ -1,8 +1,9 @@
 import webbrowser
 
 from os import environ, path
+from typing import Tuple
 
-from flask import abort, jsonify, request
+from flask import abort, jsonify, request, Response
 
 from kanmail.log import logger
 from kanmail.server.app import app
@@ -16,7 +17,7 @@ from kanmail.window import (
 
 
 @app.route('/open-link', methods=('GET',))
-def open_link():
+def open_link() -> Tuple[str, int]:
     link = request.args['url']
 
     # https://github.com/pyinstaller/pyinstaller/issues/3668
@@ -29,11 +30,11 @@ def open_link():
             environ['XDG_DATA_DIRS'] = xdg_data_dirs
 
     logger.critical(f'Failed to open browser link: {link}!')
-    return abort(500, 'Could not open link!')
+    abort(500, 'Could not open link!')
 
 
 @app.route('/open-window', methods=('GET',))
-def open_window():
+def open_window() -> Tuple[str, int]:
     link = request.args['url']
 
     if not create_window(
@@ -42,30 +43,30 @@ def open_window():
         height=int(request.args['height']),
         unique_key=request.args.get('unique_key'),
     ):
-        return abort(500, f'Could not open {link} window')
+        abort(500, f'Could not open {link} window')
     return '', 204
 
 
 @app.route('/close-window', methods=('GET',))
-def close_window():
+def close_window() -> Tuple[str, int]:
     destroy_window(request.args['window_id'])
     return '', 204
 
 
 @app.route('/minimize-window', methods=('GET',))
-def window_minimize():
+def window_minimize() -> Tuple[str, int]:
     minimize_window(request.args['window_id'])
     return '', 204
 
 
 @app.route('/maximize-window', methods=('GET',))
-def window_maximize():
+def window_maximize() -> Tuple[str, int]:
     maximize_window(request.args['window_id'])
     return '', 204
 
 
 @app.route('/select-files')
-def select_files():
+def select_files() -> Response:
     local_filenames = create_open_dialog(path.expanduser('~'))
     local_filenames = local_filenames or []
     return jsonify(filenames=local_filenames)

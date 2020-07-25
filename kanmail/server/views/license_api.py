@@ -1,4 +1,6 @@
-from flask import abort, jsonify, request
+from typing import Tuple, Union
+
+from flask import abort, jsonify, request, Response
 
 from kanmail.license import activate_license, LicenseActivationError, remove_license
 from kanmail.server.app import app
@@ -7,7 +9,7 @@ from kanmail.window import reload_main_window
 
 
 @app.route('/api/license', methods=('POST',))
-def api_activate_license():
+def api_activate_license() -> Union[Response, Tuple[Response, int]]:
     request_data = request.get_json()
     license_data = get_or_400(request_data, 'license')
 
@@ -26,7 +28,7 @@ def api_activate_license():
 
 
 @app.route('/api/license', methods=('DELETE',))
-def api_delete_license():
+def api_delete_license() -> Response:
     remove_license()
     reload_main_window()
     return jsonify(deleted=True)

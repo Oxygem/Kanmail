@@ -1,4 +1,4 @@
-from flask import abort, jsonify
+from flask import abort, jsonify, Response
 
 from kanmail.server.app import app
 from kanmail.update import check_device_update, update_device
@@ -6,7 +6,7 @@ from kanmail.version import get_version
 
 
 @app.route('/api/update', methods=('GET',))
-def api_check_update():
+def api_check_update() -> Response:
     update = check_device_update()
 
     if update:
@@ -15,11 +15,11 @@ def api_check_update():
 
 
 @app.route('/api/update', methods=('POST',))
-def api_download_overwrite_update():
+def api_download_overwrite_update() -> Response:
     update = check_device_update()
 
     if not update:
-        return abort(404, 'No update found!')
+        abort(404, 'No update found!')
 
     update_device(update)
     return jsonify(update_ready=True)

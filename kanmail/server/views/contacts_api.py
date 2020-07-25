@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from flask import abort, jsonify, request, send_file
+from flask import abort, jsonify, request, Response, send_file
 from sqlalchemy.exc import IntegrityError
 
 from kanmail.server.app import app
@@ -10,7 +10,7 @@ from kanmail.server.util import get_or_400
 
 
 @app.route('/api/contacts', methods=('POST',))
-def api_post_contacts():
+def api_post_contacts() -> Response:
     '''
     Create a new contact.
     '''
@@ -31,7 +31,7 @@ def api_post_contacts():
 
 
 @app.route('/api/contacts/<int:contact_id>', methods=('PUT',))
-def api_put_contact(contact_id):
+def api_put_contact(contact_id) -> Response:
     '''
     Update a single contact.
     '''
@@ -51,7 +51,7 @@ def api_put_contact(contact_id):
 
 
 @app.route('/api/contacts/<int:contact_id>', methods=('DELETE',))
-def api_delete_contact(contact_id):
+def api_delete_contact(contact_id) -> Response:
     '''
     Delete a single contact.
     '''
@@ -63,6 +63,6 @@ def api_delete_contact(contact_id):
 
 
 @app.route('/contact-icon/<email>', methods=('GET',))
-def api_get_contact_image(email):
+def api_get_contact_image(email) -> Response:
     data, mimetype = get_icon_for_email(email)
     return send_file(BytesIO(data), mimetype=mimetype)

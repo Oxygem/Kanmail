@@ -1,5 +1,6 @@
 from os import environ, path
 from sqlite3 import Connection as SQLite3Connection
+from typing import Union
 
 from flask import abort, Flask, request
 from flask.json import JSONEncoder
@@ -22,7 +23,7 @@ from kanmail.settings.constants import (
 
 
 @event.listens_for(Engine, 'connect')
-def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+def enable_sqlite_foreign_keys(dbapi_connection, connection_record) -> None:
     if isinstance(dbapi_connection, SQLite3Connection):
         cursor = dbapi_connection.cursor()
         cursor.execute('PRAGMA foreign_keys=ON;')
@@ -30,7 +31,7 @@ def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
 
 
 class JsonEncoder(JSONEncoder):
-    def default(self, obj):
+    def default(self, obj) -> Union[str, int]:
         if isinstance(obj, bytes):
             try:
                 return obj.decode()
@@ -59,7 +60,7 @@ db = SQLAlchemy(app)
 
 
 @app.before_request
-def validate_session_token():
+def validate_session_token() -> None:
     if DEBUG and not IS_APP:  # don't apply in full dev mode
         return
 

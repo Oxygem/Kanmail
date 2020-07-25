@@ -69,8 +69,8 @@ CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
 CLIENT_ROOT = path.abspath(path.join(path.dirname(__file__), '..', 'client'))
 META_FILE_ROOT = path.abspath(path.join(path.dirname(__file__), '..', '..'))
 if FROZEN:
-    CLIENT_ROOT = sys._MEIPASS
-    META_FILE_ROOT = sys._MEIPASS
+    CLIENT_ROOT = sys._MEIPASS  # type: ignore
+    META_FILE_ROOT = sys._MEIPASS  # type: ignore
 
 
 # Platform specific interface settings

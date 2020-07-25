@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request, Response
 
 from kanmail.secrets import set_password
 from kanmail.server.app import app
@@ -16,14 +16,14 @@ from kanmail.window import get_main_window_size_position, reload_main_window
 
 
 @app.route('/api/settings', methods=('GET',))
-def api_get_settings():
+def api_get_settings() -> Response:
     return jsonify(
         settings=get_settings(),
         settings_file=SETTINGS_FILE,
     )
 
 
-def _extract_password(obj):
+def _extract_password(obj) -> None:
     if not obj or not all(k in obj for k in ('host', 'username', 'password')):
         return
 
@@ -31,7 +31,7 @@ def _extract_password(obj):
 
 
 @app.route('/api/settings', methods=('PUT',))
-def api_set_settings():
+def api_set_settings() -> Response:
     request_data = request.get_json()
 
     accounts = request_data.get('accounts', [])
@@ -54,21 +54,21 @@ def api_set_settings():
 
 
 @app.route('/api/settings', methods=('POST',))
-def api_update_settings():
+def api_update_settings() -> Response:
     request_data = request.get_json()
     update_settings(request_data)
     return jsonify(saved=True)
 
 
 @app.route('/api/settings/cache', methods=('DELETE',))
-def api_delete_caches():
+def api_delete_caches() -> Response:
     bust_all_caches()
     reload_main_window()
     return jsonify(deleted=True)
 
 
 @app.route('/api/settings/window', methods=('POST',))
-def api_update_window_settings():
+def api_update_window_settings() -> Response:
     if not IS_APP:
         return jsonify(saved=False)  # success response, but not saved (browser mode)
 

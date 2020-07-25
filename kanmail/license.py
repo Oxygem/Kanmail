@@ -50,12 +50,12 @@ def remove_email_from_license_file() -> None:
     write_license_file_data(license_data)
 
 
-def get_email_from_license_file() -> str:
+def get_email_from_license_file() -> Optional[str]:
     try:
         with open(LICENSE_FILE, 'r+') as f:  # license file must be writeable
             license_data = json.load(f)
     except Exception:
-        return
+        return None
 
     return license_data.get(LICENSE_SERVER_APP_TOKEN)
 
@@ -102,15 +102,17 @@ def check_get_license_email() -> Optional[str]:
 
     license_email = get_email_from_license_file()
     if not license_email:
-        return
+        return None
 
     combined_token = get_password('license', LICENSE_SERVER_APP_TOKEN, license_email)
 
     if combined_token:
         return license_email
 
+    return None
 
-def remove_license():
+
+def remove_license() -> None:
     license_email = check_get_license_email()
     delete_password('license', LICENSE_SERVER_APP_TOKEN, license_email)
     remove_email_from_license_file()
@@ -131,6 +133,9 @@ def validate_or_remove_license() -> None:
     logger.debug(f'Validating license for {license_email}...')
 
     combined_token = get_password('license', LICENSE_SERVER_APP_TOKEN, license_email)
+    if not combined_token:
+        return
+
     token, device_token = combined_token.split(':')
 
     try:
@@ -159,4 +164,4 @@ def validate_or_remove_license() -> None:
     try:
         response.raise_for_status()
     except HTTPError as e:
-        logger.warning(f'Unexpected status from license server: {e} ({response.content})')
+        logger.warning(f'Unexpected status from license server: {e} ({response.text})')

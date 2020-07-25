@@ -1,6 +1,6 @@
 from os import path
 
-from flask import jsonify, make_response, request
+from flask import jsonify, make_response, request, Response
 
 from kanmail.server.app import app
 from kanmail.server.mail import (
@@ -21,7 +21,7 @@ from kanmail.window import get_main_window
 
 
 @app.route('/api/folders', methods=('GET',))
-def api_get_folders():
+def api_get_folders() -> Response:
     '''
     List available folders/mailboxes for all the accounts.
     '''
@@ -32,7 +32,7 @@ def api_get_folders():
 
 
 @app.route('/api/emails/<account>/<folder>', methods=('GET',))
-def api_get_account_folder_emails(account, folder):
+def api_get_account_folder_emails(account, folder) -> Response:
     '''
     Get (more) emails for a folder in a given account.
     '''
@@ -40,7 +40,7 @@ def api_get_account_folder_emails(account, folder):
     batch_size = None
 
     try:
-        batch_size = int(request.args.get('batch_size'))
+        batch_size = int(request.args.get('batch_size'))  # type: ignore
     except (TypeError, ValueError):
         pass
 
@@ -55,7 +55,7 @@ def api_get_account_folder_emails(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/sync', methods=('GET',))
-def api_sync_account_folder_emails(account, folder):
+def api_sync_account_folder_emails(account, folder) -> Response:
     '''
     Sync emails within a folder for a given account.
     '''
@@ -81,7 +81,7 @@ def api_sync_account_folder_emails(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/text', methods=('GET',))
-def api_get_account_email_texts(account, folder):
+def api_get_account_email_texts(account, folder) -> Response:
     '''
     Get a specific list of email texts by UID for a given account/folder.
     '''
@@ -94,7 +94,7 @@ def api_get_account_email_texts(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>', methods=('GET',))
-def api_get_account_email_part(account, folder, uid, part_number):
+def api_get_account_email_part(account, folder, uid, part_number) -> Response:
     '''
     Return a specific part of an email by account/folder/UID.
     '''
@@ -114,7 +114,7 @@ def api_get_account_email_part(account, folder, uid, part_number):
 
 
 @app.route('/api/emails/<account>/<folder>/<int:uid>/<part_number>/download', methods=('GET',))
-def api_download_account_email_part(account, folder, uid, part_number):
+def api_download_account_email_part(account, folder, uid, part_number) -> Response:
     '''
     Download a specific part of an email by account/folder/UID.
     '''
@@ -151,7 +151,7 @@ def api_download_account_email_part(account, folder, uid, part_number):
 
 
 @app.route('/api/emails/<account>/<folder>/move', methods=('POST',))
-def api_move_account_emails(account, folder):
+def api_move_account_emails(account, folder) -> Response:
     '''
     Move emails from one folder to another within a given account.
     '''
@@ -166,7 +166,7 @@ def api_move_account_emails(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/copy', methods=('POST',))
-def api_copy_account_emails(account, folder):
+def api_copy_account_emails(account, folder) -> Response:
     '''
     Copy emails from one folder to another within a given account.
     '''
@@ -181,7 +181,7 @@ def api_copy_account_emails(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/star', methods=('POST',))
-def api_star_account_emails(account, folder):
+def api_star_account_emails(account, folder) -> Response:
     '''
     Star emails in a given account/folder.
     '''
@@ -195,7 +195,7 @@ def api_star_account_emails(account, folder):
 
 
 @app.route('/api/emails/<account>/<folder>/unstar', methods=('POST',))
-def api_unstar_account_emails(account, folder):
+def api_unstar_account_emails(account, folder) -> Response:
     '''
     Unstar emails in a given account/folder.
     '''
@@ -209,7 +209,7 @@ def api_unstar_account_emails(account, folder):
 
 
 @app.route('/api/emails/<account_key>', methods=('POST',))
-def api_send_account_email(account_key):
+def api_send_account_email(account_key) -> Response:
     '''
     Create (send) emails from one of the accounts.
     '''
