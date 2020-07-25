@@ -433,7 +433,7 @@ class Folder(object):
 
     def append_email_message(self, email_message):
         with self.account.get_imap_connection() as connection:
-            connection.append(self.name, email_message, flags=(SEEN_FLAG,))
+            connection.append(self.name, email_message.as_string(), flags=(SEEN_FLAG,))
 
     def move_emails(self, email_uids, new_folder):
         '''

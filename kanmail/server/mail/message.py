@@ -40,6 +40,7 @@ def make_email_message(
     reply_to_message_id=None,
     reply_to_message_references=None,
     reply_to_html=None,
+    raise_for_no_recipients=True,
 ):
     text = text or ''
 
@@ -54,7 +55,7 @@ def make_email_message(
 
     message['From'] = _make_address(from_)
 
-    if not any((to, cc, bcc)):
+    if raise_for_no_recipients and not any((to, cc, bcc)):
         raise ValueError('No recipients defined!')
 
     message['To'] = tuple(_make_address(a) for a in to)

@@ -229,6 +229,12 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
     )
 
 
+def append_folder_email(account_key, folder_name, message):
+    account = get_account(account_key)
+    folder = account.get_folder(folder_name)
+    folder.append_email_message(message)
+
+
 def _handle_folder_action(
     action_name, account_key, folder_name, message_uids,
     *args,

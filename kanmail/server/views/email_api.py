@@ -4,6 +4,7 @@ from flask import jsonify, make_response, request, Response
 
 from kanmail.server.app import app
 from kanmail.server.mail import (
+    append_folder_email,
     copy_folder_emails,
     get_account,
     get_all_folders,
@@ -15,6 +16,7 @@ from kanmail.server.mail import (
     sync_folder_emails,
     unstar_folder_emails,
 )
+from kanmail.server.mail.message import make_email_message
 from kanmail.server.util import get_list_or_400, get_or_400
 from kanmail.settings.constants import IS_APP
 from kanmail.window import get_main_window
@@ -206,6 +208,24 @@ def api_unstar_account_emails(account, folder) -> Response:
     unstar_folder_emails(account, folder, message_uids)
 
     return jsonify(unstarred=True)
+
+
+@app.route('/api/emails/<account>/<folder>', methods=('POST',))
+def api_append_account_folder_email(account, folder) -> Response:
+    '''
+    Create and append a message to a folder (ie drafts).
+    '''
+
+    request_data = request.get_json()
+    message = make_email_message(
+        from_=request_data.pop('from', None),  # argname can't be from
+        raise_for_no_recipients=False,
+        **request_data,
+    )
+
+    append_folder_email(account, folder, message)
+
+    return jsonify(saved=True)
 
 
 @app.route('/api/emails/<account_key>', methods=('POST',))
