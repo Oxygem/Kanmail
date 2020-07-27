@@ -195,6 +195,30 @@ export default class SendApp extends React.Component {
         );
     }
 
+    getEmailData() {
+        const emailData = _.pick(this.state, [
+            'subject',
+            'attachments',
+        ]);
+
+        // Attach the HTML + plaintext copy
+        emailData.html = this.state.body;
+        emailData.text = this.state.textBody;
+
+        _.each(['to', 'cc', 'bcc'], key => {
+            const value = this.state[key];
+            if (!value) {
+                return;
+            }
+            emailData[key] = _.map(value, item => item.value);
+        });
+
+        const accountTuple = this.state.accountContact.value;
+        emailData.from = [accountTuple[1], accountTuple[2]];
+
+        return [accountTuple[0], emailData];
+    }
+
     handleInputChange = (field, ev) => {
         this.setState({
             [field]: ev.target.value,
@@ -226,30 +250,34 @@ export default class SendApp extends React.Component {
 
         this.setState({isSending: true});
 
-        const emailData = _.pick(this.state, [
-            'subject',
-            'attachments',
-            'replyToMessageId',
-            'replyToMessageReferences',
-            'replyToQuoteHtml',
-        ]);
+        const [accountKey, emailData] = this.getEmailData();
+        emailData.replyToMessageId = this.state.replyToMessageId;
+        emailData.replyToMessageReferences = this.state.replyToMessageReferences;
+        emailData.replyToQuoteHtml = this.staet.replyToQuoteHtml;
 
-        // Attach the HTML + plaintext copy
-        emailData.html = this.state.body;
-        emailData.text = this.state.textBody;
+        post(`/api/emails/${accountKey}`, emailData)
+            .then(() => {
+                closeWindow();
+                this.setState({isSent: true});
+            })
+            .catch((err) => this.setState({saveError: err}));
+    }
 
-        _.each(['to', 'cc', 'bcc'], key => {
-            const value = this.state[key];
-            if (!value) {
-                return;
+    handleSaveEmail = (ev) => {
+        ev.preventDefault();
+
+        if (this.state.isSending) {
+            if (this.state.saveError) {
+                this.setState({isSending: false, saveError: null});
             }
-            emailData[key] = _.map(value, item => item.value);
-        });
+            return;
+        }
 
-        const accountTuple = this.state.accountContact.value;
-        emailData.from = [accountTuple[1], accountTuple[2]];
+        this.setState({isSending: true});
 
-        post(`/api/emails/${accountTuple[0]}`, emailData)
+        const [accountKey, emailData] = this.getEmailData();
+
+        post(`/api/emails/${accountKey}/drafts`, emailData)
             .then(() => {
                 closeWindow();
                 this.setState({isSent: true});
@@ -370,6 +398,18 @@ export default class SendApp extends React.Component {
                 type="submit"
                 className={classes.join(' ')}
                 onClick={this.handleSendEmail}
+            >{text}</button>
+        );
+    }
+
+    renderSaveButton() {
+        const text = <span>Save email to drafts</span>;
+        const classes = [];
+        return (
+            <button
+                type="submit"
+                className={classes.join(' ')}
+                onClick={this.handleSaveEmail}
             >{text}</button>
         );
     }
@@ -507,6 +547,7 @@ export default class SendApp extends React.Component {
                     </div>
 
                     {this.renderSendButton()}
+                    {this.renderSaveButton()}
                     {this.renderAttachButton()}
                 </form>
             </section>
