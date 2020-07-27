@@ -460,7 +460,10 @@ export default class EmailColumnThread extends React.Component {
     }
 
     renderArchiveButton() {
-        if (_.includes(['trash', 'spam', 'archive'], this.props.columnId)) {
+        if (_.includes(
+            ['trash', 'spam', 'archive', 'drafts'],
+            this.props.columnId,
+        )) {
             return;
         }
 
