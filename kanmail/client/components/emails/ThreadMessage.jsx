@@ -195,6 +195,10 @@ export default class ThreadMessage extends React.Component {
         openReplyToMessageWindow(this.props.message, {forward: true});
     }
 
+    handleClickEdit = () => {
+        openReplyToMessageWindow(this.props.message, {edit: true});
+    }
+
     handleClickText = () => {
         this.messageElementReady = false;
         this.setState({showPlainText: true});
@@ -264,18 +268,42 @@ export default class ThreadMessage extends React.Component {
                 className={this.state.showPlainText ? '' : 'active'}
             >HTML</button>
         ): null;
-
         const textToggle = message.body.text ? (<button
                 onClick={this.handleClickText}
                 className={this.state.showPlainText ? 'active' : ''}
             >Text</button>
         ) : null;
-
         const imagesToggle = this.state.imagesShown ? null : (
             <button
                 onClick={this.handleClickShowImages}
             >Show remote images</button>
         );
+
+        const isDraft = _.includes(_.keys(this.props.message.folderUids), 'drafts');
+        const forwardButton = isDraft ? null : (
+            <a onClick={this.handleClickForward}>
+                <i className="fa fa-send"></i>
+                Forward
+            </a>
+        );
+        const replyButton = isDraft ? null : (
+            <a onClick={this.handleClickReply}>
+                <i className="fa fa-reply"></i>
+                Reply
+            </a>
+        );
+        const replyAllButton = isDraft ? null : (
+            <a onClick={this.handleClickReplyAll}>
+                <i className="fa fa-reply-all"></i>
+                Reply All
+            </a>
+        );
+        const editButton = isDraft ? (
+            <a onClick={this.handleClickEdit}>
+                <i className="fa fa-pencil"></i>
+                Edit
+            </a>
+        ) : null;
 
         return (
             <div className="controls">
@@ -283,19 +311,10 @@ export default class ThreadMessage extends React.Component {
                     {htmlToggle}
                     {textToggle}
                     {imagesToggle}
-
-                    <a onClick={this.handleClickForward}>
-                        <i className="fa fa-send"></i>
-                        Forward
-                    </a>
-                    <a onClick={this.handleClickReply}>
-                        <i className="fa fa-reply"></i>
-                        Reply
-                    </a>
-                    <a onClick={this.handleClickReplyAll}>
-                        <i className="fa fa-reply-all"></i>
-                        Reply All
-                    </a>
+                    {forwardButton}
+                    {replyButton}
+                    {replyAllButton}
+                    {editButton}
                 </span>
 
                 {this.renderFolders()}

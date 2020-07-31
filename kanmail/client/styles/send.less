@@ -117,22 +117,34 @@ section#new-email {
             }
         }
 
-        button.send-button, button.attach-button {
-            left: 70px;
-            cursor: pointer;
+        div.buttons {
+            left: 60px;
             padding: 5px 10px;
-            color: white;
             font-size: 16px;
-            border-radius: @borderRadius;
             border: none;
             position: absolute;
             bottom: 10px;
+            right: 10px;
 
-            &.attach-button {
+            button.send.submit {
+                border-radius: @borderRadius 0 0 @borderRadius;
+            }
+
+            button.save {
+                border-radius: 0 @borderRadius @borderRadius 0;
+                background: @lightestGrey;
+                color: @lightTextGrey;
+
+                &:hover {
+                    background: @lightGrey;
+                }
+            }
+
+            button.attach {
                 left: auto;
                 right: 20px;
                 bottom: 10px;
-                background: @blue;
+                float: right;
             }
         }
 

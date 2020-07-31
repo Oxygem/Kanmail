@@ -91,10 +91,8 @@ export default class SendApp extends React.Component {
             defaultAccount = this.getDefaultAccount(0);
         }
 
-        const includeQuote = this.props.message ? true : false;
-
         this.state = {
-            includeQuote: includeQuote,
+            includeQuote: false,
             accountContact: defaultAccount,
 
             to: [],
@@ -114,74 +112,64 @@ export default class SendApp extends React.Component {
         }
 
         if (props.message) {
-            const replyToEmails = [];
-
+            // Figure out subject
             let subject = props.message.subject;
             if (props.message.forward) {
                 subject = prependIfNotPresent(subject, 'Fwd');
-            } else {
+            } else if (props.message.reply || props.message.reply_all) {
                 subject = prependIfNotPresent(subject, 'Re')
             }
+            this.state.subject = subject;
 
-            let replyAccount;
-
+            // Figure out account contact we're sending from
+            let accountContact;
             const accountIndex = _.findIndex(
                 this.props.accounts,
                 account => account.name === props.message.account_name,
             );
             const account = props.accounts[accountIndex];
-            const accountName = account.name;
             const accountContacts = account.contacts;
-
             if (accountContacts && accountContacts.length > 0) {
-                replyAccount = makeAccountContactOption(
-                    accountName, accountContacts[0],
+                accountContact = makeAccountContactOption(
+                    account.name, accountContacts[0],
                 );
             } else {
-                replyAccount = this.getDefaultAccount(accountIndex);
+                accountContact = this.getDefaultAccount(accountIndex);
             }
+            this.state.accountContact = accountContact;
 
-            let to = [];
-            if (!props.message.forward) {
-                to = _.map(props.message.reply_to, contactTuple => {
-                    replyToEmails.push(contactTuple[1]);
+            // Figure out who we're emailing
+            if (props.message.reply) {
+                this.state.to = _.map(props.message.reply_to, contactTuple => {
                     return {
                         value: contactTuple[1],
                         label: makeContactLabel(contactTuple),
                     };
                 });
+            } else if (props.message.reply_all | props.message.edit) {
+                this.state.to = _.map(props.message.to, contactTuple => ({
+                    value: contactTuple[1],
+                    label: makeContactLabel(contactTuple),
+                }));
+                this.state.cc = _.map(props.message.cc, contactTuple => ({
+                    value: contactTuple[1],
+                    label: makeContactLabel(contactTuple),
+                }));
+                this.state.bcc = _.map(props.message.bcc, contactTuple => ({
+                    value: contactTuple[1],
+                    label: makeContactLabel(contactTuple),
+                }));
             }
 
-            this.state = _.extend(this.state, {
-                subject, to,
-                accountContact: replyAccount,
-
-                replyToMessageId: props.message.message_id,
-                replyToMessageReferences: props.message.originalReferences,
-                replyToQuoteHtml: props.message.body.html || props.message.body.text,
-            });
-
-            if (props.message.reply_all) {
-                const newTos = _.filter(_.map(props.message.to,
-                    contactTuple => ({
-                        value: contactTuple[1],
-                        label: makeContactLabel(contactTuple),
-                    }),
-                ), item => !_.includes(replyToEmails, item.value));
-
-                this.state = _.extend(this.state, {
-                    to: this.state.to.concat(newTos),
-
-                    cc: _.map(props.message.cc, contactTuple => ({
-                        value: contactTuple[1],
-                        label: makeContactLabel(contactTuple),
-                    })),
-
-                    bcc: _.map(props.message.bcc, contactTuple => ({
-                        value: contactTuple[1],
-                        label: makeContactLabel(contactTuple),
-                    })),
-                });
+            // Figure out where to put the actual message (edit or reply/forward)
+            if (props.message.edit) {
+                this.state.textBody = props.message.body.text;
+                this.state.body = props.message.body.html;
+            } else {
+                this.state.includeQuote = true;
+                this.state.replyToMessageId = props.message.message_id;
+                this.state.replyToMessageReferences = props.message.originalReferences;
+                this.state.replyToQuoteHtml = props.message.body.html || props.message.body.text;
             }
         }
     }
@@ -303,7 +291,7 @@ export default class SendApp extends React.Component {
     }
 
     renderQuote() {
-        if (!this.props.message) {
+        if (!this.props.message || this.props.message.edit) {
             return;
         }
 
@@ -376,7 +364,7 @@ export default class SendApp extends React.Component {
 
     renderSendButton() {
         let text = <span>Send email <i className="fa fa-arrow-right" /></span>;
-        const classes = ['send-button'];
+        const classes = ['send'];
 
         if (this.state.isSending) {
             if (this.state.saveError) {
@@ -403,8 +391,12 @@ export default class SendApp extends React.Component {
     }
 
     renderSaveButton() {
-        const text = <span>Save email to drafts</span>;
-        const classes = [];
+        if (this.state.isSending || this.state.saveError || this.state.isSent) {
+            return null;
+        }
+
+        const text = <span>Save draft</span>;
+        const classes = ['save'];
         return (
             <button
                 type="submit"
@@ -426,7 +418,7 @@ export default class SendApp extends React.Component {
 
         return (
             <button
-                className="attach-button"
+                className="attach"
                 onClick={this.handleClickAttach}
             ><i className="fa fa-attach" />{buttonText}{attachments}</button>
         );
@@ -546,9 +538,11 @@ export default class SendApp extends React.Component {
                         {this.renderQuote()}
                     </div>
 
-                    {this.renderSendButton()}
-                    {this.renderSaveButton()}
-                    {this.renderAttachButton()}
+                    <div className="buttons">
+                        {this.renderSendButton()}
+                        {this.renderSaveButton()}
+                        {this.renderAttachButton()}
+                    </div>
                 </form>
             </section>
         );

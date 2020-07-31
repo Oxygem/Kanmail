@@ -142,6 +142,7 @@ def create_send():
     message_data = get_or_400(data, 'message')
     message_data['reply_all'] = data.get('reply_all', False)
     message_data['forward'] = data.get('forward', False)
+    message_data['edit'] = data.get('edit', False)
 
     uid = str(uuid4())
     SEND_WINDOW_DATA[uid] = message_data
