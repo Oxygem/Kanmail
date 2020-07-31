@@ -190,10 +190,6 @@ section#columns {
             }
         }
 
-        &.unread h4 {
-            font-weight: bold;
-        }
-
         h5 {
             margin: 0;
             height: 24px;
@@ -216,7 +212,16 @@ section#columns {
             margin: 0;
             font-weight: normal;
             height: 24px;
-            overflow: hidden;
+
+            span.subject {
+                overflow: hidden;
+                height: 24px;
+                display: inline-block;
+            }
+        }
+
+        &.unread h4 {
+            font-weight: bold;
         }
 
         span.date {

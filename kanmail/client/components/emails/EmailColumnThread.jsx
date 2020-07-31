@@ -612,7 +612,9 @@ export default class EmailColumnThread extends React.Component {
                         x{thread.mergedThreads}
                         <span className="tooltip">{thread.mergedThreads} merged threads</span>
                     </span>}
-                    {this.state.deleted ? <strike>{subject}</strike> : subject}
+                    <span className="subject">
+                        {this.state.deleted ? <strike>{subject}</strike> : subject}
+                    </span>
                 </h4>
                 <p>{latestEmail.excerpt}</p>
                 <div className="meta">
