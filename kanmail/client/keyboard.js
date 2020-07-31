@@ -161,29 +161,31 @@ class Keyboard {
         }
 
         if (this.currentComponent) {
-            // Current component
-            if (code === keys.SPACE) {
-                this.openCurrentThread(ev);
-            }
-            else if (code === keys.DELETE) {
-                this.trashCurrentThread(ev);
-            }
-            else if (code === keys.ENTER) {
-                this.archiveCurrentThread(ev);
-            }
+            switch (code) {
+                // Current component: immediate actions
+                case keys.SPACE:
+                    this.openCurrentThread(ev);
+                    break;
+                case keys.DELETE:
+                    this.trashCurrentThread(ev);
+                    break;
+                case keys.ENTER:
+                    this.archiveCurrentThread(ev);
+                    break;
 
-            // Jump to other components
-            else if (code === keys.ARROW_UP) {
-                this.selectPreviousThread();
-            }
-            else if (code === keys.ARROW_DOWN) {
-                this.selectNextThread();
-            }
-            else if (code == keys.ARROW_LEFT) {
-                this.selectPreviousColumnThread();
-            }
-            else if (code == keys.ARROW_RIGHT) {
-                this.selectNextColumnThread();
+                // Jump to other components
+                case keys.ARROW_UP:
+                    this.selectPreviousThread();
+                    break;
+                case keys.ARROW_DOWN:
+                    this.selectNextThread();
+                    break;
+                case keys.ARROW_LEFT:
+                    this.selectPreviousColumnThread();
+                    break;
+                case keys.ARROW_RIGHT:
+                    this.selectNextColumnThread();
+                    break;
             }
         }
     }
