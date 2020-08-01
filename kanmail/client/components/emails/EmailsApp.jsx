@@ -8,6 +8,7 @@ import keyboard from 'keyboard.js';
 import { createWindowPositionHandlers } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
+import ControlInput from 'components/emails/ControlInput.jsx';
 import Thread from 'components/emails/Thread.jsx';
 import Sidebar from 'components/emails/Sidebar.jsx';
 import EmailColumn from 'components/emails/EmailColumn.jsx';
@@ -164,6 +165,7 @@ export default class EmailsApp extends React.Component {
                 <Sidebar />
                 {this.renderColumnsSection()}
                 <Thread />
+                <ControlInput />
             </section>
         );
     }

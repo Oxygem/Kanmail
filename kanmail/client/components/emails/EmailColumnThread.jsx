@@ -14,16 +14,11 @@ import { getColumnStore } from 'stores/columns.js';
 
 import { getAccountIconName } from 'util/accounts.js';
 import { formatAddress, formatDate } from 'util/string.js';
+import {
+    getThreadColumnMessageIds,
+    getMoveDataFromThreadProps,
+} from 'util/threads.js';
 
-
-/*
-    Return a list of UIDs for a given folder in this thread.
-*/
-function getThreadColumnMessageIds(thread, columnId) {
-    return _.filter(_.map(thread, message => (
-        message.folderUids[columnId]
-    )));
-}
 
 /*
     Return a map of folder -> UIDs for all messages in this thread.
@@ -48,22 +43,7 @@ function getThreadFolderMessageIds(thread) {
 
 
 const emailSource = {
-    beginDrag(props) {
-        // Get account name from the first message in the thread
-        const { account_name } = props.thread[0];
-
-        // Get list of message UIDs *for this folder*
-        const messageUids = getThreadColumnMessageIds(
-            props.thread,
-            props.columnId,
-        );
-
-        return {
-            messageUids: messageUids,
-            oldColumn: props.columnId,
-            accountName: account_name,
-        };
-    }
+    beginDrag: getMoveDataFromThreadProps,
 };
 
 

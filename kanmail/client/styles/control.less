@@ -1,0 +1,24 @@
+/*
+    Control input overlay */
+
+section#control-background {
+    position: absolute;
+    z-index: 9;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(100, 100, 100, 0.6);
+}
+
+section#control {
+    margin: 200px auto 0 auto;
+    width: 600px;
+    padding: 20px;
+    background: white;
+    border-radius: @borderRadius;
+
+    div.react-select__control {
+        margin-top: 10px;
+    }
+}

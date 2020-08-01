@@ -2,17 +2,21 @@ import _ from 'lodash';
 
 import threadStore from 'stores/thread.js';
 import requestStore from 'stores/request.js';
+import controlStore from 'stores/control.js';
 
 import {
     getNextThreadComponent,
     getPreviousThreadComponent,
     getNextColumnThreadComponent,
     getPreviousColumnThreadComponent,
+    getMoveDataFromThreadProps,
 } from 'util/threads.js';
 
 const keys = {
     // Letters
     Z: 90,
+    M: 77,
+    C: 67,
 
     // Special
     DELETE: 8,
@@ -67,6 +71,10 @@ class Keyboard {
     }
 
     setThreadComponent = (component) => {
+        if (controlStore.props.open) {
+            return;
+        }
+
         if (component === this.currentComponent) {
             console.error('Attempted to set same component in focus!');
             return;
@@ -150,6 +158,14 @@ class Keyboard {
 
         ev.preventDefault();
 
+        // Control mode
+        if (controlStore.props.open) {
+            if (code === keys.ESCAPE) {
+                controlStore.close();
+            }
+            return;
+        }
+
         if (code === keys.ESCAPE) {
             threadStore.close();
             return;
@@ -161,7 +177,20 @@ class Keyboard {
         }
 
         if (this.currentComponent) {
+            const subject = this.currentComponent.props.thread[0].subject;
+            const moveData = getMoveDataFromThreadProps(this.currentComponent.props);
+
             switch (code) {
+                // Current component: actions needing control input
+                case keys.M:
+                    controlStore.open('move', subject, moveData);
+                    // TODO: MOVE
+                    break;
+                case keys.C:
+                    controlStore.open('copy', subject, moveData);
+                    // TODO: COPY
+                    break;
+
                 // Current component: immediate actions
                 case keys.SPACE:
                     this.openCurrentThread(ev);

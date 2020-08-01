@@ -1,6 +1,34 @@
 import _ from 'lodash';
 
 
+/*
+    Return a list of UIDs for a given folder in this thread.
+*/
+export function getThreadColumnMessageIds(thread, columnId) {
+    return _.filter(_.map(thread, message => (
+        message.folderUids[columnId]
+    )));
+}
+
+
+export function getMoveDataFromThreadProps(props) {
+    // Get account name from the first message in the thread
+    const { account_name } = props.thread[0];
+
+    // Get list of message UIDs *for this folder*
+    const messageUids = getThreadColumnMessageIds(
+        props.thread,
+        props.columnId,
+    );
+
+    return {
+        messageUids: messageUids,
+        oldColumn: props.columnId,
+        accountName: account_name,
+    };
+}
+
+
 function getThreadComponent(sourceComponent, propName) {
     let component;
 
