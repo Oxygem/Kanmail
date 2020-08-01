@@ -38,7 +38,7 @@
     "urijs": "^1.19.0",
     "url-loader": "^1.0.1",
     "webpack": "^3.6.0",
-    "webpack-dev-server": "2.11.2",
+    "webpack-dev-server": "^2.11.2",
     "whatwg-fetch": "^2.0.3"
   },
   "scripts": {
