@@ -48,8 +48,10 @@ class ControlInput extends React.Component {
             <div>
                 <section id="control-background">
                     <section id="control">
-                        {capitalizeFirstLetter(this.props.action)}
-                        <strong>{this.props.subject}</strong>...
+                        <p>
+                            {capitalizeFirstLetter(this.props.action)}&nbsp;
+                            <strong>{this.props.subject}</strong>...
+                        </p>
                         <Select
                             id="control-input"
                             classNamePrefix="react-select"
@@ -57,6 +59,7 @@ class ControlInput extends React.Component {
                             autoFocus={true}
                             openMenuOnFocus={true}
                             closeMenuOnSelect={false}
+                            menuIsOpen={true}
                             onMenuClose={this.handleClose}
                             onChange={this.handleSelectChange}
                             onFocus={keyboard.disable}
