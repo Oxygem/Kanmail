@@ -14,6 +14,8 @@ import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 
+import { moveOrCopyThread } from 'util/threads.js';
+
 
 const columnTarget = {
     canDrop(props, monitor) {
@@ -22,34 +24,15 @@ const columnTarget = {
     },
 
     drop(props, monitor) {
-        const { messageUids, oldColumn, accountName } = monitor.getItem();
-        const emailStore = getEmailStore();
-
-        const accountSettings = settingsStore.getAccountSettings(accountName);
-        let handler = emailStore.moveEmails;
-        if (accountSettings.folders.copy_on_move === true && oldColumn == 'inbox') {
-            handler = emailStore.copyEmails;
-        }
-
-        handler(
-            accountName,
-            messageUids,
-            oldColumn,
+        const moveData = monitor.getItem();
+        const accountSettings = settingsStore.getAccountSettings(moveData.accountName);
+        moveOrCopyThread(
+            moveData,
             props.id,
-        ).then(() => {
-            emailStore.syncFolderEmails(
-                oldColumn,
-                {accountName: accountName},
-            );
-            emailStore.syncFolderEmails(
-                props.id,
-                {
-                    accountName: accountName,
-                    // Tell the backend to expect X messages (and infer if needed!)
-                    query: {uid_count: messageUids.length},
-                },
-            );
-        });
+            accountSettings.folders.copy_on_move === true && moveData.oldColumn == 'inbox',
+        );
+        // Flag the thread component as moving (hiding it)
+        moveData.sourceThreadComponent.setIsMoving();
     },
 };
 

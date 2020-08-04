@@ -7,10 +7,10 @@ import keyboard from 'keyboard.js';
 
 import controlStore from 'stores/control.js';
 import folderStore from 'stores/folders.js';
-import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
 
 import { capitalizeFirstLetter } from 'util/string.js';
+import { moveOrCopyThread } from 'util/threads.js';
 
 
 @subscribe(folderStore)
@@ -23,40 +23,19 @@ class ControlInput extends React.Component {
     }
 
     handleSelectChange = (value) => {
-        const { messageUids, oldColumn, accountName } = this.props.moveData;
-        const emailStore = getEmailStore();
-
-        let handler = emailStore.moveEmails;
-        if (this.props.action === 'copy') {
-            handler = emailStore.copyEmails;
-        }
-
-        handler(
-            accountName,
-            messageUids,
-            oldColumn,
+        moveOrCopyThread(
+            this.props.moveData,
             value.value,
-        ).then(() => {
-            emailStore.syncFolderEmails(
-                oldColumn,
-                {accountName: accountName},
-            );
-            emailStore.syncFolderEmails(
-                value.value,
-                {
-                    accountName: accountName,
-                    // Tell the backend to expect X messages (and infer if needed!)
-                    query: {uid_count: messageUids.length},
-                },
-            );
-        });
-
+            this.props.action === 'copy',  // copy bool
+        );
+        // Flag the thread component as moving (hide it)
         this.handleClose();
+        keyboard.setMovingCurrentThread();
     }
 
     handleClose = () => {
         controlStore.close();
-        setTimeout(keyboard.enable, 0);
+        setTimeout(keyboard.enable, 0);  // prevent the *current* keyboard event executing
     }
 
     render () {

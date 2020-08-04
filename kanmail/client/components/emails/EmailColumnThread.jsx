@@ -16,7 +16,7 @@ import { getAccountIconName } from 'util/accounts.js';
 import { formatAddress, formatDate } from 'util/string.js';
 import {
     getThreadColumnMessageIds,
-    getMoveDataFromThreadProps,
+    getMoveDataFromThreadComponent,
 } from 'util/threads.js';
 
 
@@ -43,7 +43,9 @@ function getThreadFolderMessageIds(thread) {
 
 
 const emailSource = {
-    beginDrag: getMoveDataFromThreadProps,
+    beginDrag: (props, monitor, component) => {
+        return getMoveDataFromThreadComponent(component);
+    }
 };
 
 
@@ -92,10 +94,16 @@ export default class EmailColumnThread extends React.Component {
             unread: unread,
             archived: archived,
             deleted: deleted,
-            locked: false,
+            // Visual/error state
             open: false,
             hover: false,
             error: false,
+            // Locking/executing state
+            locked: false,
+            archiving: false,
+            trashing: false,
+            restoring: false,
+            moving: false,
         }
     }
 
@@ -153,8 +161,15 @@ export default class EmailColumnThread extends React.Component {
         }
     }
 
+    setIsMoving = () => {
+        this.setState({
+            moving: true,
+            locked: true,
+        });
+    }
+
     isBusy = () => {
-        return this.state.trashing || this.state.archiving;
+        return this.state.locked;
     }
 
     /*
@@ -561,7 +576,7 @@ export default class EmailColumnThread extends React.Component {
             }
         });
 
-        if (this.state.archiving) {
+        if (this.state.archiving || this.state.trashing || this.state.moving) {
             classNames.push('archiving');
         }
 

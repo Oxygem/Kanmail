@@ -1,5 +1,35 @@
 import _ from 'lodash';
 
+import { getEmailStore } from 'stores/emailStoreProxy.js';
+
+
+export function moveOrCopyThread(moveData, targetFolder, copy=false) {
+    const { messageUids, oldColumn, accountName } = moveData;
+    const emailStore = getEmailStore();
+
+    let handler = copy ? emailStore.copyEmails : emailStore.moveEmails;
+
+    handler(
+        accountName,
+        messageUids,
+        oldColumn,
+        targetFolder,
+    ).then(() => {
+        emailStore.syncFolderEmails(
+            oldColumn,
+            {accountName: accountName},
+        );
+        emailStore.syncFolderEmails(
+            targetFolder,
+            {
+                accountName: accountName,
+                // Tell the backend to expect X messages (and infer if needed!)
+                query: {uid_count: messageUids.length},
+            },
+        );
+    });
+}
+
 
 /*
     Return a list of UIDs for a given folder in this thread.
@@ -11,7 +41,9 @@ export function getThreadColumnMessageIds(thread, columnId) {
 }
 
 
-export function getMoveDataFromThreadProps(props) {
+export function getMoveDataFromThreadComponent(component) {
+    const { props } = component;
+
     // Get account name from the first message in the thread
     const { account_name } = props.thread[0];
 
@@ -25,6 +57,7 @@ export function getMoveDataFromThreadProps(props) {
         messageUids: messageUids,
         oldColumn: props.columnId,
         accountName: account_name,
+        sourceThreadComponent: component,
     };
 }
 

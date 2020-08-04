@@ -9,7 +9,7 @@ import {
     getPreviousThreadComponent,
     getNextColumnThreadComponent,
     getPreviousColumnThreadComponent,
-    getMoveDataFromThreadProps,
+    getMoveDataFromThreadComponent,
 } from 'util/threads.js';
 
 const keys = {
@@ -143,6 +143,13 @@ class Keyboard {
         component.handleClickTrash(ev);
     }
 
+    /* Actual move is executed by the ControlInput component (and react-dnd) */
+    setMovingCurrentThread = () => {
+        const component = this.currentComponent;
+        this.selectNextThread() || this.selectPreviousThread() || threadStore.close();
+        component.setIsMoving();
+    }
+
     handleKeyboardEvents = (ev) => {
         if (this.disabled) {
             return;
@@ -178,7 +185,7 @@ class Keyboard {
 
         if (this.currentComponent) {
             const subject = this.currentComponent.props.thread[0].subject;
-            const moveData = getMoveDataFromThreadProps(this.currentComponent.props);
+            const moveData = getMoveDataFromThreadComponent(this.currentComponent);
 
             switch (code) {
                 // Current component: actions needing control input
