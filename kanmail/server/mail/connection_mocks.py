@@ -19,21 +19,15 @@ from imapclient.response_types import Address, Envelope
 
 from kanmail.log import logger
 
-ALIAS_FOLDERS = ['inbox', 'archive']
-
-FAKE_IMAPCLIENT_UIDS = tuple(range(1, 10))
-
-FAKE_IMAPCLIENT_FOLDER_STATUS = {
-    b'UIDVALIDITY': choice(FAKE_IMAPCLIENT_UIDS),
-}
-
+ALIAS_FOLDERS = ['inbox', 'archive', 'sent', 'drafts', 'trash', 'spam']
+OTHER_FOLDERS = ['Invoices', 'Feedback', 'Kanmail Bugs', 'Another Folder']
 
 fake = Faker()
 
 
 def random_sleep():
     if environ.get('KANMAIL_FAKE_SLEEP') == 'on':
-        sleep(choice((1, 2)))
+        sleep(choice((1, 1, 1, 2)))
 
 
 def make_fake_address():
@@ -66,7 +60,8 @@ def make_fake_fetch_item(folder, uid, keys):
         b'RFC822.SIZE': 100,
     }
 
-    message_id_folder = choice(ALIAS_FOLDERS + [folder])
+    # message_id_folder = choice(ALIAS_FOLDERS + [folder])
+    message_id_folder = folder
     message_id = f'{message_id_folder}_{uid}'
 
     from_addresses = make_fake_addresses()
@@ -99,60 +94,103 @@ def make_key(key):
     return key.encode()
 
 
+class FakeFolderData(object):
+    def __init__(self, name):
+        logger.debug(f'Creating fake folder: {name}')
+
+        self.name = name
+        self.uids = tuple(range(1, 10))
+        self.status = {
+            b'UIDVALIDITY': choice(self.uids),
+        }
+
+    def add_uids(self, uids):
+        new_uids = list(self.uids)
+        for uid in uids:
+            new_uids.append(len(new_uids) + 1)
+        self.uids = new_uids
+        logger.debug(f'Added {len(uids)} UIDs: {self.uids}')
+
+    def remove_uids(self, uids):
+        self.uids = [
+            uid for uid in self.uids
+            if uid not in uids
+        ]
+        logger.debug(f'Removed {len(uids)} UIDs: {self.uids}')
+
+
 class FakeIMAPClient(object):
     _current_folder = None
-    _has_searched = False
+    _folders = {}
 
     def __init__(self, *args, **kwargs):
         logger.debug(f'Creating fake IMAP: ({args}, {kwargs})')
 
+        for folder in ALIAS_FOLDERS + OTHER_FOLDERS:
+            self._ensure_folder(folder)
+
+    def _ensure_folder(self, folder_name):
+        if folder_name not in self._folders:
+            self._folders[folder_name] = FakeFolderData(folder_name)
+        return self._folders[folder_name]
+
+    def expunge(self, uids):
+        random_sleep()
+
     def noop(self):
-        pass
+        random_sleep()
 
     def capabilities(self):
+        random_sleep()
         return []
+
+    def list_folders(self):
+        return [
+            ([], None, name)
+            for name in self._folders.keys()
+            if name not in ALIAS_FOLDERS
+        ]
 
     def login(self, username, password):
         random_sleep()
 
     def folder_exists(self, folder_name):
+        random_sleep()
         return True
 
     def select_folder(self, folder_name):
-        self._current_folder = folder_name
+        random_sleep()
+        self._current_folder = self._ensure_folder(folder_name)
 
     def folder_status(self, folder_name, keys):
-        return FAKE_IMAPCLIENT_FOLDER_STATUS
+        random_sleep()
+        return self._ensure_folder(self._current_folder).status
 
     def search(self, query):
         random_sleep()
-        if not self._has_searched:
-            return FAKE_IMAPCLIENT_UIDS
-        return []
+        return self._ensure_folder(self._current_folder).uids
+
+    def copy(self, uids, new_folder):
+        random_sleep()
+        folder = self._ensure_folder(new_folder)
+        folder.add_uids(uids)
+
+    def delete_messages(self, uids):
+        random_sleep()
+        folder = self._folders[self._current_folder]
+        folder.remove_uids(uids)
 
     def fetch(self, uids, keys):
         random_sleep()
         keys.append('SEQ')  # TODO: more crap!
         keys = [make_key(key) for key in keys]
         responses = {}
-
         for uid in uids:
-            responses[uid] = make_fake_fetch_item(
-                self._current_folder, uid, keys,
-            )
-
+            responses[uid] = make_fake_fetch_item(self._current_folder, uid, keys)
         return responses
-
-    def copy(self, uids, new_folder):
-        pass
-
-    def delete_messages(self, uids):
-        pass
 
 
 def bootstrap_fake_connections():
     patch('kanmail.server.mail.connection.IMAPClient', FakeIMAPClient).start()
-
-    # TODO stop calling this fake IMAP! IS SMTP
     patch('kanmail.server.mail.connection.SMTP', MagicMock()).start()
     patch('kanmail.server.mail.connection.SMTP_SSL', MagicMock()).start()
