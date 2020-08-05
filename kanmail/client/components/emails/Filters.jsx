@@ -203,14 +203,17 @@ export default class Filters extends React.Component {
             return;
         }
 
+        const sidebarFoldersLength = this.props.styleSettings.sidebar_folders.length || 0;
+        const nFolders = this.props.folders.length - sidebarFoldersLength;
+
         if (this.state.showAllFolders) {
             return <li key="show-all" className="small"><a onClick={this.toggleShowAllFolders}>
-                <i className="fa fa-arrow-up" />Hide {this.props.folders.length} folders
+                <i className="fa fa-arrow-up" />Hide {nFolders} folders
             </a></li>;
         }
 
         return <li key="show-all" className="small"><a onClick={this.toggleShowAllFolders}>
-                <i className="fa fa-arrow-down" />Show {this.props.folders.length} folders
+                <i className="fa fa-arrow-down" />Show {nFolders} folders
         </a></li>;
     }
 
