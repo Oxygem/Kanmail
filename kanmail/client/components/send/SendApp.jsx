@@ -241,7 +241,7 @@ export default class SendApp extends React.Component {
         const [accountKey, emailData] = this.getEmailData();
         emailData.replyToMessageId = this.state.replyToMessageId;
         emailData.replyToMessageReferences = this.state.replyToMessageReferences;
-        emailData.replyToQuoteHtml = this.staet.replyToQuoteHtml;
+        emailData.replyToQuoteHtml = this.state.replyToQuoteHtml;
 
         post(`/api/emails/${accountKey}`, emailData)
             .then(() => {
