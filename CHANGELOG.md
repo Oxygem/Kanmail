@@ -1,3 +1,33 @@
+# v1.2008071409
+
+This release adds full draft support (save + edit), as well
+as move and copy keyboard shortcuts (m & c respectively).
+
+Changes:
+- Fix variable in send handler.
+- Rework the connection mock classes for better testing.
+- Fix non-main window drag bar z-index.
+- Fix sidebar show/hide button count.
+- Tidy up the control input style.
+- Make threads slide away when moving.
+- Implement copy & move keyboard shortcuts.
+- Yum upgrade run.
+- Bump webpack dev server patch version.
+- Actually fix subject header lines.
+- Use switch instead of all the if statements for keyboard controls.
+- Fix overflow hiding tooltip in column email threads.
+- Fix z-index of header errors in non-main windows.
+- Fix width of add new column form.
+- Complete implementation of draft saving and editing.
+- Tweak merging of single sender threads:
+- Add save draft/email button to send app.
+- Don't show archive button for draft threads.
+- Add append email to folder API endpoint.
+- Add many more Python type annotations/mypy setup.
+- Move `fake_imap.py` -> `connection_mocks.py`.
+- Fix header errors showing behind columns.
+- Add contact icons checkbox to welcome settings flow.
+
 # v1.2007081733
 
 Changes:
