@@ -139,15 +139,9 @@ export default class SendApp extends React.Component {
             this.state.accountContact = accountContact;
 
             // Figure out who we're emailing
-            if (props.message.reply) {
-                this.state.to = _.map(props.message.reply_to, contactTuple => {
-                    return {
-                        value: contactTuple[1],
-                        label: makeContactLabel(contactTuple),
-                    };
-                });
-            } else if (props.message.reply_all | props.message.edit) {
-                this.state.to = _.map(props.message.to, contactTuple => ({
+            if (props.message.reply_all || props.message.edit) {
+                const allTos = props.message.to.concat(props.message.reply_to);
+                this.state.to = _.map(allTos, contactTuple => ({
                     value: contactTuple[1],
                     label: makeContactLabel(contactTuple),
                 }));
@@ -159,6 +153,14 @@ export default class SendApp extends React.Component {
                     value: contactTuple[1],
                     label: makeContactLabel(contactTuple),
                 }));
+            // Default: simple reply message
+            } else {
+                this.state.to = _.map(props.message.reply_to, contactTuple => {
+                    return {
+                        value: contactTuple[1],
+                        label: makeContactLabel(contactTuple),
+                    };
+                });
             }
 
             // Figure out where to put the actual message (edit or reply/forward)
