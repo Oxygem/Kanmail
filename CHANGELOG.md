@@ -1,3 +1,8 @@
+# v1.2008131047
+
+Changes:
+- Fix reply/reply all sending to logic.
+
 # v1.2008071409
 
 This release adds full draft support (save + edit), as well
