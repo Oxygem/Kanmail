@@ -1,5 +1,4 @@
 import json
-import pickle
 
 from copy import deepcopy
 from os import makedirs, path
@@ -143,8 +142,9 @@ def get_window_settings() -> dict:
     }
 
     if path.exists(WINDOW_CACHE_FILE):
-        with open(WINDOW_CACHE_FILE, 'rb') as f:
-            data = pickle.loads(f.read())
+        with open(WINDOW_CACHE_FILE, 'r') as f:
+            data = json.load(f)
+
         logger.debug(f'Loaded window settings: {data}')
 
         for key, value in data.items():
@@ -168,5 +168,5 @@ def set_window_settings(width: int, height: int, left: int, top: int) -> None:
 
     logger.debug(f'Writing window settings: {window_settings}')
 
-    with open(WINDOW_CACHE_FILE, 'wb') as f:
-        f.write(pickle.dumps(window_settings))
+    with open(WINDOW_CACHE_FILE, 'w') as f:
+        f.write(json.dumps(window_settings))

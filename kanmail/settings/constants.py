@@ -34,7 +34,7 @@ CONTACTS_CACHE_DB_FILE = path.join(CACHE_DIR, 'contacts.db')
 FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
 
 # Window settings/position cache filename
-WINDOW_CACHE_FILE = path.join(CACHE_DIR, '.window_position')
+WINDOW_CACHE_FILE = path.join(CACHE_DIR, 'window_position.json')
 
 # Settings JSON filename
 SETTINGS_FILE = path.join(APP_DIR, 'settings.json')
