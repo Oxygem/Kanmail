@@ -1,3 +1,15 @@
+# v1.2009020945
+
+Minor improvements - note you will need to resize/position the main window.
+
+Changes:
+- Further improve the fake IMAP mocking.
+- Store window position as JSON in new location.
+- Icon support for iCloud/Outlook accounts.
+- Include account key when merging threads.
+- Move docs to website.
+- Create codeql-analysis.yml
+
 # v1.2008131047
 
 Changes:
