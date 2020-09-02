@@ -422,9 +422,10 @@ export default class BaseEmails {
                         return;
                     }
 
+                    const accountKey = thread[0].account.name;
                     const subject = thread[0].subject.match(/\[.*\]/) || thread[0].subject;
                     const from_ = _.map(thread[0].from, address => address[1]);
-                    const threadKey = `${from_}-${subject}-${thread.allFolderNames}`;
+                    const threadKey = `${accountKey}-${from_}-${subject}-${thread.allFolderNames}`;
                     if (!senderToSingleThread[threadKey]) {
                         senderToSingleThread[threadKey] = [];
                     }
