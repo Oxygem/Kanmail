@@ -4,6 +4,8 @@ Fake IMAP + SMTP connections for rapid development, even w/o internet.
 Useful for building/testing basic email functionality quickly - BUT essential
 to always test with real email services as well, because they all have weird
 qwirks and behaviours to deal with.
+
+Also used for "demo mode" to create marketing materials.
 '''
 
 import re
@@ -20,7 +22,14 @@ from imapclient.response_types import Address, Envelope
 from kanmail.log import logger
 
 ALIAS_FOLDERS = ['inbox', 'archive', 'sent', 'drafts', 'trash', 'spam']
-OTHER_FOLDERS = ['Invoices', 'Feedback', 'Kanmail Bugs', 'Another Folder']
+OTHER_FOLDERS = [
+    'Invoices',
+    'Feedback',
+    'Kanmail Bugs',
+    'Another Folder',
+    'Waiting',
+    'Needs Reply',
+]
 
 fake = Faker()
 
@@ -49,7 +58,7 @@ def make_fake_addresses():
 
 
 def make_fake_fetch_item(folder, uid, keys):
-    body_text = fake.paragraphs(choice((1, 2, 3)))
+    body_text = fake.paragraphs(choice((2, 3, 4, 5, 6, 7, 8, 9)))
 
     fake_data = {
         b'FLAGS': ['\\Seen'],
@@ -65,7 +74,7 @@ def make_fake_fetch_item(folder, uid, keys):
     message_id = f'{message_id_folder}_{uid}'
 
     from_addresses = make_fake_addresses()
-    subject = fake.text()
+    subject = fake.sentence(choice((3, 4, 5, 6, 7, 8)))
 
     fake_data[b'SEQ'] = uid
     fake_data[b'ENVELOPE'] = Envelope(
@@ -177,7 +186,7 @@ class FakeIMAPClient(object):
 
     def delete_messages(self, uids):
         random_sleep()
-        folder = self._folders[self._current_folder]
+        folder = self._current_folder
         folder.remove_uids(uids)
 
     def fetch(self, uids, keys):
