@@ -134,6 +134,13 @@ def remove_stale_headers():
     logger.info(f'Deleted {len(headers_to_delete)}/{len(all_headers)} cache headers')
 
 
+def vacuum_folder_cache():
+    with db.get_engine(bind='folders').begin() as conn:
+        conn.execute('VACUUM')
+
+    logger.info('Folder cache DB vacuumed')
+
+
 def bust_all_caches():
     if CACHE_ENABLED:
         logger.warning('Busting all cache items!')
