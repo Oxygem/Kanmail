@@ -276,6 +276,27 @@ export default class SettingsApp extends React.Component {
                             )}
                         />
 
+                        <label htmlFor="sidebar_folders">
+                            Sidebar folders
+                            <small>
+                                Folders to pin in the sidebar
+                            </small>
+                        </label>
+                        <div className="select-wrapper">
+                            <Creatable
+                                isMulti
+                                defaultOptions
+                                cacheOptions
+                                classNamePrefix="react-select"
+                                options={this.state.initialSidebarFolderOptions}
+                                value={this.state.styleSettings.sidebar_folders}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'sidebar_folders',
+                                )}
+                            />
+                        </div>
+
                         <label htmlFor="group_single_sender_threads">
                             Group single sender threads
                             <small>Groups single message threads from the same sender</small>
@@ -304,26 +325,18 @@ export default class SettingsApp extends React.Component {
                             )}
                         />
 
-                        <label htmlFor="sidebar_folders">
-                            Sidebar folders
-                            <small>
-                                Folders to pin in the sidebar
-                            </small>
+                        <label htmlFor="show_help_button">
+                            Show help button
                         </label>
-                        <div className="select-wrapper">
-                            <Creatable
-                                isMulti
-                                defaultOptions
-                                cacheOptions
-                                classNamePrefix="react-select"
-                                options={this.state.initialSidebarFolderOptions}
-                                value={this.state.styleSettings.sidebar_folders}
-                                onChange={_.partial(
-                                    this.handleSettingUpdate,
-                                    'styleSettings', 'sidebar_folders',
-                                )}
-                            />
-                        </div>
+                        <input
+                            type="checkbox"
+                            id="show_help_button"
+                            checked={this.state.systemSettings.show_help_button}
+                            onChange={_.partial(
+                                this.handleCheckboxUpdate,
+                                'systemSettings', 'show_help_button',
+                            )}
+                        />
                     </div>
 
                     <div className="settings" id="style">

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { DropTarget } from 'react-dnd';
 
 import { ALIAS_FOLDERS, ALIAS_TO_ICON } from 'constants.js';
-import { openSettings, openContacts, openLicense } from 'window.js';
+import { openSettings, openContacts, openLicense, openLink } from 'window.js';
 
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
@@ -301,6 +301,12 @@ export default class Filters extends React.Component {
                         <i className="fa fa-address-book"></i> Contacts
                     </a>
                 </li>
+
+                {settingsStore.props.systemSettings.show_help_button && <li>
+                    <a onClick={() => openLink('https://kanmail.io/docs')}>
+                        <i className="fa fa-support"></i> Help
+                    </a>
+                </li>}
 
                 {!window.KANMAIL_LICENSED && <li>
                     <a onClick={openLicense}>

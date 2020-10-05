@@ -29,6 +29,7 @@ MODEL = {
         'undo_ms': (int, 5000),
         'load_contact_icons': (bool, True),
         'group_single_sender_threads': (bool, True),
+        'show_help_button': (bool, True),
         # 'group_threads_by_subject': (bool, False),
     },
     'style': {
