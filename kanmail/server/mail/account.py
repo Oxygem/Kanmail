@@ -123,4 +123,4 @@ class Account(object):
 
         if self.settings['folders'].get('save_sent_copies'):
             sent_folder = self.get_folder('sent')
-            sent_folder.append_email_message(message.as_string())
+            sent_folder.append_email_message(message)
