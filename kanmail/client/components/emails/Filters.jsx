@@ -10,13 +10,13 @@ import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
 import folderStore from 'stores/folders.js';
-import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 import mainEmailStore from 'stores/emails/main.js';
 
-import { capitalizeFirstLetter } from 'util/string.js';
 import { getAccountIconName } from 'util/accounts.js';
+import { capitalizeFirstLetter } from 'util/string.js';
+import { moveOrCopyThread } from 'util/threads.js';
 
 
 const folderLinkTarget = {
@@ -26,29 +26,10 @@ const folderLinkTarget = {
     },
 
     drop(props, monitor) {
-        const { messageUids, oldColumn, accountName } = monitor.getItem();
-
-        const emailStore = getEmailStore();
-
-        emailStore.moveEmails(
-            accountName,
-            messageUids,
-            oldColumn,
-            props.folderName,
-        ).then(() => {
-            emailStore.syncFolderEmails(
-                oldColumn,
-                {accountName: accountName},
-            );
-            emailStore.syncFolderEmails(
-                props.id,
-                {
-                    accountName: accountName,
-                    // Tell the backend to expect X messages (and infer if needed!)
-                    query: {uid_count: messageUids.length},
-                },
-            );
-        });
+        const moveData = monitor.getItem();
+        moveOrCopyThread(moveData, props.folderName);
+        // Flag the thread component as moving (hiding it)
+        moveData.sourceThreadComponent.setIsMoving();
     },
 };
 
