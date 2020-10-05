@@ -19,5 +19,5 @@ export const ALIAS_TO_ICON = {
     'spam': 'crosshairs',
 };
 
-export const PROVIDERS_DOC_LINK = 'https://github.com/Oxygem/Kanmail/blob/master/docs/providers.md'
-export const SUPPORT_DOC_LINK = 'https://github.com/Oxygem/Kanmail/blob/master/docs/support.md'
+export const PROVIDERS_DOC_LINK = 'https://kanmail.io/docs/email-providers'
+export const SUPPORT_DOC_LINK = 'https://kanmail.io/support'
