@@ -304,7 +304,7 @@ export default class Filters extends React.Component {
 
                 {!window.KANMAIL_LICENSED && <li>
                     <a onClick={openLicense}>
-                        <i className="fa fa-shopping-cart"></i> License
+                        <i className="fa fa-shopping-cart"></i> Purchase Kanmail
                     </a>
                 </li>}
             </ul>
