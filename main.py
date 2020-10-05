@@ -9,6 +9,11 @@ import webview
 from kanmail.license import validate_or_remove_license
 from kanmail.log import logger
 from kanmail.server.app import app, boot
+from kanmail.server.mail.folder_cache import (
+    remove_stale_folders,
+    remove_stale_headers,
+    vacuum_folder_cache,
+)
 from kanmail.settings import get_window_settings
 from kanmail.settings.constants import (
     DEBUG,
@@ -18,6 +23,13 @@ from kanmail.settings.constants import (
 )
 from kanmail.version import get_version
 from kanmail.window import create_window, destroy_main_window
+
+
+def run_cache_cleanup_later():
+    sleep(120)  # TODO: make this more intelligent?
+    remove_stale_folders()
+    remove_stale_headers()
+    vacuum_folder_cache()
 
 
 def run_server():
@@ -71,6 +83,7 @@ def main():
     server_thread.start()
 
     run_thread(validate_or_remove_license)
+    run_thread(run_cache_cleanup_later)
 
     # Ensure the webserver is up & running by polling it
     waits = 0
