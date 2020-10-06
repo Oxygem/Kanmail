@@ -1,3 +1,17 @@
+# v1.2010061014
+
+No Linux build yet unfortunately due to upstream changes breaking the build process.
+
+Changes:
+- Correct providers & support doc link constants.
+- Hide emails immediately when dropping on sidebar folders.
+- Automatically clean the folder cache after 120s after start.
+- Implement vacuuming for the sqlite folders database.
+- Pass message object, not string, when saving copies of sent messages.
+- Add help button to sidebar, with setting to hide.
+- Update license button.
+- Update screenshot.
+
 # v1.2009020945
 
 Minor improvements - note you will need to resize/position the main window.
