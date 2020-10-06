@@ -1,8 +1,10 @@
 blank_issues_enabled: true
+
 contact_links:
 - name: 🛡 License issues
-  url: https://kanmail.io/license
+  url: https://kanmail.io/support
   about: Purchase and recover Kanmail licenses.
+
 - name: 📖 Documentation
-  url: https://github.com/Oxygem/Kanmail/blob/master/docs/README.md
+  url: https://kanmail.io/docs
   about: View the Kanmail user documentation.
