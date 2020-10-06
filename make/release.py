@@ -30,14 +30,13 @@ def do_release():
     if click.confirm('Build MacOS client? ', default=True):
         _wait_for_build('Kanmail-mac-{version}.tar.gz')
 
-    if click.confirm('Build Linux client? ', default=True):
-        _wait_for_build('Kanmail-nix64-{version}.tar.gz')
-
     if click.confirm('Build Windows client? ', default=True):
         _wait_for_build('Kanmail-win-{version}.zip')
 
-    print_and_run(('python', '-m', 'make', '--release', '--complete'))
+    if click.confirm('Build Linux client? ', default=False):
+        _wait_for_build('Kanmail-nix64-{version}.tar.gz')
 
+    print_and_run(('python', '-m', 'make', '--release', '--complete'))
 
 
 if __name__ == '__main__':
