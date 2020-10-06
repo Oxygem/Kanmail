@@ -25,3 +25,7 @@ RUN env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install `cat .python-versi
 RUN pip install pip -U
 ADD requirements /opt/kanmail/requirements
 RUN pip install -r requirements/linux.txt
+
+# FFS
+RUN pip install pycairo==1.19.1
+RUN pip install PyGObject==3.36.1 --no-use-pep517
