@@ -3,11 +3,11 @@
     Kanmail
 </h1>
 
-An email client that functions like a kanban board, for Mac/Windows/Linux/Docker. [**Download the latest release here**](https://kanmail.io/download).
+An email client that functions like a kanban board, for Mac/Windows/Docker. [**Download the latest release here**](https://kanmail.io/download).
 
 ![](./screenshot.png)
 
-+ Works on MacOS, Linux, Windows & Docker
++ Works on MacOS, Windows & Docker (see [Linux support issue](https://github.com/Oxygem/Kanmail/issues/140))
 + Developed using Gmail, Outlook & Fastmail
 + Should be compatible with [other email providers](https://kanmail.io/docs/email-providers) (uses IMAP/SMTP)
 + Considered in "beta" - used as primary email client for >1yr
