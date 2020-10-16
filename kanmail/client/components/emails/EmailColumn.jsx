@@ -175,12 +175,6 @@ class EmailColumn extends React.Component {
             </div>;
         }
 
-        if (threads.length === 0) {
-            return <div className="loader">
-                This folder is empty
-            </div>;
-        }
-
         // Build a list of our threads and references to each, such that each
         // thread can access the previous/next threads (keyboard shortcuts).
         const threadRefs = [];

@@ -137,11 +137,22 @@ section#columns {
 
         div.loader {
             text-align: center;
-            margin-top: 20px;
+            padding: 20px 0;
             color: @lightestTextGrey;
+            background: white;
+            position: relative;
         }
 
-        .scrollbar
+        .scrollbar;
+
+        &::before {
+            content: "This folder is empty.";
+            color: @lightestTextGrey;
+            text-align: center;
+            margin-top: 20px;
+            position: absolute;
+            width: 100%;
+        }
     }
 
     div.email {
@@ -153,6 +164,7 @@ section#columns {
         overflow: hidden;
         height: 140px;
         transition: height 500ms, padding 500ms;
+        background: white;
 
         &.hover {
             background: @lightestGrey;
