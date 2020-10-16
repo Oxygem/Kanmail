@@ -3,8 +3,11 @@ const webpack = require('webpack');
 
 
 const plugins = [];
+let mode = 'development';
 
 if (process.env.NODE_ENV == 'production') {
+    mode = 'production';
+
     plugins.push(
         new webpack.DefinePlugin({
             'process.env': {
@@ -13,12 +16,12 @@ if (process.env.NODE_ENV == 'production') {
         }),
     );
     plugins.push(new webpack.optimize.OccurrenceOrderPlugin());
-    plugins.push(new webpack.optimize.UglifyJsPlugin());
 }
 
 const modulesDirectory = path.join(__dirname, 'node_modules');
 
 module.exports = {
+    mode: mode,
     plugins: plugins,
     entry: path.join(__dirname, 'kanmail', 'client', 'main.jsx'),
     output: {
@@ -43,19 +46,27 @@ module.exports = {
         ],
     },
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.(js|jsx)$/,
-                loader: 'babel-loader',
-                exclude: /node_modules/
+                exclude: /node_modules/,
+                use: [
+                    {loader: 'babel-loader'},
+                ],
             },
             {
                 test: /\.(less|css)$/,
-                loader: 'style-loader!css-loader!less-loader',
+                use: [
+                    {loader: 'style-loader'},
+                    {loader: 'css-loader'},
+                    {loader: 'less-loader'},
+                ],
             },
             {
                 test: /\.(woff|woff2|eot|ttf|svg|png)$/,
-                loader: 'url-loader',
+                use: [
+                    {loader: 'url-loader'},
+                ],
             },
         ]
     }
