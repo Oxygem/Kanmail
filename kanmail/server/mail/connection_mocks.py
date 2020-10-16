@@ -113,6 +113,9 @@ class FakeFolderData(object):
             b'UIDVALIDITY': choice(self.uids),
         }
 
+    def __str__(self):
+        return f'FakeFolderData({self.name})'
+
     def add_uids(self, uids):
         new_uids = list(self.uids)
         for uid in uids:
@@ -173,11 +176,14 @@ class FakeIMAPClient(object):
 
     def folder_status(self, folder_name, keys):
         random_sleep()
-        return self._ensure_folder(self._current_folder).status
+        return self._current_folder.status
+
+    def find_special_folder(self, alias_name):
+        return alias_name
 
     def search(self, query):
         random_sleep()
-        return self._ensure_folder(self._current_folder).uids
+        return self._current_folder.uids
 
     def copy(self, uids, new_folder):
         random_sleep()
