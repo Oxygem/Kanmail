@@ -14,7 +14,7 @@ import { subscribe } from 'stores/base.jsx'
 import { closeWindow } from 'window.js';
 
 import { cleanHtml } from 'util/html.js'
-import { get, post } from 'util/requests.js'
+import { post } from 'util/requests.js'
 
 import Quill from 'quill';
 
@@ -104,6 +104,7 @@ export default class SendApp extends React.Component {
             textBody: '',
 
             attachments: [],
+            attachmentData: {},
 
             // "Hidden"/uneditable fields
             replyToMessageId: null,
@@ -190,6 +191,9 @@ export default class SendApp extends React.Component {
             'subject',
             'attachments',
         ]);
+
+        // Attach any binary attachment data
+        emailData.attachment_data = this.state.attachmentData;
 
         // Attach the HTML + plaintext copy
         emailData.html = this.state.body;
@@ -284,12 +288,30 @@ export default class SendApp extends React.Component {
     handleClickAttach = (ev) => {
         ev.preventDefault();
 
-        get('/select-files').then(data => {
-            const allFilenames = this.state.attachments.concat(data.filenames);
-            this.setState({
-                attachments: allFilenames,
+        // Browsers cannot get full path + filename due to security restrictions,
+        // so we actually read the files into memory and then write them to the
+        // server in the API request. This is not ideal, but there's alternative!
+        const fileSelector = document.createElement('input');
+        fileSelector.setAttribute('type', 'file');
+        fileSelector.setAttribute('multiple', 'multiple');
+        fileSelector.addEventListener('change', ev => {
+            _.each(ev.target.files, file => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const allFilenames = this.state.attachments.concat([file.name]);
+                    const allAttachmentData = this.state.attachmentData;
+                    // Save the data base64 encoded
+                    allAttachmentData[file.name] = btoa(reader.result);
+                    this.setState({
+                        attachments: allFilenames,
+                        attachmentData: allAttachmentData,
+                    });
+                }
+                reader.readAsBinaryString(file);
             });
         });
+
+        fileSelector.click();
     }
 
     renderQuote() {
@@ -415,7 +437,7 @@ export default class SendApp extends React.Component {
         }
 
         const attachments = _.map(this.state.attachments, attachment => (
-            <li>{getFilename(attachment)}</li>
+            <li key={attachment}>{getFilename(attachment)}</li>
         ));
 
         return (

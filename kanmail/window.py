@@ -105,22 +105,3 @@ def get_main_window_size_position() -> Dict[str, int]:
         'width': window.width,
         'height': window.height,
     }
-
-
-def create_save_dialog(directory: str, filename: str) -> bool:
-    window = get_main_window()
-
-    return window.create_file_dialog(
-        webview.SAVE_DIALOG,
-        directory=directory,
-        save_filename=filename,
-    )
-
-
-def create_open_dialog(allow_multiple: bool = True) -> bool:
-    window = get_main_window()
-
-    return window.create_file_dialog(
-        webview.OPEN_DIALOG,
-        allow_multiple=allow_multiple,
-    )

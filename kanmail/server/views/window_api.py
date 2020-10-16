@@ -1,14 +1,13 @@
 import webbrowser
 
-from os import environ, path
+from os import environ
 from typing import Tuple
 
-from flask import abort, jsonify, request, Response
+from flask import abort, request
 
 from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.window import (
-    create_open_dialog,
     create_window,
     destroy_window,
     maximize_window,
@@ -63,10 +62,3 @@ def window_minimize() -> Tuple[str, int]:
 def window_maximize() -> Tuple[str, int]:
     maximize_window(request.args['window_id'])
     return '', 204
-
-
-@app.route('/select-files')
-def select_files() -> Response:
-    local_filenames = create_open_dialog(path.expanduser('~'))
-    local_filenames = local_filenames or []
-    return jsonify(filenames=local_filenames)

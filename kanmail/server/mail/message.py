@@ -1,3 +1,4 @@
+from base64 import b64decode
 from email.headerregistry import Address
 from email.message import EmailMessage
 from email.utils import formatdate
@@ -35,7 +36,7 @@ def make_email_message(
     from_,
     to=None, cc=None, bcc=None,
     subject=None, text=None, html=None,
-    attachments=None,
+    attachments=None, attachment_data=None,
     # If replying to another message
     reply_to_message_id=None,
     reply_to_message_references=None,
@@ -90,16 +91,23 @@ def make_email_message(
 
     # Handle attached files
     if attachments:
+        attachment_data = attachment_data or {}
+
         for attachment in attachments:
             mimetype = guess_type(attachment)[0]
             maintype, subtype = mimetype.split('/')
 
-            with open(attachment, 'rb') as file:
-                message.add_attachment(
-                    file.read(),
-                    maintype=maintype,
-                    subtype=subtype,
-                    filename=path.basename(attachment),
-                )
+            data = attachment_data.get(attachment)
+            if not data:
+                raise Exception(f'Missing data in request for attachment: {attachment}')
+
+            data = b64decode(data)
+
+            message.add_attachment(
+                data,
+                maintype=maintype,
+                subtype=subtype,
+                filename=path.basename(attachment),
+            )
 
     return message
