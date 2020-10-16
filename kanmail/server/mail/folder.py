@@ -132,7 +132,10 @@ class Folder(object):
             data_meta = parts.get(part)
 
             if not data_meta:
-                raise Exception('MISSING PART', uid, part, parts)
+                self.log(
+                    'warning',
+                    f'Unknown part uid={uid}, part={part}, knownParts={parts}',
+                )
 
             if body_keyname not in data:
                 if retry > connection.config.max_attempts:
