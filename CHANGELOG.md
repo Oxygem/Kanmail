@@ -1,3 +1,18 @@
+# v1.2010161619
+
+Changes:
+- Only warn when part is missing on thread fetch.
+- Fix connection mock folder class for offline dev.
+- Try the following column if the first is empty when navigating between.
+- Redo attachment handling to be compatible with browser mode.
+- Fix empty column message by always showing it.
+- Reload the welcome window after saving initil settings.
+- Upgrade to webpack 4 & tidy up packages.
+- Update dev instructions.
+- Update readme to remove Linux official support.
+- Don't build Linux app by default.
+- Fix the new issue links.
+
 # v1.2010061014
 
 No Linux build yet unfortunately due to upstream changes breaking the build process.
