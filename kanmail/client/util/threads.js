@@ -99,13 +99,20 @@ function collectVisibleThreadComponents(threadRefs) {
     );
 }
 
-function getColumnThreadComponent(sourceComponent, propName) {
-    const targetColumn = sourceComponent.props[propName]();
+function getColumnThreadComponent(sourceComponent, propName, targetColumn=null) {
+    if (!targetColumn) {
+        targetColumn = sourceComponent.props[propName]();
+    }
 
     if (targetColumn) {
-        const sourceColumn = sourceComponent.props.column;
-
         const visibleTargetThreads = collectVisibleThreadComponents(targetColumn.threadRefs);
+
+        // If the target column is empty, attempt to skip to the column after it
+        if (visibleTargetThreads.length <= 0) {
+            return getColumnThreadComponent(sourceComponent, propName, targetColumn.props[propName]());
+        }
+
+        const sourceColumn = sourceComponent.props.column;
         const visibleSourceThreads = collectVisibleThreadComponents(sourceColumn.threadRefs);
 
         let wantedSourceThreadRef = visibleSourceThreads.indexOf(sourceComponent);
