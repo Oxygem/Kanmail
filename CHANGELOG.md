@@ -1,3 +1,8 @@
+# v1.2011090915
+
+Changes:
+- Fix column jumping where all remaining columns emptry.
+
 # v1.2010161619
 
 Changes:
