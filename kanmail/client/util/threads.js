@@ -109,7 +109,10 @@ function getColumnThreadComponent(sourceComponent, propName, targetColumn=null) 
 
         // If the target column is empty, attempt to skip to the column after it
         if (visibleTargetThreads.length <= 0) {
-            return getColumnThreadComponent(sourceComponent, propName, targetColumn.props[propName]());
+            const nextTargetColumn = targetColumn.props[propName]();
+            if (nextTargetColumn) {
+                return getColumnThreadComponent(sourceComponent, propName, nextTargetColumn);
+            }
         }
 
         const sourceColumn = sourceComponent.props.column;
