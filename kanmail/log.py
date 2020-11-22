@@ -5,22 +5,11 @@ from datetime import datetime
 
 import click
 
-STDOUT_LOG_LEVELS = (logging.DEBUG, logging.INFO)
-STDERR_LOG_LEVELS = (logging.WARNING, logging.ERROR, logging.CRITICAL)
-
 
 # Get the logger
 logger = logging.getLogger('Kanmail')
 # Don't push messages from this Process -> main
 logger.propagate = False
-
-
-class LogFilter(logging.Filter):
-    def __init__(self, *levels):
-        self.levels = levels
-
-    def filter(self, record):
-        return record.levelno in self.levels
 
 
 class LogFormatter(logging.Formatter):
@@ -61,23 +50,13 @@ def setup_logging(debug: bool, log_file: str) -> int:
     logger.setLevel(log_level)
 
     # Setup a new handler for stdout & stderr
-    stdout_handler = logging.StreamHandler(sys.stdout)
     stderr_handler = logging.StreamHandler(sys.stderr)
-
-    # Setup filters to push different levels to different streams
-    stdout_filter = LogFilter(*STDOUT_LOG_LEVELS)
-    stdout_handler.addFilter(stdout_filter)
-
-    stderr_filter = LogFilter(*STDERR_LOG_LEVELS)
-    stderr_handler.addFilter(stderr_filter)
 
     # Setup a formatter
     formatter = LogFormatter()
-    stdout_handler.setFormatter(formatter)
     stderr_handler.setFormatter(formatter)
 
     # Add the handlers
-    logger.addHandler(stdout_handler)
     logger.addHandler(stderr_handler)
 
     # Setup the file handler
