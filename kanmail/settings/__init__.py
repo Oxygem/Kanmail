@@ -1,10 +1,9 @@
 import json
 
 from copy import deepcopy
+from functools import lru_cache
 from os import makedirs, path
 from typing import Optional, Union
-
-from pydash import memoize
 
 from kanmail.log import logger, setup_logging
 
@@ -64,7 +63,7 @@ def _merge_settings(
     return changed_keys
 
 
-@memoize
+@lru_cache(maxsize=1)
 def get_settings() -> dict:
     settings = get_default_settings()
 
@@ -129,8 +128,7 @@ def set_settings(new_settings: dict) -> None:
     with open(SETTINGS_FILE, 'w') as file:
         file.write(json_data)
 
-    # Reset pydash.memoize's cache for next call to `get_settings`
-    get_settings.cache = {}
+    get_settings.cache_clear()
 
 
 def get_window_settings() -> dict:

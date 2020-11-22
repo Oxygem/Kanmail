@@ -1,14 +1,13 @@
 import json
 
+from functools import lru_cache
 from os import path
 from typing import Dict
-
-from pydash import memoize
 
 from kanmail.settings.constants import CLIENT_ROOT
 
 
-@memoize
+@lru_cache(maxsize=1)
 def get_version_data() -> Dict[str, str]:
     version_filename = path.join(CLIENT_ROOT, 'static', 'dist', 'version.json')
 

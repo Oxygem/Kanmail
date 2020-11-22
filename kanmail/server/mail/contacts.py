@@ -1,4 +1,4 @@
-from pydash import memoize
+from functools import lru_cache
 
 from kanmail.log import logger
 from kanmail.server.app import db
@@ -17,7 +17,7 @@ class Contact(db.Model):
     email = db.Column(db.String(300))
 
 
-@memoize
+@lru_cache(maxsize=1)
 def get_contacts(with_id=False):
     contacts = Contact.query.all()
 

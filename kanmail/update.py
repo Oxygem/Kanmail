@@ -1,4 +1,5 @@
-from pydash import memoize
+from functools import lru_cache
+
 from pyupdater.client import Client as PyUpdaterClient
 
 from kanmail.log import logger
@@ -10,7 +11,7 @@ from kanmail.settings.constants import (
 from kanmail.version import get_version_data
 
 
-@memoize
+@lru_cache(maxsize=1)
 def get_pyupdater_client() -> PyUpdaterClient:
     return PyUpdaterClient(PyUpdaterConfig())
 
@@ -56,5 +57,5 @@ def update_device(update) -> None:
     logger.debug(f'Downloading update: {update.version}')
     update.download()
 
-    logger.debug(f'Download complete, extracting & overwriting')
+    logger.debug('Download complete, extracting & overwriting')
     update.extract_overwrite()
