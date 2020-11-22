@@ -212,7 +212,7 @@ class Folder(object):
             parts = parse_bodystructure(data[b'BODYSTRUCTURE'])
             headers = make_email_headers(
                 self.account, self, uid, data, parts,
-                save_contacts=self.alias_name not in ('spam', 'trash'),
+                save_contacts=self.alias_name != 'spam',
             )
             emails.append(headers)
             uid_to_headers[uid] = headers
