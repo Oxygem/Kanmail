@@ -52,6 +52,16 @@ def save_contact(contact):
     get_contacts.cache_clear()
 
 
+def save_contacts(*contacts):
+    logger.debug(f'Saving {len(contacts)} contacts')
+
+    for contact in contacts:
+        db.session.add(contact)
+    db.session.commit()
+
+    get_contacts.cache_clear()
+
+
 def delete_contact(contact):
     logger.debug(f'Deleting contact: {contact}')
 
@@ -86,6 +96,8 @@ def is_valid_contact(name, email):
 
 def add_contacts(contacts):
     existing_contacts = get_contact_tuple_to_contact()
+    contacts_to_save = []
+
     for name, email in contacts:
         if not is_valid_contact(name, email):
             logger.debug(f'Not saving invalid contact: ({name} {email})')
@@ -94,8 +106,7 @@ def add_contacts(contacts):
         if (name, email) in existing_contacts:
             return
 
-        new_contact = Contact(
-            name=name,
-            email=email,
-        )
-        save_contact(new_contact)
+        new_contact = Contact(name=name, email=email)
+        contacts_to_save.append(new_contact)
+
+    save_contacts(*save_contact)
