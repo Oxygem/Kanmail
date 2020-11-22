@@ -4,9 +4,24 @@ from flask import abort, jsonify, request, Response, send_file
 from sqlalchemy.exc import IntegrityError
 
 from kanmail.server.app import app
-from kanmail.server.mail.contacts import Contact, delete_contact, save_contact
+from kanmail.server.mail.contacts import (
+    Contact,
+    delete_contact,
+    get_contacts,
+    save_contact,
+)
 from kanmail.server.mail.icon import get_icon_for_email
 from kanmail.server.util import get_or_400
+
+
+@app.route('/api/contacts', methods=('GET',))
+def api_get_contacts() -> Response:
+    '''
+    Get the contacts list.
+    '''
+
+    contacts = [contact.to_dict() for contact in get_contacts()]
+    return jsonify(contacts=contacts)
 
 
 @app.route('/api/contacts', methods=('POST',))
