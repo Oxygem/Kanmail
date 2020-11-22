@@ -37,8 +37,7 @@ def save_contact(contact):
     db.session.add(contact)
     db.session.commit()
 
-    # Reset pydash.memoize's cache for get_contacts
-    get_contacts.cache = {}
+    get_contacts.cache_clear()
 
 
 def delete_contact(contact):
@@ -47,8 +46,7 @@ def delete_contact(contact):
     db.session.delete(contact)
     db.session.commit()
 
-    # Reset pydash.memoize's cache for get_contacts
-    get_contacts.cache = {}
+    get_contacts.cache_clear()
 
 
 def is_valid_contact(name, email):
