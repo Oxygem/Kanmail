@@ -44,7 +44,7 @@ def make_contact_tuple(address):
     return (name, email)
 
 
-def make_contacts(addresses):
+def make_contact_tuples(addresses):
     if not addresses:
         return []
 
@@ -96,12 +96,12 @@ def make_email_headers(account, folder, uid, data, parts, save_contacts=True):
     if envelope.date:
         date = envelope.date.isoformat()
 
-    from_ = make_contacts(envelope.from_)
-    to = make_contacts(envelope.to)
-    send = make_contacts(envelope.sender)
-    cc = make_contacts(envelope.cc)
-    bcc = make_contacts(envelope.bcc)
-    reply_to = make_contacts(envelope.reply_to)
+    from_ = make_contact_tuples(envelope.from_)
+    to = make_contact_tuples(envelope.to)
+    send = make_contact_tuples(envelope.sender)
+    cc = make_contact_tuples(envelope.cc)
+    bcc = make_contact_tuples(envelope.bcc)
+    reply_to = make_contact_tuples(envelope.reply_to)
 
     if save_contacts:
         all_contacts = set((*from_, *to, *send, *cc, *bcc, *reply_to))
