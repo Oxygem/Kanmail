@@ -16,6 +16,7 @@ export default class ContactsApp extends React.Component {
         super(props);
 
         this.state = {
+            newContactFormOpen: false,
             contacts: props.contacts,
             contactsFilter: '',
         };
@@ -23,12 +24,15 @@ export default class ContactsApp extends React.Component {
 
     addNewContact = (id, name, email) => {
         const contacts = this.state.contacts;
-        contacts.unshift([id, name, email]);
+        contacts.unshift({id, name, email});
         this.setState({contacts});
     }
 
     deleteContact = (idToDelete) => {
-        const contacts = _.filter(this.state.contacts, ([id]) => id !== idToDelete);
+        const contacts = _.filter(
+            this.state.contacts,
+            ({id}) => id !== idToDelete,
+        );
         this.setState({contacts});
     }
 
@@ -48,13 +52,13 @@ export default class ContactsApp extends React.Component {
         if (this.state.contactsFilter) {
             const filterText = this.state.contactsFilter.toLowerCase();
 
-            contacts = _.filter(contacts, ([, name, email]) => (
+            contacts = _.filter(contacts, ({name, email}) => (
                 (name && name.toLowerCase().indexOf(filterText) >= 0) ||
                 email.toLowerCase().indexOf(filterText) >= 0
             ));
         }
 
-        return _.map(contacts, ([id, name, email]) => (
+        return _.map(contacts, ({id, name, email}) => (
             <Contact
                 id={id} key={id}
                 name={name} email={email}
@@ -86,7 +90,7 @@ export default class ContactsApp extends React.Component {
                     />
                     <div
                         id="contact-list"
-                        className={this.state.newContactFormOpen && 'form-open'}
+                        className={this.state.newContactFormOpen && 'form-open' || ''}
                     >{this.renderContactList()}</div>
                 </section>
             </section>

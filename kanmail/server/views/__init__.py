@@ -6,7 +6,7 @@ from flask import abort, jsonify, render_template, request
 from kanmail.license import check_get_license_email
 from kanmail.log import logger
 from kanmail.server.app import app
-from kanmail.server.mail.contacts import get_contacts
+from kanmail.server.mail.contacts import get_contact_dicts
 from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
 from kanmail.settings.constants import (
@@ -99,8 +99,8 @@ def get_meta_file(filename):
 
 @app.route('/contacts', methods=('GET',))
 def get_contacts_page():
-    contacts = list(get_contacts(with_id=True))
-    contacts = sorted(contacts, key=lambda c: c[1] or '')
+    contacts = get_contact_dicts()
+    contacts = sorted(contacts, key=lambda c: c.get('email', ''))
 
     return render_template(
         'contacts.html',
@@ -113,7 +113,7 @@ def get_contacts_page():
 def get_send():
     return render_template(
         'send.html',
-        contacts=list(get_contacts()),
+        contacts=get_contact_dicts(),
         **_get_render_data(),
     )
 
@@ -131,7 +131,7 @@ def get_send_reply(uid):
     return render_template(
         'send.html',
         reply=reply,
-        contacts=list(get_contacts()),
+        contacts=get_contact_dicts(),
         **_get_render_data(),
     )
 

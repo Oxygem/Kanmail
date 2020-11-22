@@ -16,19 +16,31 @@ class Contact(db.Model):
     name = db.Column(db.String(300))
     email = db.Column(db.String(300))
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+        }
+
 
 @lru_cache(maxsize=1)
-def get_contacts(with_id=False):
-    contacts = Contact.query.all()
+def get_contacts():
+    contacts = list(Contact.query.all())
+    for contact in contacts:
+        db.session.expunge(contact)  # detach from session (request)
+    return contacts
 
-    if with_id:
-        def make_contact(c):
-            return (c.id, c.name, c.email)
-    else:
-        def make_contact(c):
-            return (c.name, c.email)
 
-    return set(make_contact(contact) for contact in contacts)
+def get_contact_dicts():
+    return [contact.to_dict() for contact in Contact.query.all()]
+
+
+def get_contact_tuple_to_contact():
+    return {
+        (contact.name, contact.email): contact
+        for contact in get_contacts()
+    }
 
 
 def save_contact(contact):
@@ -73,12 +85,13 @@ def is_valid_contact(name, email):
 
 
 def add_contacts(contacts):
+    existing_contacts = get_contact_tuple_to_contact()
     for name, email in contacts:
         if not is_valid_contact(name, email):
             logger.debug(f'Not saving invalid contact: ({name} {email})')
             return
 
-        if (name, email) in get_contacts():
+        if (name, email) in existing_contacts:
             return
 
         new_contact = Contact(
