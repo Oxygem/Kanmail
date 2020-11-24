@@ -467,11 +467,11 @@ export default class SendApp extends React.Component {
             [],
         );
 
-        const contactOptions = _.map(this.props.contacts, ([name, email]) => {
-            const label = makeContactLabel([name, email]);
+        const contactOptions = _.map(this.props.contacts, (contact) => {
+            const label = makeContactLabel([contact.name, contact.email]);
             return {
                 label,
-                value: [name, email],
+                value: [contact.name, contact.email],
                 lowercaseLabel: label.toLowerCase(),
             };
         });
