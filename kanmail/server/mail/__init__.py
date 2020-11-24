@@ -5,6 +5,7 @@ from kanmail.server.util import execute_threaded
 from kanmail.settings import get_settings
 
 from .account import Account
+from .allowed_images import is_email_allowed_images
 from .util import markdownify
 
 ACCOUNTS = {}
@@ -157,6 +158,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
     uid_parts = []
 
     uid_to_content_ids = {}
+    uid_to_allow_images = {}
 
     uid_to_text_part_number = {}
     uid_to_html_part_number = {}
@@ -165,6 +167,11 @@ def get_folder_email_texts(account_key, folder_name, uids):
 
     for uid in uids:
         headers = uid_to_headers[uid]
+
+        uid_to_allow_images[uid] = all(
+            is_email_allowed_images(email)
+            for email in [contact[1] for contact in headers['from']]
+        )
 
         parts = headers['parts']
 
@@ -202,6 +209,7 @@ def get_folder_email_texts(account_key, folder_name, uids):
 
         uid_part_data_with_cids[uid] = {
             'cid_to_part': uid_to_content_ids.get(uid),
+            'allow_images': uid_to_allow_images.get(uid),
             'text': text_data,
             'html': html_data,
         }
