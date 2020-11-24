@@ -1,2 +1,2 @@
-server: sleep 1 && python main.py
+server: python main.py
 client: yarn run dev
