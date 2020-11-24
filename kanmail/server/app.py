@@ -101,5 +101,6 @@ def boot() -> None:
 
     # Database models
     from kanmail.server.mail.contacts import Contact  # noqa: F401
+    from kanmail.server.mail.allowed_images import AllowedImage  # noqa: F401
 
     db.create_all()
