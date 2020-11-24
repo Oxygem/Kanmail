@@ -109,4 +109,4 @@ def add_contacts(contacts):
         new_contact = Contact(name=name, email=email)
         contacts_to_save.append(new_contact)
 
-    save_contacts(*save_contact)
+    save_contacts(*contacts_to_save)
