@@ -115,6 +115,9 @@ def main():
     monitor_thread.daemon = True
     monitor_thread.start()
 
+    if DEBUG:
+        sleep(1)  # give webpack a second to start listening
+
     # Start the GUI - this will block until the main window is destroyed
     webview.start(gui=GUI_LIB, debug=DEBUG)
 
