@@ -9,6 +9,7 @@ import settingsStore from 'stores/settings.js';
 
 import ThreadMessageAttachment from 'components/emails/ThreadMessageAttachment.jsx';
 
+import { ensureInView } from 'util/element.js';
 import { cleanHtml } from 'util/html.js';
 import { formatAddress, formatDate } from 'util/string.js';
 import { openReplyToMessageWindow } from 'util/message.js';
@@ -44,6 +45,7 @@ export default class ThreadMessage extends React.Component {
     static propTypes = {
         message: PropTypes.object.isRequired,
         open: PropTypes.bool.isRequired,
+        scrollToOnLoad: PropTypes.bool.isRequired,
     }
 
     constructor(props) {
@@ -372,7 +374,16 @@ export default class ThreadMessage extends React.Component {
         const { message } = this.props;
 
         return (
-            <div key={message.message_id} className="message">
+            <div
+                key={message.message_id}
+                className="message"
+                ref={ref => {
+                    if (ref && !this.hasScrolledOnLoad && this.props.scrollToOnLoad) {
+                        ensureInView(ref, {behavior: 'smooth'});
+                        this.hasScrolledOnLoad = true;
+                    }
+                }}
+            >
                 {this.renderMeta()}
                 {this.state.open && this.renderControls()}
                 {this.state.open && this.renderBody()}

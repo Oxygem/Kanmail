@@ -88,11 +88,22 @@ class Thread extends React.Component {
             return <p>Failed to fetch thread messages!</p>;
         }
 
+        let seenUnread = false;
+
         return _.map(messages, (message, i) => {
+            const isLast = (i + 1) === messages.length;
+
+            let scrollTo = false;
+            if (!seenUnread && (message.unread || isLast)) {
+                seenUnread = true;
+                scrollTo = true;
+            }
+
             return <ThreadMessage
                 key={message.message_id}
                 message={message}
-                open={(i + 1) === messages.length}
+                open={isLast}
+                scrollToOnLoad={scrollTo}
             />;
         });
     }
