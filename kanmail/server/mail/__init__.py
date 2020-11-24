@@ -161,8 +161,12 @@ def get_folder_email_texts(account_key, folder_name, uids):
     uid_to_text_part_number = {}
     uid_to_html_part_number = {}
 
+    uid_to_headers = folder.get_email_headers(uids)
+
     for uid in uids:
-        parts = folder.get_email_header_parts(uid)
+        headers = uid_to_headers[uid]
+
+        parts = headers['parts']
 
         uid_to_content_ids[uid] = {
             part['content_id']: part_id
@@ -212,7 +216,7 @@ def get_folder_email_part(account_key, folder_name, uid, part_number):
     account = get_account(account_key)
     folder = account.get_folder(folder_name)
 
-    parts = folder.get_email_header_parts(uid)
+    parts = folder.get_email_headers([uid])[uid]['parts']
     if part_number not in parts:
         return None, None
 

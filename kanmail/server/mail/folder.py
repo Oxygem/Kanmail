@@ -127,8 +127,13 @@ class Folder(object):
         failed_email_uids = []
         body_keyname = body_keyname.encode()  # returned as bytes via IMAP
 
+        uid_to_parts = {
+            uid: headers['parts']
+            for uid, headers in self.get_email_headers(email_uids).items()
+        }
+
         for uid, data in email_parts.items():
-            parts = self.get_email_header_parts(uid)
+            parts = uid_to_parts.get(uid)
             data_meta = parts.get(part)
 
             if not data_meta:
@@ -167,7 +172,7 @@ class Folder(object):
         Fetch email headers/meta information (to display in a folder list).
         '''
 
-        emails = []
+        emails = {}
 
         # First get/remove any cached headers before fetching
         uids_to_get = []
@@ -176,7 +181,7 @@ class Folder(object):
         for uid in email_uids:
             cached_headers = uid_to_cached_headers.get(uid)
             if cached_headers:
-                emails.append(cached_headers)
+                emails[uid] = cached_headers
             else:
                 uids_to_get.append(uid)
 
@@ -214,7 +219,7 @@ class Folder(object):
                 self.account, self, uid, data, parts,
                 save_contacts=self.alias_name != 'spam',
             )
-            emails.append(headers)
+            emails[uid] = headers
             uid_to_headers[uid] = headers
 
         self.cache.batch_set_headers(uid_to_headers)
@@ -238,12 +243,6 @@ class Folder(object):
                 self.add_cache_flags(uid, SEEN_FLAG)
 
         return read_uids
-
-    def get_email_header_parts(self, uid):
-        emails = self.get_email_headers([uid])
-        if not emails:
-            return
-        return emails[0]['parts']
 
     # UID handling
     #
@@ -380,11 +379,12 @@ class Folder(object):
             f'/{len(deleted_message_uids)} deleted message IDs'
         ))
 
-        new_emails = {}
+        new_emails = []
 
         if new_message_uids:
             # Now actually fetch & return those emails
             new_emails = self.get_email_headers(new_message_uids)
+            new_emails = list(new_emails.values())
             self.seen_email_uids.update(new_message_uids)
 
         read_uids = []
@@ -395,7 +395,7 @@ class Folder(object):
             ]
             read_uids = self.check_update_unread_emails(check_unread_uids)
 
-        # Return the enw emails & any deleted uids
+        # Return the new emails & any deleted uids
         return new_emails, list(deleted_message_uids), read_uids
 
     @lock_class_method
@@ -429,7 +429,7 @@ class Folder(object):
         emails = self.get_email_headers(email_uids)
         self.seen_email_uids.update(email_uids)
 
-        return emails
+        return list(emails.values())
 
     # Functions that affect emails, but not any of the class internals
     #
