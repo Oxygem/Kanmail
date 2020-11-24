@@ -4,6 +4,10 @@ from flask import abort, jsonify, request, Response, send_file
 from sqlalchemy.exc import IntegrityError
 
 from kanmail.server.app import app
+from kanmail.server.mail.allowed_images import (
+    allow_images_for_email,
+    disallow_images_for_email,
+)
 from kanmail.server.mail.contacts import (
     Contact,
     delete_contact,
@@ -74,6 +78,18 @@ def api_delete_contact(contact_id) -> Response:
     contact = Contact.query.get_or_404(contact_id)
     delete_contact(contact)
 
+    return jsonify(deleted=True)
+
+
+@app.route('/api/contacts/allow-images/<email>', methods=('PUT',))
+def api_put_images_for_email(email):
+    allow_images_for_email(email)
+    return jsonify(added=True)
+
+
+@app.route('/api/contacts/allow-images/<email>', methods=('DELETE',))
+def api_delete_images_for_email(email):
+    disallow_images_for_email(email)
     return jsonify(deleted=True)
 
 
