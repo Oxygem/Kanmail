@@ -1,6 +1,5 @@
 # Client
-# This is https://github.com/r0x0r/pywebview/pull/520
-https://github.com/Fizzadar/pywebview/archive/1d7a5159cc6460aaaa8da5f5ea80ef31c206b104.zip
+pywebview==3.3.5
 
 # Server
 click==7.0
