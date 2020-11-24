@@ -11,6 +11,7 @@ import ThreadMessageAttachment from 'components/emails/ThreadMessageAttachment.j
 
 import { ensureInView } from 'util/element.js';
 import { cleanHtml } from 'util/html.js';
+import { put, delete_ } from 'util/requests.js';
 import { formatAddress, formatDate } from 'util/string.js';
 import { openReplyToMessageWindow } from 'util/message.js';
 
@@ -53,13 +54,19 @@ export default class ThreadMessage extends React.Component {
 
         const hasHtml = props.message.body.html ? true : false;
 
+        const alwaysShowImages = props.message.body.allow_images;
+        const imagesShown = alwaysShowImages || !hasHtml;
+
         this.state = {
             open: props.open || props.message.unread,
             replying: false,
             replyingAll: false,
 
+            hasHtml: hasHtml,
+            alwaysShowImages: alwaysShowImages,
+
             // No HTML version? Show plain text only and hide show images button
-            imagesShown: !hasHtml,
+            imagesShown: imagesShown,
             showPlainText: !hasHtml,
         };
     }
@@ -132,6 +139,13 @@ export default class ThreadMessage extends React.Component {
                 return;
             }
 
+            if (this.state.imagesShown) {
+                img.src = imageUrl;
+                return;
+            }
+
+            img.removeAttribute('src');
+
             const showButton = document.createElement('button');
             showButton.textContent = 'Show image';
             showButton.classList.add('show-image-button');
@@ -153,6 +167,10 @@ export default class ThreadMessage extends React.Component {
         this.messageElementReady = true;
     }
 
+    getFromEmailAddresses = () => {
+        return _.map(this.props.message.from, email => email[1]);
+    }
+
     handleClickShowImages = () => {
         if (
             !this.state.open  // not open
@@ -168,6 +186,32 @@ export default class ThreadMessage extends React.Component {
 
         this.setState({
             imagesShown: true,
+        });
+    }
+
+    handleClickAlwaysShowImages = () => {
+        const requests = this.getFromEmailAddresses().map(
+            email => put(`/api/contacts/allow-images/${email}`),
+        );
+
+        Promise.all(requests).then(() => {
+            this.setState({
+                alwaysShowImages: true,
+            });
+        });
+    }
+
+    handleClickHideImages = () => {
+        const requests = this.getFromEmailAddresses().map(
+            email => delete_(`/api/contacts/allow-images/${email}`),
+        );
+
+        Promise.all(requests).then(() => {
+            this.messageElementReady = false;
+            this.setState({
+                alwaysShowImages: false,
+                imagesShown: false,
+            });
         });
     }
 
@@ -207,10 +251,14 @@ export default class ThreadMessage extends React.Component {
     }
 
     handleClickHtml = () => {
+        if (!this.state.showPlainText) {
+            return;
+        }
+
         this.messageElementReady = false;
         this.setState({
             showPlainText: false,
-            imagesShown: false,
+            imagesShown: this.state.alwaysShowImages,
         });
     }
 
@@ -261,6 +309,26 @@ export default class ThreadMessage extends React.Component {
         );
     }
 
+    renderImagesToggle() {
+        if (!this.state.hasHtml) {
+            return;
+        }
+
+        if (this.state.imagesShown) {
+            if (!this.state.alwaysShowImages) {
+                return <button onClick={this.handleClickAlwaysShowImages}>
+                    Always show from this sender
+                </button>;
+            } else {
+                return <button onClick={this.handleClickHideImages}>
+                    Hide images
+                </button>;
+            }
+        }
+
+        return <button onClick={this.handleClickShowImages}>Show remote images</button>;
+    }
+
     renderControls() {
         const { message } = this.props;
 
@@ -275,11 +343,6 @@ export default class ThreadMessage extends React.Component {
                 className={this.state.showPlainText ? 'active' : ''}
             >Text</button>
         ) : null;
-        const imagesToggle = this.state.imagesShown ? null : (
-            <button
-                onClick={this.handleClickShowImages}
-            >Show remote images</button>
-        );
 
         const isDraft = _.includes(_.keys(this.props.message.folderUids), 'drafts');
         const forwardButton = isDraft ? null : (
@@ -312,7 +375,7 @@ export default class ThreadMessage extends React.Component {
                 <span className="right">
                     {htmlToggle}
                     {textToggle}
-                    {imagesToggle}
+                    {this.renderImagesToggle()}
                     {forwardButton}
                     {replyButton}
                     {replyAllButton}
