@@ -73,7 +73,7 @@ export default class AddNewContactForm extends React.Component {
     render() {
         if (!this.props.isOpen) {
             return <button
-                className="submit"
+                className="submit add-contact"
                 onClick={this.props.toggleForm}
             >Add new contact</button>;
         }
