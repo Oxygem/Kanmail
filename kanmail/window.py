@@ -4,7 +4,7 @@ from uuid import uuid4
 import webview
 
 from kanmail.log import logger
-from kanmail.settings.constants import FRAMELESS, IS_APP, SERVER_PORT
+from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_PORT
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
@@ -105,3 +105,25 @@ def get_main_window_size_position() -> Dict[str, int]:
         'width': window.width,
         'height': window.height,
     }
+
+
+def init_window_hacks() -> None:
+    try:
+        import AppKit
+        from webview.platforms import cocoa
+    except ImportError:
+        pass
+    else:
+        # Normally set by webview.start but importing cocoa before breaks that
+        cocoa._debug = DEBUG
+
+        class CustomBrowserView(cocoa.BrowserView):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.window.standardWindowButton_(AppKit.NSWindowCloseButton).setHidden_(False)
+                self.window.standardWindowButton_(AppKit.NSWindowZoomButton).setHidden_(False)
+                self.window.standardWindowButton_(
+                    AppKit.NSWindowMiniaturizeButton,
+                ).setHidden_(False)
+
+        cocoa.BrowserView = CustomBrowserView

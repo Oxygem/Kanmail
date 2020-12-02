@@ -22,7 +22,7 @@ from kanmail.settings.constants import (
     SERVER_PORT,
 )
 from kanmail.version import get_version
-from kanmail.window import create_window, destroy_main_window
+from kanmail.window import create_window, destroy_main_window, init_window_hacks
 
 
 def run_cache_cleanup_later():
@@ -77,6 +77,8 @@ def run_thread(target):
 
 def main():
     logger.info(f'\n#\n# Booting Kanmail {get_version()}\n#')
+
+    init_window_hacks()
 
     server_thread = Thread(name='Server', target=run_server)
     server_thread.daemon = True
