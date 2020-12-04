@@ -1,3 +1,34 @@
+# v1.2012041414
+
+Major addition: always show images from a given sender.
+
+Changes:
+- Use newer pywebview commit than released.
+- Implement "window hacks" for cocoa.
+- Tidy up the add contact form/contacts app.
+- Fix contact option list in send app.
+- Restore sleep inside main python when debug.
+- Upgrade pywebview to 3.3.5.
+- Offer to always allow images for a message in thread view.
+- Implement allowed images in email text API.
+- Add API to create/delete allowed image flags for an email.
+- Add the allowed images database table/model.
+- Remove `Folder.get_email_header_parts`.
+- Fix save contacts call argument.
+- Make keyboard column scrolling smoother & consistent.
+- Scroll down to first open message on open thread.
+- Remove sleep before starting app in dev.
+- Actually remove `pydash` requirement.
+- Tidy up logging module mess - always log to stderr.
+- Add batch save contacts function and use when adding contacts.
+- Store contacts from trash.
+- More descriptive function name.
+- Add get contacts API endpoint.
+- Improve consistency of contacts module.
+- Use functools LRU cache `cache_clear`.
+- Replace `pydash.memoize` with `functools.lru_cache`.
+- Fix scroll container on contacts app.
+
 # v1.2011090915
 
 Changes:
