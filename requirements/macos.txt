@@ -1,3 +1,5 @@
 -r base.txt
 
-pyobjc==6.1
+pyobjc-core==6.2.2
+pyobjc-framework-Cocoa==6.2.2
+pyobjc-framework-WebKit==6.2.2
