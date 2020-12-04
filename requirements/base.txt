@@ -20,9 +20,5 @@ keyrings.alt==3.4.0
 # IMAPClient==2.1.0 - pending 2.2.0
 https://github.com/mjs/imapclient/archive/580dc6781b5bf9d4f2a1a74b5d4168ef9b842b87.zip
 
-# Pinned because other packages either miss them or have wrong versions!
-urllib3==1.25.3
-certifi==2019.3.9
-
 # Setuptools 45 broke a lot of things, and will not work with pyinstaller
 setuptools<45
