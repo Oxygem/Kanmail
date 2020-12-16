@@ -1,7 +1,7 @@
 from os import path
 from uuid import uuid4
 
-from flask import abort, jsonify, render_template, request
+from flask import abort, jsonify, redirect, render_template, request
 
 from kanmail.license import check_get_license_email
 from kanmail.log import logger
@@ -23,6 +23,19 @@ from kanmail.version import get_version
 
 
 SEND_WINDOW_DATA = {}
+
+
+if FROZEN:
+    # This view redirects non-versioned static requests (webpack public path is static)
+    # to the versioned one when running as a frozen app.
+    @app.route('/static/dist/<filename>')
+    def get_dev_static_file(filename):
+        return redirect(f'/static/dist/{get_version()}/{filename}')
+elif DEBUG:
+    # Thie view redirects local development static requests to webpack dev server
+    @app.route('/static/dist/<filename>')
+    def get_dev_static_file(filename):
+        return redirect(f'http://localhost:4421/static/dist/{filename}')
 
 
 @app.route('/ping', methods=('GET',))

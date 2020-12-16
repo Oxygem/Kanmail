@@ -50,7 +50,9 @@ module.exports = {
         filename: '[name].js',
     },
     devServer: {
+        port: 4421,
         contentBase: path.join(__dirname, 'kanmail', 'client', 'static'),
+        publicPath: '/static/dist/',
         headers: {
             'Access-Control-Allow-Origin': '*',
         },

@@ -46,7 +46,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack",
-    "dev": "NODE_ENV=dev webpack serve --port 4421",
+    "dev": "NODE_ENV=dev webpack serve",
     "lint": "eslint --cache --ext .js,.jsx kanmail/client/",
     "lint-fix": "eslint --cache --fix --ext .js,.jsx kanmail/client/"
   }
