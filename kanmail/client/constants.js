@@ -13,7 +13,7 @@ export const ALIAS_FOLDERS = ALWAYS_SYNC_FOLDERS.concat([
 export const ALIAS_TO_ICON = {
     'inbox': 'inbox',
     'sent': 'paper-plane',
-    'drafts': 'file',
+    'drafts': 'pencil',
     'archive': 'archive',
     'trash': 'trash',
     'spam': 'crosshairs',
