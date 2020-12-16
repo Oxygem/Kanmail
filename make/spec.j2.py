@@ -11,8 +11,8 @@ a = Analysis(  # noqa: F821
         (r'{{ root_dir }}/kanmail/client/templates', 'templates'),
 
         # Generated at build time
-        (r'{{ root_dir }}/dist/main.js', 'static/dist/{{ version }}'),
         (r'{{ root_dir }}/dist/version.json', 'static/dist'),
+        (r'{{ root_dir }}/dist/', 'static/dist/{{ version }}'),
 
         # TLD names
         (r'{{ tld_package_dir }}/res/effective_tld_names.dat.txt', 'tld/res'),

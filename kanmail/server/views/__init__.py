@@ -45,9 +45,9 @@ def _get_render_data():
 
 
 @app.route('/', methods=('GET',))
-def get_index():
+def get_emails():
     return render_template(
-        'index.html',
+        'emails.html',
         **_get_render_data(),
     )
 

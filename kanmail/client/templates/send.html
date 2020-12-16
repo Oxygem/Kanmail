@@ -2,7 +2,15 @@
 
 {% block page_title %}Send{% endblock %}
 
+{% block js_file %}send{% endblock %}
+
 {% block app_container %}
+{% if is_app and version != '0.0.0dev' %}
+    <link rel="stylesheet" type="text/css" href="/static/dist/{{ version }}/send.css" />
+{% else %}
+    <link rel="stylesheet" type="text/css" href="/static/dist/send.css" />
+{% endif %}
+
     <div
         data-send-app
         data-contacts='{{ contacts|tojson }}'

@@ -1,8 +1,17 @@
+/* global __dirname process */
+
 const path = require('path');
 const webpack = require('webpack');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const TerserJSPlugin = require('terser-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 
 
-const plugins = [];
+const plugins = [
+    new MiniCssExtractPlugin(),
+    // Ignore moment/locale, see: https://github.com/moment/moment/issues/2416
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+];
 let mode = 'development';
 
 if (process.env.NODE_ENV == 'production') {
@@ -19,14 +28,26 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 const modulesDirectory = path.join(__dirname, 'node_modules');
+const getAppDir = app => path.join(
+    __dirname, 'kanmail', 'client', 'components', app, 'main.js',
+);
 
 module.exports = {
     mode: mode,
     plugins: plugins,
-    entry: path.join(__dirname, 'kanmail', 'client', 'main.jsx'),
+    entry: {
+        emails: getAppDir('emails'),
+        send: getAppDir('send'),
+        settings: getAppDir('settings'),
+        contacts: getAppDir('contacts'),
+        license: getAppDir('license'),
+        meta: getAppDir('meta'),
+        metaFile: getAppDir('metaFile'),
+    },
     output: {
         path: path.join(__dirname, 'dist'),
-        filename: 'main.js',
+        publicPath: '/static/dist/',
+        filename: '[name].js',
     },
     devServer: {
         contentBase: path.join(__dirname, 'kanmail', 'client', 'static'),
@@ -45,29 +66,37 @@ module.exports = {
             modulesDirectory,
         ],
     },
+    optimization: {
+        minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
+        splitChunks: {
+            cacheGroups: {
+                shared: {
+                    name: 'shared',
+                    chunks: 'initial',
+                    minChunks: 2,
+                },
+            }
+        },
+    },
     module: {
         rules: [
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                use: [
-                    {loader: 'babel-loader'},
-                ],
+                use: ['babel-loader'],
             },
             {
                 test: /\.(less|css)$/,
                 use: [
-                    {loader: 'style-loader'},
-                    {loader: 'css-loader'},
-                    {loader: 'less-loader'},
+                    MiniCssExtractPlugin.loader,
+                    'css-loader',
+                    'less-loader',
                 ],
             },
             {
                 test: /\.(woff|woff2|eot|ttf|svg|png)$/,
-                use: [
-                    {loader: 'url-loader'},
-                ],
+                use: ['file-loader'],
             },
-        ]
-    }
+        ],
+    },
 }

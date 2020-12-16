@@ -81,7 +81,7 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
                 'set to 10.12 (need to setup env?).'
             ))
 
-    js_bundle_filename = path.join(DIST_DIRNAME, 'main.js')
+    js_bundle_filename = path.join(DIST_DIRNAME, 'emails.js')
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
         if not release and click.confirm('No JS bundle exists, build it?'):

@@ -17,14 +17,14 @@
         window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
     </script>
 
-    {% if version == '0.0.0dev' %}
-        <script type="text/javascript" src="http://localhost:4421/main.js" crossorigin="anonymous"></script>
+    {% if is_app and version != '0.0.0dev' %}
+        <link rel="stylesheet" type="text/css" href="/static/dist/{{ version }}/shared.css" />
+        <script type="text/javascript" src="/static/dist/{{ version }}/shared.js"></script>
+        <script type="text/javascript" src="/static/dist/{{ version }}/{{ self.js_file() }}.js"></script>
     {% else %}
-        {% if is_app %}
-            <script type="text/javascript" src="/static/dist/{{ version }}/main.js"></script>
-        {% else %}
-            <script type="text/javascript" src="/static/dist/main.js"></script>
-        {% endif %}
+        <link rel="stylesheet" type="text/css" href="/static/dist/shared.css" />
+        <script type="text/javascript" src="/static/dist/shared.js"></script>
+        <script type="text/javascript" src="/static/dist/{{ self.js_file() }}.js"></script>
     {% endif %}
 </body>
 </html>
