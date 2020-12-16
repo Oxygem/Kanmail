@@ -1,7 +1,7 @@
 export const ALWAYS_SYNC_FOLDERS = [
     'inbox',
-    'sent',
     'archive',
+    'sent',
 ];
 
 export const ALIAS_FOLDERS = ALWAYS_SYNC_FOLDERS.concat([
