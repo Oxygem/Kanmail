@@ -31,8 +31,6 @@ const columnTarget = {
             props.id,
             accountSettings.folders.copy_on_move === true && moveData.oldColumn == 'inbox',
         );
-        // Flag the thread component as moving (hiding it)
-        moveData.sourceThreadComponent.setIsMoving();
     },
 };
 

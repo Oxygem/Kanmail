@@ -53,10 +53,6 @@ class Keyboard {
     }
 
     setThreadComponent = (component) => {
-        if (controlStore.props.open) {
-            return;
-        }
-
         if (component === this.currentComponent) {
             console.error('Attempted to set same component in focus!');
             return;

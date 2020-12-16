@@ -27,10 +27,9 @@ class ControlInput extends React.Component {
             this.props.moveData,
             value.value,
             this.props.action === 'copy',  // copy bool
+            keyboard.setMovingCurrentThread,
         );
-        // Flag the thread component as moving (hide it)
         this.handleClose();
-        keyboard.setMovingCurrentThread();
     }
 
     handleClose = () => {

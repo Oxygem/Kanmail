@@ -7,6 +7,7 @@ import { ALIAS_FOLDERS } from 'constants.js';
 
 import keyboard from 'keyboard.js';
 
+import controlStore from 'stores/control.js';
 import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
@@ -168,6 +169,13 @@ export default class EmailColumnThread extends React.Component {
         });
     }
 
+    undoSetIsMoving = () => {
+        this.setState({
+            moving: false,
+            locked: false,
+        });
+    }
+
     isBusy = () => {
         return this.state.locked;
     }
@@ -183,7 +191,7 @@ export default class EmailColumnThread extends React.Component {
             return;
         }
 
-        if (this.isBusy() || this.state.hover || threadStore.isOpen) {
+        if (this.isBusy() || this.state.hover || threadStore.isOpen || controlStore.props.open) {
             return;
         }
 
@@ -191,7 +199,7 @@ export default class EmailColumnThread extends React.Component {
     }
 
     handleMouseLeave = () => {
-        if (this.isBusy() || threadStore.isOpen) {
+        if (this.isBusy() || threadStore.isOpen || controlStore.props.open) {
             return;
         }
 

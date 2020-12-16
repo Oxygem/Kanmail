@@ -1,33 +1,45 @@
 import _ from 'lodash';
 
+import requestStore from 'stores/request.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 
 
-export function moveOrCopyThread(moveData, targetFolder, copy=false) {
+export function moveOrCopyThread(moveData, targetFolder, copy=false, setIsMovingFunction=null) {
+    setIsMovingFunction = setIsMovingFunction || moveData.sourceThreadComponent.setIsMoving;
+    setIsMovingFunction();
+
     const { messageUids, oldColumn, accountName } = moveData;
     const emailStore = getEmailStore();
 
     let handler = copy ? emailStore.copyEmails : emailStore.moveEmails;
 
-    handler(
-        accountName,
-        messageUids,
-        oldColumn,
-        targetFolder,
-    ).then(() => {
-        emailStore.syncFolderEmails(
+    const undoMove = () => {
+        moveData.sourceThreadComponent.undoSetIsMoving();
+    }
+
+    const moveThread = () => {
+        handler(
+            accountName,
+            messageUids,
             oldColumn,
-            {accountName: accountName},
-        );
-        emailStore.syncFolderEmails(
             targetFolder,
-            {
-                accountName: accountName,
-                // Tell the backend to expect X messages (and infer if needed!)
-                query: {uid_count: messageUids.length},
-            },
-        );
-    });
+        ).then(() => {
+            emailStore.syncFolderEmails(
+                oldColumn,
+                {accountName: accountName},
+            );
+            emailStore.syncFolderEmails(
+                targetFolder,
+                {
+                    accountName: accountName,
+                    // Tell the backend to expect X messages (and infer if needed!)
+                    query: {uid_count: messageUids.length},
+                },
+            );
+        });
+    }
+
+    requestStore.addUndoable(moveThread, undoMove);
 }
 
 
