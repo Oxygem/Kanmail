@@ -224,6 +224,7 @@ class EmailColumn extends React.Component {
             return this.props.threads;
         }
 
+        const columnStore = getColumnStore(this.props.id);
         return _.filter(
             this.props.threads,
             thread => {
@@ -249,7 +250,7 @@ class EmailColumn extends React.Component {
                 }
 
                 // If this email has been hidden (ie, is/will be moving elsewhere)
-                if (getColumnStore(this.props.id).hasHiddenThread(thread)) {
+                if (columnStore.hasHiddenThread(thread)) {
                     return false;
                 }
 
@@ -282,12 +283,6 @@ class EmailColumn extends React.Component {
     }
 
     render() {
-        // Reset the temporary column store set classes - these hold information
-        // that lives *between* column renders to show/hide individual threads.
-        // See the README for more information.
-        const columnStore = getColumnStore(this.props.id);
-        columnStore.resetThreadSets();
-
         const { connectDropTarget } = this.props;
         const threads = this.getFilteredEmailThreads();
 
