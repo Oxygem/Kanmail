@@ -37,6 +37,7 @@
     "react-dom": "^16.0.0",
     "react-quill": "1.x",
     "react-select": "2.x",
+    "seamless-scroll-polyfill": "^1.2.3",
     "terser-webpack-plugin": "4.x",
     "urijs": "^1.19.0",
     "webpack": "^4.44.2",
