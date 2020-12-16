@@ -67,7 +67,6 @@ class SettingsStore extends BaseStore {
     }
 
     addSidebarFolder(name) {
-        console.log('YAS', this.props.styleSettings.sidebar_folders, name);
         if (this.props.styleSettings.sidebar_folders.indexOf(name) > -1) {
             return;
         }
