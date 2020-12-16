@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { ALIAS_FOLDERS } from 'constants.js';
 import { makeDragElement } from 'window.js';
 
+import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
@@ -20,6 +21,7 @@ export default class EmailColumnHeaderWrapper extends React.Component {
     render() {
         const WrappedEmailColumnHeader = subscribe(
             getColumnMetaStore(this.props.id),
+            [filterStore, ['accountName']],
         )(EmailColumnHeader);
 
         return <WrappedEmailColumnHeader
@@ -38,6 +40,7 @@ class EmailColumnHeader extends React.Component {
         isSyncing: PropTypes.bool.isRequired,
         isMainColumn: PropTypes.bool.isRequired,
         getNewEmails: PropTypes.func.isRequired,
+        accountName: PropTypes.string,
     }
 
     handleClickDelete = () => {
@@ -117,16 +120,19 @@ class EmailColumnHeader extends React.Component {
     }
 
     renderMeta() {
-        const totalAccounts = _.size(this.props.counts);
+        const totalAccounts = this.props.accountName ? 1 : _.size(this.props.counts);
 
-        const totalEmails = _.reduce(this.props.counts, (memo, value) => {
-            memo += value;
+        const totalEmails = _.reduce(this.props.counts, (memo, value, accountKey) => {
+            if (!this.props.accountName || accountKey === this.props.accountName) {
+                memo += value;
+            }
             return memo;
         }, 0);
 
         return (
             <div className="text">
-                {totalEmails.toLocaleString()} emails in {totalAccounts} accounts
+                {totalEmails.toLocaleString()} emails in {totalAccounts}&nbsp;
+                {totalAccounts > 1 ? 'accounts': 'account'}
             </div>
         );
     }
