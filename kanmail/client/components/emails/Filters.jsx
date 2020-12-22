@@ -18,6 +18,15 @@ import { getAccountIconName } from 'util/accounts.js';
 import { capitalizeFirstLetter } from 'util/string.js';
 import { moveOrCopyThread } from 'util/threads.js';
 
+const ALIAS_TO_CLASS = {
+    'inbox': 'pink',
+    'sent': 'blue',
+    'drafts': 'white',
+    'archive': 'green',
+    'trash': 'red',
+    'spam': '',
+};
+
 
 const folderLinkTarget = {
     canDrop(props, monitor) {
@@ -46,6 +55,7 @@ class SidebarFolderLink extends React.Component {
     static propTypes = {
         folderName: PropTypes.string.isRequired,
         iconName: PropTypes.string.isRequired,
+        cssClass: PropTypes.string.isRequired,
         isActive: PropTypes.bool.isRequired,
         handleClick: PropTypes.func.isRequired,
 
@@ -96,7 +106,7 @@ class SidebarFolderLink extends React.Component {
                 ref={(li) => {this.containerLi = li;}}
             >
                 <a onClick={this.props.handleClick}>
-                    <i className={`fa fa-${this.props.iconName}`}></i>
+                    <i className={`fa fa-${this.props.iconName} ${this.props.cssClass}`}></i>
                     {capitalizeFirstLetter(this.props.folderName)}
                     {this.renderPinButton()}
                 </a>
@@ -139,6 +149,7 @@ export default class Filters extends React.Component {
     renderFolderLinks(folders, extraProps) {
         return _.map(folders, folderName => {
             const iconName = ALIAS_TO_ICON[folderName] || 'folder';
+            const cssClass = ALIAS_TO_CLASS[folderName] || '';
             const isActive = this.props.mainColumn === folderName;
             const handleClick = () => {
                 const columnMetaStore = getColumnMetaStore(folderName);
@@ -159,6 +170,7 @@ export default class Filters extends React.Component {
                 isActive={isActive}
                 handleClick={handleClick}
                 iconName={iconName}
+                cssClass={cssClass}
                 {...extraProps}
             />;
         });
@@ -235,7 +247,7 @@ export default class Filters extends React.Component {
 
         if (this.props.updateReady) {
             return (
-                <li><span>
+                <li><span className="update">
                     Update installed, restart Kanmail when ready...
                 </span></li>
             );
