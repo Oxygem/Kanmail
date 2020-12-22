@@ -135,7 +135,7 @@ class Folder(object):
         }
 
         for uid, data in email_parts.items():
-            parts = uid_to_parts.get(uid)
+            parts = uid_to_parts.get(uid, {})
             data_meta = parts.get(part)
 
             if not data_meta:
