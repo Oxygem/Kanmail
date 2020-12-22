@@ -224,7 +224,7 @@ class ThreadStore extends BaseStore {
 
         if (this.columnContainer) {
             this.columnContainer.classList.remove('open');
-            this.columnContainer.style.maxWidth = 'none';
+            this.columnContainer.style.maxWidth = null;
         }
 
         if (this.onClose) {
