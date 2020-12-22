@@ -1,12 +1,10 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import randomColor from 'randomcolor';
 
 import { openLink } from 'window.js';
 
-import settingsStore from 'stores/settings.js';
-
+import Avatar from 'components/Avatar.jsx';
 import ThreadMessageAttachment from 'components/emails/ThreadMessageAttachment.jsx';
 
 import { ensureInView } from 'util/element.js';
@@ -14,32 +12,6 @@ import { cleanHtml } from 'util/html.js';
 import { put, delete_ } from 'util/requests.js';
 import { formatAddress, formatDate } from 'util/string.js';
 import { openReplyToMessageWindow } from 'util/message.js';
-
-
-const emailToColor = {};
-
-function getColorForAddress(address) {
-    const email = address[1];
-    if (!emailToColor[email]) {
-        emailToColor[email] = randomColor();
-    }
-    return emailToColor[email];
-}
-
-function getInitialsFromAddress(address) {
-    const text = address[0] || address[1];
-    const textBits = text.split(' ');
-    if (textBits.length > 1) {
-        return `${textBits[0][0]}${textBits[1][0]}`;
-    }
-
-    const capitalOnlyText = text.replace(/[^A-Z]/g, '');
-    if (capitalOnlyText.length) {
-        return capitalOnlyText;
-    }
-
-    return text[0];
-}
 
 
 export default class ThreadMessage extends React.Component {
@@ -287,10 +259,7 @@ export default class ThreadMessage extends React.Component {
         return (
             <div className="meta flex" onClick={this.handleClick}>
                 <div className="addresses half">
-                    <div className="avatar" style={{background: getColorForAddress(message.from[0])}}>
-                        {settingsStore.props.systemSettings.load_contact_icons && <img src={`/contact-icon/${message.from[0][1]}`} />}
-                        <span>{getInitialsFromAddress(message.from[0])}</span>
-                    </div>
+                    <Avatar address={message.from[0]} />
                     {this.renderAddresses(message.from)}
                     <br />
                     <span className="meta-text">
