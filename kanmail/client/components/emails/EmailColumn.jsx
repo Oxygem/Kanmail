@@ -79,6 +79,7 @@ class EmailColumn extends React.Component {
     static propTypes = {
         id: PropTypes.string.isRequired,
         threads: PropTypes.array,
+        incomingThreads: PropTypes.array.isRequired,
         hiddenThreadHashes: PropTypes.object.isRequired,
         accountName: PropTypes.string,
         isMainColumn: PropTypes.bool.isRequired,
@@ -225,7 +226,7 @@ class EmailColumn extends React.Component {
         }
 
         const columnStore = getColumnStore(this.props.id);
-        return _.filter(
+        const filteredThreads = _.filter(
             this.props.threads,
             thread => {
                 const accountKey = thread[0].account_name;
@@ -257,6 +258,8 @@ class EmailColumn extends React.Component {
                 return true;
             }
         );
+
+        return this.props.incomingThreads.concat(filteredThreads);
     }
 
     handleScroll = () => {

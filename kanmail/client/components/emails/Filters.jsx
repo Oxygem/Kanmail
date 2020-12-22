@@ -28,8 +28,6 @@ const folderLinkTarget = {
     drop(props, monitor) {
         const moveData = monitor.getItem();
         moveOrCopyThread(moveData, props.folderName);
-        // Flag the thread component as moving (hiding it)
-        moveData.sourceThreadComponent.setIsMoving();
     },
 };
 

@@ -80,8 +80,27 @@ class ColumnStore extends BaseStore {
         this.folderName = folderName;
         this.props = {
             threads: null,
+            incomingThreads: [],
         };
         this.resetThreadSets();
+    }
+
+    addIncomingThread(thread) {
+        const incomingThread = _.clone(thread);
+        incomingThread.isIncoming = true;
+        incomingThread.hash = `incoming-${thread.hash}`;
+
+        this.props.incomingThreads.push(incomingThread);
+        this.triggerUpdate(['incomingThreads']);
+    }
+
+    removeIncomingThread(thread) {
+        const incomingHash = `incoming-${thread.hash}`;
+        this.props.incomingThreads = _.filter(
+            this.props.incomingThreads,
+            incomingThread => incomingThread.hash !== incomingHash,
+        );
+        this.triggerUpdate(['incomingThreads']);
     }
 
     resetThreadSets() {

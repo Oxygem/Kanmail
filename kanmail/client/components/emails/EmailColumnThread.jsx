@@ -80,7 +80,7 @@ export default class EmailColumnThread extends React.Component {
     constructor(props) {
         super(props);
 
-        const { starred, archived, deleted } = this.props.thread;
+        const { starred, archived, deleted, isIncoming } = this.props.thread;
         let { unread } = this.props.thread;
 
         // Read the emails via the column store, just in case we re-render the column
@@ -100,7 +100,7 @@ export default class EmailColumnThread extends React.Component {
             hover: false,
             error: false,
             // Locking/executing state
-            locked: false,
+            locked: isIncoming || false,
             archiving: false,
             trashing: false,
             restoring: false,
@@ -594,6 +594,10 @@ export default class EmailColumnThread extends React.Component {
 
         if (this.state.archived) {
             classNames.push('archived');
+        }
+
+        if (this.props.thread.isIncoming) {
+            classNames.push('incoming');
         }
 
         return connectDragSource(
