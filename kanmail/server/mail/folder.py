@@ -88,6 +88,7 @@ class Folder(object):
         with self.account.get_imap_connection(selected_folder=self.name) as connection:
             yield connection
 
+    @lock_class_method  # prevent parallel writes to the same UID (TODO? lock by uid arg)
     def add_cache_flags(self, uid, new_flag):
         headers = self.cache.get_headers(uid)
 
@@ -97,6 +98,7 @@ class Folder(object):
             headers['flags'] = tuple(flags)
             self.cache.set_headers(uid, headers)
 
+    @lock_class_method  # prevent parallel writes to the same UID (TODO? lock by uid arg)
     def remove_cache_flags(self, uid, remove_flag):
         headers = self.cache.get_headers(uid)
 
