@@ -259,7 +259,12 @@ class EmailColumn extends React.Component {
             }
         );
 
-        return this.props.incomingThreads.concat(filteredThreads);
+        // Sort by the *first/latest* email in each thread
+        return _.orderBy(
+            this.props.incomingThreads.concat(filteredThreads),
+            thread => new Date(thread[0].date),
+            'desc',
+        );
     }
 
     handleScroll = () => {

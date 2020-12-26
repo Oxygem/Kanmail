@@ -464,12 +464,7 @@ export default class BaseEmails {
             const store = getColumnStore(columnName);
             const metaStore = getColumnMetaStore(columnName);
 
-            let threads = folderEmails[columnName] || [];
-            threads = _.orderBy(threads, emails => {
-                // Sort by the *first/latest* email in each thread
-                const date = new Date(emails[0].date);
-                return date;
-            }, 'desc');
+            const threads = folderEmails[columnName] || [];
 
             // Always update the main column
             const forceUpdate = (
