@@ -39,7 +39,7 @@ We welcome pull requests, but note you will be contributing to a non-free projec
 
 Python _must_ be configured `--with-framework`. See [this StackOverflow answer](https://stackoverflow.com/a/15752676/352488) to check whether this is enabled.
 
-To build/release you'll need to intsall GNU tar, which can be done with brew:
+To build/release you'll need to install GNU tar, which can be done with brew:
 
 ```
 brew install gnu-tar
