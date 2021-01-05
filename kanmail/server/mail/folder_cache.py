@@ -1,3 +1,4 @@
+from functools import wraps
 from pickle import (
     dumps as pickle_dumps,
     loads as pickle_loads,
@@ -10,6 +11,15 @@ from kanmail.server.app import db
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_settings
 from kanmail.settings.constants import CACHE_ENABLED
+
+
+def execute_if_enabled(func):
+    @wraps(func)
+    def decorator(*args, **kwargs):
+        if CACHE_ENABLED:
+            return func(*args, **kwargs)
+
+    return decorator
 
 
 # Database models
@@ -141,11 +151,11 @@ def vacuum_folder_cache():
     logger.info('Folder cache DB vacuumed')
 
 
+@execute_if_enabled
 def bust_all_caches():
-    if CACHE_ENABLED:
-        logger.warning('Busting all cache items!')
-        FolderCacheItem.query.delete()
-        db.session.commit()
+    logger.warning('Busting all cache items!')
+    FolderCacheItem.query.delete()
+    db.session.commit()
 
 
 def save_cache_items(*items):
@@ -192,10 +202,8 @@ class FolderCache(object):
         func = getattr(logger, method)
         func(f'[{self}]: {message}')
 
+    @execute_if_enabled
     def bust(self):
-        if not CACHE_ENABLED:
-            return
-
         self.log('warning', 'busting the cache!')
         delete_cache_items(self.get_folder_cache_item())
 
@@ -224,6 +232,7 @@ class FolderCache(object):
         if uids:
             return pickle_loads(uids)
 
+    @execute_if_enabled
     def set_headers(self, uid, headers):
         self.log('debug', f'Set headers for UID {uid}: {headers}')
 
@@ -241,6 +250,7 @@ class FolderCache(object):
 
         save_cache_items(headers)
 
+    @execute_if_enabled
     def get_header_cache_item(self, uid):
         try:
             return FolderHeaderCacheItem.query.filter_by(
@@ -250,16 +260,19 @@ class FolderCache(object):
         except NoResultFound:
             pass
 
+    @execute_if_enabled
     def delete_headers(self, uid):
         headers = self.get_header_cache_item(uid)
         if headers:
             delete_cache_items(headers)
 
+    @execute_if_enabled
     def get_headers(self, uid):
         headers = self.get_header_cache_item(uid)
         if headers:
             return pickle_loads(headers.data)
 
+    @execute_if_enabled
     def get_parts(self, uid):
         headers = self.get_headers(uid)
         if headers:
@@ -269,6 +282,9 @@ class FolderCache(object):
     #
 
     def batch_get_header_items(self, uids):
+        if not CACHE_ENABLED:
+            return {}
+
         matched_headers = (
             FolderHeaderCacheItem.query
             .filter_by(folder_id=self.get_folder_cache_item().id)
@@ -281,6 +297,9 @@ class FolderCache(object):
         }
 
     def batch_get_headers(self, uids):
+        if not CACHE_ENABLED:
+            return {}
+
         self.log('debug', f'Batch get {len(uids)} headers')
 
         return {
@@ -288,6 +307,7 @@ class FolderCache(object):
             for uid, header in self.batch_get_header_items(uids).items()
         }
 
+    @execute_if_enabled
     def batch_set_headers(self, uid_to_headers):
         self.log('debug', f'Batch set {len(uid_to_headers)} headers')
 
