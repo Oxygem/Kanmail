@@ -91,7 +91,7 @@ class ImapConnectionWrapper(object):
     def try_make_imap(self):
         try:
             self.make_imap()
-        except OSError as e:
+        except (OSError, LoginError) as e:
             raise ImapConnectionError(self.config.account, *e.args)
 
     def make_imap(self):
