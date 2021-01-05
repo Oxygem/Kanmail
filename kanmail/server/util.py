@@ -10,6 +10,17 @@ from kanmail.log import logger
 from kanmail.settings.constants import DEBUG_LOCKS
 
 
+def lock_function(func):
+    func.lock = RLock()
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        with func.lock:
+            return func(*args, **kwargs)
+
+    return wrapper
+
+
 def lock_class_method(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
