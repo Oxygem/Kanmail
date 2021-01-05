@@ -6,6 +6,7 @@ from imapclient.exceptions import IMAPClientError
 from kanmail.log import logger
 from kanmail.server.util import lock_class_method
 from kanmail.settings import get_system_setting
+from kanmail.settings.constants import DEBUG
 
 from .connection import ImapConnectionError
 from .fixes import fix_email_uids, fix_missing_uids
@@ -13,6 +14,10 @@ from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
 
 SEEN_FLAG = b'\\Seen'
+
+
+class FolderError(Exception):
+    pass
 
 
 class Folder(object):
@@ -139,14 +144,15 @@ class Folder(object):
             data_meta = parts.get(part)
 
             if not data_meta:
-                self.log(
-                    'warning',
-                    f'Unknown part uid={uid}, part={part}, knownParts={parts}',
-                )
+                message = f'Unknown part uid={uid}, part={part}, knownParts={parts}'
+                if DEBUG:
+                    raise FolderError(message)
+                else:
+                    self.log('warning', message)
 
             if body_keyname not in data:
                 if retry > connection.config.max_attempts:
-                    raise Exception(f'Missing data for UID/part {uid}/{part}')
+                    raise FolderError(f'Missing data for UID/part {uid}/{part}')
 
                 failed_email_uids.append(uid)
                 continue
