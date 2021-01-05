@@ -1,10 +1,8 @@
 import React from 'react';
 
-import HeaderBar from 'components/HeaderBar.jsx';
-
 import img from 'icon-pink.png';
 import keyboard from 'keyboard.js';
-import { openLink, openWindow } from 'window.js';
+import { openLink, openWindow, makeDragElement } from 'window.js';
 
 
 export default class MetaApp extends React.Component {
@@ -14,9 +12,7 @@ export default class MetaApp extends React.Component {
     }
 
     render() {
-        return <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
-            <HeaderBar />
-
+        return <section className="no-select" ref={makeDragElement}>
             <section id="meta">
                 <h2><img src={img} width="48px" /> Kanmail</h2>
                 <p>

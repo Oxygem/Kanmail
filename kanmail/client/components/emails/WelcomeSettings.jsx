@@ -1,11 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
 
-import HeaderBar from 'components/HeaderBar.jsx';
 import AccountList from 'components/settings/AccountList.jsx';
 
 import img from 'icon-pink.png';
 import keyboard from 'keyboard.js';
+import { makeDragElement } from 'window.js';
 
 import { put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
@@ -133,7 +133,10 @@ export default class WelcomeSettings extends React.Component {
     render() {
         return (
             <section className={window.KANMAIL_PLATFORM}>
-                <HeaderBar />
+                <header className="welcome-settings header-bar" ref={makeDragElement}>
+                    <h2>Setup Kanmail</h2>
+                </header>
+
                 <section id="welcome-settings">
                     <h2><img src={img} width="48px" /> Kanmail</h2>
                     <p>

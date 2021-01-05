@@ -1,8 +1,6 @@
 import React from 'react';
 
-import HeaderBar from 'components/HeaderBar.jsx';
-
-import { closeWindow, openLink } from 'window.js';
+import { closeWindow, openLink, makeDragElement } from 'window.js';
 
 import { delete_, post } from 'util/requests.js';
 
@@ -118,8 +116,10 @@ export default class LicenseApp extends React.Component {
     }
 
     render() {
-        return <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
-            <HeaderBar />
+        return <section className="no-select">
+            <header className="meta header-bar" ref={makeDragElement}>
+                <h2>Manage License</h2>
+            </header>
 
             <section id="license">
                 <h2>Kanmail License</h2>

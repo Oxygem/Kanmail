@@ -1,7 +1,5 @@
 header {
-    height: @dragBarHeight;
-    background: @pink;
-    color: white;
+    height: @topHeight;
     position: relative;
 
     h1#logo {
@@ -107,6 +105,15 @@ header {
         left: 0;
         right: 0;
         z-index: 99999;
+        background: @lightestGrey;
+        border-bottom: 1px solid @lightGrey;
+
+        h2 {
+            margin-top: 15px;
+            margin-left: 20px;
+
+            .no-select
+        }
 
         div.header-errors {
             margin-top: 20px;
@@ -127,56 +134,4 @@ header {
 /* Make the logo float right on MacOS, as the control buttons live on the left */
 section.Darwin header h1#logo {
     float: right;
-}
-
-
-
-/*
-    Drag bar */
-
-div#drag-bar {
-    position: fixed;
-    z-index: 999999;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: @dragBarHeight;
-    background: transparent;
-
-    a {
-        float: right;
-        color: @lightGrey;
-        font-size: 14px;
-
-        width: 18px;
-        height: 18px;
-        border-radius: 20px;
-        background: transparent;
-        text-align: center;
-
-        margin-top: 2px;
-        margin-right: 5px;
-        padding-top: 1px;
-
-        border: 1px solid transparent;
-
-        &:hover {
-            border-color: #A7A7A7;
-        }
-        &:first-child {
-            margin-right: 5px;
-        }
-
-            i.close {
-                color: @orange;
-            }
-
-            i.minimize {
-                color: @yellow;
-            }
-
-            i.maximize {
-                color: @green;
-            }
-    }
 }

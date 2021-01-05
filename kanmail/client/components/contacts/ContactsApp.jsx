@@ -2,9 +2,9 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import HeaderBar from 'components/HeaderBar.jsx';
 import Contact from 'components/contacts/Contact.jsx';
 import AddNewContactForm from 'components/contacts/AddNewContactForm.jsx';
+import { makeDragElement } from 'window.js';
 
 
 export default class ContactsApp extends React.Component {
@@ -69,10 +69,8 @@ export default class ContactsApp extends React.Component {
 
     render() {
         return (
-            <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
-                <HeaderBar />
-
-                <section id="contacts">
+            <section className="no-select">
+                <header className="contacts header-bar" ref={makeDragElement}>
                     <h2>{_.size(this.state.contacts).toLocaleString()} Contacts</h2>
                     <div className="search">
                         <input
@@ -83,6 +81,9 @@ export default class ContactsApp extends React.Component {
                             placeholder="Filter contacts..."
                         />
                     </div>
+                </header>
+
+                <section id="contacts">
                     <AddNewContactForm
                         addNewContact={this.addNewContact}
                         toggleForm={this.toggleForm}

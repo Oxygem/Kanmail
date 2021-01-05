@@ -3,11 +3,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Creatable } from 'react-select';
 
-import HeaderBar from 'components/HeaderBar.jsx';
 import AccountList from 'components/settings/AccountList.jsx';
 
 import keyboard from 'keyboard.js';
-import { closeWindow, openLicense } from 'window.js';
+import { closeWindow, openLicense, makeDragElement } from 'window.js';
 
 import { delete_, put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
@@ -243,8 +242,10 @@ export default class SettingsApp extends React.Component {
 
     render() {
         return (
-            <section className={`no-select ${window.KANMAIL_PLATFORM}`}>
-                <HeaderBar />
+            <section className="no-select">
+                <header className="settings header-bar" ref={makeDragElement}>
+                    <h2>Settings</h2>
+                </header>
 
                 <section id="settings">
                     <div className="settings">

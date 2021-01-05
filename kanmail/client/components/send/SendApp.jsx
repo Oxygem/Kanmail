@@ -6,12 +6,10 @@ import PropTypes from 'prop-types';
 import Select, { AsyncCreatable } from 'react-select';
 import ReactQuill from 'react-quill';
 
-import HeaderBar from 'components/HeaderBar.jsx';
-
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
 
-import { closeWindow } from 'window.js';
+import { closeWindow, makeDragElement } from 'window.js';
 
 import { cleanHtml } from 'util/html.js'
 import { post } from 'util/requests.js'
@@ -497,7 +495,9 @@ export default class SendApp extends React.Component {
 
         return (
             <section id="new-email" className={window.KANMAIL_PLATFORM}>
-                <HeaderBar />
+                <header className="new-email header-bar" ref={makeDragElement}>
+                    <h2>New Email</h2>
+                </header>
 
                 <form>
                     <div className="third">

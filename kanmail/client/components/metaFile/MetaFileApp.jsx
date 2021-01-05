@@ -1,9 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import HeaderBar from 'components/HeaderBar.jsx';
-
 import img from 'icon-pink.png';
+import { makeDragElement } from 'window.js';
 
 
 export default class MetaApp extends React.Component {
@@ -13,11 +12,12 @@ export default class MetaApp extends React.Component {
     }
 
     render() {
-        return <section className={window.KANMAIL_PLATFORM}>
-            <HeaderBar />
+        return <section>
+            <header className="meta header-bar" ref={makeDragElement}>
+                <h2 className="no-select"><img src={img} width="36px" /> {this.props.fileTitle}</h2>
+            </header>
 
             <section id="meta-file">
-                <h2 className="no-select"><img src={img} width="48px" /> {this.props.fileTitle}</h2>
                 <div
                     dangerouslySetInnerHTML={{
                         __html: this.props.fileData,
