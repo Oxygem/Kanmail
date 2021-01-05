@@ -16,7 +16,7 @@ export const ALIAS_TO_ICON = {
     'drafts': 'pencil',
     'archive': 'archive',
     'trash': 'trash',
-    'spam': 'crosshairs',
+    'spam': 'exclamation-triangle',
 };
 
 export const PROVIDERS_DOC_LINK = 'https://kanmail.io/docs/email-providers'
