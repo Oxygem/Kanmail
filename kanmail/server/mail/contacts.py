@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from kanmail.log import logger
 from kanmail.server.app import db
+from kanmail.server.util import lock_function
 
 
 class Contact(db.Model):
@@ -94,6 +95,7 @@ def is_valid_contact(name, email):
     return True
 
 
+@lock_function
 def add_contacts(contacts):
     existing_contacts = get_contact_tuple_to_contact()
     contacts_to_save = []
