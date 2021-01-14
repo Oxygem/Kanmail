@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 
 import 'fonts/fontawesome/css/font-awesome.css';
 import 'fonts/roboto/css/roboto.css';
-import 'fonts/roboto-slab/css/roboto-slab.css';
 import 'style.less';
 
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
