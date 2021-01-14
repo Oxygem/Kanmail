@@ -65,7 +65,7 @@ section#columns {
             padding-top: 18px;
             line-height: 20px;
             position: relative;
-            font-size: 20px;
+            font-size: @titleTextSize;
             z-index: 2;
 
             i.loading {
@@ -76,8 +76,7 @@ section#columns {
 
             span.meta {
                 float: right;
-                font-size: 12px;
-                font-family: Roboto;
+                font-size: @smallTextSize;
 
                 div.icons {
                     display: none;
@@ -194,6 +193,7 @@ section#columns {
             margin: 0;
             height: 24px;
             overflow: hidden;
+            font-size: @smallTextSize;
 
             span {
                 margin-right: 4px;
@@ -227,19 +227,17 @@ section#columns {
 
         span.date {
             float: right;
-            font-size: 12px;
             font-weight: normal;
         }
 
         p {
             margin: 0;
-            font-size: 14px;
             height: 48px;  // line-height * 2
             overflow: hidden;
         }
 
         div.meta {
-            font-size: 12px;
+            font-size: @smallTextSize;
 
             span.extra-meta {
                 opacity: 0.5;

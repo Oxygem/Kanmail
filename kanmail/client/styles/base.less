@@ -10,6 +10,10 @@
 @sidebarWidth: 175px;
 @borderRadius: 5px;
 
+@titleTextSize: 17px;
+@bigTextSize: 15px;
+@textSize: 13px;
+@smallTextSize: 11px;
 
 
 /*
@@ -40,7 +44,7 @@
 
 body {
     font-family: Roboto;
-    font-size: 16px;
+    font-size: @textSize;
     line-height: 24px;
     height: 100%;
     width: 100%;
@@ -103,7 +107,7 @@ input {
 button {
     padding: 5px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: @textSize;
     border: none;
     border-radius: @borderRadius;
     color: white;
@@ -123,8 +127,8 @@ input, textarea {
     width: 100%;
     border-radius: @borderRadius;
     padding: 5px;
-    font-size: 16px;
     border: 1px solid;
+    font-size: @textSize;
 
     &:hover, &:focus {
         outline: none;
@@ -147,7 +151,7 @@ span.multi-subject {
     float: left;
     text-align: center;
     display: inline-block;
-    font-size: 12px;
+    font-size: @smallTextSize;
 }
 
 .tooltip-wrapper {
@@ -164,7 +168,7 @@ span.multi-subject {
         margin-left: 5px;
         margin-top: -5px;
         padding: 5px;
-        font-size: 12px;
+        font-size: @smallTextSize;
     }
 
     &:hover .tooltip {

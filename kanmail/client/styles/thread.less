@@ -24,7 +24,7 @@ section#thread {
         margin: 0 0 10px 0;
         padding-left: 20px;
         padding-top: 20px;
-        font-size: 20px;
+        font-size: @titleTextSize;
         height: @topHeight;
         background: white;
         border-bottom: 1px solid;
@@ -59,13 +59,13 @@ section#thread {
         }
 
         button {
-            font-size: 16px;
+            font-size: @textSize;
         }
 
         button span {
             display: block;
             font-weight: normal;
-            font-size: 12px;
+            font-size: @smallTextSize;
             margin-top: 4px;
         }
 
@@ -89,7 +89,6 @@ section#thread {
             button {
                 width: 48%;
                 padding: 10px 0;
-                font-size: 16px;
                 margin-bottom: 10px;
             }
         }
@@ -101,7 +100,7 @@ section#thread {
 
     button {
         padding: 3px;
-        font-size: 12px;
+        font-size: @smallTextSize;
         border: none;
     }
 
@@ -120,10 +119,7 @@ section#thread {
             margin: 0 -5px;
 
             span.meta-text {
-                font-size: 12px;
-            }
-
-            .fa-star {
+                font-size: @smallTextSize;
             }
 
             div.date {
@@ -163,7 +159,7 @@ section#thread {
 
         div.controls {
             width: 100%;
-            font-size: 12px;
+            font-size: @smallTextSize;
             margin-bottom: 20px;
 
             .no-select;
@@ -193,7 +189,7 @@ section#thread {
 
             .attachment-meta {
                 display: block;
-                font-size: 12px;
+                font-size: @smallTextSize;
             }
         }
     }
