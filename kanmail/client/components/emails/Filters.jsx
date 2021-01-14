@@ -270,6 +270,12 @@ export default class Filters extends React.Component {
 
     render() {
         return (<div id="filters">
+            {!window.KANMAIL_LICENSED && <ul><li>
+                <a onClick={openLicense}>
+                    <i className="fa fa-shopping-cart green"></i> Purchase Kanmail
+                </a>
+            </li></ul>}
+
             <ul>{this.renderMainFolderLinks()}</ul>
             <ul>{this.renderOtherFolderLinks()}</ul>
 
@@ -296,12 +302,6 @@ export default class Filters extends React.Component {
                 {settingsStore.props.systemSettings.show_help_button && <li>
                     <a onClick={() => openLink('https://kanmail.io/docs')}>
                         <i className="fa fa-support"></i> Help
-                    </a>
-                </li>}
-
-                {!window.KANMAIL_LICENSED && <li>
-                    <a onClick={openLicense}>
-                        <i className="fa fa-shopping-cart"></i> Purchase Kanmail
                     </a>
                 </li>}
             </ul>
