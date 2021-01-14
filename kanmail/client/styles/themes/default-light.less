@@ -1,0 +1,656 @@
+/*
+    Variables */
+
+@white: #FFFFFF;
+
+@darkestGrey: #232526;
+@darkGrey: #343637;
+@midGrey: #A6A8A9;
+@lightGrey: #E6E8E9;
+@lightestGrey: #F6F8F9;
+
+@pink: #F2318D;
+@blue: #008dd5;
+@red: #fb6107;
+@green: #47d966;
+@yellow: #ecc30b;
+
+@formBorderGrey: @lightGrey;
+@formBorderGreyHover: #D6D8D0;
+@formBorderGreyActive: #A6A8A9;
+
+@textGrey: #333536;
+@lightTextGrey: #666869;
+@lightestTextGrey: #999B9C;
+
+body.theme-default-light {
+    color: @textGrey;
+    background: @white;
+
+    a {
+        color: @blue;
+
+        &:hover {
+            color: darken(@blue, 10%);
+        }
+    }
+
+
+    /*
+        Classes */
+
+    .pink {
+        color: @pink;
+    }
+
+    .white {
+        color: @white;
+    }
+
+    .yellow {
+        color: @yellow;
+    }
+
+    .green {
+        color: @green;
+    }
+    .green-hover:hover {
+        color: darken(@green, 25%);
+    }
+
+    .red {
+        color: @red;
+    }
+    .red-hover:hover {
+        color: darken(@red, 25%);
+    }
+
+    .blue {
+        color: @blue;
+    }
+    .blue-hover:hover {
+        color: darken(@blue, 25%);
+    }
+
+    .yellow {
+        color: @yellow;
+    }
+    .yellow-hover:hover {
+        color: darken(@yellow, 25%);
+    }
+
+
+    /*
+        Forms */
+
+    button {
+        background: @blue;
+
+        &:hover {
+            background: darken(@blue, 10%);
+        }
+
+        &.cancel {
+            background: @red;
+
+            &:hover {
+                background: darken(@red, 10%);
+            }
+        }
+
+        &.submit {
+            background: @green;
+
+            &:hover {
+                background: darken(@green, 10%);
+            }
+        }
+
+        &.error {
+            background: @red;
+        }
+
+        &.inactive {
+            background: @midGrey;
+        }
+
+        &.disabled, &.disabled:hover {
+            background: @lightGrey;
+        }
+    }
+
+    input, textarea {
+        border-color: @formBorderGrey;
+
+        &:hover, &:focus {
+            border-color: @formBorderGreyHover;
+        }
+    }
+
+
+    /*
+        ??? */
+
+    span.multi-subject {
+        background: @lightGrey;
+        color: @lightTextGrey;
+    }
+
+    .tooltip {
+        background: @darkestGrey;
+        color: @lightestGrey;
+    }
+
+    /*
+        Header */
+
+    header {
+        div.header-errors {
+            i {
+                &.error {
+                    color: @red !important;
+                }
+            }
+
+            div.icon-wrapper {
+                a {
+                    color: white;
+                }
+            }
+
+            div.icon-contents {
+                border-color: @red;
+                background: white;
+                color: black;
+
+                p {
+                    border-color: @lightGrey;
+
+                    span.meta {
+                        color: @darkGrey;
+                    }
+
+                    a {
+                        color: @blue;
+                    }
+                }
+            }
+        }
+
+        &.header-bar {
+            background: @lightestGrey;
+            border-color: @lightGrey;
+
+            button {
+                background: transparent;
+                color: @lightTextGrey;
+
+                &:hover {
+                    background: @lightGrey;
+                }
+
+                i {
+                    color: @midGrey;
+                }
+            }
+
+            div.header-errors {
+                div.icon-wrapper a {
+                    color: @textGrey;
+                }
+            }
+        }
+    }
+
+
+    /*
+        Sidebar */
+
+    section#sidebar {
+        background: @lightGrey;
+
+        header {
+            a.compose {
+                color: @lightTextGrey;
+            }
+
+            a.search {
+                color: @lightTextGrey;
+            }
+        }
+
+        ul {
+            li {
+                a, span {
+                    color: @lightTextGrey;
+                }
+
+                span.update {
+                    background: @green;
+                    color: white;
+                }
+
+                a {
+                    &:hover {
+                        background: @midGrey;
+                        color: @white;
+                    }
+                }
+
+                &.active a, &.hover a {
+                    background: @midGrey;
+                    color: @white;
+                }
+
+                i.pin-button {
+                    &.fa-bookmark:hover {
+                        color: @red;
+                    }
+                    &.fa-bookmark-o:hover {
+                        color: @green;
+                    }
+                }
+
+                &.small {
+                    a {
+                        background: transparent;
+                    }
+                }
+            }
+        }
+
+        footer {
+            color: #666;
+
+            a {
+                color: @lightTextGrey;
+
+                &:hover {
+                    color: @lightestTextGrey;
+                }
+            }
+
+            section#status {
+                background: @lightGrey;
+                border-color: #D7D7D7;
+            }
+        }
+    }
+
+
+    /*
+        Threads overlay */
+
+    section#thread-background {
+        background: rgba(100, 100, 100, 0.6);
+    }
+
+    section#thread {
+        background: white;
+        border-color: @lightGrey;
+
+        h1 {
+            background: white;
+            border-color: @lightGrey;
+        }
+
+        section#meta {
+            background: @lightestGrey;
+            border-color: @lightGrey;
+
+            button#close {
+                &:hover {
+                    color: @red;
+                }
+            }
+
+            button {
+                background: white;
+            }
+
+            div#other-buttons {
+                button {
+                    &:hover {
+                        color: @blue;
+                    }
+                }
+            }
+
+            div#respond-buttons {
+                button {
+                    &:hover {
+                        color: @blue;
+                    }
+
+                    &.archive:hover {
+                        color: @green;
+                    }
+
+                    &.trash:hover {
+                        color: @red;
+                    }
+                }
+            }
+        }
+
+        a.show-all-messages {
+            color: @lightTextGrey;
+        }
+
+        button {
+            background: @lightestGrey;
+            color: @lightTextGrey;
+
+            &.active {
+                background: @formBorderGreyHover;
+            }
+        }
+
+        div.message {
+            border-color: @lightestGrey;
+
+            div.meta {
+                span.meta-text {
+                    color: @lightTextGrey;
+                }
+
+                .fa-star {
+                    color: @blue;
+                }
+
+                div.addresses {
+                    div.avatar {
+                        text-shadow: 0 0 1px @darkestGrey;
+                    }
+                }
+            }
+
+            div.controls {
+                color: @lightTextGrey;
+
+                span.right {
+                    i {
+                        color: @lightTextGrey;
+                    }
+                }
+
+                span.tag {
+                    background: @lightestGrey;
+                }
+            }
+
+            .attachment-link {
+                background: @lightestGrey;
+
+                .attachment-meta {
+                    color: @lightTextGrey;
+                }
+            }
+        }
+    }
+
+
+    /*
+        React select overrides */
+
+    div.react-select__control {
+        background: transparent;
+        border-color: @formBorderGrey;
+
+        &:hover {
+            border-color: @formBorderGreyHover;
+        }
+    }
+
+    div.react-select__control--is-focused {
+        border-color: @formBorderGreyActive !important;
+    }
+
+    span.react-select__indicator-separator {
+        background: @formBorderGrey;
+    }
+
+    div.react-select__menu {
+        border-color: @formBorderGreyHover;
+    }
+
+    div.react-select__option {
+        &.react-select__option--is-focused {
+            background: @lightGrey;
+        }
+    }
+
+
+    /*
+        Meta/License App */
+
+    section#meta-file {
+        pre, code {
+            background: @lightestGrey;
+        }
+        code {
+            padding: 1px;
+        }
+    }
+
+
+    /*
+        Columns */
+
+    section#columns {
+        div#search input {
+            border-color: @lightestGrey;
+        }
+
+        div.column {
+            border-color: @lightGrey;
+
+            h3 {
+                border-color: @lightestGrey;
+
+                i.loading {
+                    color: @formBorderGreyActive;
+                }
+
+                span.meta {
+                    color: @formBorderGreyActive;
+                }
+            }
+
+            div.emails {
+                div.loader {
+                    color: @lightestTextGrey;
+                }
+
+                &::before {
+                    color: @lightestTextGrey;
+                }
+            }
+
+            div.email {
+                background: white;
+
+                &.hover {
+                    background: @lightestGrey;
+                }
+
+                &.archiving {
+                    background: @green;
+                }
+
+                &.trashing {
+                    background: @red;
+                }
+
+                h4 {
+                    span {
+                        text-shadow-color: @darkestGrey;
+                    }
+                }
+
+                span.date {
+                    color: @lightTextGrey;
+                }
+
+                p {
+                    color: @formBorderGreyActive;
+                }
+
+                div.meta {
+                    color: @lightTextGrey;
+
+                    span.buttons {
+                        a {
+                            color: @lightTextGrey;
+
+                            &.star {
+                                &.active, &:hover {
+                                    color: @yellow;
+                                }
+                            }
+
+                            &.archive {
+                                &.active, &:hover {
+                                    color: @green;
+                                }
+                            }
+
+                            &.trash {
+                                &.active, &:hover {
+                                    color: @red;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*
+        Send App */
+
+    section#new-email {
+        form {
+            label {
+                color: @lightestTextGrey;
+            }
+
+            div input {
+                border-color: @formBorderGrey;
+
+                &:hover {
+                    border-color: @formBorderGreyHover;
+                }
+
+                &:focus {
+                    border-color: @formBorderGreyActive;
+                }
+            }
+
+            blockquote#reply-quote {
+                background: @lightestGrey;
+                border-color: @lightGrey;
+            }
+
+            div.buttons {
+                button.save {
+                    background: @lightestGrey;
+                    color: @lightTextGrey;
+
+                    &:hover {
+                        background: @lightGrey;
+                    }
+                }
+            }
+
+            div#textarea-body {
+                .ql-container {
+                    &.ql-snow {
+                        border-color: @formBorderGrey;
+                    }
+                }
+
+                .ql-toolbar.ql-snow {
+                    border-color: @formBorderGrey;
+                }
+
+                &.active {
+                    .ql-container.ql-snow, .ql-toolbar.ql-snow {
+                        border-color: @formBorderGreyHover;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*
+        Settings App */
+
+    section#settings {
+        div.settings {
+            label {
+                small {
+                    color: @lightTextGrey;
+                }
+            }
+
+            &.advanced {
+                background: @lightGrey;
+            }
+        }
+    }
+
+    div#accounts {
+        div.error {
+            color: @red;
+        }
+
+        .account {
+            background: @lightestGrey;
+
+            small.connected {
+                color: green;
+            }
+
+            small.not-connected {
+                color: red;
+            }
+
+            &.active {
+                background: @lightGrey;
+                border-color:  @midGrey;
+            }
+
+            &.new {
+                background: #D7D7D7;
+            }
+        }
+
+        div#add-account {
+            div.new-account {
+                p {
+                    color: #666;
+                }
+            }
+        }
+    }
+
+
+    /*
+        Contacts App */
+
+    section#contacts {
+        div#contact-list {
+            border-color: @lightestGrey;
+        }
+
+        div.contact {
+            &:hover {
+                background: @lightestGrey;
+            }
+        }
+    }
+}
