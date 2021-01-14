@@ -16,7 +16,6 @@ section#new-email {
             width: 55px;
             text-align: right;
             padding-right: 2px;
-            color: @lightestTextGrey;
             font-size: 14px;
             margin-bottom: 10px;
             position: absolute;
@@ -27,18 +26,10 @@ section#new-email {
             padding: 2px 9px;
             margin: 0 2px;
             font-size: 14px;
-            border: 1px solid @formBorderGrey;
+            border: 1px solid;
             width: 100%;
             border-radius: @borderRadius;
             outline: none;
-
-            &:hover {
-                border-color: @formBorderGreyHover;
-            }
-
-            &:focus {
-                border-color: @formBorderGreyActive;
-            }
         }
 
         input#subject {
@@ -80,10 +71,8 @@ section#new-email {
             right: 20px;
             left: 70px;
             overflow-y: auto;
-            background: @lightestGrey;
             position: absolute;
             bottom: 50px;
-            border: 1px solid @lightGrey;
 
             * {
                 pointer-events: none;
@@ -132,12 +121,6 @@ section#new-email {
 
             button.save {
                 border-radius: 0 @borderRadius @borderRadius 0;
-                background: @lightestGrey;
-                color: @lightTextGrey;
-
-                &:hover {
-                    background: @lightGrey;
-                }
             }
 
             button.attach {
@@ -164,20 +147,6 @@ section#new-email {
             .ql-container {
                 font-size: 14px;
                 font-family: Roboto;
-
-                &.ql-snow {
-                    border-color: @formBorderGrey;
-                }
-            }
-
-            .ql-toolbar.ql-snow {
-                border-color: @formBorderGrey;
-            }
-
-            &.active {
-                .ql-container.ql-snow, .ql-toolbar.ql-snow {
-                    border-color: @formBorderGreyHover;
-                }
             }
         }
     }
