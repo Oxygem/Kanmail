@@ -35,6 +35,8 @@ MODEL = {
     'style': {
         'header_background': str,
         'sidebar_folders': [str],
+        'theme_light': (str, 'default'),
+        'theme_dark': (str, 'default-dark'),
     },
     'accounts': [
         {
