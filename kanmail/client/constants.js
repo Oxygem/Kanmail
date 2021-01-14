@@ -4,11 +4,14 @@ export const ALWAYS_SYNC_FOLDERS = [
     'sent',
 ];
 
-export const ALIAS_FOLDERS = ALWAYS_SYNC_FOLDERS.concat([
+export const ALIAS_FOLDERS = [  // this defines the display order
+    'inbox',
+    'sent',
     'drafts',
-    'trash',
+    'archive',
     'spam',
-]);
+    'trash',
+];
 
 export const ALIAS_TO_ICON = {
     'inbox': 'inbox',
