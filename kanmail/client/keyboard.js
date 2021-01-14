@@ -3,6 +3,7 @@ import _ from 'lodash';
 import threadStore from 'stores/thread.js';
 import requestStore from 'stores/request.js';
 import controlStore from 'stores/control.js';
+import searchStore from 'stores/search.js';
 
 import { ensureInView } from 'util/element.js';
 import {
@@ -18,6 +19,7 @@ const keys = {
     Z: 90,
     M: 77,
     C: 67,
+    S: 83,
 
     // Special
     DELETE: 8,
@@ -132,11 +134,15 @@ class Keyboard {
     }
 
     handleKeyboardEvents = (ev) => {
+        const code = ev.keyCode;
+
         if (this.disabled) {
+            if (searchStore.props.open && code === keys.ESCAPE) {
+                searchStore.close();
+                return;
+            }
             return;
         }
-
-        const code = ev.keyCode;
 
         // Code we don't care about?
         if (!_.includes(validKeyCodes, code)) {
@@ -156,6 +162,11 @@ class Keyboard {
 
         if (code === keys.ESCAPE) {
             threadStore.close();
+            return;
+        }
+
+        if (code === keys.S) {
+            searchStore.open();
             return;
         }
 
