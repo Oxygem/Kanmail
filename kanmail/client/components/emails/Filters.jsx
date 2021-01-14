@@ -24,7 +24,7 @@ const ALIAS_TO_CLASS = {
     'drafts': 'white',
     'archive': 'green',
     'trash': 'red',
-    'spam': '',
+    'spam': 'yellow',
 };
 
 
@@ -55,7 +55,7 @@ class SidebarFolderLink extends React.Component {
     static propTypes = {
         folderName: PropTypes.string.isRequired,
         iconName: PropTypes.string.isRequired,
-        cssClass: PropTypes.string.isRequired,
+        iconClassName: PropTypes.string.isRequired,
         isActive: PropTypes.bool.isRequired,
         handleClick: PropTypes.func.isRequired,
 
@@ -106,7 +106,7 @@ class SidebarFolderLink extends React.Component {
                 ref={(li) => {this.containerLi = li;}}
             >
                 <a onClick={this.props.handleClick}>
-                    <i className={`fa fa-${this.props.iconName} ${this.props.cssClass}`}></i>
+                    <i className={`fa fa-${this.props.iconName} ${this.props.iconClassName}`}></i>
                     {capitalizeFirstLetter(this.props.folderName)}
                     {this.renderPinButton()}
                 </a>
@@ -149,7 +149,7 @@ export default class Filters extends React.Component {
     renderFolderLinks(folders, extraProps) {
         return _.map(folders, folderName => {
             const iconName = ALIAS_TO_ICON[folderName] || 'folder';
-            const cssClass = ALIAS_TO_CLASS[folderName] || '';
+            const iconClassName = ALIAS_TO_CLASS[folderName] || 'white';
             const isActive = this.props.mainColumn === folderName;
             const handleClick = () => {
                 const columnMetaStore = getColumnMetaStore(folderName);
@@ -170,7 +170,7 @@ export default class Filters extends React.Component {
                 isActive={isActive}
                 handleClick={handleClick}
                 iconName={iconName}
-                cssClass={cssClass}
+                iconClassName={iconClassName}
                 {...extraProps}
             />;
         });
@@ -235,7 +235,7 @@ export default class Filters extends React.Component {
                 key={account.name}
                 className={this.props.accountName === account.name ? 'active': ''}
             ><a onClick={_.partial(this.setAccountFilter, account.name)}>
-                <i className={`fa fa-${getAccountIconName(account)}`}></i> {account.name}
+                <i className={`fa fa-${getAccountIconName(account)} white`}></i> {account.name}
             </a></li>
         ));
     }
@@ -282,20 +282,20 @@ export default class Filters extends React.Component {
             <ul>
                 <li className={_.isNull(this.props.accountName) ? 'active': ''}><a
                     onClick={_.partial(this.setAccountFilter, null)}>
-                    <i className="fa fa-globe"></i> All accounts
+                    <i className="fa fa-globe white"></i> All accounts
                 </a></li>
                 {this.renderAccounts()}
             </ul>
 
             <ul>
                 <li>
-                    <a onClick={openSettings}>
-                        <i className="fa fa-cog"></i> Settings
+                    <a onClick={openContacts}>
+                        <i className="fa fa-address-book"></i> Contacts
                     </a>
                 </li>
                 <li>
-                    <a onClick={openContacts}>
-                        <i className="fa fa-address-book"></i> Contacts
+                    <a onClick={openSettings}>
+                        <i className="fa fa-cog"></i> Settings
                     </a>
                 </li>
 
