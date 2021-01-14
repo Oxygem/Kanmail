@@ -1,21 +1,6 @@
 /*
     Variables */
 
-
-@darkestGrey: #232727;
-@darkGrey: #343838;
-@midGrey: #A7A7A7;
-@lightGrey: #E7E7E7;
-@lightestGrey: #F7F7F7;
-
-@pink: #F2318D;
-
-@blue: #008dd5;
-@red: #fb6107;
-@green: #29bf12;
-@green: #47d966;
-@yellow: #ecc30b;
-
 @dragBarHeight: 22px;
 
 @topHeight: 56px;
@@ -25,13 +10,6 @@
 @sidebarWidth: 175px;
 @borderRadius: 5px;
 
-@formBorderGrey: @lightGrey;
-@formBorderGreyHover: #D7D7D7;
-@formBorderGreyActive: #A7A7A7;
-
-@textGrey: #333333;
-@lightTextGrey: #666666;
-@lightestTextGrey: #999999;
 
 
 /*
@@ -68,18 +46,11 @@ body {
     width: 100%;
     position: relative;
     margin: 0;
-    color: @textGrey;
-    background: #FFFFFF;
 }
 
 a {
     text-decoration: none;
-    color: @blue;
     cursor: pointer;
-
-    &:hover {
-        color: darken(@blue, 10%);
-    }
 }
 
 h1, h2, h3 {
@@ -89,39 +60,6 @@ h1, h2, h3 {
 input {
     font-family: Roboto;
 }
-
-
-/*
-    Styles */
-
-.green {
-    color: @green;
-}
-.green-hover:hover {
-    color: darken(@green, 25%);
-}
-
-.red {
-    color: @orange;
-}
-.red-hover:hover {
-    color: darken(@orange, 25%);
-}
-
-.blue {
-    color: @blue;
-}
-.blue-hover:hover {
-    color: darken(@blue, 25%);
-}
-
-.yellow {
-    color: @yellow;
-}
-.yellow-hover:hover {
-    color: darken(@yellow, 25%);
-}
-
 
 
 /*
@@ -165,43 +103,13 @@ input {
 button {
     padding: 5px;
     font-weight: bold;
-    background: @blue;
     font-size: 14px;
     border: none;
     border-radius: @borderRadius;
     color: white;
     cursor: pointer;
 
-    &:hover {
-        background: darken(@blue, 10%);
-    }
-
-    &.cancel {
-        background: @orange;
-
-        &:hover {
-            background: darken(@orange, 10%);
-        }
-    }
-
-    &.submit {
-        background: @green;
-
-        &:hover {
-            background: darken(@green, 10%);
-        }
-    }
-
-    &.error {
-        background: @orange;
-    }
-
-    &.inactive {
-        background: @midGrey;
-    }
-
     &.disabled, &.disabled:hover {
-        background: @lightGrey;
         cursor: auto;
     }
 
@@ -215,11 +123,10 @@ input, textarea {
     width: 100%;
     border-radius: @borderRadius;
     padding: 5px;
-    border: 1px solid @formBorderGrey;
     font-size: 16px;
+    border: 1px solid;
 
     &:hover, &:focus {
-        border-color: @formBorderGreyHover;
         outline: none;
     }
 
@@ -233,7 +140,6 @@ input, textarea {
     Other bits ??? */
 
 span.multi-subject {
-    background: @lightGrey;
     margin-right: 4px;
     border-radius: 24px;
     width: 24px;
@@ -242,7 +148,6 @@ span.multi-subject {
     text-align: center;
     display: inline-block;
     font-size: 12px;
-    color: @lightTextGrey;
 }
 
 .tooltip-wrapper {
@@ -251,8 +156,6 @@ span.multi-subject {
     .tooltip {
         display: none;
         position: absolute;
-        background: @darkestGrey;
-        color: @lightestGrey;
         left: 100%;
         top: 0;
         width: auto;

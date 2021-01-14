@@ -46,7 +46,7 @@ section#columns {
         max-width: 50%;
         position: relative;
         height: 100%;
-        border-right: 1px solid @lightestGrey;
+        border-right: 1px solid;
         overflow: hidden;
 
         &.hover {
@@ -60,7 +60,7 @@ section#columns {
         h3 {
             margin: 0;
             padding: 10px 20px;
-            border-bottom: 1px solid @lightestGrey;
+            border-bottom: 1px solid;
             height: @topHeight;
             padding-top: 18px;
             line-height: 20px;
@@ -70,7 +70,6 @@ section#columns {
 
             i.loading {
                 font-size: 12px;
-                color: @formBorderGreyActive;
                 margin-left: 5px;
                 margin-top: -2px;
             }
@@ -79,7 +78,6 @@ section#columns {
                 float: right;
                 font-size: 12px;
                 font-family: Roboto;
-                color: @formBorderGreyActive;
 
                 div.icons {
                     display: none;
@@ -134,7 +132,6 @@ section#columns {
         div.loader {
             text-align: center;
             padding: 20px 0;
-            color: @lightestTextGrey;
             background: white;
             position: relative;
         }
@@ -143,7 +140,6 @@ section#columns {
 
         &::before {
             content: "This folder is empty.";
-            color: @lightestTextGrey;
             text-align: center;
             margin-top: 20px;
             position: absolute;
@@ -160,10 +156,8 @@ section#columns {
         overflow: hidden;
         height: 140px;
         transition: height 500ms, padding 500ms;
-        background: white;
 
         &.hover {
-            background: @lightestGrey;
 
             div.meta span.buttons, div.meta span.extra-meta {
                 opacity: 1;
@@ -180,14 +174,6 @@ section#columns {
             margin: 0 10px;
             pointer-events: none;
             overflow: hidden;
-        }
-
-        &.archiving {
-            background: @green;
-        }
-
-        &.trashing {
-            background: @red;
         }
 
         &.error {
@@ -241,21 +227,18 @@ section#columns {
 
         span.date {
             float: right;
-            color: @lightTextGrey;
             font-size: 12px;
             font-weight: normal;
         }
 
         p {
             margin: 0;
-            color: @formBorderGreyActive;
             font-size: 14px;
             height: 48px;  // line-height * 2
             overflow: hidden;
         }
 
         div.meta {
-            color: @lightTextGrey;
             font-size: 12px;
 
             span.extra-meta {
@@ -268,29 +251,10 @@ section#columns {
                 opacity: 0;
 
                 a {
-                    color: @lightTextGrey;
                     padding: 5px 2px;
 
                     &:last-child {
                         padding-right: 0;
-                    }
-
-                    &.star {
-                        &.active, &:hover {
-                            color: @yellow;
-                        }
-                    }
-
-                    &.archive {
-                        &.active, &:hover {
-                            color: @green;
-                        }
-                    }
-
-                    &.trash {
-                        &.active, &:hover {
-                            color: @red;
-                        }
                     }
                 }
             }

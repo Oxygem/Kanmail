@@ -5,8 +5,6 @@ section#sidebar {
     width: @sidebarWidth;
     float: left;
     height: 100%;
-    background: @darkGrey;
-    color: white;
 
     .no-select;
 
@@ -75,29 +73,11 @@ section#sidebar {
             a, span {
                 padding: 5px 0 5px 10px;
                 display: block;
-                color: @formBorderGreyActive;
                 border-radius: @borderRadius;
             }
 
-            span {
-                background: @green;
-                color: white;
-            }
-
-            a {
-                &:hover {
-                    background: @darkestGrey;
-                    color: white;
-                }
-
-                span {
-                    display: block;
-                }
-            }
-
-            &.active a, &.hover a {
-                background: @darkestGrey;
-                color: white;
+            span.update {
+                display: block;
             }
 
             i {
@@ -111,13 +91,6 @@ section#sidebar {
                 margin-top: 2px;
                 padding: 5px;
                 right: 0;
-
-                &.fa-bookmark:hover {
-                    color: @red;
-                }
-                &.fa-bookmark-o:hover {
-                    color: @green;
-                }
             }
 
             &.small {
@@ -125,7 +98,6 @@ section#sidebar {
 
                 a {
                     padding: 2px 0 2px 10px;
-                    background: transparent;
                 }
             }
         }
@@ -135,18 +107,9 @@ section#sidebar {
         position: absolute;
         bottom: 0;
         font-size: 10px;
-        color: #666;
         line-height: 16px;
         padding: 0px 0 10px 10px;
         width: @sidebarWidth;
-
-        a {
-            color: @lightTextGrey;
-
-            &:hover {
-                color: @lightestTextGrey;
-            }
-        }
 
         div#footer-status {
             margin-top: 10px;
@@ -182,8 +145,7 @@ section#sidebar {
             right: 0;
             left: @sidebarWidth;
             height: 100px;
-            background: @lightGrey;
-            border-top: 5px solid #D7D7D7;
+            border-top: 5px solid;
             z-index: 9;
             display: flex;
             justify-content: space-between;

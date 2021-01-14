@@ -13,13 +13,12 @@ section#thread-background {
 
 section#thread {
     z-index: 9;
-    background: white;
     position: absolute;
     top: 0;
     bottom: 0;
     left: @sidebarWidth;
     right: 0;
-    border-left: 1px solid @lightestGrey;
+    border-left: 1px solid;
 
     h1 {
         margin: 0 0 10px 0;
@@ -28,7 +27,7 @@ section#thread {
         font-size: 20px;
         height: @topHeight;
         background: white;
-        border-bottom: 1px solid @lightestGrey;
+        border-bottom: 1px solid;
         overflow: auto;
     }
 
@@ -52,20 +51,15 @@ section#thread {
         bottom: 0;
         padding: 20px 10px 10px 10px;
         position: absolute;
-        background: @lightestGrey;
+        border-left: 1px solid;
 
         button#close {
             width: 100%;
             margin-bottom: 16px;
-
-            &:hover {
-                color: @red;
-            }
         }
 
         button {
             font-size: 16px;
-            background: white;
         }
 
         button span {
@@ -84,10 +78,6 @@ section#thread {
                 width: 48%;
                 padding: 5px;
                 margin-bottom: 10px;
-
-                &:hover {
-                    color: @blue;
-                }
             }
         }
 
@@ -101,43 +91,24 @@ section#thread {
                 padding: 10px 0;
                 font-size: 16px;
                 margin-bottom: 10px;
-
-                &:hover {
-                    color: @blue;
-                }
-
-                &.archive:hover {
-                    color: @green;
-                }
-
-                &.trash:hover {
-                    color: @red;
-                }
             }
         }
     }
 
     a.show-all-messages {
         font-size: 12px;
-        color: @lightTextGrey;
     }
 
     button {
-        background: @lightestGrey;
         padding: 3px;
         font-size: 12px;
-        color: @lightTextGrey;
         border: none;
-
-        &.active {
-            background: @formBorderGreyHover;
-        }
     }
 
     div.message {
         margin-bottom: 5px;
         padding: 0 20px;
-        border-bottom: 1px solid @lightestGrey;
+        border-bottom: 1px solid;
 
         div.content {
             width: 100%;
@@ -150,11 +121,9 @@ section#thread {
 
             span.meta-text {
                 font-size: 12px;
-                color: @lightTextGrey;
             }
 
             .fa-star {
-                color: @blue;
             }
 
             div.date {
@@ -172,7 +141,6 @@ section#thread {
                     margin-right: 5px;
                     position: relative;
                     color: white;
-                    text-shadow: 0 0 1px @darkestGrey;
 
                     span {
                         position: relative;
@@ -196,7 +164,6 @@ section#thread {
         div.controls {
             width: 100%;
             font-size: 12px;
-            color: @lightTextGrey;
             margin-bottom: 20px;
 
             .no-select;
@@ -205,13 +172,11 @@ section#thread {
                 float: right;
 
                 i {
-                    color: @lightTextGrey;
                     margin: 0 2px 0 5px;
                 }
             }
 
             span.tag {
-                background: @lightestGrey;
                 padding: 2px;
                 margin-left: 2px;
             }
@@ -223,14 +188,12 @@ section#thread {
 
         .attachment-link {
             cursor: pointer;
-            background: @lightestGrey;
             padding: 5px;
             display: inline-block;
 
             .attachment-meta {
                 display: block;
                 font-size: 12px;
-                color: @lightTextGrey;
             }
         }
     }

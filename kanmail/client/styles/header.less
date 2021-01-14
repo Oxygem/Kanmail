@@ -29,10 +29,6 @@ header {
 
         i {
             line-height: 16px;
-
-            &.error {
-                color: @red !important;
-            }
         }
 
         div.icon-wrapper {
@@ -49,7 +45,7 @@ header {
             display: none;
             position: absolute;
             width: 600px;
-            border: 5px solid @red;
+            border: 5px solid;
             max-height: 500px;
             overflow-y: auto;
             background: white;
@@ -63,7 +59,7 @@ header {
             p {
                 margin: 15px 0 10px 0;
                 padding-bottom: 10px;
-                border-bottom: 1px solid @lightGrey;
+                border-bottom: 1px solid;
                 line-height: 24px;
 
                 &:last-child {
@@ -73,7 +69,6 @@ header {
                 span.meta {
                     display: block;
                     font-size: 12px;
-                    color: @darkGrey;
                 }
 
                 textarea {
@@ -81,10 +76,6 @@ header {
                     line-height: 20px;
                     resize: none;
                     height: 100px;
-                }
-
-                a {
-                    color: @blue;
                 }
 
                 button {
@@ -105,8 +96,7 @@ header {
         left: 0;
         right: 0;
         z-index: 99999;
-        background: @lightestGrey;
-        border-bottom: 1px solid @lightGrey;
+        border-bottom: 1px solid;
 
         h2 {
             margin-top: 15px;
@@ -122,10 +112,6 @@ header {
             div.icon-contents {
                 margin-left: -600px;
                 left: 0;
-            }
-
-            div.icon-wrapper a {
-                color: @textGrey;
             }
         }
     }
