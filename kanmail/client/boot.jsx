@@ -23,6 +23,11 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
         return;
     }
 
+    const classNames = [window.KANMAIL_PLATFORM];
+    if (window.KANMAIL_FRAMELESS) {
+        classNames.push('frameless');
+    }
+
     // Load the settings *then* bootstrap the app into the DOM
     settingsStore.getSettings().then(() => {
         const rootProps = getPropsFromElement(rootElement);

@@ -157,13 +157,8 @@ export default class EmailsApp extends React.Component {
             return <WelcomeSettings />;
         }
 
-        const classNames = [window.KANMAIL_PLATFORM];
-        if (window.KANMAIL_FRAMELESS) {
-            classNames.push('frameless');
-        }
-
         return (
-            <section className={classNames.join(' ')}>
+            <section>
                 <Sidebar />
                 {this.renderColumnsSection()}
                 <Thread />
