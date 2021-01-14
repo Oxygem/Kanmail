@@ -46,8 +46,8 @@
     "whatwg-fetch": "^2.0.3"
   },
   "scripts": {
-    "build": "NODE_ENV=production webpack",
-    "dev": "NODE_ENV=dev webpack serve",
+    "build": "webpack --mode=production",
+    "dev": "webpack --mode=development serve",
     "lint": "eslint --cache --ext .js,.jsx kanmail/client/",
     "lint-fix": "eslint --cache --fix --ext .js,.jsx kanmail/client/"
   }
