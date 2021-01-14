@@ -70,12 +70,16 @@ export default class ContactsApp extends React.Component {
     render() {
         return (
             <section className="no-select">
-                <header className="contacts header-bar" ref={makeDragElement}>
+                <header className="contacts flex header-bar" ref={makeDragElement}>
                     <h2>{_.size(this.state.contacts).toLocaleString()} Contacts</h2>
+                    <div>
+                        <button onClick={this.toggleForm}>
+                            <i className="fa fa-user-plus"></i> Add Contact
+                        </button>
+                    </div>
                     <div className="search">
                         <input
                             type="text"
-                            id="search"
                             value={this.state.contactsFilter}
                             onChange={this.handleFilter}
                             placeholder="Filter contacts..."

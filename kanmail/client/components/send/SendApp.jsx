@@ -385,7 +385,7 @@ export default class SendApp extends React.Component {
     }
 
     renderSendButton() {
-        let text = <span>Send email <i className="fa fa-arrow-right" /></span>;
+        let text = <span><i className="fa fa-paper-plane" /> Send email</span>;
         const classes = ['send'];
 
         if (this.state.isSending) {
@@ -396,7 +396,7 @@ export default class SendApp extends React.Component {
                 text = 'Email sent, please close this window';
                 classes.push('disabled');
             } else {
-                text = <span>Sending email <i className="fa fa-spin fa-refresh" /></span>;
+                text = <span><i className="fa fa-spin fa-refresh" /> Sending email</span>;
                 classes.push('disabled');
             }
         } else {
@@ -424,7 +424,7 @@ export default class SendApp extends React.Component {
                 type="submit"
                 className={classes.join(' ')}
                 onClick={this.handleSaveEmail}
-            >{text}</button>
+            ><i className="fa fa-save" /> {text}</button>
         );
     }
 
@@ -442,7 +442,7 @@ export default class SendApp extends React.Component {
             <button
                 className="attach"
                 onClick={this.handleClickAttach}
-            ><i className="fa fa-attach" />{buttonText}{attachments}</button>
+            ><i className="fa fa-paperclip" /> {buttonText}{attachments}</button>
         );
     }
 
@@ -495,8 +495,13 @@ export default class SendApp extends React.Component {
 
         return (
             <section id="new-email" className={window.KANMAIL_PLATFORM}>
-                <header className="new-email header-bar" ref={makeDragElement}>
+                <header className="new-email flex header-bar" ref={makeDragElement}>
                     <h2>New Email</h2>
+                    <div>
+                        {this.renderAttachButton()}
+                        {this.renderSaveButton()}
+                        {this.renderSendButton()}
+                    </div>
                 </header>
 
                 <form>
@@ -560,12 +565,6 @@ export default class SendApp extends React.Component {
 
                     <div className="wide">
                         {this.renderQuote()}
-                    </div>
-
-                    <div className="buttons">
-                        {this.renderSendButton()}
-                        {this.renderSaveButton()}
-                        {this.renderAttachButton()}
                     </div>
                 </form>
             </section>

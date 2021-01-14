@@ -1,5 +1,5 @@
 section#license {
-    margin: 0 10px;
+    margin: 20px 20px;
 
     textarea {
         display: block;
@@ -12,8 +12,23 @@ section#license {
     }
 }
 
-section#meta, section#meta-file {
+header.meta {
     h2 {
+        img {
+            float: right;
+            margin-top: -6px;
+            margin-right: 20px;
+        }
+    }
+}
+
+section#meta {
+    text-align: center;
+    height: 100%;
+
+    h2 {
+        padding-top: @topHeight + 24;
+
         img {
             vertical-align: middle;
             margin-top: -10px;
@@ -22,16 +37,8 @@ section#meta, section#meta-file {
     }
 }
 
-section#meta {
-    text-align: center;
-
-    h2 {
-        margin-top: 50px;
-    }
-}
-
 section#meta-file {
-    padding: 30px 20px 20px 20px;
+    padding: @topHeight 20px 20px 20px;
 
     pre, code {
         font-size: 16px;

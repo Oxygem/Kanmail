@@ -11,44 +11,31 @@ section#sidebar {
     header {
         height: @topHeight;
 
-        div.search {
-            padding-top: 10px;
+        div.buttons {
+            padding-top: 8px;
             margin: 0 10px;
             overflow: hidden;
             height: @topHeight;
+        }
 
-            input {
-                background: rgba(0, 0, 0, 0.1);
-                border-radius: @borderRadius;
-                border: none;
-                color: white;
-                width: @sidebarWidth - 45;
-                font-size: 14px;
-                padding: 9px;
-                transition: width 100ms;
-
-                &::placeholder {
-                    color: @lightGrey;
-                }
-
-                &:focus {
-                    width: @sidebarWidth - 20;
-                }
-
-                &:focus + a.compose {
-                    width: 0;
-                    overflow: hidden;
-                }
-            }
+        div.logo {
+            float: left;
+            margin-top: 7px;
+            margin-left: 10px;
+            font-size: 16px;
         }
 
         a.compose {
-            color: white;
-            font-size: 20px;
-            font-family: Roboto;
+            font-size: 18px;
             float: right;
             margin-top: 10px;
-            transition: width 100ms;
+        }
+
+        a.search {
+            font-size: 15px;
+            float: right;
+            margin-top: 10px;
+            margin-left: 10px;
         }
     }
 
@@ -57,7 +44,7 @@ section#sidebar {
         position: fixed;
         width: @sidebarWidth;
         left: 0;
-        top: @topHeight + 5;
+        top: @topHeight + 4;
         bottom: 78px;
     }
 
@@ -67,7 +54,6 @@ section#sidebar {
 
         li {
             list-style: none;
-            font-size: 14px;
             margin: 5px 10px;
 
             a, span {
@@ -90,7 +76,7 @@ section#sidebar {
                 position: absolute;
                 margin-top: 2px;
                 padding: 5px;
-                right: 0;
+                right: 8px;
             }
 
             &.small {
@@ -106,7 +92,7 @@ section#sidebar {
     footer {
         position: absolute;
         bottom: 0;
-        font-size: 10px;
+        font-size: @smallTextSize;
         line-height: 16px;
         padding: 0px 0 10px 10px;
         width: @sidebarWidth;

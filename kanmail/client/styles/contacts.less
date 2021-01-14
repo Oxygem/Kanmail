@@ -1,26 +1,22 @@
-section#contacts {
-    h2 {
-        padding-top: 40px;
-        margin-top: 0;
-        margin-left: 20px;
-    }
+header.contacts {
+    padding-right: 20px;
 
     div.search {
-        display: inline-block;
-        position: absolute;
-        left: 20px;
-        right: 140px;
-        padding-right: 20px;
+        flex-grow: 1;
+        margin: 11px 0px 0 50px;
     }
+}
 
+section#contacts {
     button.add-contact {
         float: right;
         margin-right: 20px;
         padding: 6.5px 5px;
+        margin-top: 20px;
     }
 
     form.add-contact {
-        margin: 50px 20px 0 20px;
+        margin: 65px 20px 0 20px;
         display: inline-block;
 
         div {
@@ -33,14 +29,14 @@ section#contacts {
     div#contact-list {
         overflow-y: auto;
         position: absolute;
-        top: 130px;
+        top: 52px;
         bottom: 0;
         left: 0;
         right: 0;
         border-top: 1px solid;
 
         &.form-open {
-            top: 200px;
+            top: 137px;
         }
     }
 

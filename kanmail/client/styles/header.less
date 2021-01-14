@@ -97,12 +97,28 @@ header {
         right: 0;
         z-index: 99999;
         border-bottom: 1px solid;
+        padding-right: 20px;
+
+        &.flex {
+            display: flex;
+            justify-content: space-between;
+        }
 
         h2 {
             margin-top: 15px;
             margin-left: 20px;
+            font-size: @titleTextSize;
 
             .no-select
+        }
+
+        button {
+            padding: 8px;
+            margin: 11px 0 11px 11px;
+
+            i {
+                margin-right: 4px;
+            }
         }
 
         div.header-errors {

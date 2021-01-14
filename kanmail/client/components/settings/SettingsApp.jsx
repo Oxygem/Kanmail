@@ -213,8 +213,8 @@ export default class SettingsApp extends React.Component {
     }
 
     renderSaveButton() {
-        let text = <span>Save all settings <i className="fa fa-arrow-right" /></span>;
-        const classes = ['main-button'];
+        let text = <span><i className="fa fa-save" /> Save</span>;
+        const classes = [];
 
         if (this.state.isSaving) {
             if (this.state.saveError) {
@@ -243,8 +243,11 @@ export default class SettingsApp extends React.Component {
     render() {
         return (
             <section className="no-select">
-                <header className="settings header-bar" ref={makeDragElement}>
+                <header className="settings flex header-bar" ref={makeDragElement}>
                     <h2>Settings</h2>
+                    <div>
+                        {this.renderSaveButton()}
+                    </div>
                 </header>
 
                 <section id="settings">
@@ -393,7 +396,6 @@ export default class SettingsApp extends React.Component {
                     </div>
 
                     {this.renderAdvancedSettings()}
-                    {this.renderSaveButton()}
                 </section>
             </section>
         );
