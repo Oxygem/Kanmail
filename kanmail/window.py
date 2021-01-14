@@ -107,9 +107,34 @@ def get_main_window_size_position() -> Dict[str, int]:
     }
 
 
+def show_traffic_light_buttons(window):
+    import AppKit
+
+    buttons = [
+        window.standardWindowButton_(AppKit.NSWindowCloseButton),
+        window.standardWindowButton_(AppKit.NSWindowZoomButton),
+        window.standardWindowButton_(AppKit.NSWindowMiniaturizeButton),
+    ]
+
+    for button in buttons:
+        button.setHidden_(False)
+
+
+def reposition_traffic_light_buttons(window):
+    import AppKit
+
+    button = window.standardWindowButton_(AppKit.NSWindowCloseButton)
+    titlebar_container_view = button.superview().superview()
+    titlebar_container_rect = titlebar_container_view.frame()
+    titlebar_container_rect.size.height += 22
+    titlebar_container_rect.origin.y -= 13
+    titlebar_container_rect.size.width += 22
+    titlebar_container_rect.origin.x += 13
+    titlebar_container_view._.frame = AppKit.NSValue.valueWithRect_(titlebar_container_rect)
+
+
 def init_window_hacks() -> None:
     try:
-        import AppKit
         from webview.platforms import cocoa
     except ImportError:
         pass
@@ -118,12 +143,14 @@ def init_window_hacks() -> None:
         cocoa._debug = DEBUG
 
         class CustomBrowserView(cocoa.BrowserView):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self.window.standardWindowButton_(AppKit.NSWindowCloseButton).setHidden_(False)
-                self.window.standardWindowButton_(AppKit.NSWindowZoomButton).setHidden_(False)
-                self.window.standardWindowButton_(
-                    AppKit.NSWindowMiniaturizeButton,
-                ).setHidden_(False)
+            def first_show(self, *args, **kwargs):
+                show_traffic_light_buttons(self.window)
+                reposition_traffic_light_buttons(self.window)
+                super().first_show(*args, **kwargs)
+
+        class CustomWindowDelegate(cocoa.BrowserView.WindowDelegate):
+            def windowDidResize_(self, notification):
+                reposition_traffic_light_buttons(notification.object())
 
         cocoa.BrowserView = CustomBrowserView
+        cocoa.BrowserView.WindowDelegate = CustomWindowDelegate
