@@ -28,7 +28,7 @@ if (process.env.NODE_ENV == 'production') {
 }
 
 const modulesDirectory = path.join(__dirname, 'node_modules');
-const getAppDir = app => path.join(
+const getAppMainFile = app => path.join(
     __dirname, 'kanmail', 'client', 'components', app, 'main.js',
 );
 
@@ -36,13 +36,13 @@ module.exports = {
     mode: mode,
     plugins: plugins,
     entry: {
-        emails: getAppDir('emails'),
-        send: getAppDir('send'),
-        settings: getAppDir('settings'),
-        contacts: getAppDir('contacts'),
-        license: getAppDir('license'),
-        meta: getAppDir('meta'),
-        metaFile: getAppDir('metaFile'),
+        emails: getAppMainFile('emails'),
+        send: getAppMainFile('send'),
+        settings: getAppMainFile('settings'),
+        contacts: getAppMainFile('contacts'),
+        license: getAppMainFile('license'),
+        meta: getAppMainFile('meta'),
+        metaFile: getAppMainFile('metaFile'),
     },
     output: {
         path: path.join(__dirname, 'dist'),
