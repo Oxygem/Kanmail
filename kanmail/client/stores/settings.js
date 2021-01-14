@@ -110,4 +110,6 @@ class SettingsStore extends BaseStore {
 
 
 const settingsStore = new SettingsStore();
+
+window.settingsStore = settingsStore;
 export default settingsStore;
