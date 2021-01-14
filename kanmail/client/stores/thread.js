@@ -66,7 +66,6 @@ class ThreadStore extends BaseStore {
         this.props = makeDefaults();
 
         this.columnRefs = [];
-        this.columnWidth = null;
     }
 
     hideOtherColumns(targetColumn) {
@@ -86,24 +85,28 @@ class ThreadStore extends BaseStore {
     }
 
     open(component, thread, onClose) {
-        let width = this.columnWidth;
+        let width;
         const columnContainer = component.props.getColumnContainer();
 
         if (this.isOpen) {
-            this.close(true);
-        } else {
             // If we're already open we just re-use the last known column width
+            width = this.props.columnWidth;
+            this.close(false);
+        } else {
             width = columnContainer.clientWidth;
-            this.columnWidth = width;
         }
 
-        // this.originalColumnWidth = columnContainer.clientWidth + 1;
-
-        const maxWidth = window.innerWidth / 4;
+        const maxWidth = window.innerWidth / 3;
         width = _.min([width, maxWidth]);  // don't let width >1/4 of the screen
 
-        columnContainer.style.maxWidth = width;
-        this.props.columnWidth = width;
+        columnContainer.style.maxWidth = width + 'px';
+
+        if (columnContainer.classList.contains('main')) {
+            this.props.columnWidth = width - 1;
+        } else {
+            this.props.columnWidth = width;
+        }
+
         this.hideOtherColumns(columnContainer);
 
         const nextComponent = getNextThreadComponent(component);
@@ -208,7 +211,7 @@ class ThreadStore extends BaseStore {
         });
     }
 
-    close() {
+    close(triggerUpdate=true) {
         if (!this.isOpen) {
             return;
         }
@@ -220,7 +223,9 @@ class ThreadStore extends BaseStore {
         this.props = makeDefaults();
         this.props.columnWidth = columnWidth;
 
-        this.triggerUpdate();
+        if (triggerUpdate) {
+            this.triggerUpdate();
+        }
 
         if (this.columnContainer) {
             this.columnContainer.classList.remove('open');
