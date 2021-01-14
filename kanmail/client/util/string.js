@@ -13,7 +13,18 @@ export function lowercaseFirstLetter(string) {
 
 
 export function formatDate(date) {
-    return moment(date).calendar(null, {sameElse: 'DD/MM/YYYY'});
+    return moment(date).calendar(null, {
+        sameDay: 'HH:mm A',
+        lastDay: '[Yesterday]',
+        lastWeek: 'dddd',
+        nextWeek: '[Next] dddd,',  // should never happen (future)
+        sameElse: function(now) {
+            if (this.isSame(now, 'year')) {
+                return 'MMM DD';
+            }
+            return 'MMM DD YY';
+        },
+    });
 }
 
 
