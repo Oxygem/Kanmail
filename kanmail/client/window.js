@@ -39,7 +39,7 @@ export function makeDragElement(element) {
 
 
 export function makeNoDragElement(element) {
-    if (!window.KANMAIL_FRAMELESS) {
+    if (!window.KANMAIL_FRAMELESS || !element) {
         return;
     }
 
