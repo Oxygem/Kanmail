@@ -11,6 +11,21 @@ from kanmail.server.mail.autoconf import get_autoconf_settings
 CONNECTION_KEYS = ('host', 'port', 'username')
 
 
+# German folder names provided by @georks
+# (https://github.com/Oxygem/Kanmail/issues/146)
+INBOX_NAMES = ('inbox', 'posteingang')
+
+EXTRA_SPECIAL_FOLDER_NAMES = {
+    imapclient.SENT: ('Gesendet', 'gesendet'),
+    imapclient.DRAFTS: ('Entwuerfe', 'Entwürfe'),
+    imapclient.ARCHIVE: ('Archiv', 'Archivieren'),
+    imapclient.TRASH: ('Papierkorb', 'Gelöschte Elemente'),
+    imapclient.JUNK: ('Unerwünscht', 'Unerwuenscht'),
+}
+for key, extra_names in EXTRA_SPECIAL_FOLDER_NAMES.items():
+    imapclient._POPULAR_SPECIAL_FOLDERS[key] += extra_names
+
+
 def _get_folders(connection):
     folders = {}
 
@@ -38,7 +53,7 @@ def _get_folders(connection):
 
     # Now find the inbox folder
     for folder in connection.list_folders():
-        if folder[2].lower() == 'inbox':
+        if folder[2].lower() in INBOX_NAMES:
             folders['inbox'] = folder[2]
             break
 
