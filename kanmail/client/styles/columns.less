@@ -1,11 +1,9 @@
-@columnTopHeight: 91px;
-
-
 /*
     Columns/emails */
 
 section#columns {
     display: flex;
+    flex-wrap: wrap;
     top: 0px;
     left: @sidebarWidth;
     bottom: 0;
@@ -68,13 +66,16 @@ section#columns {
         height: 100%;
         border-right: 1px solid;
         overflow: hidden;
+        transition: max-width 250ms;
 
         &.hover {
             opacity: 0.5;
         }
 
         &.hidden {
-            flex: 0;
+            max-width: 0;
+            width: 0;
+            border-right: 1px solid transparent;
         }
 
         h3 {
@@ -82,7 +83,7 @@ section#columns {
             padding: 10px 20px;
             border-bottom: 1px solid;
             height: @topHeight;
-            padding-top: 18px;
+            padding-top: 17px;
             line-height: 20px;
             position: relative;
             font-size: @titleTextSize;
@@ -97,20 +98,23 @@ section#columns {
             span.meta {
                 float: right;
                 font-size: @smallTextSize;
+                margin-right: 8px;
+                margin-top: 1px;
 
                 div.icons {
                     display: none;
                     margin-left: 3px;
-                    margin-top: 1px;
                     float: right;
                     cursor: pointer;
 
                     i {
                         margin-left: 8px;
-                        font-size: 18px;
+                        font-size: 16px;
+                        float: left;
 
                         &.delete {
-                            font-size: 22px;
+                            font-size: 19px;
+                            margin-top: -2px;
                         }
                     }
                 }
@@ -166,13 +170,16 @@ section#columns {
         cursor: pointer;
         position: relative;
         overflow: hidden;
-        height: 140px;
+        height: 132px;
         transition: height 500ms, padding 500ms;
 
         &.hover {
+            div.meta span.buttons {
+                display: block;
+            }
 
-            div.meta span.buttons, div.meta span.extra-meta {
-                opacity: 1;
+            div.meta span.extra-meta {
+                display: none;
             }
         }
 
@@ -203,7 +210,7 @@ section#columns {
         }
 
         h5 {
-            margin: 0;
+            margin: 0 8px 0 30px;
             height: 24px;
             overflow: hidden;
             font-size: @smallTextSize;
@@ -217,12 +224,36 @@ section#columns {
             margin: 0;
             font-weight: normal;
             height: 24px;
+            font-size: @bigTextSize;
+
+            div.avatar {
+                float: left;
+                margin-right: 8px;
+                border-radius: 4px;
+                position: relative;
+
+                img {
+                    width: 22px;
+                    height: 22px;
+                    border-radius: 4px;
+                }
+
+                span {
+                    position: absolute;
+                    color: white;
+                    text-shadow: 0 0 1px;
+                    left: 0;
+                    right: 0;
+                    font-size: 12px;
+                    text-align: center;
+                }
+            }
 
             span.subject {
                 overflow: hidden;
                 height: 24px;
                 display: inline-block;
-                width: 90%;
+                width: 80%;
             }
         }
 
@@ -236,22 +267,27 @@ section#columns {
         }
 
         p {
-            margin: 0;
-            height: 48px;  // line-height * 2
+            margin: 0 8px 0 30px;
+            line-height: 20px;
+            height: 40px;  // line-height * 2
             overflow: hidden;
         }
 
         div.meta {
             font-size: @smallTextSize;
+            margin: 4px 8px 0 30px;
 
             span.extra-meta {
-                opacity: 0.5;
+                float: right;
+                i {
+                    margin-left: 5px;
+                }
             }
 
             span.buttons {
                 float: right;
                 font-size: 14px;
-                opacity: 0;
+                display: none;
 
                 a {
                     padding: 5px 2px;

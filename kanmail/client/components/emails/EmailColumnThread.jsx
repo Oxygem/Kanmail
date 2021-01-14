@@ -7,6 +7,8 @@ import { ALIAS_FOLDERS } from 'constants.js';
 
 import keyboard from 'keyboard.js';
 
+import Avatar from 'components/Avatar.jsx';
+
 import controlStore from 'stores/control.js';
 import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
@@ -548,12 +550,7 @@ export default class EmailColumnThread extends React.Component {
             return;
         }
 
-        return (
-            <span>
-                &nbsp;/&nbsp;
-                <i className="fa fa-paperclip"></i> {attachmentCount}
-            </span>
-        );
+        return <span><i className="fa fa-paperclip"></i> {attachmentCount}</span>;
     }
 
     render() {
@@ -615,6 +612,7 @@ export default class EmailColumnThread extends React.Component {
                     {addresses}
                 </h5>
                 <h4>
+                    <Avatar address={latestEmail.from[0]} />
                     {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
                         x{thread.mergedThreads}
                         <span className="tooltip">{thread.mergedThreads} merged threads</span>
@@ -629,10 +627,8 @@ export default class EmailColumnThread extends React.Component {
                     &nbsp;{latestEmail.account_name}
 
                     <span className="extra-meta">
-                        &nbsp;/&nbsp;
-                        <i className="fa fa-envelope-o"></i> {thread.length}
-                        &nbsp;/&nbsp;
-                        <i className="fa fa-user-o"></i> {uniqueAddresses.length}
+                        {thread.length > 1 && <span><i className="fa fa-envelope-o"></i> {thread.length}</span>}
+                        {uniqueAddresses.length > 1 && <span><i className="fa fa-user-o"></i> {uniqueAddresses.length}</span>}
                         {this.renderAttachmentCount()}
                     </span>
 
