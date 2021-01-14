@@ -141,7 +141,7 @@ export function openMeta() {
         unique_key: 'meta',
         title: 'Kanmail Meta',
         width: 300,
-        height: 200,
+        height: 230,
     });
 }
 
