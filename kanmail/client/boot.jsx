@@ -5,6 +5,8 @@ import 'fonts/fontawesome/css/font-awesome.css';
 import 'fonts/roboto/css/roboto.css';
 import 'style.less';
 
+import { setupThemes } from 'theme.js';
+
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
 
 import settingsStore from 'stores/settings.js';
@@ -28,11 +30,16 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
     }
 
     // Load the settings *then* bootstrap the app into the DOM
-    settingsStore.getSettings().then(() => {
+    settingsStore.getSettings().then(({styleSettings}) => {
+        setupThemes(styleSettings);
+
         const rootProps = getPropsFromElement(rootElement);
         console.debug('Settings loaded, bootstrapping app to DOM...');
+
         ReactDOM.render(<ErrorBoundary>
-            <Component {...rootProps} />
+            <section className={classNames.join(' ')}>
+                <Component {...rootProps} />
+            </section>
         </ErrorBoundary>, rootElement);
     });
 }
