@@ -8,18 +8,19 @@ import keyboard from 'keyboard.js';
 import { createWindowPositionHandlers } from 'window.js';
 import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
 
-import ControlInput from 'components/emails/ControlInput.jsx';
-import Thread from 'components/emails/Thread.jsx';
-import Sidebar from 'components/emails/Sidebar.jsx';
-import EmailColumn from 'components/emails/EmailColumn.jsx';
-import MainColumn from 'components/emails/MainColumn.jsx';
 import AddNewColumnForm from 'components/emails/AddNewColumnForm.jsx';
+import EmailColumn from 'components/emails/EmailColumn.jsx';
+import ControlInput from 'components/emails/ControlInput.jsx';
+import MainColumn from 'components/emails/MainColumn.jsx';
+import Search from 'components/emails/Search.jsx';
+import Sidebar from 'components/emails/Sidebar.jsx';
+import Thread from 'components/emails/Thread.jsx';
 import WelcomeSettings from 'components/emails/WelcomeSettings.jsx';
 
 import filterStore from 'stores/filters.js';
+import folderStore from 'stores/folders.js';
 import settingsStore from 'stores/settings.js';
 import updateStore from 'stores/update.js';
-import folderStore from 'stores/folders.js';
 import threadStore from 'stores/thread.js';
 import mainEmailStore from 'stores/emails/main.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
@@ -144,6 +145,7 @@ export default class EmailsApp extends React.Component {
     renderColumnsSection() {
         return (
             <section id="columns">
+                <Search />
                 {this.renderColumns()}
                 <AddNewColumnForm />
             </section>

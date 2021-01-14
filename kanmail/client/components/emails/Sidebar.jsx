@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import HeaderErrors from 'components/HeaderErrors.jsx';
 import Filters from 'components/emails/Filters.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
-import Search from 'components/emails/Search.jsx';
 
 import {
     openLicense,
@@ -14,6 +13,7 @@ import {
     makeNoDragElement,
 } from 'window.js';
 import settingsStore from 'stores/settings.js';
+import searchStore from 'stores/search.js';
 import { subscribe } from 'stores/base.jsx';
 
 
@@ -40,9 +40,18 @@ export default class Sidebar extends React.Component {
             <section id="sidebar">
                 <header style={this.getHeaderStyles()} ref={makeDragElement}>
                     <HeaderErrors />
-                    <div className="search">
-                        <Search />
-
+                    <div className="buttons">
+                        <div className="logo">
+                            <span>K-</span>
+                            <i className="logo fa fa-envelope-o"></i>
+                        </div>
+                        <a
+                            className="search"
+                            onClick={searchStore.toggle}
+                            ref={makeNoDragElement}
+                        >
+                            <i className="fa fa-search"></i>
+                        </a>
                         <a
                             className="compose"
                             onClick={this.openSend}

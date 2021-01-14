@@ -11,8 +11,28 @@ section#columns {
     bottom: 0;
     right: 0;
     position: absolute;
+    overflow: hidden;
 
     .no-select;
+
+    div#search {
+        height: 0;
+        width: 100%;
+        overflow: hidden;
+        transition: height 500ms;
+
+        &.open {
+            height: @topHeight;
+        }
+
+        input {
+            width: 100%;
+            border: none;
+            height: @topHeight;
+            padding-top: 6px;
+            padding-left: 20px;
+        }
+    }
 
     form#add-column {
         height: @topHeight;

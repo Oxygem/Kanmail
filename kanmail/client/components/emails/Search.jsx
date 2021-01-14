@@ -1,13 +1,21 @@
 import _ from 'lodash';
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import keyboard from 'keyboard.js';
 import { makeNoDragElement } from 'window.js';
 
 import emailStoreProxy from 'stores/emailStoreProxy.js';
+import searchStore from 'stores/search.js';
+import { subscribe } from 'stores/base.jsx';
 
 
+@subscribe([searchStore, ['open']])
 export default class Search extends React.Component {
+    static propTypes = {
+        open: PropTypes.bool.isRequired,
+    }
+
     constructor(props) {
         super(props);
 
@@ -17,11 +25,19 @@ export default class Search extends React.Component {
 
         this.executeSearch = _.debounce(
             this.executeSearch,
-            300,
+            500,
         );
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps) {
+        if (!prevProps.open && this.props.open) {
+            this.input.focus();
+        }
+
+        if (prevProps.open && !this.props.open) {
+            this.input.blur();
+        }
+
         this.executeSearch();
     }
 
@@ -42,21 +58,31 @@ export default class Search extends React.Component {
     }
 
     render() {
-
         return (
-            <input
-                type="text"
-                value={this.searchValue}
-                onChange={this.handleInputChange}
-                onFocus={keyboard.disable}
-                onBlur={keyboard.enable}
-                placeholder="Search..."
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck="false"
-                ref={makeNoDragElement}
-            />
+            <div id="search" className={this.props.open ? 'open' : ''}>
+                <input
+                    type="text"
+                    value={this.searchValue}
+                    onChange={this.handleInputChange}
+                    onFocus={keyboard.disable}
+                    onBlur={(ev) => {
+                        if (ev.target.value.length === 0) {
+                            searchStore.close();
+                        }
+                        keyboard.enable();
+                    }}
+                    placeholder="Search..."
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                    disabled={!this.props.open}
+                    ref={(input) => {
+                        this.input = input;
+                        makeNoDragElement(input);
+                    }}
+                />
+            </div>
         );
     }
 }
