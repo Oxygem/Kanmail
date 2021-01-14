@@ -2,6 +2,7 @@ export const ALWAYS_SYNC_FOLDERS = [
     'inbox',
     'archive',
     'sent',
+    'trash',
 ];
 
 export const ALIAS_FOLDERS = [  // this defines the display order
