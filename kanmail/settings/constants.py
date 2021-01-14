@@ -61,7 +61,10 @@ FROZEN = getattr(sys, 'frozen', False)
 IS_APP = environ.get('KANMAIL_MODE', 'app') == 'app'
 
 # Flag to tell us whether to disable the cache
-CACHE_ENABLED = environ.get('KANMAIL_CACHE', 'on') == 'on'
+CACHE_ENABLED = (
+    environ.get('KANMAIL_CACHE', 'on') == 'on'
+    and not environ.get('KANMAIL_FAKE_IMAP') == 'on'  # never cache fake IMAP responses
+)
 
 
 # Get the client root directory - if we're frozen (by pyinstaller) this is relative
