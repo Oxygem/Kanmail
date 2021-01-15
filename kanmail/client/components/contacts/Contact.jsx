@@ -2,6 +2,8 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import Avatar from 'components/Avatar.jsx';
+
 import { delete_, put } from 'util/requests.js';
 
 
@@ -146,6 +148,7 @@ export default class Contact extends React.Component {
 
         return (
             <div className="contact">
+                <Avatar address={[this.state.name, this.state.email]} />
                 {this.renderFormOrText()}
                 <div className="buttons">
                     {this.renderButtons()}

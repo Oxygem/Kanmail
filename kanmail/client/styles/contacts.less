@@ -33,7 +33,6 @@ section#contacts {
         bottom: 0;
         left: 0;
         right: 0;
-        border-top: 1px solid;
 
         &.form-open {
             top: 137px;
@@ -41,9 +40,10 @@ section#contacts {
     }
 
     div.contact {
-        padding: 10px 20px;
-        height: 50px;
+        padding: 5px 20px;
+        height: 40px;
         overflow: hidden;
+        display: flex;
 
         input {
             width: auto;
@@ -54,8 +54,29 @@ section#contacts {
             vertical-align: top;
         }
 
+        div.avatar {
+            position: relative;
+            border-radius: 4px;
+            margin-right: 10px;
+            margin-top: 4px;
+
+            img {
+                width: 22px;
+                border-radius: 4px;
+            }
+
+            span {
+                position: absolute;
+                left: 0;
+                right: 0;
+                text-align: center;
+                color: white;
+                margin-top: 6px;
+            }
+        }
+
         div.form, div.text {
-            width: 75%;
+            flex-grow: 1;
         }
 
         div.text {
