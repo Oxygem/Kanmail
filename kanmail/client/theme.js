@@ -9,8 +9,8 @@ export function setupThemes(styleSettings) {
             targetThemeName = styleSettings.theme_dark;
             otherThemeName = styleSettings.theme_light;
         }
-        document.body.classList.add(`theme-${targetThemeName}`);
         document.body.classList.remove(`theme-${otherThemeName}`);
+        document.body.classList.add(`theme-${targetThemeName}`);
     }
 
     setTheme(darkModeMedia);
