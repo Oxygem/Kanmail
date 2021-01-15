@@ -296,7 +296,7 @@ class EmailColumn extends React.Component {
 
         return connectDropTarget(
             <div
-                className={`column ${this.props.isMainColumn ? 'main' : ''}`}
+                className="column"
                 ref={(div) => {this.containerDiv = div;}}
             >
                 <EmailColumnHeader

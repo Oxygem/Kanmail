@@ -180,7 +180,7 @@ class Thread extends React.Component {
                 <section
                     id="thread"
                     onClick={(ev) => ev.stopPropagation()}
-                    style={{marginLeft: this.props.columnWidth}}
+                    style={{marginLeft: this.props.columnWidth - 1}}
                 >
                     {this.renderTitle()}
                     <section id="content">

@@ -100,12 +100,7 @@ class ThreadStore extends BaseStore {
         width = _.min([width, maxWidth]);  // don't let width >1/4 of the screen
 
         columnContainer.style.maxWidth = width + 'px';
-
-        if (columnContainer.classList.contains('main')) {
-            this.props.columnWidth = width - 1;
-        } else {
-            this.props.columnWidth = width;
-        }
+        this.props.columnWidth = width;
 
         this.hideOtherColumns(columnContainer);
 
