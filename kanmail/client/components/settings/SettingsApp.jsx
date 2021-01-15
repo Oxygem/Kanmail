@@ -1,10 +1,11 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Creatable } from 'react-select';
+import Select, { Creatable } from 'react-select';
 
 import AccountList from 'components/settings/AccountList.jsx';
 
+import { THEME_NAMES } from 'constants.js';
 import keyboard from 'keyboard.js';
 import {
         closeWindow,
@@ -40,6 +41,15 @@ export default class SettingsApp extends React.Component {
 
         this.state.initialSidebarFolderOptions = sidebarFolderOptions;
         this.state.styleSettings.sidebar_folders = sidebarFolderOptions;
+
+        this.state.styleSettings.theme_light = {
+            label: this.state.styleSettings.theme_light,
+            value: this.state.styleSettings.theme_light,
+        };
+        this.state.styleSettings.theme_dark = {
+            label: this.state.styleSettings.theme_dark,
+            value: this.state.styleSettings.theme_dark,
+        };
     }
 
     deleteAccount = (accountIndex) => {
@@ -112,6 +122,9 @@ export default class SettingsApp extends React.Component {
             style: _.clone(this.state.styleSettings),
             columns: this.props.settings.columns,
         };
+
+        newSettings.style.theme_light = newSettings.style.theme_light.value;
+        newSettings.style.theme_dark = newSettings.style.theme_dark.value;
 
         newSettings.style.sidebar_folders = _.map(
             newSettings.style.sidebar_folders,
@@ -247,6 +260,11 @@ export default class SettingsApp extends React.Component {
     }
 
     render() {
+        const themeOptions = _.map(THEME_NAMES, themeName => ({
+            value: themeName,
+            label: themeName,
+        }));
+
         return (
             <section className="no-select">
                 <header className="settings flex header-bar" ref={makeDragElement}>
@@ -272,19 +290,37 @@ export default class SettingsApp extends React.Component {
 
                     <div className="settings" id="style">
                         <h2>Appearance</h2>
-                        <label htmlFor="header_background">
-                            Header background
-                            <small>Header background colour</small>
+                        <label htmlFor="theme_light">
+                            Light theme
+                            <small>Theme to use when the system theme is light</small>
                         </label>
-                        <input
-                            type="text"
-                            id="header_background"
-                            value={this.state.styleSettings.header_background}
-                            onChange={_.partial(
-                                this.handleInputUpdate,
-                                'styleSettings', 'header_background',
-                            )}
-                        />
+                        <div className="select-wrapper">
+                            <Select
+                                classNamePrefix="react-select"
+                                options={themeOptions}
+                                value={this.state.styleSettings.theme_light}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'theme_light',
+                                )}
+                            />
+                        </div>
+
+                        <label htmlFor="theme_dark">
+                            Dark theme
+                            <small>Theme to use when the system theme is dark</small>
+                        </label>
+                        <div className="select-wrapper">
+                            <Select
+                                classNamePrefix="react-select"
+                                options={themeOptions}
+                                value={this.state.styleSettings.theme_dark}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'theme_dark',
+                                )}
+                            />
+                        </div>
 
                         <label htmlFor="sidebar_folders">
                             Sidebar folders

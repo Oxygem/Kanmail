@@ -25,3 +25,9 @@ export const ALIAS_TO_ICON = {
 
 export const PROVIDERS_DOC_LINK = 'https://kanmail.io/docs/email-providers'
 export const SUPPORT_DOC_LINK = 'https://kanmail.io/support'
+
+export const THEME_NAMES = [
+    'default',
+    'default-dark',
+    'default-light',
+];
