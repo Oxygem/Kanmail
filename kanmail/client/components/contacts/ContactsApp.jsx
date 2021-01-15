@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import Contact from 'components/contacts/Contact.jsx';
 import AddNewContactForm from 'components/contacts/AddNewContactForm.jsx';
-import { makeDragElement } from 'window.js';
+import { makeDragElement, makeNoDragElement } from 'window.js';
 
 
 export default class ContactsApp extends React.Component {
@@ -72,18 +72,19 @@ export default class ContactsApp extends React.Component {
             <section className="no-select">
                 <header className="contacts flex header-bar" ref={makeDragElement}>
                     <h2>{_.size(this.state.contacts).toLocaleString()} Contacts</h2>
-                    <div>
-                        <button onClick={this.toggleForm}>
-                            <i className="fa fa-user-plus"></i> Add Contact
-                        </button>
-                    </div>
                     <div className="search">
                         <input
                             type="text"
                             value={this.state.contactsFilter}
                             onChange={this.handleFilter}
                             placeholder="Filter contacts..."
+                            ref={makeNoDragElement}
                         />
+                    </div>
+                    <div>
+                        <button onClick={this.toggleForm} ref={makeNoDragElement}>
+                            <i className="fa fa-user-plus"></i> Add Contact
+                        </button>
                     </div>
                 </header>
 

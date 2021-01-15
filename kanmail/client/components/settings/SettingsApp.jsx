@@ -6,7 +6,12 @@ import { Creatable } from 'react-select';
 import AccountList from 'components/settings/AccountList.jsx';
 
 import keyboard from 'keyboard.js';
-import { closeWindow, openLicense, makeDragElement } from 'window.js';
+import {
+        closeWindow,
+        openLicense,
+        makeDragElement,
+        makeNoDragElement,
+} from 'window.js';
 
 import { delete_, put } from 'util/requests.js';
 import { arrayMove } from 'util/array.js';
@@ -236,6 +241,7 @@ export default class SettingsApp extends React.Component {
                 type="submit"
                 className={classes.join(' ')}
                 onClick={this.handleSaveSettings}
+                ref={makeNoDragElement}
             >{text}</button>
         );
     }

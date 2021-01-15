@@ -9,7 +9,7 @@ import ReactQuill from 'react-quill';
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
 
-import { closeWindow, makeDragElement } from 'window.js';
+import { closeWindow, makeDragElement, makeNoDragElement } from 'window.js';
 
 import { cleanHtml } from 'util/html.js'
 import { post } from 'util/requests.js'
@@ -408,6 +408,7 @@ export default class SendApp extends React.Component {
                 type="submit"
                 className={classes.join(' ')}
                 onClick={this.handleSendEmail}
+                ref={makeNoDragElement}
             >{text}</button>
         );
     }
@@ -424,6 +425,7 @@ export default class SendApp extends React.Component {
                 type="submit"
                 className={classes.join(' ')}
                 onClick={this.handleSaveEmail}
+                ref={makeNoDragElement}
             ><i className="fa fa-save" /> {text}</button>
         );
     }
@@ -442,6 +444,7 @@ export default class SendApp extends React.Component {
             <button
                 className="attach"
                 onClick={this.handleClickAttach}
+                ref={makeNoDragElement}
             ><i className="fa fa-paperclip" /> {buttonText}{attachments}</button>
         );
     }
