@@ -6,11 +6,7 @@ import { get, post } from 'util/requests';
 export function makeDragElement(element) {
     // Note this is based on my original drag code merged into `pywebview`:
     // https://github.com/r0x0r/pywebview/blob/master/webview/js/drag.py
-    if (!window.KANMAIL_FRAMELESS) {
-        return;
-    }
-
-    if (!element) {
+    if (!window.KANMAIL_FRAMELESS || !element) {
         return;
     }
 
