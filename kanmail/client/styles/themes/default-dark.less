@@ -121,7 +121,9 @@ body.theme-default-dark {
     }
 
     input, textarea {
-        border-color: @formBorderGrey;
+        background: @darkGrey;
+        border-color: @midGrey;
+        color: @textGrey;
 
         &:hover, &:focus {
             border-color: @formBorderGreyHover;
@@ -644,13 +646,9 @@ body.theme-default-dark {
         Contacts App */
 
     section#contacts {
-        div#contact-list {
-            border-color: @lightestGrey;
-        }
-
         div.contact {
             &:hover {
-                background: @lightestGrey;
+                background: @darkestGrey;
             }
         }
     }
