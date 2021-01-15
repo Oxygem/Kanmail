@@ -433,8 +433,15 @@ export default class BaseEmails {
                 });
 
                 _.each(senderToSingleThread, singleThreads => {
-                    // We want the first thread object to be the "base" of this thread as this contains
-                    // all the special values we assigned above (unread, etc).
+                    // Ensure the threads are in date-reverse order, matching other threads
+                    singleThreads = _.orderBy(
+                        singleThreads,
+                        thread => new Date(thread[0].date),
+                        'desc',
+                    );
+
+                    // We want the first thread object to be the "base" of this thread as this
+                    // contains all the special values we assigned above (unread, etc).
                     let newThread;
                     _.each(singleThreads, singleThread => {
                         if (!newThread) {
