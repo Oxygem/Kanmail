@@ -1,5 +1,6 @@
 from flask import jsonify, request, Response
 
+from kanmail.log import logger
 from kanmail.secrets import set_password
 from kanmail.server.app import app
 from kanmail.server.mail import reset_accounts
@@ -10,7 +11,7 @@ from kanmail.settings import (
     set_window_settings,
     update_settings,
 )
-from kanmail.settings.constants import IS_APP, SETTINGS_FILE
+from kanmail.settings.constants import DEBUG, IS_APP, SETTINGS_FILE
 from kanmail.settings.model import validate_unique_accounts
 from kanmail.window import get_main_window_size_position, reload_main_window
 
@@ -73,5 +74,19 @@ def api_update_window_settings() -> Response:
         return jsonify(saved=False)  # success response, but not saved (browser mode)
 
     window_settings = get_main_window_size_position()
+    js_window_settings = request.get_json()
+
+    if DEBUG:
+        for key in ('left', 'top', 'width', 'height'):
+            if window_settings[key] != js_window_settings[key]:
+                logger.warning((
+                    f'Mismatched Python <> JS window setting for {key}, '
+                    f'py={window_settings[key]}, js={js_window_settings[key]}'
+                ))
+
+    # Cap the width + height to max size of screen
+    window_settings['height'] = min(window_settings['height'], js_window_settings['height'])
+    window_settings['width'] = min(window_settings['width'], js_window_settings['width'])
+
     set_window_settings(**window_settings)
     return jsonify(saved=True)
