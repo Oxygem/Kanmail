@@ -48,7 +48,17 @@ export function makeNoDragElement(element) {
 
 
 function saveWindowPosition() {
-    post('/api/settings/window');
+    const windowSettings = {
+        // Unused (Python/backend provides these currently)
+        left: window.screenX,
+        top: window.screenY,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        // Used to cap the width/height to the screen size
+        screen_width: window.screen.width,
+        screen_height: window.screen.height,
+    }
+    post('/api/settings/window', windowSettings);
 }
 
 
