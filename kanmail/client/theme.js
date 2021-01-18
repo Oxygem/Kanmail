@@ -14,5 +14,7 @@ export function setupThemes(styleSettings) {
     }
 
     setTheme(darkModeMedia);
-    darkModeMedia.addEventListener('change', setTheme);
+    if (darkModeMedia.addEventListener) {
+        darkModeMedia.addEventListener('change', setTheme);
+    }
 }
