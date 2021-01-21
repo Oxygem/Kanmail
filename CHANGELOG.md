@@ -1,3 +1,91 @@
+# v1.2101211835
+
+This releases introduces a major design overhaul and cleanup, with dark
+mode support. Check out the settings to pick default, light or dark 
+theme settings.
+
+Changes:
+- Correct thread title border colour in default/light themes.
+- Fix thread message border in dark theme.
+- Only add dark mode event listener if supported.
+- Fixes for dark theme colours.
+- Tweak contacts header search bar margin.
+- Sort merged single sender threads properly.
+- Make control overlay text bigger.
+- Combine if statements.
+- Add theme class after removing old one (in case same).
+- Add dark/light theme settings.
+- Fix 1px extra margin error on main column.
+- Tidy up headers, make buttons not drag window.
+- Add avatars to contact list.
+- Rework Cocoa traffic light button repositioning.
+- Dramatically improve the fake IMAP response content.
+- Never enable caching if we're using fake IMAP responses.
+- Always sync trash folder, as may contain thread messages.
+- Re-order main alias folder sidebar ordering.
+- Improve date formatting for this-year dates.
+- Increase text size of meta/meta-file apps.
+- Don't attempt to make drag region on non-element.
+- Improve short address formatting.
+- Add dark/light theme settings to the setting model.
+- Setup dark/light theme switching and activation on app boot.
+- Remove Robot slab import.
+- Tidy up column email design/layout.
+- Add settingsStore to window for debugging.
+- Import the new dark/light themes.
+- Ensure tooltips always appear on top.
+- Move thread sidebar width into less variable.
+- Allow open column to be larger and detect/fix main column width.
+- Set frameless/wrapper classes in generic app boot.
+- Add "s"/escape keyboard shortcut to open/close search.
+- Move search out of sidebar and above the columns.
+- Tidy up sidebar icons, make spam yellow.
+- Move purchase button to top of sidebar.
+- Move save/etc window buttons into headers, tidy up styling.
+- Remove unused CSS.
+- Rename `frameless.less` -> `platforms.less` and cleanup.
+- Move font sizes into less variables.
+- Add dark & light theme CSS.
+- Break out all colour related CSS into a theme.
+- Use webpack `--mode` argument instead of envvar.
+- Better name for get main JS filename in webpack config.
+- Use python rather than script direct (Windows dev support).
+- Rename less variable `orangee` -> `red`.
+- Replace/simplify the headerbar + dragbar components.
+- Update spam icon (exclamation triangle).
+- Remove Roboto Slab font.
+- Add `lock_function` util.
+- Fix cache disable envvar flag.
+- Raise an error when parts missing in dev.
+- Lock the `add_contacts` function.
+- Capture `LoginError`s connecting to IMAP servers.
+- Use deep path for scroll polyfill to fix Windows support.
+- Use JS screen info to cap saved window height/width.
+- Pass JS detected window position/size/resolution to backend.
+- Expand support for German IMAP folder names (provided by @georks).
+- Sort column threads after including incoming.
+- Merge pull request #148 from vilhelmprytz/vilhelmprytz-minor-readme-fix
+- Fix key error when accessing missing header parts.
+- Lock when adding/removing cached header flags.
+- Fix unsetting column maxwidth.
+- Add CSS classes to each of the sidebar alias folders.
+- Make new avatar component and extract icons from thread message.
+- Show incoming threads when moving to a new column.
+- Replace "intsall" with "install" in README
+- Update yarn lock file.
+- Add seamless scroll polyfill package.
+- Remove old debug statement (whoops!).
+- Make the column header email count respect the selected account.
+- Fix deleted/moved/archived threads re-appearing when switching main column.
+- Update drafts sidebar icon (file -> pencil).
+- Move sent after archive in sidebar.
+- Make moving messages undo-able.
+- Ensure development works properly / similarly to app builds.
+- Split up webpack app bundles and extract files/css.
+- Remove unused style.
+- Install less `pyobjc` packages and upgrade to v6.2.2.
+- Remove pinned requirements.
+
 # v1.2012041414
 
 Major addition: always show images from a given sender.
