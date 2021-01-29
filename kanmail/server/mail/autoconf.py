@@ -92,6 +92,8 @@ def get_autoconf_settings(username, password):
     if not config:
         mx_domains = get_mx_record_domain(domain)
         for mx_domain in mx_domains:
+            if mx_domain == domain:  # don't re-attempt the original domain
+                continue
             config = get_ispdb_confg(mx_domain)
             if config:
                 break
