@@ -49,6 +49,9 @@ MODEL = {
                 **CONNECTION_DEFAULTS,
             },
             'folders': {
+                # Namespace (IMAP) settings
+                'prefix': (str, ''),
+                'separator': (str, '/'),
                 # Folder settings
                 'save_sent_copies': bool,
                 'copy_on_move': bool,

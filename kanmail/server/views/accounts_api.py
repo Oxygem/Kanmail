@@ -26,8 +26,21 @@ for key, extra_names in EXTRA_SPECIAL_FOLDER_NAMES.items():
     imapclient._POPULAR_SPECIAL_FOLDERS[key] += extra_names
 
 
-    folders = {}
 def _get_folder_settings(imap_settings, connection):
+    # First, figure out the folder prefix & separator using the NAMESPACE IMAP
+    # extension if available on the server.
+    prefix = ''
+    separator = '/'
+
+    capabilities = connection.capabilities()
+    if b'NAMESPACE' in capabilities:
+        namespace = connection.namespace().personal[0]
+        prefix, separator = namespace
+
+    folders = {
+        'prefix': prefix,
+        'separator': separator,
+    }
 
     # Get the alias folders
     for alias in (
@@ -43,6 +56,8 @@ def _get_folder_settings(imap_settings, connection):
         special_folder = connection.find_special_folder(constant)
 
         if special_folder:
+            if special_folder.startswith(prefix):
+                special_folder = special_folder[len(prefix):]
             folders[folder] = special_folder
 
     # Some email providers use ALL instead of ARCHIVE (gmail)

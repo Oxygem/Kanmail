@@ -64,13 +64,23 @@ class Account(object):
             if alias in alias_folders
         ]
 
+        prefix = self.settings['folders'].get('prefix')
+
         with self.get_imap_connection() as connection:
             for flags, delimeter, name in connection.list_folders():
                 if NOSELECT_FLAG in flags:
                     continue
 
-                if name not in alias_folder_names:
-                    folder_names.append(name)
+                if name == alias_folders['inbox']:
+                    continue
+
+                name_without_prefix = name
+                if prefix:
+                    name_without_prefix = name[len(prefix):]
+                    name = f'{prefix}{name}'
+
+                if name_without_prefix not in alias_folder_names:
+                    folder_names.append(name_without_prefix)
 
         return folder_names
 
@@ -83,6 +93,10 @@ class Account(object):
         folder_name = folder_alias
         if folder_alias in self.settings['folders']:
             folder_name = self.settings['folders'][folder_alias]
+
+        prefix = self.settings['folders'].get('prefix')
+        if prefix and folder_alias != 'inbox':
+            folder_name = f'{prefix}{folder_name}'
 
         # Is this a temporary query-based folder?
         cache = self.query_folders if query else self.folders
