@@ -1,3 +1,15 @@
+# v1.2101301934
+
+This release adds support for IMAP namespaces.
+
+Changes:
+- Update folder settings when creating a new account.
+- Add folder prefix to account settings.
+- Implement proper IMAP namespace handling.
+- Rewrite account test API to use an exception for errors.
+- Fix margin on welcome settings header.
+- Don't lookup the same domain twice in autoconf.
+
 # v1.2101211835
 
 This releases introduces a major design overhaul and cleanup, with dark
