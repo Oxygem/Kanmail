@@ -161,26 +161,30 @@ export default class Account extends React.Component {
         post('/api/settings/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
-        }, {ignoreStatus: [400]}).then(() => {
+            update_folder_settings: this.props.alwaysEditing,
+        }, {ignoreStatus: [400]}).then((data) => {
             const filteredContacts = _.filter(
                 this.state.contactSettings,
                 contactTuple => contactTuple[0].length && contactTuple[1].length,
             );
 
-            this.props.updateAccount(
-                this.props.accountIndex,
-                {
-                    imap_connection: this.state.imapSettings,
-                    smtp_connection: this.state.smtpSettings,
-                    folders: this.state.folderSettings,
-                    contacts: filteredContacts,
-                    name: this.state.name,
-                },
-            );
+            const updatedSettings = {
+                imap_connection: this.state.imapSettings,
+                smtp_connection: this.state.smtpSettings,
+                folders: this.state.folderSettings,
+                contacts: filteredContacts,
+                name: this.state.name,
+            };
+
+            if (this.props.alwaysEditing) {
+                updatedSettings.folders = data.settings.folders;
+            }
+
+            this.props.updateAccount(this.props.accountIndex, updatedSettings);
 
             this.setState({connected: true});
 
-            if (!this.state.alwaysEditing) {
+            if (!this.props.alwaysEditing) {
                 this.resetState();
             }
         }).catch(error => {
@@ -198,9 +202,7 @@ export default class Account extends React.Component {
 
         const { contactSettings } = this.state;
         contactSettings.push(['', '']);
-        this.setState({
-            contactSettings,
-        });
+        this.setState({contactSettings});
     }
 
     renderInput(settingsKey, key, options={}) {
