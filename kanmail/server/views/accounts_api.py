@@ -26,8 +26,8 @@ for key, extra_names in EXTRA_SPECIAL_FOLDER_NAMES.items():
     imapclient._POPULAR_SPECIAL_FOLDERS[key] += extra_names
 
 
-def _get_folders(connection):
     folders = {}
+def _get_folder_settings(imap_settings, connection):
 
     # Get the alias folders
     for alias in (
@@ -57,10 +57,19 @@ def _get_folders(connection):
             folders['inbox'] = folder[2]
             break
 
+    # Gmail is the only provider that *always* supports copy from inbox ie
+    # label style IMAP rather than folder style.
+    if imap_settings['host'] == 'imap.gmail.com':
+        folders['copy_on_move'] = True
+
     return folders
 
 
-def _test_account_settings(account_settings, get_folders=False):
+class TestAccountSettingsError(Exception):
+    pass
+
+
+def _test_account_settings(account_settings, get_folder_settings=False):
     imap_settings = account_settings['imap_connection']
     smtp_settings = account_settings['smtp_connection']
 
@@ -70,7 +79,10 @@ def _test_account_settings(account_settings, get_folders=False):
     ):
         for key in CONNECTION_KEYS:
             if not settings.get(key):
-                return False, (settings_type, f'Missing {settings_type} setting: {key}')
+                raise TestAccountSettingsError(
+                    settings_type,
+                    f'Missing {settings_type} setting: {key}',
+                )
 
     new_account = Account('Unsaved test account', account_settings)
 
@@ -80,12 +92,12 @@ def _test_account_settings(account_settings, get_folders=False):
     try:
         with new_account.get_imap_connection() as connection:
             connection.noop()
-            if get_folders:
-                folders = _get_folders(connection)
+            if get_folder_settings:
+                folders = _get_folder_settings(imap_settings, connection)
     except Exception as e:
         trace = traceback.format_exc().strip()
         logger.debug(f'IMAP connection exception traceback: {trace}')
-        return False, ('imap', f'{e}')
+        raise TestAccountSettingsError('imap', f'{e}')
 
     # Check SMTP
     try:
@@ -94,11 +106,9 @@ def _test_account_settings(account_settings, get_folders=False):
     except Exception as e:
         trace = traceback.format_exc().strip()
         logger.debug(f'SMTP connection exception traceback: {trace}')
-        return False, ('smtp', f'{e}')
+        raise TestAccountSettingsError('smtp', f'{e}')
 
-    if get_folders:
-        return True, folders
-    return True, None
+    return folders or True
 
 
 @app.route('/api/settings/account/test', methods=('POST',))
@@ -110,16 +120,25 @@ def api_test_account_settings():
         'smtp_connection': request_data['smtp_connection'],
     }
 
-    status, error = _test_account_settings(account_settings)
-    if status:
-        return jsonify(connected=True)
+    update_folder_settings = request_data.get('update_folder_settings') is True
 
-    error_type, error_message = error
-    return jsonify(
-        connected=False,
-        error_type=error_type,
-        error_message=error_message,
-    ), 400
+    try:
+        folders = _test_account_settings(
+            account_settings,
+            get_folder_settings=update_folder_settings,
+        )
+    except TestAccountSettingsError as e:
+        error_type, error_message = e.args
+        return jsonify(
+            connected=False,
+            error_type=error_type,
+            error_message=error_message,
+        ), 400
+
+    if update_folder_settings:
+        account_settings['folders'] = folders
+
+    return jsonify(connected=True, settings=account_settings)
 
 
 @app.route('/api/settings/account/new', methods=('POST',))
@@ -134,27 +153,23 @@ def api_test_new_account_settings():
     username = request_data['username']
     password = request_data['password']
 
-    status = False
-    folders_or_error = (None, 'Could not autoconfigure')
+    error_name = None
+    error_message = 'Could not autoconfigure'
 
     did_autoconf, account_settings = get_autoconf_settings(username, password)
 
     if did_autoconf:
-        status, folders_or_error = _test_account_settings(
-            account_settings,
-            get_folders=True,
-        )
+        try:
+            folders = _test_account_settings(
+                account_settings,
+                get_folder_settings=True,
+            )
+        except TestAccountSettingsError as e:
+            error_name, error_message = e.args
+        else:
+            account_settings['folders'] = folders
+            return jsonify(connected=True, settings=account_settings)
 
-    if status:
-        # Gmail is the only provider that *always* supports copy from inbox ie
-        # label style IMAP rather than folder style.
-        if account_settings['imap_connection']['host'] == 'imap.gmail.com':
-            folders_or_error['copy_on_move'] = True
-
-        account_settings['folders'] = folders_or_error
-        return jsonify(connected=True, settings=account_settings)
-
-    error_name, error_message = folders_or_error
     return jsonify(
         connected=False,
         settings=account_settings,
