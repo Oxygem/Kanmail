@@ -420,7 +420,15 @@ export default class Account extends React.Component {
                 </div>
 
                 <div className={this.state.editingTab == 'mailbox' ? 'wide' : 'hidden'}>
+                    <div className="flex wide">
+                        <div className="half">
+                            <label htmlFor="folderSettings-prefix">Folder prefix</label>
+                            {this.renderInput('folderSettings', 'prefix')}
+                        </div>
+                    </div>
+
                     <div className="flex wide">{this.renderFolderSettings()}</div>
+
                     <div className="flex wide">
                         <div className="half">
                             <label
