@@ -1,11 +1,11 @@
-from kanmail.log import logger
-
 '''
 Fixes for IMAP issues (specifically encountered with Gmail, elsewhere untested
 currently). Basically: Gmail's IMAP implementation is shit.
 
-This this StackOverflow question: https://stackoverflow.com/questions/46936646
+This StackOverflow question: https://stackoverflow.com/questions/46936646
 '''
+
+from kanmail.log import logger
 
 
 def fix_missing_uids(expected_uid_count, uids):
