@@ -76,6 +76,12 @@ export default class BaseEmails {
 
         // Initialise emails/meta objects
         this.reset()
+
+        this.processEmailChanges = _.debounce(
+            this.processEmailChanges,
+            250,
+            {maxWait: 1000},
+        );
     }
 
     getAccountKeys() {
