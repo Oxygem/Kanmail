@@ -2,7 +2,6 @@ import ssl
 
 from contextlib import contextmanager
 from queue import LifoQueue
-from smtplib import SMTP, SMTP_SSL
 from socket import error as socket_error
 from time import time
 
@@ -12,6 +11,8 @@ from imapclient.exceptions import IMAPClientAbortError, IMAPClientError, LoginEr
 from kanmail.log import logger
 from kanmail.secrets import get_password
 from kanmail.settings.constants import DEBUG_SMTP
+
+from .smtp import SMTP, SMTP_SSL
 
 DEFAULT_ATTEMPTS = 3
 DEFAULT_CONNECTIONS = 10
