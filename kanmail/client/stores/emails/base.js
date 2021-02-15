@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import ReactDOM from 'react-dom';
 
 import { ALIAS_FOLDERS } from 'constants.js';
 import { messageThreader } from 'threading.js';
@@ -467,24 +468,26 @@ export default class BaseEmails {
 
         const renderStart = performance.now();
 
-        _.each(getColumnStoreKeys(), columnName => {
-            const store = getColumnStore(columnName);
-            const metaStore = getColumnMetaStore(columnName);
+        ReactDOM.unstable_batchedUpdates(() => {
+            _.each(getColumnStoreKeys(), columnName => {
+                const store = getColumnStore(columnName);
+                const metaStore = getColumnMetaStore(columnName);
 
-            const threads = folderEmails[columnName] || [];
+                const threads = folderEmails[columnName] || [];
 
-            // Always update the main column
-            const forceUpdate = (
-                options.forceUpdate
-                || _.includes(ALIAS_FOLDERS, columnName)
-            );
+                // Always update the main column
+                const forceUpdate = (
+                    options.forceUpdate
+                    || _.includes(ALIAS_FOLDERS, columnName)
+                );
 
-            // Push to the column and meta stores
-            store.setThreads(threads, {...options, forceUpdate});
-            _.each(
-                this.meta[columnName],
-                (meta, accountKey) => metaStore.setAccountMeta(accountKey, meta),
-            );
+                // Push to the column and meta stores
+                store.setThreads(threads, {...options, forceUpdate});
+                _.each(
+                    this.meta[columnName],
+                    (meta, accountKey) => metaStore.setAccountMeta(accountKey, meta),
+                );
+            });
         });
 
         const renderTaken = (performance.now() - renderStart).toFixed(2);
