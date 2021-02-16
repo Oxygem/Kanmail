@@ -43,7 +43,7 @@ class JsonEncoder(JSONEncoder):
 
 app = Flask(
     APP_NAME,
-    static_folder=path.join(CLIENT_ROOT, 'static'),
+    static_folder=CLIENT_ROOT,
     template_folder=path.join(CLIENT_ROOT, 'templates'),
 )
 app.json_encoder = JsonEncoder
