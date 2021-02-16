@@ -98,6 +98,12 @@ class SettingsStore extends BaseStore {
             // Store the original for the settings "app"
             this.props.originalSettings = data.settings;
 
+            const accountEmails = new Set();
+            _.each(this.props.accounts, account => {
+                _.each(account.contacts, contact => accountEmails.add(contact[1]));
+            });
+            this.props.accountEmails = accountEmails;
+
             this.triggerUpdate();
             return this.props;
         });

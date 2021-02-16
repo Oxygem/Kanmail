@@ -12,6 +12,7 @@ import Avatar from 'components/Avatar.jsx';
 import controlStore from 'stores/control.js';
 import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
+import settingsStore from 'stores/settings.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { getColumnStore } from 'stores/columns.js';
 
@@ -557,6 +558,12 @@ export default class EmailColumnThread extends React.Component {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
 
+        // Show the avatar of the most recent external (non local user) email
+        const latestEmailNotUs = _.find(
+            thread,
+            message => !settingsStore.props.accountEmails.has(message.from[0][1]),
+        ) || latestEmail;
+
         const uniqueSubjects = _.uniq(_.map(thread, message => message.subject));
         const subject = thread.mergedThreads ? uniqueSubjects.join(', ') : latestEmail.subject;
 
@@ -612,7 +619,7 @@ export default class EmailColumnThread extends React.Component {
                     {addresses}
                 </h5>
                 <h4>
-                    <Avatar address={latestEmail.from[0]} />
+                    <Avatar address={latestEmailNotUs.from[0]} />
                     {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
                         x{thread.mergedThreads}
                         <span className="tooltip">{thread.mergedThreads} merged threads</span>
