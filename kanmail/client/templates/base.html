@@ -1,6 +1,17 @@
 <html>
 <head>
     <title>Kanmail {% block page_title %}{% endblock %}</title>
+
+    <link
+        rel="shortcut icon"
+        type="image/png"
+        href="{{ url_for('static', filename='icon-pink.png') }}"
+    />
+    <link
+        rel="icon"
+        type="image/png"
+        href="{{ url_for('static', filename='icon-pink.png') }}"
+    />
 </head>
 <body>
     {% block app_container %}{% endblock %}
