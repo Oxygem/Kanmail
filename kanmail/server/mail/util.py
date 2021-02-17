@@ -10,8 +10,6 @@ from mdx_linkify.mdx_linkify import LinkifyExtension
 
 from kanmail.log import logger
 
-from .contacts import add_contacts
-
 
 def markdownify(text, linkify=True):
     extensions = [
@@ -51,7 +49,7 @@ def make_contact_tuples(addresses):
     return [make_contact_tuple(address) for address in addresses]
 
 
-def make_email_headers(account, folder, uid, data, parts, save_contacts=True):
+def make_email_headers(account, folder, uid, data, parts):
     # Parse references header into list of reference message IDs
     headers = extract_headers(
         data[b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]'],
@@ -102,10 +100,6 @@ def make_email_headers(account, folder, uid, data, parts, save_contacts=True):
     cc = make_contact_tuples(envelope.cc)
     bcc = make_contact_tuples(envelope.bcc)
     reply_to = make_contact_tuples(envelope.reply_to)
-
-    if save_contacts:
-        all_contacts = set((*from_, *to, *send, *cc, *bcc, *reply_to))
-        add_contacts(all_contacts)
 
     return {
         'uid': uid,

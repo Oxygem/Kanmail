@@ -9,6 +9,7 @@ from kanmail.settings import get_system_setting
 from kanmail.settings.constants import DEBUG
 
 from .connection import ImapConnectionError
+from .contacts import add_contacts
 from .fixes import fix_email_uids, fix_missing_uids
 from .folder_cache import FolderCache
 from .util import decode_string, make_email_headers, parse_bodystructure
@@ -220,15 +221,24 @@ class Folder(object):
         # Fix any dodgy UIDs
         email_headers = fix_email_uids(uids_to_get, email_headers)
         uid_to_headers = {}
+        contacts_to_save = set()
 
         for uid, data in email_headers.items():
             parts = parse_bodystructure(data[b'BODYSTRUCTURE'])
-            headers = make_email_headers(
-                self.account, self, uid, data, parts,
-                save_contacts=self.alias_name != 'spam',
-            )
+            headers = make_email_headers(self.account, self, uid, data, parts)
             emails[uid] = headers
             uid_to_headers[uid] = headers
+            contacts_to_save.update(set((
+                *headers['from'],
+                *headers['to'],
+                *headers['send'],
+                *headers['cc'],
+                *headers['bcc'],
+                *headers['reply_to'],
+            )))
+
+        if contacts_to_save and self.alias_name != 'spam':
+            add_contacts(contacts_to_save)
 
         self.cache.batch_set_headers(uid_to_headers)
 
