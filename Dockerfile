@@ -2,7 +2,7 @@ FROM python:3.6-alpine
 
 LABEL maintainer="Nick Barrett, Oxygem <hello@oxygem.com>"
 
-ARG PACKAGES='gcc make git musl-dev libc-dev libffi-dev libressl-dev'
+ARG PACKAGES='gcc make git musl-dev libc-dev libffi-dev libressl-dev cargo'
 
 ADD ./requirements /opt/kanmail/requirements
 
