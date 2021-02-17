@@ -39,7 +39,7 @@ if FROZEN:
     # to the versioned one when running as a frozen app.
     @app.route('/static/dist/<filename>')
     def get_dev_static_file(filename):
-        return redirect(f'/static/dist/{get_version()}/{filename}')
+        return redirect(url_for('static', filename=f'dist/{get_version()}/{filename}'))
 elif DEBUG:
     # Thie view redirects local development static requests to webpack dev server
     @app.route('/static/dist/<filename>')
