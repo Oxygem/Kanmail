@@ -31,11 +31,13 @@ export default class Search extends React.Component {
 
     componentDidUpdate(prevProps) {
         if (!prevProps.open && this.props.open) {
+            keyboard.disable();
             this.input.focus();
         }
 
         if (prevProps.open && !this.props.open) {
             this.input.blur();
+            keyboard.enable();
         }
 
         this.executeSearch();
@@ -64,12 +66,10 @@ export default class Search extends React.Component {
                     type="text"
                     value={this.searchValue}
                     onChange={this.handleInputChange}
-                    onFocus={keyboard.disable}
                     onBlur={(ev) => {
                         if (ev.target.value.length === 0) {
                             searchStore.close();
                         }
-                        keyboard.enable();
                     }}
                     placeholder="Search..."
                     autoComplete="off"
