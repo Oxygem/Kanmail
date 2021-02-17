@@ -78,9 +78,7 @@ def is_valid_contact(name, email):
     if not name:
         return False
 
-    if any(s in email for s in (
-        'noreply', 'no-reply', 'donotreply',
-    )):
+    if any(s in email for s in ('noreply', 'no-reply', 'donotreply')):
         return False
 
     if email.startswith('reply'):
@@ -103,10 +101,11 @@ def add_contacts(contacts):
     for name, email in contacts:
         if not is_valid_contact(name, email):
             logger.debug(f'Not saving invalid contact: ({name} {email})')
-            return
+            continue
 
         if (name, email) in existing_contacts:
-            return
+            logger.debug(f'Already have contact: ({name} {email})')
+            continue
 
         new_contact = Contact(name=name, email=email)
         contacts_to_save.append(new_contact)
