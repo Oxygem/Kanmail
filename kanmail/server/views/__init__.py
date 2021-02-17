@@ -1,7 +1,15 @@
 from os import path
 from uuid import uuid4
 
-from flask import abort, jsonify, redirect, render_template, request
+from flask import (
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 
 from kanmail.license import check_get_license_email
 from kanmail.log import logger
@@ -10,6 +18,7 @@ from kanmail.server.mail.contacts import get_contact_dicts
 from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
 from kanmail.settings.constants import (
+    CLIENT_ROOT,
     DEBUG,
     FRAMELESS,
     FROZEN,
@@ -36,6 +45,11 @@ elif DEBUG:
     @app.route('/static/dist/<filename>')
     def get_dev_static_file(filename):
         return redirect(f'http://localhost:4421/static/dist/{filename}')
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(CLIENT_ROOT, 'icon-pink.png', mimetype='image/png')
 
 
 @app.route('/ping', methods=('GET',))
