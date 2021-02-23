@@ -18,6 +18,21 @@ function isEmailUnread(email) {
     return !_.includes(email.flags, '\\Seen');
 }
 
+function getEmailMessageId(folderName, email) {
+    // Message ID is optional in IMAP
+    if (email.message_id) {
+        return email.message_id;
+    }
+
+    if (email.in_reply_to) {
+        return `in_reply_to-${email.in_reply_to}`;
+    }
+
+    console.warning('Email with no message ID!')
+    return `folder-${folderName}-${email.uid}`;
+}
+
+
 function makeThread(messages) {
     const thread = _.orderBy(messages, message => {
         const date = new Date(message.date);
@@ -177,7 +192,7 @@ export default class BaseEmails {
 
         _.each(emails, email => {
             // Get the account-unique messageID
-            const accountMessageId = `${accountKey}-${email.message_id}`;
+            const accountMessageId = `${accountKey}-${getEmailMessageId(folderName, email)}`;
 
             // We've already seen this email? Simply merge it's folderUids
             const existingEmail = this.emails[accountMessageId];
