@@ -36,6 +36,8 @@ def open_window() -> Tuple[str, int]:
         width=int(request.args['width']),
         height=int(request.args['height']),
         unique_key=request.args.get('unique_key'),
+        confirm_close=request.args.get('confirm_close'),
+        resizable=not (request.args.get('resizable') == 'false'),
     ):
         abort(500, f'Could not open {link} window')
     return '', 204
