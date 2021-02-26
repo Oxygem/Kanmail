@@ -1,7 +1,7 @@
 from base64 import b64decode
 from email.headerregistry import Address
 from email.message import EmailMessage
-from email.utils import formatdate
+from email.utils import formatdate, make_msgid
 from mimetypes import guess_type
 from os import path
 
@@ -51,6 +51,7 @@ def make_email_message(
 
     message = EmailMessage()
 
+    message['Message-ID'] = make_msgid(domain='kanmail')
     message['X-Mailer'] = f'Kanmail v{get_version()}'
     message['Date'] = formatdate()
 
