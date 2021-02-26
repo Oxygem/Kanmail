@@ -63,6 +63,15 @@ def destroy_window(internal_id: str) -> None:
     logger.warning(f'Tried to destroy non-existant window: {internal_id}')
 
 
+def resize_window(internal_id: str, width: int, height: int) -> None:
+    window = ID_TO_WINDOW[internal_id]
+
+    if window:
+        window.resize(width, height)
+
+    logger.warning(f'Tried to resize non-existant window: {internal_id}')
+
+
 def reload_main_window() -> None:
     if IS_APP:
         window = get_main_window()

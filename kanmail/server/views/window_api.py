@@ -7,7 +7,7 @@ from flask import abort, request
 
 from kanmail.log import logger
 from kanmail.server.app import app
-from kanmail.window import create_window, destroy_window
+from kanmail.window import create_window, destroy_window, resize_window
 
 
 @app.route('/open-link', methods=('GET',))
@@ -44,4 +44,14 @@ def open_window() -> Tuple[str, int]:
 @app.route('/close-window', methods=('GET',))
 def close_window() -> Tuple[str, int]:
     destroy_window(request.args['window_id'])
+    return '', 204
+
+
+@app.route('/resize-window', methods=('GET',))
+def window_resize() -> Tuple[str, int]:
+    resize_window(
+        request.args['window_id'],
+        width=int(request.args['width']),
+        height=int(request.args['height']),
+    )
     return '', 204

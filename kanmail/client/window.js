@@ -63,10 +63,19 @@ export function createWindowPositionHandlers() {
 }
 
 
-export function closeWindow() {
+function getWindowId() {
     const url = new URL(window.location.href);
-    const windowId = url.searchParams.get('window_id');
-    get('/close-window', {window_id: windowId});
+    return url.searchParams.get('window_id');
+}
+
+
+export function closeWindow() {
+    get('/close-window', {window_id: getWindowId()});
+}
+
+
+export function resizeWindow(width, height) {
+    get('/resize-window', {window_id: getWindowId(), width, height});
 }
 
 
