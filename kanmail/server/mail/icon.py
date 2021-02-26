@@ -30,14 +30,15 @@ def get_icon_for_email(email):
         (f'https://www.gravatar.com/avatar/{email_hash}', {'d': '404'}),
     ]
 
-    email_domain = email.rsplit('@', 1)[1]
-    email_domain_parts = list(reversed(email_domain.split('.')))
-    email_domains = [
-        '.'.join(reversed(email_domain_parts[:i + 1]))
-        for i in range(len(email_domain_parts))
-    ]
-    for domain in reversed(email_domains[1:]):
-        requests_to_attempt.append(f'https://icons.duckduckgo.com/ip3/{domain}.ico')
+    if '@' in email:
+        email_domain = email.rsplit('@', 1)[1]
+        email_domain_parts = list(reversed(email_domain.split('.')))
+        email_domains = [
+            '.'.join(reversed(email_domain_parts[:i + 1]))
+            for i in range(len(email_domain_parts))
+        ]
+        for domain in reversed(email_domains[1:]):
+            requests_to_attempt.append(f'https://icons.duckduckgo.com/ip3/{domain}.ico')
 
     for url in requests_to_attempt:
         params = None
