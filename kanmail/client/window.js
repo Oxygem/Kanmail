@@ -131,6 +131,7 @@ export function openLicense() {
 export function openMeta() {
     openWindow('/meta', {
         unique_key: 'meta',
+        resizable: false,
         title: 'Kanmail Meta',
         width: 300,
         height: 230,
