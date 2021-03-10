@@ -81,7 +81,7 @@ export function resizeWindow(width, height) {
 
 export function openWindow(path, options={}) {
     if (!options.width) {
-        options.width = 800;
+        options.width = 600;
     }
     if (!options.height) {
         options.height = 800;
