@@ -13,7 +13,7 @@ CONNECTION_DEFAULTS = {
     'host': str,
     'port': int,
     'ssl': bool,
-    'ssl_verify_hostname': bool,
+    'ssl_verify_hostname': (bool, True),
 }
 
 MODEL = {
