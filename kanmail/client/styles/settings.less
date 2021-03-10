@@ -2,12 +2,12 @@
     Settings */
 
 section#settings {
-    margin-top: @topHeight + 20px;
-
-    h2.accounts {
-        margin-top: 20px;
-        margin-bottom: 10px;
-    }
+    top: @topHeight;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    position: fixed;
 
     button.main-button {
         margin-left: 20px;
@@ -16,16 +16,22 @@ section#settings {
     }
 
     div.settings {
-        padding-left: 20px;
-        padding-right: 20px;
+        padding: 20px;
 
         label {
-            width: 28%;
-            display: inline-block;
+            display: block;
 
             small {
                 display: block;
             }
+        }
+
+        > input {
+            margin-bottom: 30px;
+        }
+
+        .select-wrapper {
+            padding-bottom: 30px;
         }
 
         div.no-input {
@@ -33,21 +39,12 @@ section#settings {
         }
     }
 
-    div#style, div#system {
-        > input, div.select-wrapper {
-            width: 68%;
-            display: inline-block;
-            margin-bottom: 30px;
+    div.checkbox {
+        margin-bottom: 30px;
+        display: flex;
+        label {
+            width: 300px;
         }
-
-        > input[type=checkbox] {
-            width: 20%;
-        }
-    }
-
-    div#system {
-        padding-top: 10px;
-        padding-bottom: 10px;
     }
 
     form.account {

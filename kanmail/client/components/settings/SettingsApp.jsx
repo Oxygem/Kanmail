@@ -8,10 +8,11 @@ import AccountList from 'components/settings/AccountList.jsx';
 import { THEME_NAMES } from 'constants.js';
 import keyboard from 'keyboard.js';
 import {
-        closeWindow,
-        openLicense,
-        makeDragElement,
-        makeNoDragElement,
+    closeWindow,
+    resizeWindow,
+    openLicense,
+    makeDragElement,
+    makeNoDragElement,
 } from 'window.js';
 
 import { delete_, put } from 'util/requests.js';
@@ -29,6 +30,7 @@ export default class SettingsApp extends React.Component {
         keyboard.disable();
 
         this.state = {
+            selectedTab: 'accounts',
             accounts: props.settings.accounts,
             systemSettings: props.settings.system || {},
             styleSettings: props.settings.style || {},
@@ -50,6 +52,8 @@ export default class SettingsApp extends React.Component {
             label: this.state.styleSettings.theme_dark,
             value: this.state.styleSettings.theme_dark,
         };
+
+        resizeWindow(500, 500);
     }
 
     deleteAccount = (accountIndex) => {
@@ -147,87 +151,8 @@ export default class SettingsApp extends React.Component {
             .catch(err => console.error('SETTING ERROR', err));
     }
 
-    renderAdvancedSettings() {
-        if (!this.state.showAdvancedSettings) {
-            return (
-                <div className="settings" id="system">
-                    <button
-                        className="cancel"
-                        onClick={() => this.setState({showAdvancedSettings: true})}
-                    >Show advanced settings <i className="fa fa-arrow-down" /></button>
-                </div>
-            );
-        }
-
-        return (
-             <div className="settings advanced" id="system">
-                 <button
-                    className="cancel"
-                    onClick={() => this.setState({showAdvancedSettings: false})}
-                >Hide advanced settings <i className="fa fa-arrow-up" /></button>
-
-                <h2>
-                    Advanced <small>
-                        <i className="red fa fa-exclamation-triangle" /> danger zone
-                    </small>
-                </h2>
-
-                <label htmlFor="batch_size">
-                    Batch size
-                    <small>Number of emails to fetch at once.</small>
-                </label>
-                <input
-                    required
-                    type="number"
-                    id="batch_size"
-                    value={this.state.systemSettings.batch_size}
-                    onChange={_.partial(
-                        this.handleInputUpdate,
-                        'systemSettings', 'batch_size',
-                    )}
-                />
-
-                <label htmlFor="initial_batches">
-                    Initial batches
-                    <small>initial number of batches to fetch</small>
-                </label>
-                <input
-                    required
-                    type="number"
-                    id="initial_batches"
-                    value={this.state.systemSettings.initial_batches}
-                    onChange={_.partial(
-                        this.handleInputUpdate,
-                        'systemSettings', 'initial_batches',
-                    )}
-                />
-
-                <label>
-                    Clear cache
-                    <small>
-                        Any settings changes will be lost,<br />
-                        will immediately reload the app
-                    </small>
-                </label>
-                <button
-                    className="cancel"
-                    onClick={this.handleBustCache}
-                >Clear the cache</button>
-
-                {window.KANMAIL_LICENSED && <div className="no-input">
-                    <label>
-                        Update license
-                        <small>
-                            Change or remove the license key
-                        </small>
-                    </label>
-                    <button
-                        className=""
-                        onClick={openLicense}
-                    >Open license settings</button>
-                </div>}
-            </div>
-        );
+    selectTab = (selectedTab) => {
+        this.setState({selectedTab});
     }
 
     renderSaveButton() {
@@ -259,185 +184,276 @@ export default class SettingsApp extends React.Component {
         );
     }
 
-    render() {
+    renderAccountSettings() {
+        return (
+            <div className="settings">
+                <AccountList
+                    accounts={this.state.accounts}
+                    addAccount={this.addAccount}
+                    deleteAccount={this.deleteAccount}
+                    updateAccount={this.updateAccount}
+                    moveAccount={this.moveAccount}
+                />
+            </div>
+        );
+    }
+
+    renderAppearanceSettings() {
         const themeOptions = _.map(THEME_NAMES, themeName => ({
             value: themeName,
             label: themeName,
         }));
 
         return (
+            <div className="settings" id="style">
+                <label htmlFor="theme_light">
+                    Light theme
+                    <small>Theme to use when the system theme is light</small>
+                </label>
+                <div className="select-wrapper">
+                    <Select
+                        classNamePrefix="react-select"
+                        options={themeOptions}
+                        value={this.state.styleSettings.theme_light}
+                        onChange={_.partial(
+                            this.handleSettingUpdate,
+                            'styleSettings', 'theme_light',
+                        )}
+                    />
+                </div>
+
+                <label htmlFor="theme_dark">
+                    Dark theme
+                    <small>Theme to use when the system theme is dark</small>
+                </label>
+                <div className="select-wrapper">
+                    <Select
+                        classNamePrefix="react-select"
+                        options={themeOptions}
+                        value={this.state.styleSettings.theme_dark}
+                        onChange={_.partial(
+                            this.handleSettingUpdate,
+                            'styleSettings', 'theme_dark',
+                        )}
+                    />
+                </div>
+
+                <label htmlFor="sidebar_folders">
+                    Sidebar folders
+                    <small>
+                        Folders to pin in the sidebar
+                    </small>
+                </label>
+                <div className="select-wrapper">
+                    <Creatable
+                        isMulti
+                        defaultOptions
+                        cacheOptions
+                        classNamePrefix="react-select"
+                        options={this.state.initialSidebarFolderOptions}
+                        value={this.state.styleSettings.sidebar_folders}
+                        onChange={_.partial(
+                            this.handleSettingUpdate,
+                            'styleSettings', 'sidebar_folders',
+                        )}
+                    />
+                </div>
+
+                <div className="checkbox">
+                    <label htmlFor="group_single_sender_threads">
+                        Group single sender threads
+                        <small>Groups single message threads from the same sender</small>
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="group_single_sender_threads"
+                        checked={this.state.systemSettings.group_single_sender_threads}
+                        onChange={_.partial(
+                            this.handleCheckboxUpdate,
+                            'systemSettings', 'group_single_sender_threads',
+                        )}
+                    />
+                </div>
+
+                <div className="checkbox">
+                    <label htmlFor="load_contact_icons">
+                        Load contact icons
+                        <small>Lookup gravatars and favicons for contacts</small>
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="load_contact_icons"
+                        checked={this.state.systemSettings.load_contact_icons}
+                        onChange={_.partial(
+                            this.handleCheckboxUpdate,
+                            'systemSettings', 'load_contact_icons',
+                        )}
+                    />
+                </div>
+
+                <div className="checkbox">
+                    <label htmlFor="show_help_button">
+                        Show help button
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="show_help_button"
+                        checked={this.state.systemSettings.show_help_button}
+                        onChange={_.partial(
+                            this.handleCheckboxUpdate,
+                            'systemSettings', 'show_help_button',
+                        )}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    renderSyncSettings() {
+        return (
+            <div>
+                <div className="settings" id="style">
+                    <label htmlFor="undo_ms">
+                        Undo time (ms)
+                        <small>Length of time to undo actions</small>
+                    </label>
+                    <input
+                        type="number"
+                        id="undo_ms"
+                        value={this.state.systemSettings.undo_ms}
+                        onChange={_.partial(
+                            this.handleInputUpdate,
+                            'systemSettings', 'undo_ms',
+                        )}
+                    />
+
+                    <label htmlFor="sync_interval">
+                        Update interval (ms)
+                        <small>
+                            How often to fetch new emails
+                        </small>
+                    </label>
+                    <input
+                        required
+                        type="number"
+                        id="sync_interval"
+                        value={this.state.systemSettings.sync_interval}
+                        onChange={_.partial(
+                            this.handleInputUpdate,
+                            'systemSettings', 'sync_interval',
+                        )}
+                    />
+
+                    <label htmlFor="sync_days">
+                        Sync days
+                        <small>
+                            Days of email to sync (0 = all), does not affect search
+                        </small>
+                    </label>
+                    <input
+                        required
+                        type="number"
+                        id="sync_days"
+                        value={this.state.systemSettings.sync_days}
+                        onChange={_.partial(
+                            this.handleInputUpdate,
+                            'systemSettings', 'sync_days',
+                        )}
+                    />
+                </div>
+
+                 <div className="settings advanced" id="system">
+                    <div>
+                        <i className="red fa fa-exclamation-triangle" /> Danger zone
+                    </div>
+
+                    <label htmlFor="batch_size">
+                        Batch size
+                        <small>Number of emails to fetch at once.</small>
+                    </label>
+                    <input
+                        required
+                        type="number"
+                        id="batch_size"
+                        value={this.state.systemSettings.batch_size}
+                        onChange={_.partial(
+                            this.handleInputUpdate,
+                            'systemSettings', 'batch_size',
+                        )}
+                    />
+
+                    <label htmlFor="initial_batches">
+                        Initial batches
+                        <small>initial number of batches to fetch</small>
+                    </label>
+                    <input
+                        required
+                        type="number"
+                        id="initial_batches"
+                        value={this.state.systemSettings.initial_batches}
+                        onChange={_.partial(
+                            this.handleInputUpdate,
+                            'systemSettings', 'initial_batches',
+                        )}
+                    />
+
+                    <label>
+                        Clear cache
+                        <small>
+                            Any settings changes will be lost,<br />
+                            will immediately reload the app
+                        </small>
+                    </label>
+                    <button
+                        className="cancel"
+                        onClick={this.handleBustCache}
+                    >Clear the cache</button>
+
+                    {window.KANMAIL_LICENSED && <div className="no-input">
+                        <label>
+                            Update license
+                            <small>
+                                Change or remove the license key
+                            </small>
+                        </label>
+                        <button
+                            className=""
+                            onClick={openLicense}
+                        >Open license settings</button>
+                    </div>}
+                </div>
+            </div>
+        );
+    }
+
+    render() {
+        return (
             <section className="no-select">
                 <header className="settings flex header-bar" ref={makeDragElement}>
                     <h2>Settings</h2>
+                    <div className="button-set" ref={makeNoDragElement}>
+                        <button
+                            className={this.state.selectedTab === 'accounts' && 'active'}
+                            onClick={_.partial(this.selectTab, 'accounts')}
+                        ><i className="fa fa-envelope" /> Accounts</button>
+                        <button
+                            className={this.state.selectedTab === 'appearance' && 'active'}
+                            onClick={_.partial(this.selectTab, 'appearance')}
+                        ><i className="fa fa-paint-brush" /> Appearance</button>
+                        <button
+                            className={this.state.selectedTab === 'sync' && 'active'}
+                            onClick={_.partial(this.selectTab, 'sync')}
+                        ><i className="fa fa-refresh" /> Sync</button>
+                    </div>
                     <div>
                         {this.renderSaveButton()}
                     </div>
                 </header>
 
                 <section id="settings">
-                    <div className="settings">
-                        <h2 className="accounts">Accounts</h2>
-                        <small>Changes will not be saved until you save all settings at the bottom of the page.</small>
-                    </div>
-
-                    <AccountList
-                        accounts={this.state.accounts}
-                        addAccount={this.addAccount}
-                        deleteAccount={this.deleteAccount}
-                        updateAccount={this.updateAccount}
-                        moveAccount={this.moveAccount}
-                    />
-
-                    <div className="settings" id="style">
-                        <h2>Appearance</h2>
-                        <label htmlFor="theme_light">
-                            Light theme
-                            <small>Theme to use when the system theme is light</small>
-                        </label>
-                        <div className="select-wrapper">
-                            <Select
-                                classNamePrefix="react-select"
-                                options={themeOptions}
-                                value={this.state.styleSettings.theme_light}
-                                onChange={_.partial(
-                                    this.handleSettingUpdate,
-                                    'styleSettings', 'theme_light',
-                                )}
-                            />
-                        </div>
-
-                        <label htmlFor="theme_dark">
-                            Dark theme
-                            <small>Theme to use when the system theme is dark</small>
-                        </label>
-                        <div className="select-wrapper">
-                            <Select
-                                classNamePrefix="react-select"
-                                options={themeOptions}
-                                value={this.state.styleSettings.theme_dark}
-                                onChange={_.partial(
-                                    this.handleSettingUpdate,
-                                    'styleSettings', 'theme_dark',
-                                )}
-                            />
-                        </div>
-
-                        <label htmlFor="sidebar_folders">
-                            Sidebar folders
-                            <small>
-                                Folders to pin in the sidebar
-                            </small>
-                        </label>
-                        <div className="select-wrapper">
-                            <Creatable
-                                isMulti
-                                defaultOptions
-                                cacheOptions
-                                classNamePrefix="react-select"
-                                options={this.state.initialSidebarFolderOptions}
-                                value={this.state.styleSettings.sidebar_folders}
-                                onChange={_.partial(
-                                    this.handleSettingUpdate,
-                                    'styleSettings', 'sidebar_folders',
-                                )}
-                            />
-                        </div>
-
-                        <label htmlFor="group_single_sender_threads">
-                            Group single sender threads
-                            <small>Groups single message threads from the same sender</small>
-                        </label>
-                        <input
-                            type="checkbox"
-                            id="group_single_sender_threads"
-                            checked={this.state.systemSettings.group_single_sender_threads}
-                            onChange={_.partial(
-                                this.handleCheckboxUpdate,
-                                'systemSettings', 'group_single_sender_threads',
-                            )}
-                        />
-
-                        <label htmlFor="load_contact_icons">
-                            Load contact icons
-                            <small>Lookup gravatars and favicons for contacts</small>
-                        </label>
-                        <input
-                            type="checkbox"
-                            id="load_contact_icons"
-                            checked={this.state.systemSettings.load_contact_icons}
-                            onChange={_.partial(
-                                this.handleCheckboxUpdate,
-                                'systemSettings', 'load_contact_icons',
-                            )}
-                        />
-
-                        <label htmlFor="show_help_button">
-                            Show help button
-                        </label>
-                        <input
-                            type="checkbox"
-                            id="show_help_button"
-                            checked={this.state.systemSettings.show_help_button}
-                            onChange={_.partial(
-                                this.handleCheckboxUpdate,
-                                'systemSettings', 'show_help_button',
-                            )}
-                        />
-                    </div>
-
-                    <div className="settings" id="style">
-                        <h2>Sync</h2>
-                        <label htmlFor="undo_ms">
-                            Undo time (ms)
-                            <small>Length of time to undo actions</small>
-                        </label>
-                        <input
-                            type="number"
-                            id="undo_ms"
-                            value={this.state.systemSettings.undo_ms}
-                            onChange={_.partial(
-                                this.handleInputUpdate,
-                                'systemSettings', 'undo_ms',
-                            )}
-                        />
-
-                        <label htmlFor="sync_interval">
-                            Update interval (ms)
-                            <small>
-                                How often to fetch new emails
-                            </small>
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="sync_interval"
-                            value={this.state.systemSettings.sync_interval}
-                            onChange={_.partial(
-                                this.handleInputUpdate,
-                                'systemSettings', 'sync_interval',
-                            )}
-                        />
-
-                        <label htmlFor="sync_days">
-                            Sync days
-                            <small>
-                                Days of email to sync (0 = all)<br />
-                                note: this does not affect search
-                            </small>
-                        </label>
-                        <input
-                            required
-                            type="number"
-                            id="sync_days"
-                            value={this.state.systemSettings.sync_days}
-                            onChange={_.partial(
-                                this.handleInputUpdate,
-                                'systemSettings', 'sync_days',
-                            )}
-                        />
-                    </div>
-
-                    {this.renderAdvancedSettings()}
+                    {this.state.selectedTab === 'accounts' && this.renderAccountSettings()}
+                    {this.state.selectedTab === 'appearance' && this.renderAppearanceSettings()}
+                    {this.state.selectedTab === 'sync' && this.renderSyncSettings()}
                 </section>
             </section>
         );
