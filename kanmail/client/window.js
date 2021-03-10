@@ -104,6 +104,7 @@ export function openWindow(path, options={}) {
 export function openSettings() {
     openWindow('/settings', {
         unique_key: 'settings',
+        confirm_close: true,
         title: 'Kanmail Settings',
     });
 }

@@ -123,11 +123,25 @@ def reposition_traffic_light_buttons(window):
 
 
 def init_window_hacks() -> None:
+    # Although this is supported in the pywebview API - we're overriding the defaults
+    # for all windows with context of one (settings) window. Currently this is the
+    # only place we wish to confirm exit, so it's not an issue.
+    # TODO Issue to track per-window customization: https://github.com/r0x0r/pywebview/issues/697
+    webview.localization.localization['global.quit'] = 'Close without saving'
+    webview.localization.localization['global.cancel'] = 'Return to settings'
+    webview.localization.localization['global.quitConfirmation'] = (
+        'Any changes will be lost, do you still want to close the window?'
+    )
+
     try:
         from webview.platforms import cocoa
     except ImportError:
         pass
     else:
+        # This cocoa specific hack shows the traffic light buttons (pywebview hides these
+        # in frameless mode by default) and also moves them so they look better placed
+        # in the sidebar header.
+
         # Normally set by webview.start but importing cocoa before breaks that
         cocoa._debug = DEBUG
 
