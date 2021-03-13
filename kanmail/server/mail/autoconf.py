@@ -11,7 +11,7 @@ from .autoconf_settings import COMMON_ISPDB_DOMAINS
 ISPDB_URL = 'https://autoconfig.thunderbird.net/v1.1/'
 
 
-def get_ispdb_confg(domain):
+def get_ispdb_confg(domain: str) -> [dict, dict]:
     if domain in COMMON_ISPDB_DOMAINS:
         logger.debug(f'Got hardcoded autoconfig for {domain}')
         return (
@@ -58,7 +58,7 @@ def get_ispdb_confg(domain):
         return imap_settings, smtp_settings
 
 
-def get_mx_record_domain(domain):
+def get_mx_record_domain(domain: str) -> list:
     logger.debug(f'Fetching MX records for {domain}')
 
     name_to_preference = {}
@@ -78,7 +78,7 @@ def get_mx_record_domain(domain):
     )
 
 
-def get_autoconf_settings(username, password, domain):
+def get_autoconf_settings(username: str, password: str, domain: str = None) -> [bool, dict]:
     settings = {
         'imap_connection': {
             'username': username,
