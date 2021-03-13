@@ -191,6 +191,7 @@ def api_test_new_account_settings():
 
     return jsonify(
         connected=False,
+        did_autoconf=did_autoconf,
         settings=account_settings,
         error_name=error_name,
         error_message=error_message,
