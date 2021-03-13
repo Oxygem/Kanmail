@@ -78,7 +78,7 @@ def get_mx_record_domain(domain):
     )
 
 
-def get_autoconf_settings(username, password):
+def get_autoconf_settings(username, password, domain):
     settings = {
         'imap_connection': {
             'username': username,
@@ -95,7 +95,10 @@ def get_autoconf_settings(username, password):
     }
 
     did_autoconf = False
-    domain = username.rsplit('@', 1)[-1]
+
+    if not domain:
+        domain = username.rsplit('@', 1)[-1]
+
     config = get_ispdb_confg(domain)
 
     if not config:
