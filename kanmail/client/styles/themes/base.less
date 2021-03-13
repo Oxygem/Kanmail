@@ -587,7 +587,7 @@ div#accounts {
     }
 
     .account {
-        background: @lightestGrey;
+        background: @settingsAccountBackgroundColor;
 
         small.connected {
             color: green;
@@ -607,10 +607,16 @@ div#accounts {
         }
     }
 
-    div#add-account {
-        div.new-account {
-            p {
-                color: #666;
+    div#account-form-overlay {
+        background: @settingsAccountFormOverlayBackgroundColor;
+
+        div.new-account-buttons {
+            button {
+                color: @bodyTextColor;
+
+                &:hover {
+                    background: @settingsNewAccountButtonHoverBackgroundColor;
+                }
             }
         }
     }
