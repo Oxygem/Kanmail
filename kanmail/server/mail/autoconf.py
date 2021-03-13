@@ -6,10 +6,19 @@ from tld import get_fld
 
 from kanmail.log import logger
 
+from .autoconf_settings import COMMON_ISPDB_DOMAINS
+
 ISPDB_URL = 'https://autoconfig.thunderbird.net/v1.1/'
 
 
 def get_ispdb_confg(domain):
+    if domain in COMMON_ISPDB_DOMAINS:
+        logger.debug(f'Got hardcoded autoconfig for {domain}')
+        return (
+            COMMON_ISPDB_DOMAINS[domain]['imap_connection'],
+            COMMON_ISPDB_DOMAINS[domain]['smtp_connection'],
+        )
+
     logger.debug(f'Looking up thunderbird autoconfig for {domain}')
 
     response = requests.get(f'{ISPDB_URL}/{domain}')
