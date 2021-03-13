@@ -171,7 +171,11 @@ def api_test_new_account_settings():
     error_name = None
     error_message = 'Could not autoconfigure'
 
-    did_autoconf, account_settings = get_autoconf_settings(username, password)
+    did_autoconf, account_settings = get_autoconf_settings(
+        username,
+        password,
+        domain=request_data.get('autoconf_domain'),
+    )
 
     if did_autoconf:
         try:
