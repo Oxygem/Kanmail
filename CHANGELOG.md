@@ -1,3 +1,14 @@
+# v1.2103140902
+
+Changes:
+- Upgrade to pywebview `3.4`.
+- Implement custom `smtplib` override to enable Unicode passwords.
+- Updated screenshot.
+- Debounce the main process emails function.
+- Use `ReactDOM.unstable_batchedUpdates` to batch email updates.
+- Use the icon from the client assets in readme.
+- Tidy up docstring.
+
 # v1.2101301934
 
 This release adds support for IMAP namespaces.
