@@ -78,7 +78,6 @@ section#welcome-settings {
 }
 
 div#accounts {
-    margin: 0 10px;
     margin-bottom: 30px;
 
     h2 {
@@ -127,39 +126,61 @@ div#accounts {
         div.right {
             float: right;
             text-align: right;
-            width: 25%;
+            margin-top: 10px;
         }
 
         input#name {
             width: 300px;
         }
-    }
 
-    div#add-account {
-        padding: 0 10px 10px 10px;
+        h3 {
+            margin-top: 8px;
 
-        div.new-account {
-            form {
-                width: 300px;
-                display: inline-block;
-
-                div {
-                    width: 100%;
-                    margin-bottom: 10px;
-                }
-            }
-
-            p {
-                display: inline-block;
-                vertical-align: top;
-                margin-left: 20px;
-                margin-top: 85px;
-                width: 400px;
+            img, i {
+                width: 48px;
+                vertical-align: middle;
+                margin-top: -10px;
+                margin-right: 14px;
+                float: none;
+                font-size: 48px;
             }
         }
+    }
 
-        button {
-            margin-right: 5px;
+    div#account-form-overlay {
+        position: fixed;
+        z-index: 9;
+        top: @topHeight;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: auto;
+
+        form.account {
+            margin: 30px auto;
+            width: 60%;
+            max-width: 400px;
+            border: 1px solid;
+            padding: 20px;
+        }
+
+        div.new-account-buttons {
+            button {
+                width: 100%;
+                color: black;
+                text-align: left;
+                background: transparent;
+                padding: 15px 10px 10px 10px;
+
+                img, i {
+                    margin-right: 14px;
+                    margin-top: -6px;
+                    vertical-align: middle;
+                    float: none;
+                    font-size: 48px;
+                    width: 48px;
+                }
+            }
         }
     }
 }

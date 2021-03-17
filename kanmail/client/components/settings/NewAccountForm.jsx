@@ -2,76 +2,56 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import Account from 'components/settings/Account.jsx';
-
-import { PROVIDERS_DOC_LINK } from 'constants.js';
-import { openLink } from 'window.js';
+import gmailLogo from 'images/providers/gmail.png';
+import icloudLogo from 'images/providers/icloud.png';
+import outlookLogo from 'images/providers/outlook.png';
+import yahooLogo from 'images/providers/yahoo.png';
+import AccountForm from 'components/settings/AccountForm.jsx';
 
 import { post } from 'util/requests.js';
 
 
-const getInitialState = (props) => ({
-    showAdvancedSettings: false,
-    isSaving: false,
-    saveError: null,
-
-    // Add account phase 1 - name/username/password autoconfig form
-    addingAccount: props.addingAccount || false,
-    newAccountName: '',
-    newAccountUsername: '',
-    newAccountPassword: '',
-    newAccountError: null,
-
-    // Add account phase 2 - manual config if auto fails
-    isLoadingNewAccount: false,
-    configuringNewAccount: false,
-    newAccountSettings: null,
-});
-
-
-export default class NewAccountForm extends React.Component {
+class GenericAccountForm extends React.Component {
     static propTypes = {
-        addAccount: PropTypes.func.isRequired,
-        hideCancelButton: PropTypes.boolean,
+        closeForm: PropTypes.func.isRequired,
+        completeAddNewAccount: PropTypes.func.isRequired,
+        handleAddAccountError: PropTypes.func.isRequired,
     }
 
     constructor(props) {
         super(props);
-        this.state = getInitialState(props);
+        this.state = {
+            newAccountError: null,
+
+            // First phase
+            newAccountUsername: '',
+            newAccountPassword: '',
+
+            // Second phase
+            newAccountSettings: null,
+            newAccountName: '',
+            newAccountAddressEmail: '',
+            newAccountAddressName: '',
+        };
     }
 
-    resetState = () => {
-        const state = getInitialState(this.props);
-        this.setState(state);
-    }
-
-    handleClickManualAddAccount = () => {
-        this.setState({
-            isLoadingNewAccount: false,
-            configuringNewAccount: true,
-            newAccountSettings: {
-                'imap_connection': {
-                    'ssl': true,
-                    'ssl_verify_hostname': true,
-                },
-                'smtp_connection': {
-                    'ssl': true,
-                    'ssl_verify_hostname': true,
-                },
-            },
-        });
+    getAutoconfDomain() {
+        return null;
     }
 
     handleAddAccount = (ev) => {
         ev.preventDefault();
 
+        if (this.state.isLoadingNewAccount) {
+            return;
+        }
+
         if (
-            !this.state.newAccountName ||
             !this.state.newAccountUsername ||
             !this.state.newAccountPassword
         ) {
             this.setState({
-                newAccountError: 'Missing name, email or password!',
+                newAccountError: 'Email or password missing!',
             });
             return;
         }
@@ -79,25 +59,27 @@ export default class NewAccountForm extends React.Component {
         const data = {
             username: this.state.newAccountUsername,
             password: this.state.newAccountPassword,
+            autoconf_domain: this.getAutoconfDomain(),
         };
 
         const handleSettings = (data) => {
             if (data.connected) {
-                this.props.addAccount(
-                    this.state.newAccountName,
-                    data.settings,
-                );
-                this.resetState();
+                this.setState({
+                    newAccountAddressEmail: this.state.newAccountUsername,
+                    newAccountSettings: data.settings,
+                });
                 return;
             }
 
-            this.setState({
-                isLoadingNewAccount: false,
-                configuringNewAccount: true,
-                newAccountSettings: data.json.settings,
-                newAccountError: data.errorMessage,
-                newAccountErrorType: data.errorName,
-            });
+            if (data.json.did_autoconf) {
+                this.setState({
+                    newAccountError: 'Invalid email or password!',
+                    isLoadingNewAccount: false,
+                });
+                return;
+            }
+
+            this.props.handleAddAccountError(data);
         }
 
         this.setState({isLoadingNewAccount: true});
@@ -109,65 +91,41 @@ export default class NewAccountForm extends React.Component {
         );
     }
 
+    handleCompleteAddAccount = (ev) => {
+        ev.preventDefault();
+
+        const settings = this.state.newAccountSettings;
+        settings.name = this.state.newAccountName;
+        settings.contacts = [
+            [this.state.newAccountAddressName, this.state.newAccountAddressEmail],
+        ];
+
+        this.props.completeAddNewAccount(null, settings);
+    }
+
     handleUpdate = (stateKey, ev) => {
         this.setState({
             [stateKey]: ev.target.value,
         });
     }
 
-    toggleAddAccount = () => {
-        this.setState({
-            addingAccount: !this.state.addingAccount,
-        });
+    renderTitle() {
+        return <h3><i className="fa fa-envelope" /> Add New Account</h3>;
     }
 
-    completeAddNewAccount = (_, accountSettings) => {
-        this.props.addAccount(accountSettings.name, accountSettings);
-        this.resetState();
+    renderUnderTitle() {
+        return null;
     }
 
-    render() {
-        if (!this.state.addingAccount) {
-            return <button className="submit" onClick={this.toggleAddAccount}>
-                Add new account
-            </button>;
-        }
-
-        if (this.state.configuringNewAccount) {
-            const { newAccountSettings } = this.state;
-            newAccountSettings.name = this.state.newAccountName;
-
-            return <Account
-                key={this.state.newAccountName}
-                connected={false}
-                alwaysEditing={true}
-                accountSettings={newAccountSettings}
-                error={this.state.newAccountError}
-                errorType={this.state.newAccountErrorType}
-                deleteAccount={this.resetState}
-                updateAccount={this.completeAddNewAccount}
-            />
-        }
-
-        // <button>Add Gmail Account</button>
-        // <button>Add Outlook Account</button>
-
-        return <div className="new-account">
-            <form>
-                <h3>New Account</h3>
-                <div className="error">{this.state.newAccountError}</div>
-                <div>
-                    <label htmlFor="name">Account Name</label>
-                    <input
-                        id="name"
-                        value={this.state.newAccountName}
-                        onChange={_.partial(this.handleUpdate, 'newAccountName')}
-                    />
-                </div>
+    renderNewAccountForm() {
+        return (
+            <div>
+                {this.renderUnderTitle()}
                 <div>
                     <label htmlFor="username">Email</label>
                     <input
                         id="username"
+                        type="email"
                         value={this.state.newAccountUsername}
                         onChange={_.partial(this.handleUpdate, 'newAccountUsername')}
                     />
@@ -187,17 +145,244 @@ export default class NewAccountForm extends React.Component {
                     type="submit"
                     className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
                     onClick={this.handleAddAccount}
-                >Add Account</button>
+                >Add account</button>
+                <button onClick={this.props.closeForm}>
+                    Cancel
+                </button>
+            </div>
+        );
+    }
 
-                {this.props.hideCancelButton || <button onClick={this.toggleAddAccount}>
+    renderCompleteNewAccountForm() {
+        return (
+            <div>
+                <p>Account <span className="green">connected</span>! Customize the new account below:</p>
+                <div>
+                    <label htmlFor="account-name">Account display name</label>
+                    <input
+                        id="account-name"
+                        value={this.state.newAccountName}
+                        onChange={_.partial(this.handleUpdate, 'newAccountName')}
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="address-email">Email address to send from</label>
+                    <input
+                        id="address-email"
+                        type="email"
+                        value={this.state.newAccountAddressEmail}
+                        onChange={_.partial(this.handleUpdate, 'newAccountAddressEmail')}
+                    />
+                </div>
+
+                <div>
+                    <label htmlFor="address-name">Name to send from</label>
+                    <input
+                        id="address-name"
+                        value={this.state.newAccountAddressName}
+                        onChange={_.partial(this.handleUpdate, 'newAccountAddressName')}
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    className="submit"
+                    onClick={this.handleCompleteAddAccount}
+                >Complete adding account</button>
+            </div>
+        );
+    }
+
+    render() {
+        return (
+            <div className="wide">
+                {this.renderTitle()}
+                <div className="error">{this.state.newAccountError}</div>
+                {this.state.newAccountSettings ? this.renderCompleteNewAccountForm() : this.renderNewAccountForm()}
+            </div>
+        );
+    }
+}
+
+class GmailAccountForm extends GenericAccountForm {
+    getAutoconfDomain() {
+        return 'gmail.com';
+    }
+
+    renderTitle() {
+        return <h3><img src={gmailLogo} /> Add Gmail Account</h3>;
+    }
+
+    renderUnderTitle() {
+        return <p>Gmail accounts must use an app specific password for email access.</p>;
+    }
+}
+
+class IcloudAccountForm extends GenericAccountForm {
+    getAutoconfDomain() {
+        return 'icloud.com';
+    }
+
+    renderTitle() {
+        return <h3><img src={icloudLogo} /> Add iCloud Account</h3>;
+    }
+
+    renderUnderTitle() {
+        return <p>iCloud accounts must use an app specific password for any non-Apple email access.</p>;
+    }
+}
+
+class OutlookAccountForm extends GenericAccountForm {
+    getAutoconfDomain() {
+        return 'outlook.com';
+    }
+
+    renderTitle() {
+        return <h3><img src={outlookLogo} /> Add Outlook Account</h3>;
+    }
+}
+
+class YahooAccountForm extends GenericAccountForm {
+    getAutoconfDomain() {
+        return 'yahoo.com';
+    }
+
+    renderTitle() {
+        return <h3><img src={yahooLogo} /> Add Yahoo Account</h3>;
+    }
+}
+
+const ACCOUNT_TYPE_TO_COMPONENT = {
+    'gmail': GmailAccountForm,
+    'icloud': IcloudAccountForm,
+    'outlook': OutlookAccountForm,
+    'yahoo': YahooAccountForm,
+    'generic': GenericAccountForm,
+};
+
+const getInitialState = () => ({
+    newAccountType: null,
+
+    // Add account phase 1 - name/username/password autoconfig form
+    newAccountName: '',
+    newAccountUsername: '',
+    newAccountPassword: '',
+    newAccountError: null,
+
+    // Add account phase 2 - manual config if auto fails
+    isLoadingNewAccount: false,
+    manuallyConfiguringAccount: false,
+    newAccountSettings: null,
+});
+
+
+export default class NewAccountForm extends React.Component {
+    static propTypes = {
+        addAccount: PropTypes.func.isRequired,
+        closeForm: PropTypes.func.isRequired,
+        hideCancelButton: PropTypes.boolean,
+    }
+
+    constructor(props) {
+        super(props);
+        this.state = getInitialState(props);
+    }
+
+    resetState = () => {
+        const state = getInitialState(this.props);
+        this.setState(state);
+    }
+
+    handleAddAccountError = (data) => {
+        this.setState({
+            isLoadingNewAccount: false,
+            manuallyConfiguringAccount: true,
+            newAccountSettings: data.json.settings,
+            newAccountError: data.errorMessage,
+            newAccountErrorType: data.errorName,
+        });
+    }
+
+    handleClickManualAddAccount = () => {
+        this.setState({
+            isLoadingNewAccount: false,
+            manuallyConfiguringAccount: true,
+            newAccountSettings: {
+                'imap_connection': {
+                    'ssl': true,
+                    'ssl_verify_hostname': true,
+                },
+                'smtp_connection': {
+                    'ssl': true,
+                    'ssl_verify_hostname': true,
+                },
+            },
+        });
+    }
+
+    completeAddNewAccount = (_, accountSettings) => {
+        this.props.addAccount(accountSettings.name, accountSettings);
+        this.props.closeForm();
+    }
+
+    setAccountType = (accountType) => {
+        this.setState({accountType});
+    }
+
+    render() {
+        if (this.state.manuallyConfiguringAccount) {
+            const { newAccountSettings } = this.state;
+            newAccountSettings.name = this.state.newAccountName;
+
+            return <AccountForm
+                key={this.state.newAccountName}
+                connected={false}
+                alwaysEditing={true}
+                accountSettings={newAccountSettings}
+                error={this.state.newAccountError}
+                errorType={this.state.newAccountErrorType}
+                deleteAccount={this.resetState}
+                updateAccount={this.completeAddNewAccount}
+                closeForm={this.props.closeForm}
+            />
+        }
+
+        if (this.state.accountType) {
+            const Component = ACCOUNT_TYPE_TO_COMPONENT[this.state.accountType];
+            return (
+                <form className="account">
+                    <Component
+                        closeForm={this.props.closeForm}
+                        handleAddAccountError={this.handleAddAccountError}
+                        completeAddNewAccount={this.completeAddNewAccount}
+                    />
+                </form>
+            );
+        }
+
+        return <form className="account">
+                <div className="new-account-buttons">
+                    <button
+                        onClick={_.partial(this.setAccountType, 'gmail')}
+                    ><img src={gmailLogo} /> Add Google account</button>
+                    <button
+                        onClick={_.partial(this.setAccountType, 'icloud')}
+                    ><img src={icloudLogo} /> Add iCloud account</button>
+                    <button
+                        onClick={_.partial(this.setAccountType, 'outlook')}
+                    ><img src={outlookLogo} /> Add Outlook account</button>
+                    <button
+                        onClick={_.partial(this.setAccountType, 'yahoo')}
+                    ><img src={yahooLogo} /> Add Yahoo account</button>
+                    <button
+                        onClick={_.partial(this.setAccountType, 'generic')}
+                    ><i className="fa fa-envelope" /> Add a different account</button>
+                </div>
+                <p>If you would prefer to enter IMAP/SMTP settings by hand, <a onClick={this.handleClickManualAddAccount}>click here</a>.</p>
+                {this.props.hideCancelButton || <button onClick={this.props.closeForm}>
                     Cancel
                 </button>}
-            </form>
-            <p>
-                <strong>Gmail/iCloud/Fastmail users</strong>: you will need an app password. Kanmail should be compatible with most email providers. Please see the <strong><a onClick={() => openLink(PROVIDERS_DOC_LINK)}>list of providers and specific requirements</a></strong> for further information.
-                <br /><br />
-                If you would prefer to enter IMAP/SMTP settings by hand, <a onClick={this.handleClickManualAddAccount}>click here</a>.
-            </p>
-        </div>;
+        </form>;
     }
 }

@@ -10,7 +10,6 @@ import { post } from 'util/requests.js';
 
 const getInitialState = (props) => {
     const state = {
-        editing: props.alwaysEditing || false,
         editingTab: props.alwaysEditing ? 'imap' : 'address',
         deleteConfirm: false,
 
@@ -78,15 +77,13 @@ class AccountAddress extends React.Component {
 }
 
 
-export default class Account extends React.Component {
+export default class AccountForm extends React.Component {
     static propTypes = {
         accountSettings: PropTypes.object.isRequired,
-        deleteAccount: PropTypes.func.isRequired,
         accountIndex: PropTypes.number,
         updateAccount: PropTypes.func,
-        moveUp: PropTypes.func,
-        moveDown: PropTypes.func,
         alwaysEditing: PropTypes.bool,
+        closeForm: PropTypes.func,
     }
 
     constructor(props) {
@@ -102,32 +99,8 @@ export default class Account extends React.Component {
     handleClickCancel = (ev) => {
         ev.preventDefault();
 
-        if (this.props.alwaysEditing) {
-            this.props.deleteAccount();
-        }
 
         this.resetState();
-    }
-
-    handleClickEdit = (ev) => {
-        ev.preventDefault();
-        this.setState({
-            editing: true,
-        });
-    }
-
-    handleClickDelete = (ev) => {
-        ev.preventDefault();
-
-        if (!this.state.deleteConfirm) {
-            this.setState({
-                deleteConfirm: true,
-            });
-            return;
-        }
-
-        this.props.deleteAccount(this.props.accountIndex);
-        return;
     }
 
     handleUpdate = (settingsKey, key, ev) => {
@@ -285,43 +258,6 @@ export default class Account extends React.Component {
         });
     }
 
-    renderViewButtons() {
-        if (this.state.deleteConfirm) {
-            return (
-                <div className="right">
-                    <button onClick={this.handleClickCancel}>Cancel</button>
-                    &nbsp;
-                    <button
-                        className="cancel"
-                        onClick={this.handleClickDelete}
-                    >Are you SURE?</button>
-                </div>
-            );
-        }
-
-        if (!this.state.editing) {
-            return (
-                <div className="right">
-                    <button onClick={this.props.moveUp} className="inactive">
-                        <i className="fa fa-arrow-up"></i>
-                    </button>
-                    &nbsp;
-                    <button onClick={this.props.moveDown} className="inactive">
-                        <i className="fa fa-arrow-down"></i>
-                    </button>
-                    &nbsp;
-                    <button onClick={this.handleClickEdit}>
-                        Edit
-                    </button>
-                    &nbsp;
-                    <button onClick={this.handleClickDelete} className="cancel">
-                        {this.state.deleteConfirm ? 'Are you SURE?' : 'Delete'}
-                    </button>
-                </div>
-            );
-        }
-    }
-
     renderConnectedText() {
         if (this.state.connected) {
             return <small className="connected">connected</small>;
@@ -331,21 +267,6 @@ export default class Account extends React.Component {
     }
 
     render() {
-        if (!this.state.editing) {
-            return (
-                <div className="account">
-                    <div className="wide">
-                        {this.renderViewButtons()}
-                        <strong>{this.state.name}</strong>
-                        &nbsp;
-                        {this.renderConnectedText()}
-                        <br />
-                        {this.state.imapSettings.username}
-                    </div>
-                </div>
-            );
-        }
-
         const formClasses = ['account'];
         if (this.state.editing) formClasses.push('active');
         if (this.props.alwaysEditing) formClasses.push('new');
@@ -372,11 +293,11 @@ export default class Account extends React.Component {
                             type="submit"
                             className={saveButtonClasses.join(' ')}
                             onClick={this.handleTestConnection}
-                        >{this.props.alwaysEditing ? 'Add account' : 'Update account'}</button>
+                        >{this.props.alwaysEditing ? 'Add account' : 'Update'}</button>
                         &nbsp;
                         <button
                             type="submit"
-                            onClick={this.props.alwaysEditing ? this.props.deleteAccount : this.handleClickCancel}
+                            onClick={this.props.closeForm}
                         >Cancel</button>
                     </div>
                     <input
@@ -391,7 +312,7 @@ export default class Account extends React.Component {
 
                     <div className="error">{this.state.error}</div>
 
-                    <div className="wide">
+                    <div className="wide button-set">
                         {this.props.alwaysEditing || <button
                             className={getTabButtonClass('address')}
                             onClick={_.partial(setTab, 'address')}
@@ -462,32 +383,32 @@ export default class Account extends React.Component {
                 <div className={this.state.editingTab == 'imap' ? 'wide' : 'hidden'}>
                     <div className="error">{this.state.errorType === 'imap' && this.state.error}</div>
                     <div className="flex wide">
-                        <div className="half">
-                            <label htmlFor="imapSettings-host">Hostname</label>
-                            {this.renderInput('imapSettings', 'host')}
-                        </div>
-                        <div className="half">
-                            <label htmlFor="imapSettings-port">Port</label>
-                            {this.renderInput('imapSettings', 'port', {
-                                'type': 'number',
-                            })}
-                        </div>
-                        <div className="half">
+                        <div className="wide">
                             <label htmlFor="imapSettings-username">Username</label>
                             {this.renderInput('imapSettings', 'username')}
                         </div>
-                        <div className="half">
+                        <div className="wide">
                             <label htmlFor="imapSettings-password">Password</label>
                             {this.renderInput('imapSettings', 'password', {
                                 type: 'password',
                                 placeholder: 'enter to change'
                             })}
                         </div>
+                        <div className="three-quarter">
+                            <label htmlFor="imapSettings-host">Hostname</label>
+                            {this.renderInput('imapSettings', 'host')}
+                        </div>
                         <div className="quarter">
+                            <label htmlFor="imapSettings-port">Port</label>
+                            {this.renderInput('imapSettings', 'port', {
+                                'type': 'number',
+                            })}
+                        </div>
+                        <div className="half">
                             <label
                                 className="checkbox"
                                 htmlFor="imapSettings-ssl"
-                            >SSL?</label>
+                            >Use SSL?</label>
                             {this.renderInput('imapSettings', 'ssl', {
                                 type: 'checkbox',
                             })}
@@ -514,34 +435,25 @@ export default class Account extends React.Component {
                 <div className={this.state.editingTab == 'smtp' ? 'wide' : 'hidden'}>
                     <div className="error">{this.state.errorType === 'smtp' && this.state.error}</div>
                     <div className="flex wide">
-                        <div className="half">
-                            <label htmlFor="smtpSettings-host">Hostname</label>
-                            {this.renderInput('smtpSettings', 'host')}
-                        </div>
-                        <div className="half">
-                            <label htmlFor="smtpSettings-port">Port</label>
-                            {this.renderInput('smtpSettings', 'port', {
-                                type: 'number',
-                            })}
-                        </div>
-                        <div className="half">
+                        <div className="wide">
                             <label htmlFor="smtpSettings-username">Username</label>
                             {this.renderInput('smtpSettings', 'username')}
                         </div>
-                        <div className="half">
+                        <div className="wide">
                             <label htmlFor="smtpSettings-password">Password</label>
                             {this.renderInput('smtpSettings', 'password', {
                                 type: 'password',
                                 placeholder: 'enter to change',
                             })}
                         </div>
+                        <div className="three-quarter">
+                            <label htmlFor="smtpSettings-host">Hostname</label>
+                            {this.renderInput('smtpSettings', 'host')}
+                        </div>
                         <div className="quarter">
-                            <label
-                                className="checkbox"
-                                htmlFor="smtpSettings-tls"
-                            >Use TLS?</label>
-                            {this.renderInput('smtpSettings', 'tls', {
-                                type: 'checkbox',
+                            <label htmlFor="smtpSettings-port">Port</label>
+                            {this.renderInput('smtpSettings', 'port', {
+                                type: 'number',
                             })}
                         </div>
                         <div className="quarter">
@@ -550,6 +462,15 @@ export default class Account extends React.Component {
                                 htmlFor="smtpSettings-ssl"
                             >Use SSL?</label>
                             {this.renderInput('smtpSettings', 'ssl', {
+                                type: 'checkbox',
+                            })}
+                        </div>
+                        <div className="quarter">
+                            <label
+                                className="checkbox"
+                                htmlFor="smtpSettings-tls"
+                            >Use TLS?</label>
+                            {this.renderInput('smtpSettings', 'tls', {
                                 type: 'checkbox',
                             })}
                         </div>
