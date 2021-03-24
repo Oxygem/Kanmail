@@ -1,6 +1,7 @@
 import platform
 
 from os import environ, makedirs, path, remove
+from subprocess import CalledProcessError
 
 import click
 
@@ -155,9 +156,14 @@ def complete_release():
 
     release_version = get_release_version()
 
-    # Check output to hide the JSON dump
-    print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
-    print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
+    try:
+        # Check output to hide the JSON dump
+        print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
+    except CalledProcessError:
+        if not click.confirm('No Docker image found, OK to skip?'):
+            raise
+    else:
+        print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
 
     if not click.confirm((
         f'Are you SURE v{release_version} is ready to release '
