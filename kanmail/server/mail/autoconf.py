@@ -78,17 +78,15 @@ def get_mx_record_domain(domain: str) -> list:
     )
 
 
-def get_autoconf_settings(username: str, password: str, domain: str = None) -> [bool, dict]:
+def get_autoconf_settings(username: str, domain: str = None) -> [bool, dict]:
     settings = {
         'imap_connection': {
             'username': username,
-            'password': password,
             'ssl': True,
             'ssl_verify_hostname': True,
         },
         'smtp_connection': {
             'username': username,
-            'password': password,
             'ssl': True,
             'ssl_verify_hostname': True,
         },
