@@ -7,6 +7,7 @@ from kanmail.log import logger
 from kanmail.server.app import app
 from kanmail.server.mail import Account
 from kanmail.server.mail.autoconf import get_autoconf_settings
+from kanmail.server.mail.oauth import set_oauth_tokens
 
 CONNECTION_KEYS = ('host', 'port', 'username')
 
@@ -167,16 +168,34 @@ def api_test_new_account_settings():
     request_data = request.get_json()
 
     username = request_data['username']
-    password = request_data['password']
 
     error_name = None
     error_message = 'Could not autoconfigure'
 
     did_autoconf, account_settings = get_autoconf_settings(
         username,
-        password,
         domain=request_data.get('autoconf_domain'),
     )
+
+    auth_settiings = {}
+
+    oauth_provider = request_data.get('oauth_provider')
+    if oauth_provider:
+        auth_settiings.update({
+            'oauth_provider': oauth_provider,
+            'oauth_refresh_token': request_data['oauth_refresh_token'],
+        })
+        set_oauth_tokens(
+            request_data['oauth_refresh_token'],
+            request_data['oauth_access_token'],
+        )
+
+    password = request_data.get('password')
+    if password:
+        auth_settiings['password'] = password
+
+    account_settings['imap_connection'].update(auth_settiings)
+    account_settings['smtp_connection'].update(auth_settiings)
 
     if did_autoconf:
         try:

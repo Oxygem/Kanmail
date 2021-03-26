@@ -24,11 +24,11 @@ def api_get_settings() -> Response:
     )
 
 
-def _extract_password(obj) -> None:
-    if not obj or not all(k in obj for k in ('host', 'username', 'password')):
+def _extract_any_secret(secret_type: str, secret_key: str, obj: dict) -> None:
+    if not obj or not all(k in obj for k in ('host', 'username', secret_key)):
         return
 
-    set_password('account', obj['host'], obj['username'], obj.pop('password'))
+    set_password(secret_type, obj['host'], obj['username'], obj.pop(secret_key))
 
 
 @app.route('/api/settings', methods=('PUT',))
@@ -39,8 +39,12 @@ def api_set_settings() -> Response:
     validate_unique_accounts(accounts)
 
     for account in accounts:
-        _extract_password(account.get('imap_settings'))
-        _extract_password(account.get('smtp_settings'))
+        # IMAP user/password accounts
+        _extract_any_secret('account', 'password', account.get('imap_connection'))
+        _extract_any_secret('account', 'password', account.get('smtp_connection'))
+        # IMAP OAuth accounts
+        _extract_any_secret('oauth-account', 'oauth_refresh_token', account.get('imap_connection'))
+        _extract_any_secret('oauth-account', 'oauth_refresh_token', account.get('smtp_connection'))
 
     changed_keys = overwrite_settings(request_data)
 

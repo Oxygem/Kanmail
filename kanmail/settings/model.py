@@ -14,6 +14,9 @@ CONNECTION_DEFAULTS = {
     'port': int,
     'ssl': bool,
     'ssl_verify_hostname': (bool, True),
+    # Optional (+preferred) OAuth IMAP settings
+    'oauth_provider': str,
+    'oauth_refresh_token': str,
 }
 
 MODEL = {
