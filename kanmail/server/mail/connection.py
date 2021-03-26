@@ -1,5 +1,6 @@
 import ssl
 
+from base64 import b64encode
 from contextlib import contextmanager
 from queue import LifoQueue
 from socket import error as socket_error
@@ -9,9 +10,10 @@ from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError, LoginError
 
 from kanmail.log import logger
-from kanmail.secrets import get_password
+from kanmail.secrets import get_password, set_password
 from kanmail.settings.constants import DEBUG_SMTP
 
+from .oauth import get_oauth_tokens_from_refresh_token
 from .smtp import SMTP, SMTP_SSL
 
 DEFAULT_ATTEMPTS = 3
@@ -117,9 +119,10 @@ class ImapConnectionWrapper(object):
         )
         imap.normalise_times = False
 
-        username = self.config.username.encode('utf-8')
-        password = self.config.password.encode('utf-8')
-        imap.login(username, password)
+        if self.config.oauth_provider:
+            imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
+        else:
+            imap.login(self.config.username, self.config.password)
 
         if self._selected_folder:
             imap.select_folder(self._selected_folder)
@@ -139,11 +142,69 @@ class ImapConnectionWrapper(object):
         self._selected_folder = None
 
 
-class ImapConnectionPool(object):
+class ConnectionMixin(object):
+    def __str__(self):
+        return f'[{self.connection_type} Connection]: {self.host}:{self.port}'
+
+    def log(self, method, message):
+        func = getattr(logger, method)
+        func(f'[{self.connection_type} Account: {self.account}]: {message}')
+
+    def get_oauth_access_token(self):
+        oauth_tokens = get_oauth_tokens_from_refresh_token(
+            self.oauth_provider,
+            self.oauth_refresh_token,
+        )
+
+        if oauth_tokens['refresh_token'] != self.oauth_refresh_token:
+            self.oauth_refresh_token = oauth_tokens['refresh_token']
+            set_password(
+                'oauth-account',
+                self.host,
+                self.username,
+                self.oauth_refresh_token,
+            )
+
+        return oauth_tokens['access_token']
+
+    def check_auth_settings(self):
+        missing_key = None
+        fix_description = None
+
+        if self.oauth_provider:
+            if not self.oauth_refresh_token:
+                self.oauth_refresh_token = get_password('oauth-account', self.host, self.username)
+
+            if not self.oauth_refresh_token:
+                missing_key = 'token'
+                fix_description = 'Please re-authenticate this account in settings.'
+        else:
+            if not self.password:
+                self.password = get_password('account', self.host, self.username)
+
+            if not self.password:
+                missing_key = 'password'
+                fix_description = 'Please re-enter your password in settings.'
+
+        if missing_key:
+            raise ConnectionSettingsError(
+                self.account,
+                f'Missing {self.connection_type} {missing_key}! {fix_description}',
+            )
+
+
+class ImapConnectionPool(ConnectionMixin):
+    connection_type = 'IMAP'
+
     def __init__(
-        self, account,
-        host, port, username,
+        self,
+        account,
+        host,
+        port,
+        username,
         password=None,
+        oauth_provider=None,
+        oauth_refresh_token=None,
         ssl=True,
         ssl_verify_hostname=True,
         timeout=DEFAULT_TIMEOUT,
@@ -155,6 +216,8 @@ class ImapConnectionPool(object):
         self.port = port
         self.username = username
         self.password = password
+        self.oauth_provider = oauth_provider
+        self.oauth_refresh_token = oauth_refresh_token
         self.ssl = ssl
         self.ssl_verify_hostname = ssl_verify_hostname
         self.timeout = timeout
@@ -166,20 +229,9 @@ class ImapConnectionPool(object):
         for _ in range(max_connections):
             self.pool.put(ImapConnectionWrapper(self))
 
-    def log(self, method, message):
-        func = getattr(logger, method)
-        func(f'[IMAP Account: {self.account}]: {message}')
-
     @contextmanager
     def get_connection(self, selected_folder=None):
-        if not self.password:
-            self.password = get_password('account', self.host, self.username)
-
-        if not self.password:
-            raise ConnectionSettingsError(
-                self.account,
-                'Missing IMAP password! Please re-enter your password in settings.',
-            )
+        self.check_auth_settings()
 
         connection = self.pool.get()
         self.log('debug', f'Got connection from pool: {self.pool.qsize()} (-1)')
@@ -201,11 +253,24 @@ class ImapConnectionPool(object):
             self.log('debug', f'Returned connection to pool: {self.pool.qsize()} (+1)')
 
 
-class SmtpConnection(object):
+def _generate_oauth2_string(username, access_token):
+    auth_string = f'user={username}\1auth=Bearer {access_token}\1\1'
+    auth_string = b64encode(auth_string.encode('utf-8'))
+    return auth_string
+
+
+class SmtpConnection(ConnectionMixin):
+    connection_type = 'SMTP'
+
     def __init__(
-        self, account,
-        host, port, username,
+        self,
+        account,
+        host,
+        port,
+        username,
         password=None,
+        oauth_provider=None,
+        oauth_refresh_token=None,
         ssl=True,
         ssl_verify_hostname=True,
         tls=False,
@@ -215,27 +280,15 @@ class SmtpConnection(object):
         self.port = port
         self.username = username
         self.password = password
+        self.oauth_provider = oauth_provider
+        self.oauth_refresh_token = oauth_refresh_token
         self.ssl = ssl
         self.ssl_verify_hostname = ssl_verify_hostname
         self.tls = tls
 
-    def __str__(self):
-        return f'{self.host}:{self.port}'
-
-    def log(self, method, message):
-        func = getattr(logger, method)
-        func(f'[SMTP Account: {self.account}]: {message}')
-
     @contextmanager
     def get_connection(self):
-        if not self.password:
-            self.password = get_password('account', self.host, self.username)
-
-        if not self.password:
-            raise ConnectionSettingsError(
-                self.account,
-                'Missing SMTP password! Please re-enter your password in settings.',
-            )
+        self.check_auth_settings()
 
         server_string = (
             f'{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})'
@@ -260,10 +313,14 @@ class SmtpConnection(object):
         if self.tls:
             smtp.starttls()
 
-        # Pending a *Python stdlib bugfix*: https://bugs.python.org/issue29750
-        # username = self.username.encode('utf-8')
-        # password = self.password.encode('utf-8')
-        smtp.login(self.username, self.password)
+        if self.oauth_provider:
+            oauth_string = _generate_oauth2_string(
+                self.username,
+                self.get_oauth_access_token(),
+            )
+            smtp.docmd('AUTH', f'XOAUTH2 {oauth_string}')
+        else:
+            smtp.login(self.username, self.password)
 
         yield smtp
 
