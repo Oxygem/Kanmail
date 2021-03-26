@@ -20,9 +20,10 @@ elementScrollIntoViewPolyfill();
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
     const rootElement = document.querySelector(selector);
     if (!rootElement) {
-        document.write('No root element found, exiting!');
         return;
     }
+
+    document.body.removeChild(document.getElementById('no-app'));
 
     const classNames = [window.KANMAIL_PLATFORM];
     if (window.KANMAIL_FRAMELESS) {
