@@ -14,7 +14,9 @@ import outlookLogo from 'images/providers/outlook.png';
 import yahooLogo from 'images/providers/yahoo.png';
 import AccountForm from 'components/settings/AccountForm.jsx';
 
-import { post } from 'util/requests.js';
+import { openLink } from 'window.js';
+
+import { get, post } from 'util/requests.js';
 
 
 class GenericAccountForm extends React.Component {
@@ -220,7 +222,80 @@ class GenericAccountForm extends React.Component {
     }
 }
 
-class GmailAccountForm extends GenericAccountForm {
+class OauthAccountFormMixin extends GenericAccountForm {
+    constructor(props) {
+        super(props);
+        this.state.oauthError = null;
+        this.state.oauthRequestId = null;
+        this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 1000);
+    }
+
+    componentDidMount() {
+        post(
+            '/api/oauth/request',
+            {oauth_provider: this.getOauthProvider()},
+        ).then(data => {
+            // Open OAuth request in browser window
+            openLink(data.auth_url);
+            // Start checking for the response
+            this.setState({oauthRequestId: data.uid});
+        });
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.oauthRequestCheck);
+    }
+
+    checkForOauthRequest = () => {
+        if (!this.state.oauthRequestId) {
+            return;
+        }
+
+        get(`/api/oauth/response/${this.state.oauthRequestId}`).then(oauthData => {
+            if (!oauthData.response) {
+                return;
+            }
+
+            clearInterval(this.oauthRequestCheck);
+
+            const data = {
+                username: oauthData.response.email,
+                oauth_access_token: oauthData.response.access_token,
+                oauth_refresh_token: oauthData.response.refresh_token,
+                oauth_provider: this.getOauthProvider(),
+                autoconf_domain: this.getAutoconfDomain(),
+            };
+
+            const handleSettings = (data) => {
+                if (data.connected) {
+                    this.setState({
+                        newAccountAddressEmail: oauthData.response.email,
+                        newAccountSettings: data.settings,
+                    });
+                    return;
+                }
+
+                if (data.json.did_autoconf) {
+                    this.setState({
+                        newAccountError: 'Authentication failed!',
+                        isLoadingNewAccount: false,
+                    });
+                    return;
+                }
+
+                this.props.handleAddAccountError(data);
+            }
+
+            this.setState({isLoadingNewAccount: true});
+
+            // Post to new endpoint - hopefully it will autoconfigure and connect itself
+            post('/api/account/new', data, {ignoreStatus: [400]})
+                .then(handleSettings)
+                .catch(err => handleSettings(err.data),
+            );
+        });
+    }
+
     getAutoconfDomain() {
         return 'gmail.com';
     }
@@ -229,8 +304,22 @@ class GmailAccountForm extends GenericAccountForm {
         return <h3><img src={gmailLogo} /> Add Gmail Account</h3>;
     }
 
-    renderUnderTitle() {
-        return <p>Gmail accounts must use an <a onClick={() => openLink(GOOGLE_APP_PASSWORD_LINK)}>app specific password</a> for email access.</p>;
+    renderNewAccountForm() {
+        return <p>Waiting for confirmation!</p>;
+    }
+}
+
+class GmailAccountForm extends OauthAccountFormMixin {
+    getOauthProvider() {
+        return 'gmail';
+    }
+
+    getAutoconfDomain() {
+        return 'gmail.com';
+    }
+
+    renderTitle() {
+        return <h3><img src={gmailLogo} /> Add Gmail Account</h3>;
     }
 }
 
