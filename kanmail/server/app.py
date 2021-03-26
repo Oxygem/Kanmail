@@ -2,6 +2,7 @@ from os import environ, path
 from sqlite3 import Connection as SQLite3Connection
 from typing import Union
 
+from cheroot.wsgi import Server
 from flask import abort, Flask, request
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
@@ -59,6 +60,16 @@ app.config['SQLALCHEMY_BINDS'] = {
 db = SQLAlchemy(app)
 
 
+class ServerWithGetPort(Server):
+    def get_port(self):
+        if not hasattr(self, 'socket'):
+            return SERVER_PORT
+        return self.socket.getsockname()[1]
+
+
+server = ServerWithGetPort((SERVER_HOST, SERVER_PORT), app)
+
+
 @app.before_request
 def validate_session_token() -> None:
     if DEBUG and not IS_APP:  # don't apply in full dev mode
@@ -74,10 +85,13 @@ def validate_session_token() -> None:
             abort(401, 'Invalid session token provided!')
 
 
-def boot() -> None:
+def boot(prepare_server: bool = True) -> None:
+    if prepare_server:
+        server.prepare()
+
     logger.debug(f'App client root is: {CLIENT_ROOT}')
     logger.debug(f'App session token is: {SESSION_TOKEN}')
-    logger.debug(f'App server port: http://{SERVER_HOST}:{SERVER_PORT}')
+    logger.debug(f'App server port: http://{SERVER_HOST}:{server.get_port()}')
 
     if environ.get('KANMAIL_FAKE_IMAP') == 'on':
         logger.debug('Using fixtures, faking the IMAP client & responses!')

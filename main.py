@@ -8,19 +8,14 @@ import webview
 
 from kanmail.license import validate_or_remove_license
 from kanmail.log import logger
-from kanmail.server.app import app, boot
+from kanmail.server.app import boot, server
 from kanmail.server.mail.folder_cache import (
     remove_stale_folders,
     remove_stale_headers,
     vacuum_folder_cache,
 )
 from kanmail.settings import get_window_settings
-from kanmail.settings.constants import (
-    DEBUG,
-    GUI_LIB,
-    SERVER_HOST,
-    SERVER_PORT,
-)
+from kanmail.settings.constants import DEBUG, GUI_LIB, SERVER_HOST
 from kanmail.version import get_version
 from kanmail.window import create_window, destroy_main_window, init_window_hacks
 
@@ -33,19 +28,10 @@ def run_cache_cleanup_later():
 
 
 def run_server():
-    logger.debug(f'Starting server on {SERVER_HOST}:{SERVER_PORT}')
+    logger.debug(f'Starting server on {SERVER_HOST}:{server.get_port()}')
 
     try:
-        boot()
-        app.run(
-            host=SERVER_HOST,
-            port=SERVER_PORT,
-            debug=DEBUG,
-            threaded=True,
-            # We can't use the reloader within a thread as it needs signal support
-            use_reloader=False,
-        )
-
+        server.serve()
     except Exception as e:
         logger.exception(f'Exception in server thread!: {e}')
 
@@ -79,6 +65,7 @@ def main():
     logger.info(f'\n#\n# Booting Kanmail {get_version()}\n#')
 
     init_window_hacks()
+    boot()
 
     server_thread = Thread(name='Server', target=run_server)
     server_thread.daemon = True
@@ -91,7 +78,7 @@ def main():
     waits = 0
     while waits < 10:
         try:
-            response = requests.get(f'http://{SERVER_HOST}:{SERVER_PORT}/ping')
+            response = requests.get(f'http://{SERVER_HOST}:{server.get_port()}/ping')
             response.raise_for_status()
         except requests.RequestException as e:
             logger.warning(f'Waiting for main window: {e}')

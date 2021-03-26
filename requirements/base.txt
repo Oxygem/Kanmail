@@ -2,6 +2,7 @@
 pywebview==3.4
 
 # Server
+cheroot==8.3.0
 click==7.0
 flask==1.0.2
 flask-sqlalchemy==2.4.1

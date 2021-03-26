@@ -10,8 +10,8 @@ from kanmail.server.app import app, boot
 from kanmail.settings.constants import DEBUG, SERVER_PORT
 
 
-# Bootstrap the server
-boot()
+# Bootstrap the server, but don't prep cheroot itself (we'll use Flask devserver)
+boot(prepare_server=False)
 
 # Run the server
 app.run(

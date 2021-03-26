@@ -1,5 +1,4 @@
 import platform
-import socket
 import sys
 
 from os import environ, path
@@ -122,11 +121,6 @@ class PyUpdaterConfig(object):  # noqa: E302
 SERVER_HOST = '127.0.0.1'
 
 if IS_APP and not DEBUG:
-    # Thanks to: https://stackoverflow.com/a/52012158/352488
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind((SERVER_HOST, 0))
-    sock.listen()
-    environ['WERKZEUG_SERVER_FD'] = str(sock.fileno())
-    SERVER_PORT = sock.getsockname()[1]
+    SERVER_PORT = 0  # pick a random available port
 else:
     SERVER_PORT = 4420
