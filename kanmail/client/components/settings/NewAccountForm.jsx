@@ -262,12 +262,8 @@ const ACCOUNT_TYPE_TO_COMPONENT = {
 };
 
 const getInitialState = () => ({
-    newAccountType: null,
-
     // Add account phase 1 - name/username/password autoconfig form
     newAccountName: '',
-    newAccountUsername: '',
-    newAccountPassword: '',
     newAccountError: null,
 
     // Add account phase 2 - manual config if auto fails
