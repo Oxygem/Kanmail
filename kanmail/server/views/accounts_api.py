@@ -126,7 +126,7 @@ def _test_account_settings(account_settings, get_folder_settings=False):
     return folders or True
 
 
-@app.route('/api/settings/account/test', methods=('POST',))
+@app.route('/api/account/test', methods=('POST',))
 def api_test_account_settings():
     request_data = request.get_json()
 
@@ -156,7 +156,7 @@ def api_test_account_settings():
     return jsonify(connected=True, settings=account_settings)
 
 
-@app.route('/api/settings/account/new', methods=('POST',))
+@app.route('/api/account/new', methods=('POST',))
 def api_test_new_account_settings():
     '''
     Attempt to autoconfigure and connect to a new account using email/password,

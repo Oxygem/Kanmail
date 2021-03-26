@@ -131,7 +131,7 @@ export default class AccountForm extends React.Component {
 
         this.setState({isSaving: true});
 
-        post('/api/settings/account/test', {
+        post('/api/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
             update_folder_settings: this.props.alwaysEditing,

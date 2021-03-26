@@ -85,7 +85,7 @@ class GenericAccountForm extends React.Component {
         this.setState({isLoadingNewAccount: true});
 
         // Post to new endpoint - hopefully it will autoconfigure and connect itself
-        post('/api/settings/account/new', data, {ignoreStatus: [400]})
+        post('/api/account/new', data, {ignoreStatus: [400]})
             .then(handleSettings)
             .catch(err => handleSettings(err.data),
         );
