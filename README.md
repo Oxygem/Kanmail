@@ -1,5 +1,5 @@
 <h1>
-    <img src="./kanmail/client/icon-pink.png" width="28px" />
+    <img src="./kanmail/client/icon.png" width="28px" />
     Kanmail
 </h1>
 

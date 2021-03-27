@@ -3,7 +3,7 @@ import React from 'react';
 
 import AccountList from 'components/settings/AccountList.jsx';
 
-import img from 'icon-pink.png';
+import img from 'icon.png';
 import keyboard from 'keyboard.js';
 import { makeDragElement } from 'window.js';
 

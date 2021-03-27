@@ -1,6 +1,6 @@
 import React from 'react';
 
-import img from 'icon-pink.png';
+import img from 'icon.png';
 import keyboard from 'keyboard.js';
 import { openLink, openWindow, makeDragElement } from 'window.js';
 

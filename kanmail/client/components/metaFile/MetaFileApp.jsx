@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import img from 'icon-pink.png';
+import img from 'icon.png';
 import { makeDragElement } from 'window.js';
 
 

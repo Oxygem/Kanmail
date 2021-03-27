@@ -49,7 +49,7 @@ elif DEBUG:
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(CLIENT_ROOT, 'icon-pink.png', mimetype='image/png')
+    return send_from_directory(CLIENT_ROOT, 'icon.png', mimetype='image/png')
 
 
 @app.route('/ping', methods=('GET',))
