@@ -2,6 +2,12 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { openLink } from 'window.js';
+import {
+    APPLE_APP_PASSWORD_LINK,
+    GOOGLE_APP_PASSWORD_LINK,
+} from 'constants.js';
+
 import gmailLogo from 'images/providers/gmail.png';
 import icloudLogo from 'images/providers/icloud.png';
 import outlookLogo from 'images/providers/outlook.png';
@@ -215,7 +221,7 @@ class GmailAccountForm extends GenericAccountForm {
     }
 
     renderUnderTitle() {
-        return <p>Gmail accounts must use an app specific password for email access.</p>;
+        return <p>Gmail accounts must use an <a onClick={() => openLink(GOOGLE_APP_PASSWORD_LINK)}>app specific password</a> for email access.</p>;
     }
 }
 
@@ -229,7 +235,7 @@ class IcloudAccountForm extends GenericAccountForm {
     }
 
     renderUnderTitle() {
-        return <p>iCloud accounts must use an app specific password for any non-Apple email access.</p>;
+        return <p>iCloud accounts must use an <a onClick={() => openLink(APPLE_APP_PASSWORD_LINK)}>app specific password</a> for any non-Apple email access.</p>;
     }
 }
 

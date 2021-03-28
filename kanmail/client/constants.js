@@ -31,3 +31,6 @@ export const THEME_NAMES = [
     'default-dark',
     'default-light',
 ];
+
+export const GOOGLE_APP_PASSWORD_LINK = 'https://support.google.com/accounts/answer/185833?hl=en'
+export const APPLE_APP_PASSWORD_LINK = 'https://support.apple.com/en-gb/HT204397'
