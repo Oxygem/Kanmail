@@ -3,18 +3,13 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { openLink } from 'window.js';
-import {
-    APPLE_APP_PASSWORD_LINK,
-    GOOGLE_APP_PASSWORD_LINK,
-} from 'constants.js';
+import { APPLE_APP_PASSWORD_LINK } from 'constants.js';
 
 import gmailLogo from 'images/providers/gmail.png';
 import icloudLogo from 'images/providers/icloud.png';
 import outlookLogo from 'images/providers/outlook.png';
 import yahooLogo from 'images/providers/yahoo.png';
 import AccountForm from 'components/settings/AccountForm.jsx';
-
-import { openLink } from 'window.js';
 
 import { get, post } from 'util/requests.js';
 
