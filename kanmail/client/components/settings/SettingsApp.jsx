@@ -9,7 +9,6 @@ import { THEME_NAMES } from 'constants.js';
 import keyboard from 'keyboard.js';
 import {
     closeWindow,
-    resizeWindow,
     openLicense,
     makeDragElement,
     makeNoDragElement,
@@ -52,8 +51,6 @@ export default class SettingsApp extends React.Component {
             label: this.state.styleSettings.theme_dark,
             value: this.state.styleSettings.theme_dark,
         };
-
-        resizeWindow(500, 500);
     }
 
     deleteAccount = (accountIndex) => {
