@@ -90,7 +90,7 @@ exe = EXE(  # noqa: F821
 {% elif platform_name == 'win' %}  # noqa
     runtime_tmpdir=None,
     console=False,
-    icon='{{ root_dir }}/make/Kanmail.ico',
+    icon='{{ root_dir }}/make/icon.ico',
 {% endif %}  # noqa
 )
 
@@ -115,7 +115,7 @@ coll = COLLECT(  # noqa: F821
 app = BUNDLE(  # noqa: F821
     coll,
     name='mac.app',
-    icon='{{ root_dir }}/make/Kanmail.icns',
+    icon='{{ root_dir }}/make/icon.icns',
     bundle_identifier=None,
     info_plist={
         # Provides retina support
