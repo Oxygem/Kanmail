@@ -17,7 +17,7 @@ You are not permitted to:
 - Reproduce, copy, distribute, resell or otherwise use the Software for any commercial purpose
 - Allow any third party to use the Software on behalf of or for the benefit of any third party
 - Use the Software in any way which breaches any applicable local, national or international law
-- use the Software for any purpose that OxygemDigital Inc considers is a breach of this EULA agreement
+- Use the Software for any purpose that OxygemDigital Inc considers is a breach of this EULA agreement
 
 ## Disclaimer
 
@@ -25,4 +25,4 @@ The Software and accompanying documentation are provided on an “as is” and �
 
 ## Limitation of Liability
 
-in no event shall OxygemDigital Inc be liable for any direct, indirect, incidental, special or consequential damages, or damages for loss of profits, revenue, data or data use, incurred by you or any third party, whether in an action in contract or tort, arising from your access to, or use of, the site or any content provided on or through the site
+In no event shall OxygemDigital Inc be liable for any direct, indirect, incidental, special or consequential damages, or damages for loss of profits, revenue, data or data use, incurred by you or any third party, whether in an action in contract or tort, arising from your access to, or use of, the site or any content provided on or through the site.
