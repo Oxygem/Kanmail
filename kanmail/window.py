@@ -4,7 +4,8 @@ from uuid import uuid4
 import webview
 
 from kanmail.log import logger
-from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_PORT
+from kanmail.server.app import server
+from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_HOST
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
@@ -20,7 +21,7 @@ def create_window(
         return False
 
     internal_id = str(uuid4())
-    link = f'http://localhost:{SERVER_PORT}{endpoint}?window_id={internal_id}'
+    link = f'http://{SERVER_HOST}:{server.get_port()}{endpoint}?window_id={internal_id}'
 
     logger.debug(
         f'Opening window (#{internal_id}) '
