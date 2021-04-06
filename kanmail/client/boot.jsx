@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import 'fonts/fontawesome/css/font-awesome.css';
-import 'fonts/roboto/css/roboto.css';
+import 'fonts/open-sans/css/open-sans.css';
 import 'style.less';
 
 import { setupThemes } from 'theme.js';
