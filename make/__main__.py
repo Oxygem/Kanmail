@@ -13,6 +13,7 @@ from .settings import (
     GITHUB_API_TOKEN,
     MACOSX_DEPLOYMENT_TARGET,
     NOTARIZE_PASSWORD_KEYCHAIN_NAME,
+    REQUIREMENTS_FILENAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
     VERSION_DATA_FILENAME,
@@ -64,6 +65,9 @@ def prepare_release():
 
 def build_release(release=False, docker=False, build_version=None, onedir=None):
     system_type = 'Docker' if docker else platform.system()
+
+    if system_type != 'Docker':
+        print_and_run(('pip-sync', REQUIREMENTS_FILENAME))
 
     if release and system_type == 'Darwin':
         for key, value in (
