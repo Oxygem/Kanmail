@@ -100,6 +100,13 @@ class GenericAccountForm extends React.Component {
     handleCompleteAddAccount = (ev) => {
         ev.preventDefault();
 
+        if (!this.state.newAccountName) {
+            this.setState({
+                newAccountError: 'Please provide an account display name!',
+            });
+            return;
+        }
+
         const settings = this.state.newAccountSettings;
         settings.name = this.state.newAccountName;
         settings.contacts = [
