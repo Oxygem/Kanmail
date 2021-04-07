@@ -191,6 +191,7 @@ export default class AccountList extends React.Component {
                 <div id="account-form-overlay">
                     <AccountForm
                         connected={true}
+                        accountIndex={this.state.editingAccountIndex}
                         accountSettings={this.props.accounts[this.state.editingAccountIndex]}
                         updateAccount={this.props.updateAccount}
                         closeForm={this.handleClickCancelEditAccount}
