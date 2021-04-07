@@ -73,7 +73,7 @@ python -m make.requirements install [--dev]
 Install the JavaScript requirements with `yarn`:
 
 ```
-yarn
+yarn install
 ```
 
 ### Start the app
@@ -110,7 +110,7 @@ Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable
 
 Kanmail is currently built on:
 
-+ MacOS 10.15 (using 10.12 SDK), compatible with 10.12+
++ MacOS 10.15 (using 10.10 SDK), compatible with 10.10+
 + Ubuntu 18 64 bit, compatible with libc6 2.27+
 + Windows 10 64 bit, compatible with ?
 
@@ -118,20 +118,20 @@ Kanmail is currently built on:
 
 #### MacOS
 
-Should use the oldest SDK possible. Kanmail will be compatible with the SDK version of any newer versions, but nothing older, so target the oldest realistic SDK, which is currently 10.12 / Sierra. Heavily based on [this gist](https://gist.github.com/phfaist/a5b8a895b003822df5397731f4673042).
+Should use the oldest SDK possible. Kanmail will be compatible with the SDK version of any newer versions, but nothing older, so target the oldest realistic SDK, which is currently 10.10 / Sierra. Heavily based on [this gist](https://gist.github.com/phfaist/a5b8a895b003822df5397731f4673042).
 
 + Use [xcodelegacy](https://github.com/devernay/xcodelegacy) to download old OSX SDK files
 
 ##### Setup a separate environment
 
 ```sh
-export BUILD_ENV_PREFIX=/opt/osx10.12-env
+export BUILD_ENV_PREFIX=/opt/osx10.10-env
 
 export PATH="$BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin:$BUILD_ENV_PREFIX/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
 
-export MACOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk
+export MACOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk
 
-export MACOSX_DEPLOYMENT_TARGET="10.12"
+export MACOSX_DEPLOYMENT_TARGET="10.10"
 
 export CFLAGS="-isysroot $MACOSXSDK  -I$MACOSXSDK/System/Library/Frameworks/Tk.framework/Versions/8.5/Headers -I$BUILD_ENV_PREFIX/include "
 export LDFLAGS="-isysroot $MACOSXSDK -L$BUILD_ENV_PREFIX/lib "
@@ -181,7 +181,7 @@ pip install pip -U
 pip install -r requirements/macos.txt
 ```
 
-Using this environment should now build apps compatible with MacOS 10.12+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
+Using this environment should now build apps compatible with MacOS 10.10+. This can be tested by [installing a MacOS 10.13 VM](https://www.howtogeek.com/289594/how-to-install-macos-sierra-in-virtualbox-on-windows-10/).
 
 #### Linux (Ubuntu)
 
