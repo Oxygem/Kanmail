@@ -1,9 +1,14 @@
+import platform
+
 from os import environ, path
 
 
 MAJOR_VERSION = 1
 
-ROOT_DIRNAME = path.normpath(path.join(path.abspath(path.dirname(__file__)), '..'))
+ROOT_DIRNAME = path.normpath(path.join(path.dirname(path.relpath(__file__)), '..'))
+if ROOT_DIRNAME != '.':
+    raise Exception('Execute from source directory only!')
+
 DIST_DIRNAME = path.join(ROOT_DIRNAME, 'dist')
 MAKE_DIRNAME = path.join(ROOT_DIRNAME, 'make')
 
@@ -16,9 +21,29 @@ VERSION_DATA_FILENAME = path.join(DIST_DIRNAME, 'version.json')
 
 DOCKER_NAME = 'fizzadar/kanmail'
 
+GITHUB_API_TOKEN = environ.get('GITHUB_API_TOKEN')
+
+
+# MacOS build settings
+#
+
 CODESIGN_KEY_NAME = environ.get('CODESIGN_KEY_NAME')
 NOTARIZE_PASSWORD_KEYCHAIN_NAME = environ.get('NOTARIZE_PASSWORD_KEYCHAIN_NAME')
 
-GITHUB_API_TOKEN = environ.get('GITHUB_API_TOKEN')
-
 MACOSX_DEPLOYMENT_TARGET = '10.10'
+
+
+# Requirements management
+#
+
+REQUIREMENTS_DIRNAME = path.join(ROOT_DIRNAME, 'requirements')
+
+platform = platform.system().lower()
+if platform == 'darwin':
+    REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'macos.txt')
+else:
+    REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, f'{platform}.txt')
+
+DEVELOPMENT_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'development.txt')
+
+BASE_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'base.in')

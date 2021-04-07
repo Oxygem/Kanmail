@@ -1,0 +1,19 @@
+honcho==1.0.1
+
+# Build/release
+pyinstaller==4.2
+pyupdater-s3-plugin==4.1.2
+
+# Testing
+Faker==0.9.2
+
+# Linting
+mypy==0.761
+flake8==3.6.0
+flake8-quotes==2.1.1
+flake8-commas==2.0.0
+flake8-import-order==0.18
+
+# Debugging
+ipython==7.5.0
+ipdb==0.12
