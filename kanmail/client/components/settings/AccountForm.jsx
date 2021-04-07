@@ -10,7 +10,7 @@ import { post } from 'util/requests.js';
 
 const getInitialState = (props) => {
     const state = {
-        editingTab: props.alwaysEditing ? 'imap' : 'address',
+        editingTab: props.isAddingNewAccount ? 'imap' : 'address',
         deleteConfirm: false,
 
         error: props.error,
@@ -82,7 +82,7 @@ export default class AccountForm extends React.Component {
         accountSettings: PropTypes.object.isRequired,
         accountIndex: PropTypes.number,
         updateAccount: PropTypes.func,
-        alwaysEditing: PropTypes.bool,
+        isAddingNewAccount: PropTypes.bool,
         closeForm: PropTypes.func,
     }
 
@@ -134,7 +134,7 @@ export default class AccountForm extends React.Component {
         post('/api/account/test', {
             imap_connection: this.state.imapSettings,
             smtp_connection: this.state.smtpSettings,
-            update_folder_settings: this.props.alwaysEditing,
+            update_folder_settings: this.props.isAddingNewAccount,
         }, {ignoreStatus: [400]}).then((data) => {
             const filteredContacts = _.filter(
                 this.state.contactSettings,
@@ -149,7 +149,7 @@ export default class AccountForm extends React.Component {
                 name: this.state.name,
             };
 
-            if (this.props.alwaysEditing) {
+            if (this.props.isAddingNewAccount) {
                 updatedSettings.folders = data.settings.folders;
             }
 
@@ -157,8 +157,8 @@ export default class AccountForm extends React.Component {
 
             this.setState({connected: true});
 
-            if (!this.props.alwaysEditing) {
-                this.resetState();
+            if (!this.props.isAddingNewAccount) {
+                this.props.closeForm();
             }
         }).catch(error => {
             this.setState({
@@ -269,7 +269,7 @@ export default class AccountForm extends React.Component {
     render() {
         const formClasses = ['account'];
         if (this.state.editing) formClasses.push('active');
-        if (this.props.alwaysEditing) formClasses.push('new');
+        if (this.props.isAddingNewAccount) formClasses.push('new');
 
         const getTabButtonClass = tabName => (
             this.state.editingTab == tabName ? 'submit' : 'inactive'
@@ -293,7 +293,7 @@ export default class AccountForm extends React.Component {
                             type="submit"
                             className={saveButtonClasses.join(' ')}
                             onClick={this.handleTestConnection}
-                        >{this.props.alwaysEditing ? 'Add account' : 'Update'}</button>
+                        >{this.props.isAddingNewAccount ? 'Add account' : 'Update'}</button>
                         &nbsp;
                         <button
                             type="submit"
@@ -313,12 +313,12 @@ export default class AccountForm extends React.Component {
                     <div className="error">{this.state.error}</div>
 
                     <div className="wide button-set">
-                        {this.props.alwaysEditing || <button
+                        {this.props.isAddingNewAccount || <button
                             className={getTabButtonClass('address')}
                             onClick={_.partial(setTab, 'address')}
                         >Addresses</button>}
                         &nbsp;
-                        {this.props.alwaysEditing || <button
+                        {this.props.isAddingNewAccount || <button
                             className={getTabButtonClass('mailbox')}
                             onClick={_.partial(setTab, 'mailbox')}
                         >Mailboxes</button>}

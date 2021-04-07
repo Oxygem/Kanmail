@@ -341,7 +341,7 @@ export default class NewAccountForm extends React.Component {
             return <AccountForm
                 key={this.state.newAccountName}
                 connected={false}
-                alwaysEditing={true}
+                isAddingNewAccount={true}
                 accountSettings={newAccountSettings}
                 error={this.state.newAccountError}
                 errorType={this.state.newAccountErrorType}
