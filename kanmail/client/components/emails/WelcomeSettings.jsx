@@ -152,7 +152,6 @@ export default class WelcomeSettings extends React.Component {
                         moveAccount={this.moveAccount}
                         newAccountFormProps={{
                             addingAccount: this.state.accounts.length === 0,
-                            hideCancelButton: this.state.accounts.length === 0,
                         }}
                     />
                 </section>

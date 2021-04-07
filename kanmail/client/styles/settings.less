@@ -63,12 +63,10 @@ section#welcome-settings {
     img {
         vertical-align: middle;
         margin-top: -10px;
-        margin-right: 10px;
-        margin-left: 10px;
     }
 
     > p {
-        margin: 15px 10px;
+        margin: 20px 0;
         font-size: 18px;
 
         button {
@@ -159,26 +157,33 @@ div#accounts {
         form.account {
             margin: 30px auto;
             width: 60%;
-            max-width: 400px;
+            max-width: 600px;
             border: 1px solid;
             padding: 20px;
-        }
 
-        div.new-account-buttons {
-            button {
+            div.account-control-buttons {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
                 width: 100%;
-                color: black;
-                text-align: left;
-                background: transparent;
-                padding: 15px 10px 10px 10px;
+            }
 
-                img, i {
-                    margin-right: 14px;
-                    margin-top: -6px;
-                    vertical-align: middle;
-                    float: none;
-                    font-size: 48px;
-                    width: 48px;
+            div.new-account-buttons {
+                button {
+                    width: 100%;
+                    color: black;
+                    text-align: left;
+                    background: transparent;
+                    padding: 15px 10px 10px 10px;
+
+                    img, i {
+                        margin-right: 14px;
+                        margin-top: -6px;
+                        vertical-align: middle;
+                        float: none;
+                        font-size: 48px;
+                        width: 48px;
+                    }
                 }
             }
         }

@@ -147,14 +147,14 @@ class GenericAccountForm extends React.Component {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
-                    onClick={this.handleAddAccount}
-                >Add account</button>
-                <button onClick={this.props.closeForm}>
-                    Cancel
-                </button>
+                <div className="account-control-buttons">
+                    <button
+                        type="submit"
+                        className={`submit ${this.state.isLoadingNewAccount && 'disabled'}`}
+                        onClick={this.handleAddAccount}
+                    >Add account</button>
+                    <button className="cancel" onClick={this.props.closeForm}>Cancel</button>
+                </div>
             </div>
         );
     }
@@ -191,11 +191,13 @@ class GenericAccountForm extends React.Component {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    className="submit"
-                    onClick={this.handleCompleteAddAccount}
-                >Complete adding account</button>
+                <div className="account-control-buttons">
+                    <button
+                        type="submit"
+                        className="submit"
+                        onClick={this.handleCompleteAddAccount}
+                    >Complete adding account</button>
+                </div>
             </div>
         );
     }
@@ -283,7 +285,6 @@ export default class NewAccountForm extends React.Component {
     static propTypes = {
         addAccount: PropTypes.func.isRequired,
         closeForm: PropTypes.func.isRequired,
-        hideCancelButton: PropTypes.boolean,
     }
 
     constructor(props) {
@@ -381,10 +382,10 @@ export default class NewAccountForm extends React.Component {
                         onClick={_.partial(this.setAccountType, 'generic')}
                     ><i className="fa fa-envelope" /> Add a different account</button>
                 </div>
-                <p>If you would prefer to enter IMAP/SMTP settings by hand, <a onClick={this.handleClickManualAddAccount}>click here</a>.</p>
-                {this.props.hideCancelButton || <button onClick={this.props.closeForm}>
-                    Cancel
-                </button>}
+                <div className="account-control-buttons">
+                    <button onClick={this.handleClickManualAddAccount}>Custom IMAP/SMTP</button>
+                    <button className="cancel" onClick={this.props.closeForm}>Cancel</button>
+                </div>
         </form>;
     }
 }
