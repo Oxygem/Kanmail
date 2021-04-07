@@ -171,7 +171,7 @@ class GenericAccountForm extends React.Component {
             <div>
                 <p>Account <span className="green">connected</span>! Customize the new account below:</p>
                 <div>
-                    <label htmlFor="account-name">Account display name</label>
+                    <label htmlFor="account-name">Account display name (eg Work, Personal)</label>
                     <input
                         id="account-name"
                         value={this.state.newAccountName}
