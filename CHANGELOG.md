@@ -1,5 +1,7 @@
 # v1.2103140902
 
+Windows only release, fixing pywebview issues.
+
 Changes:
 - Upgrade to pywebview `3.4`.
 - Implement custom `smtplib` override to enable Unicode passwords.
