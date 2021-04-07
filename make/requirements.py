@@ -1,4 +1,5 @@
 from distutils.spawn import find_executable
+from os import path
 
 import click
 
@@ -42,11 +43,11 @@ def update():
     print_and_run((
         'pip-compile',
         '-q',
-        f'--output-file={REQUIREMENTS_FILENAME}',
-        BASE_REQUIREMENTS_FILENAME,
+        f'--output-file={path.relpath(REQUIREMENTS_FILENAME)}',
+        path.relpath(BASE_REQUIREMENTS_FILENAME),
     ))
 
-    click.echo(f'Requiremnts file updated: {REQUIREMENTS_FILENAME}')
+    click.echo(f'Requiremnts file updated: {path.relpath(REQUIREMENTS_FILENAME)}')
 
 
 @cli.command()
@@ -56,7 +57,7 @@ def update_dev():
     print_and_run((
         'pip-compile',
         '-q',
-        DEVELOPMENT_REQUIREMENTS_FILENAME.replace('.txt', '.in'),
+        path.relpath(DEVELOPMENT_REQUIREMENTS_FILENAME).replace('.txt', '.in'),
     ))
 
     click.echo(f'Development requirements file updated: {DEVELOPMENT_REQUIREMENTS_FILENAME}')

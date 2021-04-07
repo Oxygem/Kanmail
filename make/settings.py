@@ -5,10 +5,7 @@ from os import environ, path
 
 MAJOR_VERSION = 1
 
-ROOT_DIRNAME = path.normpath(path.join(path.dirname(path.relpath(__file__)), '..'))
-if ROOT_DIRNAME != '.':
-    raise Exception('Execute from source directory only!')
-
+ROOT_DIRNAME = path.normpath(path.join(path.abspath(path.dirname(__file__)), '..'))
 DIST_DIRNAME = path.join(ROOT_DIRNAME, 'dist')
 MAKE_DIRNAME = path.join(ROOT_DIRNAME, 'make')
 
