@@ -2,10 +2,7 @@ from os import path, unlink
 
 import click
 
-from .settings import (
-    TEMP_SPEC_FILENAME,
-    TEMP_VERSION_LOCK_FILENAME,
-)
+from .settings import TEMP_SPEC_FILENAME, TEMP_VERSION_LOCK_FILENAME
 from .util import print_and_run
 
 
