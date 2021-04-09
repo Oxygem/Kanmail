@@ -1,3 +1,71 @@
+# v1.2104091748
+
+Big release containing many bug fixes and performance improvements. Major feature
+is a new, simplified setup account flow.
+
+Changes:
+- Fix docker builds.
+- Upgrade/audit yarn packages.
+- Fix updating accounts missing account index ID.
+- Better label for the account display name.
+- Don't allow adding accounts with no display name.
+- Better prop name for adding new account flag.
+- Tidy up new account form buttons.
+- Fix Windows ico file.
+- Fix up last release changelog (Windows only).
+- Restore absolute path for make constants.
+- Formatting clean script imports.
+- Run `pip-sync` before building.
+- Fixup readme information.
+- Use `pip-tools` to manage requirements.
+- Fix window open URL server & host.
+- Move to Open Sans font and cleanup typography.
+- Fix license text issues.
+- New (final) icons.
+- Remove unncessary resize on settings window load.
+- Fix meta file header icon position.
+- Add links to iCloud/Google app password documentation pages.
+- Update to new logo.
+- Improve style of the error boundary.
+- Implement app loading initial page content.
+- Remove unused state variables.
+- Use `cheroot` server in production/app mode.
+- Update account API path for consistency.
+- Don't require a Docker image to release.
+- Add two-phase new account form.
+- Return back whether autconf was successful in account test API.
+- Allow frontend to specify domain to autoconf.
+- Add type hints to autoconf module.
+- Enable passing a specific domain into `get_autoconf_settings`.
+- Add per-domain hard-coded connection settings for  main providers.
+- Setup theme CSS for settings app.
+- Add default (true) for SSL verify hostname connection setting.
+- Disable resize on meta window.
+- Reduce default window width.
+- Confirm before closing settings window.
+- Tidy up contacts app header.
+- Remove loader background color.
+- Update settings app to use tabbed design.
+- Fix error handling contact emails without `@`.
+- Provide `Message-ID` when creating messages to send.
+- Add `resizable` & `confirm_close` options when opening windows.
+- Add resize window API/util.
+- Remove unused minimize/maximize window API/functions.
+- Rework themes to use variables, one common set of styles.
+- Add header button set / active styles.
+- Don't assume emails have a message ID.
+- Use the same JS files in all modes in the base template.
+- Restore old static folder location.
+- Use `url_for` in frozen (app) static redirect.
+- Add `/favicon.ico` endpoint.
+- Install `cargo` to fix `cryptography` compilation.
+- Batch save contacts from multiple messages together.
+- Fix bug in saving contacts.
+- Fix keyboard shortcuts remaining disabled after searching.
+- Use the latest external email for thread avatars.
+- Add favicon for browser mode.
+- Fix static folder path.
+
 # v1.2103140902
 
 Windows only release, fixing pywebview issues.
