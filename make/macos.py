@@ -1,4 +1,4 @@
-from os import path, symlink, unlink
+from os import path, unlink
 from shutil import rmtree
 from time import sleep
 
@@ -7,27 +7,6 @@ from .util import print_and_check_output, print_and_run
 
 
 def codesign(app_dir):
-    # "Fix" invalid files/symlinks from pyupdater
-    # See: https://github.com/JMSwag/PyUpdater/issues/139
-    # Basically - anything in Resources that's also in MacOS - remove in MacOS
-    # and replace with symlink to the Resources copy.
-    macos_dir = path.join(app_dir, 'Contents', 'MacOS')
-    resources_dir = path.join(app_dir, 'Contents', 'Resources')
-
-    # First *copy* the base_library.zip into Contents/Resources so that below
-    # we remove the original and replace with a symlink. Fixes codesign issues,
-    # see: https://github.com/pyinstaller/pyinstaller/issues/3550
-    print_and_run((
-        'mv',
-        path.join(macos_dir, 'base_library.zip'),
-        resources_dir,
-    ))
-
-    symlink(
-        path.join('..', 'Resources', 'base_library.zip'),
-        path.join(macos_dir, 'base_library.zip'),
-    )
-
     print_and_run((
         'codesign',
         '--deep',
