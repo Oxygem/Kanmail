@@ -7,7 +7,7 @@ ARG PACKAGES='gcc make git musl-dev libc-dev libffi-dev libressl-dev cargo'
 ADD ./requirements /opt/kanmail/requirements
 
 RUN apk add --no-cache $PACKAGES \
- && pip install -r /opt/kanmail/requirements/base.txt --no-cache-dir \
+ && pip install -r /opt/kanmail/requirements/docker.txt --no-cache-dir \
  && apk del --purge $PACKAGES
 
 ADD . /opt/kanmail
