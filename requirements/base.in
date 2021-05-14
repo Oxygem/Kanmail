@@ -19,9 +19,9 @@ keyrings.alt==3.4.0
 imapclient==2.2.0
 
 # MacOS requirements
-pyobjc-core==6.2.2; platform_system == 'Dawrin'
-pyobjc-framework-Cocoa==6.2.2; platform_system == 'Dawrin'
-pyobjc-framework-WebKit==6.2.2; platform_system == 'Dawrin'
+pyobjc-core==7.2; platform_system == 'Dawrin'
+pyobjc-framework-Cocoa==7.2; platform_system == 'Dawrin'
+pyobjc-framework-WebKit==7.2; platform_system == 'Dawrin'
 
 # Linux requirements
 PyGObject==3.36.1; platform_system == "Linux"

@@ -48,8 +48,6 @@ idna==2.10
     # via requests
 imapclient==2.2.0
     # via -r ./requirements/base.in
-importlib-metadata==3.10.0
-    # via pyinstaller
 itsdangerous==1.1.0
     # via flask
 jaraco.functools==3.3.0
@@ -82,16 +80,16 @@ pyinstaller-hooks-contrib==2021.1
     # via pyinstaller
 pyinstaller==4.2
     # via pyupdater
-pyobjc-core==7.1
+pyobjc-core==7.2
     # via
     #   pyobjc-framework-cocoa
     #   pyobjc-framework-webkit
     #   pywebview
-pyobjc-framework-cocoa==7.1
+pyobjc-framework-cocoa==7.2
     # via
     #   pyobjc-framework-webkit
     #   pywebview
-pyobjc-framework-webkit==7.1
+pyobjc-framework-webkit==7.2
     # via pywebview
 pyparsing==2.4.7
     # via packaging
@@ -118,8 +116,6 @@ stevedore==1.32.0
     # via pyupdater
 tld==0.9.1
     # via -r ./requirements/base.in
-typing-extensions==3.7.4.3
-    # via importlib-metadata
 urllib3==1.26.4
     # via
     #   pyupdater
@@ -128,8 +124,6 @@ webencodings==0.5.1
     # via bleach
 werkzeug==1.0.1
     # via flask
-zipp==3.4.1
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
