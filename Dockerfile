@@ -1,4 +1,11 @@
-FROM python:3.6-alpine
+FROM node:lts-alpine as javascript
+
+WORKDIR /app
+COPY . .
+RUN npm install
+RUN npm run build
+
+FROM python:3.6-alpine as prod
 
 LABEL maintainer="Nick Barrett, Oxygem <hello@oxygem.com>"
 
@@ -11,7 +18,7 @@ RUN apk add --no-cache $PACKAGES \
  && apk del --purge $PACKAGES
 
 ADD . /opt/kanmail
-ADD ./dist /opt/kanmail/kanmail/client/static/dist
+COPY --from=javascript /app/dist /opt/kanmail/kanmail/client/static/dist
 
 RUN adduser --disabled-password --gecos '' kanmail
 
