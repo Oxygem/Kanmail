@@ -319,7 +319,7 @@ class GmailAccountForm extends OauthAccountFormMixin {
     }
 
     renderTitle() {
-        return <h3><img src={gmailLogo} /> Add Gmail Account</h3>;
+        return <h3><img src={gmailLogo} /> Sign in with Google</h3>;
     }
 }
 
@@ -464,7 +464,7 @@ export default class NewAccountForm extends React.Component {
                 <div className="new-account-buttons">
                     <button
                         onClick={_.partial(this.setAccountType, 'gmail')}
-                    ><img src={gmailLogo} /> Add Google account</button>
+                    ><img src={gmailLogo} />Sign in with Google</button>
                     <button
                         onClick={_.partial(this.setAccountType, 'icloud')}
                     ><img src={icloudLogo} /> Add iCloud account</button>
