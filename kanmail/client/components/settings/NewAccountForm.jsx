@@ -460,7 +460,7 @@ export default class NewAccountForm extends React.Component {
             );
         }
 
-        return <form className="account">
+        return <form className="account new-account">
                 <div className="new-account-buttons">
                     <button
                         onClick={_.partial(this.setAccountType, 'gmail')}
