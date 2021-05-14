@@ -300,7 +300,12 @@ class OauthAccountFormMixin extends GenericAccountForm {
     }
 
     renderNewAccountForm() {
-        return <p>Waiting for confirmation!</p>;
+        return (
+            <div className="account-control-buttons">
+                <span>Waiting for confirmation!</span>
+                <button className="cancel" onClick={this.props.closeForm}>Cancel</button>
+            </div>
+        );
     }
 }
 
