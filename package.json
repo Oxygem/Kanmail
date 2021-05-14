@@ -47,7 +47,7 @@
   },
   "scripts": {
     "build": "webpack --mode=production",
-    "dev": "webpack --mode=development serve",
+    "dev": "webpack serve --mode=development",
     "lint": "eslint --cache --ext .js,.jsx kanmail/client/",
     "lint-fix": "eslint --cache --fix --ext .js,.jsx kanmail/client/"
   }
