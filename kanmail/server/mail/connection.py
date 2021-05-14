@@ -318,7 +318,8 @@ class SmtpConnection(ConnectionMixin):
                 self.username,
                 self.get_oauth_access_token(),
             )
-            smtp.docmd('AUTH', f'XOAUTH2 {oauth_string}')
+            smtp.ehlo()
+            smtp.docmd('AUTH', f'XOAUTH2 {oauth_string.decode()}')
         else:
             smtp.login(self.username, self.password)
 
