@@ -91,9 +91,12 @@ def get_oauth_tokens_from_refresh_token(provider, refresh_token):
 
     oauth_response = response.json()
 
+    if 'refresh_token' not in oauth_response:
+        oauth_response['refresh_token'] = refresh_token
+
     # Store the tokens against the returned response token, if this changes
     # the connection object will use this to lookup.
-    CURRENT_OAUTH_TOKENS[oauth_response['refresh_token']] = oauth_response
+    CURRENT_OAUTH_TOKENS[refresh_token] = oauth_response
     return oauth_response
 
 
