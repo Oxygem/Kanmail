@@ -645,6 +645,7 @@ export default class EmailColumnThread extends React.Component {
                     &nbsp;{latestEmail.account_name}
 
                     <span className="extra-meta">
+                        {this.state.starred && <a className="star active"><i className="fa fa-star"></i></a>}
                         {thread.length > 1 && <span><i className="fa fa-envelope-o"></i> {thread.length}</span>}
                         {uniqueAddresses.length > 1 && <span><i className="fa fa-user-o"></i> {uniqueAddresses.length}</span>}
                         {this.renderAttachmentCount()}
