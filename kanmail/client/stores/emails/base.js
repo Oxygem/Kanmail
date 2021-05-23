@@ -518,7 +518,20 @@ export default class BaseEmails {
                 const store = getColumnStore(columnName);
                 const metaStore = getColumnMetaStore(columnName);
 
-                const threads = folderEmails[columnName] || [];
+                let threads = folderEmails[columnName] || [];
+
+                // Trash is a special case - we don't actually want the entire thread but only the
+                // trashed messages within. The thread still needs to exist so we can show trashed
+                // messages within threads in other folders.
+                if (columnName === 'trash') {
+                    threads = _.map(
+                        threads,
+                        thread => makeThread(_.clone(_.filter(
+                            thread,
+                            msg => msg.folderUids['trash'],
+                        ))),
+                    );
+                }
 
                 // Always update the main column
                 const forceUpdate = (
