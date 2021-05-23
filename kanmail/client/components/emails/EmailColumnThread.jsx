@@ -297,9 +297,7 @@ export default class EmailColumnThread extends React.Component {
         For every message in this thread, *any folder*, generate a move request
         to another folder.
     */
-    moveThreadMessages = (targetFolder, previousState, folderFilter=null) => {
-        const emailStore = getEmailStore();
-
+    handleThreadMessages = (previousState, folderFilter, handler) => {
         const thread = this.props.thread;
         const accountKey = thread[0].account_name;
 
@@ -330,23 +328,34 @@ export default class EmailColumnThread extends React.Component {
             const requests = [];
 
             _.each(allMessageFolderUids, (uids, folderName) => {
-                requests.push(emailStore.moveEmails(
-                    accountKey,
-                    uids,
-                    folderName,
-                    targetFolder,
-                ));
+                requests.push(handler({accountKey, uids, folderName}));
             });
 
-            return Promise.all(requests).then(() => {
-                emailStore.processEmailChanges({noTriggerUpdate: true});
-            }).catch((e) => {
+            return Promise.all(requests).catch((e) => {
                 undoMove({error: true});
                 throw e;  // re-throw for the requestStore to capture
             });
         }
 
         requestStore.addUndoable(moveThread, undoMove);
+    }
+
+    moveThreadMessages = (targetFolder, previousState, folderFilter=null) => {
+        return this.handleThreadMessages(
+            previousState, folderFilter,
+            ({accountKey, uids, folderName}) => getEmailStore().moveEmails(
+                accountKey, uids, folderName, targetFolder,
+            ),
+        );
+    }
+
+    deleteThreadMessages = (previousState) => {
+        return this.handleThreadMessages(
+            previousState, null,
+            ({accountKey, uids, folderName}) => getEmailStore().deleteEmails(
+                accountKey, folderName, uids,
+            ),
+        );
     }
 
     handleClickArchive = (ev) => {
@@ -370,17 +379,13 @@ export default class EmailColumnThread extends React.Component {
 
         this.moveThreadMessages(
             'archive', previousState,
+            // Archive messages in the inbox or columns, not sent/trash/spam/drafts
             folderName => folderName == 'inbox' || !_.includes(ALIAS_FOLDERS, folderName),
         );
     }
 
     handleClickTrash = (ev) => {
         ev.stopPropagation();
-
-        if (this.props.columnId === 'trash') {
-            console.debug('Thread already trashed!');
-            return;
-        }
 
         // No double trashing please!
         if (this.state.locked) {
@@ -398,7 +403,16 @@ export default class EmailColumnThread extends React.Component {
             locked: false,
         };
 
-        this.moveThreadMessages('trash', previousState);
+        if (this.props.columnId === 'trash') {
+            this.deleteThreadMessages(previousState);
+            return;
+        }
+
+        this.moveThreadMessages(
+            'trash', previousState,
+            // Anything already in the trash needn't be moved to trash!
+            folderName => folderName !== 'trash',
+        );
     }
 
     handleClickRestore = (ev) => {
@@ -518,10 +532,6 @@ export default class EmailColumnThread extends React.Component {
     }
 
     renderTrashButton() {
-        if (this.props.columnId === 'trash') {
-            return;
-        }
-
         const classNames = ['fa'];
 
         if (this.state.trashing) {
