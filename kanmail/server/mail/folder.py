@@ -456,6 +456,20 @@ class Folder(object):
         with self.account.get_imap_connection() as connection:
             connection.append(self.name, email_message.as_string(), flags=(SEEN_FLAG,))
 
+    def delete_emails(self, email_uids):
+        '''
+        Delete emails (by UID) from this folder.
+
+        Note this method does not update the internal UID list, this is to be
+        handled by the `sync_emails` method.
+        '''
+
+        self.log('debug', f'Deleting {len(email_uids)} ({email_uids}) emails')
+
+        with self.get_connection() as connection:
+            connection.delete_messages(email_uids)
+            connection.expunge(email_uids)
+
     def move_emails(self, email_uids, new_folder):
         '''
         Move (copy + delete) emails (by UID) from this folder to another.
@@ -464,7 +478,6 @@ class Folder(object):
         handled by the `sync_emails` method.
         '''
 
-        # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
         self.log(
@@ -482,7 +495,6 @@ class Folder(object):
         Copy emails (by UID) from this folder to another.
         '''
 
-        # Ensure the new folder exists and update any alias
         new_folder = self.account.ensure_folder_exists(new_folder)
 
         self.log(

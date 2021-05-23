@@ -6,6 +6,7 @@ from kanmail.server.app import app
 from kanmail.server.mail import (
     append_folder_email,
     copy_folder_emails,
+    delete_folder_emails,
     get_account,
     get_all_folders,
     get_folder_email_part,
@@ -206,6 +207,20 @@ def api_unstar_account_emails(account, folder) -> Response:
     message_uids = get_or_400(request_data, 'message_uids')
 
     unstar_folder_emails(account, folder, message_uids)
+
+    return jsonify(unstarred=True)
+
+
+@app.route('/api/emails/<account>/<folder>/delete', methods=('POST',))
+def api_delete_account_emails(account, folder) -> Response:
+    '''
+    Delete emails in a given account/folder.
+    '''
+
+    request_data = request.get_json()
+    message_uids = get_or_400(request_data, 'message_uids')
+
+    delete_folder_emails(account, folder, message_uids)
 
     return jsonify(unstarred=True)
 
