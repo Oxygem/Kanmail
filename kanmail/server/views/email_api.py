@@ -123,7 +123,7 @@ def api_download_account_email_part(account, folder, uid, part_number) -> Respon
     '''
 
     downloads_folder = path.expanduser(path.join('~', 'Downloads'))
-    local_filename = path.join(downloads_folder, request.args['filename'])
+    local_filename = path.join(downloads_folder, path.basename(request.args['filename']))
 
     if path.exists(local_filename):
         extension = None
