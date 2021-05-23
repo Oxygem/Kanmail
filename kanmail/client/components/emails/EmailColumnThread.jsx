@@ -507,8 +507,8 @@ export default class EmailColumnThread extends React.Component {
 
         return (
             <Tooltip text={<span>Archive (<i className="fa fa-keyboard-o" /> enter)</span>}>
-                <a onClick={keyboard.archiveCurrentThread} className='archive'>
-                    <i className={classNames.join(' ')}></i>
+                <a onClick={keyboard.archiveCurrentThread} className="archive">
+                    <i className={classNames.join(' ')} />
                 </a>
             </Tooltip>
         );
@@ -531,7 +531,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <Tooltip text="Restore to inbox">
                 <a onClick={this.handleClickRestore} className='archive'>
-                    <i className={classNames.join(' ')}></i>
+                    <i className={classNames.join(' ')} />
                 </a>
             </Tooltip>
         );
@@ -552,7 +552,7 @@ export default class EmailColumnThread extends React.Component {
         return (
             <Tooltip text={<span>{text} (<i className="fa fa-keyboard-o" /> backspace)</span>}>
                 <a onClick={keyboard.trashCurrentThread} className="trash">
-                    <i className={classNames.join(' ')}></i>
+                    <i className={classNames.join(' ')} />
                 </a>
             </Tooltip>
         );
@@ -569,7 +569,7 @@ export default class EmailColumnThread extends React.Component {
             return;
         }
 
-        return <span><i className="fa fa-paperclip"></i> {attachmentCount}</span>;
+        return <span><i className="fa fa-paperclip" /> {attachmentCount}</span>;
     }
 
     render() {
@@ -649,13 +649,13 @@ export default class EmailColumnThread extends React.Component {
                 </h4>
                 <p>{latestEmail.excerpt}</p>
                 <div className="meta">
-                    <i className={`fa fa-${getAccountIconName(latestEmail.account)}`}></i>
+                    <i className={`fa fa-${getAccountIconName(latestEmail.account)}`} />
                     &nbsp;{latestEmail.account_name}
 
                     <span className="extra-meta">
-                        {this.state.starred && <a className="star active"><i className="fa fa-star"></i></a>}
-                        {thread.length > 1 && <span><i className="fa fa-envelope-o"></i> {thread.length}</span>}
-                        {uniqueAddresses.length > 1 && <span><i className="fa fa-user-o"></i> {uniqueAddresses.length}</span>}
+                        {this.state.starred && <a className="star active"><i className="fa fa-star" /></a>}
+                        {thread.length > 1 && <span><i className="fa fa-envelope-o" /> {thread.length}</span>}
+                        {uniqueAddresses.length > 1 && <span><i className="fa fa-user-o" /> {uniqueAddresses.length}</span>}
                         {this.renderAttachmentCount()}
                     </span>
 
