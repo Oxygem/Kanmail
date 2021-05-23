@@ -471,12 +471,14 @@ export default class EmailColumnThread extends React.Component {
         }
 
         return (
-            <a
-                onClick={this.handleClickStar}
-                className={`star ${this.state.starred ? 'active' : ''}`}
-            >
-                <i className={classNames.join(' ')}></i>
-            </a>
+            <Tooltip text="Star thread">
+                <a
+                    onClick={this.handleClickStar}
+                    className={`star ${this.state.starred ? 'active' : ''}`}
+                >
+                    <i className={classNames.join(' ')}></i>
+                </a>
+            </Tooltip>
         );
     }
 
@@ -498,12 +500,11 @@ export default class EmailColumnThread extends React.Component {
         }
 
         return (
-            <a
-                onClick={keyboard.archiveCurrentThread}
-                className='archive'
-            >
-                <i className={classNames.join(' ')}></i>
-            </a>
+            <Tooltip text={<span>Archive (<i className="fa fa-keyboard-o" /> enter)</span>}>
+                <a onClick={keyboard.archiveCurrentThread} className='archive'>
+                    <i className={classNames.join(' ')}></i>
+                </a>
+            </Tooltip>
         );
     }
 
@@ -522,12 +523,11 @@ export default class EmailColumnThread extends React.Component {
         }
 
         return (
-            <a
-                onClick={this.handleClickRestore}
-                className='archive'
-            >
-                <i className={classNames.join(' ')}></i>
-            </a>
+            <Tooltip text="Restore to inbox">
+                <a onClick={this.handleClickRestore} className='archive'>
+                    <i className={classNames.join(' ')}></i>
+                </a>
+            </Tooltip>
         );
     }
 
@@ -542,12 +542,11 @@ export default class EmailColumnThread extends React.Component {
         }
 
         return (
-            <a
-                onClick={keyboard.trashCurrentThread}
-                className='trash'
-            >
-                <i className={classNames.join(' ')}></i>
-            </a>
+            <Tooltip text={<span>{this.props.columnId  == 'trash' ? 'Delete permanently' : 'Trash'} (<i className="fa fa-keyboard-o" /> backspace)</span>}>
+                <a onClick={keyboard.trashCurrentThread} className="trash">
+                    <i className={classNames.join(' ')}></i>
+                </a>
+            </Tooltip>
         );
     }
 
