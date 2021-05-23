@@ -4,10 +4,6 @@
 #
 #    pip-compile requirements/development.in
 #
-altgraph==0.17
-    # via
-    #   macholib
-    #   pyinstaller
 appnope==0.1.2
     # via ipython
 backcall==0.2.0
@@ -49,8 +45,6 @@ jmespath==0.10.0
     # via
     #   boto3
     #   botocore
-macholib==1.14
-    # via pyinstaller
 mccabe==0.6.1
     # via flake8
 mypy-extensions==0.4.3
@@ -75,10 +69,6 @@ pyflakes==2.3.1
     # via flake8
 pygments==2.8.1
     # via ipython
-pyinstaller-hooks-contrib==2021.1
-    # via pyinstaller
-pyinstaller==4.3
-    # via -r requirements/development.in
 python-dateutil==2.8.1
     # via
     #   botocore

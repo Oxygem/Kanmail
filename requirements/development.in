@@ -1,7 +1,6 @@
 honcho==1.0.1
 
 # Build/release
-pyinstaller==4.3
 pyupdater-s3-plugin==4.1.2
 
 # Testing

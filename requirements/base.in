@@ -1,5 +1,7 @@
 # Client
 pywebview==3.4
+pyupdater==3.1.1
+pyinstaller==4.3
 
 # Server
 cheroot==8.3.0
@@ -13,7 +15,6 @@ dnspython==1.15.0
 defusedxml==0.5.0
 tld==0.9.1
 requests==2.25.1
-pyupdater==3.1.1
 keyring==19.2.0
 keyrings.alt==3.4.0
 imapclient==2.2.0
