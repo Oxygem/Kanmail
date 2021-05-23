@@ -353,6 +353,30 @@ export default class BaseEmails {
         });
     }
 
+    deleteEmails(accountKey, folderName, messageUids) {
+        /*
+            Delete emails in a given folder but don't trigger any updates.
+        */
+
+        console.debug(`Deleting ${messageUids.length} messages in ${accountKey}/${folderName}`);
+
+        return requestStore.post(
+            `Delete ${messageUids.length} emails in ${folderName}`,
+            `/api/emails/${accountKey}/${folderName}/delete`,
+            {message_uids: messageUids},
+        ).then(() => {
+            _.each(messageUids, uid => {
+                const email = this.getEmailFromAccountFolder(
+                    accountKey, folderName, uid,
+                );
+
+                if (!_.includes(email.flags, '\\Deleted')) {
+                    email.flags.push('\\Deleted');
+                }
+            });
+        });
+    }
+
     setEmailsReadByUid(accountKey, folderName, messageUids) {
         const accountFolder = this.getAccountFolder(accountKey, folderName);
         const accountMessageIds = _.map(messageUids, uid => (
