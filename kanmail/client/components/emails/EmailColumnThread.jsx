@@ -184,6 +184,12 @@ export default class EmailColumnThread extends React.Component {
         return this.state.locked;
     }
 
+    isDeleteOnTrash() {
+        const { account_name } = this.props.thread[0];
+        const accountSettings = settingsStore.getAccountSettings(account_name);
+        return this.props.columnId === 'trash' || accountSettings.folders.delete_on_trash;
+    }
+
     /*
         Hover states/handling
     */
@@ -403,7 +409,7 @@ export default class EmailColumnThread extends React.Component {
             locked: false,
         };
 
-        if (this.props.columnId === 'trash') {
+        if (this.isDeleteOnTrash()) {
             this.deleteThreadMessages(previousState);
             return;
         }
@@ -541,8 +547,10 @@ export default class EmailColumnThread extends React.Component {
             classNames.push('fa-trash');
         }
 
+        const text = this.isDeleteOnTrash() ? 'Delete permanently' : 'Trash';
+
         return (
-            <Tooltip text={<span>{this.props.columnId  == 'trash' ? 'Delete permanently' : 'Trash'} (<i className="fa fa-keyboard-o" /> backspace)</span>}>
+            <Tooltip text={<span>{text} (<i className="fa fa-keyboard-o" /> backspace)</span>}>
                 <a onClick={keyboard.trashCurrentThread} className="trash">
                     <i className={classNames.join(' ')}></i>
                 </a>

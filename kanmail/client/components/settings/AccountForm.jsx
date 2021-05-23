@@ -353,6 +353,14 @@ export default class AccountForm extends React.Component {
                     <div className="flex wide">{this.renderFolderSettings()}</div>
 
                     <div className="flex wide">
+                        <div className="wide">
+                            <br />
+                            <span className="red">Advanced</span>&nbsp; (<a onClick={(ev) => {
+                                ev.preventDefault();
+                                openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
+                            }}>more info</a>):
+                        </div>
+
                         <div className="half">
                             <label
                                 className="checkbox"
@@ -365,14 +373,17 @@ export default class AccountForm extends React.Component {
                         <div className="half">
                             <label
                                 className="checkbox"
+                                htmlFor="folderSettings-delete_on_trash"
+                            >Delete emails instead of moving to the trash folder?</label>
+                            {this.renderInput('folderSettings', 'delete_on_trash', {
+                                'type': 'checkbox'
+                            })}
+                        </div>
+                        <div className="half">
+                            <label
+                                className="checkbox"
                                 htmlFor="folderSettings-copy_on_move"
-                            >
-                                <span className="red">Advanced</span>&nbsp; (<a onClick={(ev) => {
-                                    ev.preventDefault();
-                                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
-                                }}>more info</a>):
-                                <br />Copy (not move) emails out of the inbox?
-                            </label>
+                            >Copy (not move) emails out of the inbox?</label>
                             {this.renderInput('folderSettings', 'copy_on_move', {
                                 'type': 'checkbox'
                             })}
