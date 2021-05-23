@@ -299,6 +299,18 @@ export default class EmailColumnThread extends React.Component {
         });
     }
 
+    handleClickMove = (ev) => {
+        ev.stopPropagation();
+
+        if (this.state.locked) {
+            console.debug('Thread locked, not moving!');
+        }
+
+        const subject = this.props.thread[0].subject;
+        const moveData = getMoveDataFromThreadComponent(this);
+        controlStore.open('move', subject, moveData);
+    }
+
     /*
         For every message in this thread, *any folder*, generate a move request
         to another folder.
@@ -482,7 +494,26 @@ export default class EmailColumnThread extends React.Component {
                     onClick={this.handleClickStar}
                     className={`star ${this.state.starred ? 'active' : ''}`}
                 >
-                    <i className={classNames.join(' ')}></i>
+                    <i className={classNames.join(' ')} />
+                </a>
+            </Tooltip>
+        );
+    }
+
+    renderMoveButton() {
+        const classNames = ['fa'];
+
+        if (this.state.moving) {
+            classNames.push('fa-cog');
+            classNames.push('fa-spin');
+        } else {
+            classNames.push('fa-folder-open');
+        }
+
+        return (
+            <Tooltip text={<span>Move (<i className="fa fa-keyboard-o" /> m)</span>}>
+                <a onClick={keyboard.startMoveCurrentThread} className="move">
+                    <i className={classNames.join(' ')} />
                 </a>
             </Tooltip>
         );
@@ -661,6 +692,7 @@ export default class EmailColumnThread extends React.Component {
 
                     <span className="buttons">
                         {this.renderStarButton()}
+                        {this.renderMoveButton()}
                         {this.renderArchiveButton()}
                         {this.renderRestoreButton()}
                         {this.renderTrashButton()}

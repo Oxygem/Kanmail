@@ -12,7 +12,6 @@ import {
     getPreviousThreadComponent,
     getNextColumnThreadComponent,
     getPreviousColumnThreadComponent,
-    getMoveDataFromThreadComponent,
 } from 'util/threads.js';
 
 const keys = {
@@ -127,6 +126,11 @@ class Keyboard {
         component.handleClickTrash(ev);
     }
 
+    startMoveCurrentThread = (ev) => {
+        const component = this.currentComponent;
+        component.handleClickMove(ev);
+    }
+
     /* Actual move is executed by the ControlInput component (and react-dnd) */
     setMovingCurrentThread = () => {
         const component = this.currentComponent;
@@ -178,18 +182,10 @@ class Keyboard {
         }
 
         if (this.currentComponent) {
-            const subject = this.currentComponent.props.thread[0].subject;
-            const moveData = getMoveDataFromThreadComponent(this.currentComponent);
-
             switch (code) {
                 // Current component: actions needing control input
                 case keys.M:
-                    controlStore.open('move', subject, moveData);
-                    // TODO: MOVE
-                    break;
-                case keys.C:
-                    controlStore.open('copy', subject, moveData);
-                    // TODO: COPY
+                    this.startMoveCurrentThread(ev);
                     break;
 
                 // Current component: immediate actions
