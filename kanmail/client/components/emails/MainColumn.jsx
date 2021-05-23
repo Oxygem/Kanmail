@@ -24,6 +24,10 @@ export default class MainColumn extends React.Component {
     render() {
         const column = this.props.mainColumn;
 
+        if (!this.props.mainColumn) {
+            return null;
+        }
+
         return <EmailColumn
             key={column}
             id={column}

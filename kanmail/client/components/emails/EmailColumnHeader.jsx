@@ -44,6 +44,10 @@ class EmailColumnHeader extends React.Component {
     }
 
     handleClickDelete = () => {
+        if (this.props.isMainColumn) {
+            filterStore.setMainColumn(null);
+            return;
+        }
         settingsStore.removeColumn(this.props.id);
     }
 
@@ -72,7 +76,7 @@ class EmailColumnHeader extends React.Component {
     }
 
     renderMetaIcons() {
-        const deleteIcon = this.props.isMainColumn ? null : <i
+        const deleteIcon = <i
             className="red red-hover delete fa fa-times"
             onClick={this.handleClickDelete}
         />;
