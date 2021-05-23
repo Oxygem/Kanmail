@@ -1,6 +1,7 @@
 import _ from 'lodash';
 
 import threadStore from 'stores/thread.js';
+import tooltipStore from 'stores/tooltip.js';
 import requestStore from 'stores/request.js';
 import controlStore from 'stores/control.js';
 import searchStore from 'stores/search.js';
@@ -151,6 +152,7 @@ class Keyboard {
         }
 
         ev.preventDefault();
+        tooltipStore.hide();
 
         // Control mode
         if (controlStore.props.open) {

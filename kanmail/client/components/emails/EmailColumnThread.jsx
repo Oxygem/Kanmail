@@ -8,6 +8,7 @@ import { ALIAS_FOLDERS } from 'constants.js';
 import keyboard from 'keyboard.js';
 
 import Avatar from 'components/Avatar.jsx';
+import Tooltip from 'components/Tooltip.jsx';
 
 import controlStore from 'stores/control.js';
 import requestStore from 'stores/request.js';
@@ -620,10 +621,11 @@ export default class EmailColumnThread extends React.Component {
                 </h5>
                 <h4>
                     <Avatar address={latestEmailNotUs.from[0]} />
-                    {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
-                        x{thread.mergedThreads}
-                        <span className="tooltip">{thread.mergedThreads} merged threads</span>
-                    </span>}
+                    {thread.mergedThreads && <Tooltip text={`${thread.mergedThreads} merged threads`}>
+                        <span className="multi-subject tooltip-wrapper">
+                            x{thread.mergedThreads}
+                        </span>
+                    </Tooltip>}
                     <span className="subject">
                         {this.state.deleted ? <strike>{subject}</strike> : subject}
                     </span>

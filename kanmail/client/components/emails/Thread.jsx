@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import keyboard from 'keyboard.js';
 
+import Tooltip from 'components/Tooltip.jsx';
 import ThreadMessage from 'components/emails/ThreadMessage.jsx';
 
 import threadStore from 'stores/thread.js';
@@ -67,10 +68,10 @@ class Thread extends React.Component {
         const subject = thread.mergedThreads ? uniqueSubjects.join(', ') : latestEmail.subject;
 
         return <h1>
-            {thread.mergedThreads && <span className="multi-subject tooltip-wrapper">
-                x{thread.mergedThreads}
-                <span className="tooltip">{thread.mergedThreads} merged threads</span>
-            </span>}
+            {thread.mergedThreads && <Tooltip text={`${thread.mergedThreads} merged threads`}><span className="multi-subject tooltip-wrapper">
+                    x{thread.mergedThreads}
+                </span>
+            </Tooltip>}
             {subject}
         </h1>;
     }

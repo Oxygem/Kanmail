@@ -183,24 +183,19 @@ span.multi-subject {
 }
 
 .tooltip-wrapper {
-    position: relative;
+    display: inline-block;
+}
 
-    .tooltip {
-        display: none;
-        z-index: 999;
-        position: absolute;
-        left: 100%;
-        top: 0;
-        width: auto;
-        border-radius: @borderRadius;
-        white-space: nowrap;
-        margin-left: 5px;
-        margin-top: -5px;
-        padding: 5px;
-        font-size: @smallTextSize;
-    }
+.tooltip {
+    z-index: 9999;
+    position: absolute;
+    font-size: @smallTextSize;
+    border-radius: @borderRadius;
+    padding: 3px 5px;
+    background: black;
+    color: white;
 
-    &:hover .tooltip {
-        display: block;
+    i.fa-keyboard-o {
+        font-size: @bigTextSize;
     }
 }

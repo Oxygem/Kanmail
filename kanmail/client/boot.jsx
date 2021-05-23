@@ -8,6 +8,7 @@ import 'style.less';
 import { setupThemes } from 'theme.js';
 
 import ErrorBoundary from 'components/ErrorBoundary.jsx';
+import { TheTooltip } from 'components/Tooltip.jsx';
 
 import settingsStore from 'stores/settings.js';
 
@@ -38,6 +39,7 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
         console.debug('Settings loaded, bootstrapping app to DOM...');
 
         ReactDOM.render(<ErrorBoundary>
+            <TheTooltip />
             <section className={classNames.join(' ')}>
                 <Component {...rootProps} />
             </section>
