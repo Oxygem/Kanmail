@@ -127,7 +127,6 @@ export function openLicense() {
     });
 }
 
-
 export function openMeta() {
     openWindow('/meta', {
         unique_key: 'meta',
@@ -136,6 +135,10 @@ export function openMeta() {
         width: 300,
         height: 230,
     });
+}
+
+export function openSend() {
+    openWindow('/send', {title: 'Kanmail: compose email'});
 }
 
 

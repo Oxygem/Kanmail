@@ -1,5 +1,7 @@
 import _ from 'lodash';
 
+import { openSend } from 'window.js';
+
 import threadStore from 'stores/thread.js';
 import tooltipStore from 'stores/tooltip.js';
 import requestStore from 'stores/request.js';
@@ -60,6 +62,8 @@ function getKeyFromEvent(ev) {
         if (shiftKeys[code]) {
             return shiftKeys[code];
         }
+        console.debug(`Not handling shifted key code: ${code}`);
+        return;
     }
 
     return code;
@@ -196,6 +200,11 @@ class Keyboard {
             if (key === keys.ESCAPE) {
                 controlStore.close();
             }
+            return;
+        }
+
+        if (key == keys.C) {
+            openSend();
             return;
         }
 
