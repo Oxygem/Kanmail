@@ -16,26 +16,28 @@ section#sidebar {
             margin: 0 10px;
             overflow: hidden;
             height: @topHeight;
+            display: flex;
+            justify-content: space-between;
         }
 
         div.logo {
-            float: left;
             margin-top: 7px;
             margin-left: 10px;
             font-size: 16px;
         }
 
+        .tooltip-wrapper {
+            vertical-align: top;
+            margin-top: 11px;
+            margin-left: 10px;
+        }
+
         a.compose {
             font-size: 18px;
-            float: right;
-            margin-top: 10px;
         }
 
         a.search {
             font-size: 15px;
-            float: right;
-            margin-top: 10px;
-            margin-left: 10px;
         }
     }
 

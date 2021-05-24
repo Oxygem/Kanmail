@@ -2,13 +2,15 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import HeaderErrors from 'components/HeaderErrors.jsx';
+import Tooltip from 'components/Tooltip.jsx';
+
 import Filters from 'components/emails/Filters.jsx';
 import FooterStatus from 'components/emails/FooterStatus.jsx';
 
 import {
     openLicense,
     openMeta,
-    openWindow,
+    openSend,
     makeDragElement,
     makeNoDragElement,
 } from 'window.js';
@@ -31,10 +33,6 @@ export default class Sidebar extends React.Component {
         }
     }
 
-    openSend = () => {
-        openWindow('/send', {title: 'Kanmail: compose email'});
-    }
-
     render() {
         return (
             <section id="sidebar">
@@ -45,20 +43,26 @@ export default class Sidebar extends React.Component {
                             <span>K-</span>
                             <i className="logo fa fa-envelope-o"></i>
                         </div>
-                        <a
-                            className="search"
-                            onClick={searchStore.toggle}
-                            ref={makeNoDragElement}
-                        >
-                            <i className="fa fa-search"></i>
-                        </a>
-                        <a
-                            className="compose"
-                            onClick={this.openSend}
-                            ref={makeNoDragElement}
-                        >
-                            <i className="fa fa-pencil-square-o"></i>
-                        </a>
+                        <div>
+                            <Tooltip text={<span>Search (<i className="fa fa-keyboard-o" /> /)</span>}>
+                                <a
+                                    className="search"
+                                    onClick={searchStore.toggle}
+                                    ref={makeNoDragElement}
+                                >
+                                    <i className="fa fa-search"></i>
+                                </a>
+                            </Tooltip>
+                            <Tooltip text={<span>Compose (<i className="fa fa-keyboard-o" /> c)</span>}>
+                                <a
+                                    className="compose"
+                                    onClick={openSend}
+                                    ref={makeNoDragElement}
+                                >
+                                    <i className="fa fa-pencil-square-o"></i>
+                                </a>
+                            </Tooltip>
+                        </div>
                     </div>
                 </header>
 
