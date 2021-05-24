@@ -488,10 +488,12 @@ export default class EmailColumnThread extends React.Component {
             }
         }
 
+        const text = this.state.starred ? 'Unstar' : 'Star';
+
         return (
-            <Tooltip text={this.state.starred ? 'Unstar' : 'Star'}>
+            <Tooltip text={<span>{text} (<i className="fa fa-keyboard-o" /> s)</span>}>
                 <a
-                    onClick={this.handleClickStar}
+                    onClick={keyboard.starCurrentThread}
                     className={`star ${this.state.starred ? 'active' : ''}`}
                 >
                     <i className={classNames.join(' ')} />

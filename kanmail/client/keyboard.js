@@ -127,9 +127,12 @@ class Keyboard {
         component.handleClickTrash(ev);
     }
 
+    starCurrentThread = (ev) => {
+        this.currentComponent.handleClickStar(ev);
+    }
+
     startMoveCurrentThread = (ev) => {
-        const component = this.currentComponent;
-        component.handleClickMove(ev);
+        this.currentComponent.handleClickMove(ev);
     }
 
     /* Actual move is executed by the ControlInput component (and react-dnd) */
@@ -198,6 +201,9 @@ class Keyboard {
                     break;
                 case keys.ENTER:
                     this.archiveCurrentThread(ev);
+                    break;
+                case keys.S:
+                    this.starCurrentThread(ev);
                     break;
 
                 // Jump to other components
