@@ -33,8 +33,37 @@ const keys = {
     ARROW_UP: 38,
     ARROW_RIGHT: 39,
     ARROW_DOWN: 40,
+
+    // Combinations
+    QUESTION: [['shiftKey'], 191],
 };
 const validKeyCodes = _.values(keys);
+const shiftKeys = {
+    191: keys.QUESTION,
+};
+
+
+function getKeyFromEvent(ev) {
+    if (ev.altKey || ev.metaKey || ev.ctrlKey) {
+        return;
+    }
+
+    const code = ev.keyCode;
+
+    // Code we don't care about?
+    if (!_.includes(validKeyCodes, code)) {
+        console.debug(`Not handling key code: ${code}`);
+        return;
+    }
+
+    if (ev.shiftKey) {
+        if (shiftKeys[code]) {
+            return shiftKeys[code];
+        }
+    }
+
+    return code;
+}
 
 
 class Keyboard {
@@ -143,19 +172,19 @@ class Keyboard {
     }
 
     handleKeyboardEvents = (ev) => {
-        const code = ev.keyCode;
+        const key = getKeyFromEvent(ev);
 
-        if (this.disabled) {
-            if (searchStore.props.open && code === keys.ESCAPE) {
-                searchStore.close();
-                return;
-            }
+        if (!key) {
             return;
         }
 
-        // Code we don't care about?
-        if (!_.includes(validKeyCodes, code)) {
-            console.debug(`Not handling key code: ${code}`);
+        console.debug('Handling key shortcut', key);
+
+        if (this.disabled) {
+            if (searchStore.props.open && key === keys.ESCAPE) {
+                searchStore.close();
+                return;
+            }
             return;
         }
 
@@ -164,29 +193,29 @@ class Keyboard {
 
         // Control mode
         if (controlStore.props.open) {
-            if (code === keys.ESCAPE) {
+            if (key === keys.ESCAPE) {
                 controlStore.close();
             }
             return;
         }
 
-        if (code === keys.ESCAPE) {
+        if (key === keys.ESCAPE) {
             threadStore.close();
             return;
         }
 
-        if (code === keys.SLASH) {
+        if (key === keys.SLASH) {
             searchStore.open();
             return;
         }
 
-        if (code === keys.Z) {
+        if (key === keys.Z) {
             requestStore.undo();
             return;
         }
 
         if (this.currentComponent) {
-            switch (code) {
+            switch (key) {
                 // Current component: actions needing control input
                 case keys.M:
                     this.startMoveCurrentThread(ev);
