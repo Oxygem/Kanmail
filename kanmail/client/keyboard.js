@@ -26,6 +26,7 @@ const keys = {
     ENTER: 13,
     ESCAPE: 27,
     SPACE: 32,
+    SLASH: 191,
 
     // Arrows
     ARROW_LEFT: 37,
@@ -171,7 +172,7 @@ class Keyboard {
             return;
         }
 
-        if (code === keys.S) {
+        if (code === keys.SLASH) {
             searchStore.open();
             return;
         }
