@@ -7,7 +7,6 @@ import keyboard from 'keyboard.js';
 
 import controlStore from 'stores/control.js';
 import folderStore from 'stores/folders.js';
-import settingsStore from 'stores/settings.js';
 import { subscribe } from 'stores/base.jsx';
 
 import { capitalizeFirstLetter } from 'util/string.js';
@@ -30,11 +29,9 @@ class ControlInput extends React.Component {
             throw new Error(`${action} is not a valid control action!`);
         }
 
-        const accountSettings = settingsStore.getAccountSettings(moveData.accountName);
         moveOrCopyThread(
             moveData,
             value.value,
-            accountSettings.folders.copy_on_move === true && moveData.oldColumn == 'inbox',
             keyboard.setMovingCurrentThread,
         );
         this.handleClose();

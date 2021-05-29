@@ -5,14 +5,12 @@ import { getColumnStore } from 'stores/columns.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 
 
-export function moveOrCopyThread(moveData, targetFolder, copy=false, setIsMovingFunction=null) {
+export function moveOrCopyThread(moveData, targetFolder, setIsMovingFunction=null) {
     setIsMovingFunction = setIsMovingFunction || moveData.sourceThreadComponent.setIsMoving;
     setIsMovingFunction();
 
     const { messageUids, oldColumn, accountName, thread } = moveData;
     const emailStore = getEmailStore();
-
-    let handler = copy ? emailStore.copyEmails : emailStore.moveEmails;
 
     const targetColumnStore = getColumnStore(targetFolder);
     targetColumnStore.addIncomingThread(thread);
@@ -23,7 +21,7 @@ export function moveOrCopyThread(moveData, targetFolder, copy=false, setIsMoving
     }
 
     const moveThread = () => {
-        handler(accountName, messageUids, oldColumn, targetFolder).then(() => {
+        emailStore.moveEmails(accountName, messageUids, oldColumn, targetFolder).then(() => {
             emailStore.syncFolderEmails(
                 oldColumn,
                 {accountName: accountName},

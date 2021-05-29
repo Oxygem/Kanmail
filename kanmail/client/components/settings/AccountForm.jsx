@@ -379,15 +379,6 @@ export default class AccountForm extends React.Component {
                                 'type': 'checkbox'
                             })}
                         </div>
-                        <div className="half">
-                            <label
-                                className="checkbox"
-                                htmlFor="folderSettings-copy_on_move"
-                            >Copy (not move) emails out of the inbox?</label>
-                            {this.renderInput('folderSettings', 'copy_on_move', {
-                                'type': 'checkbox'
-                            })}
-                        </div>
                     </div>
                 </div>
 

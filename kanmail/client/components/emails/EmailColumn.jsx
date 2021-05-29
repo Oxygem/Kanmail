@@ -24,13 +24,7 @@ const columnTarget = {
     },
 
     drop(props, monitor) {
-        const moveData = monitor.getItem();
-        const accountSettings = settingsStore.getAccountSettings(moveData.accountName);
-        moveOrCopyThread(
-            moveData,
-            props.id,
-            accountSettings.folders.copy_on_move === true && moveData.oldColumn == 'inbox',
-        );
+        moveOrCopyThread(monitor.getItem(), props.id);
     },
 };
 

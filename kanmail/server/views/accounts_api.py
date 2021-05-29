@@ -72,14 +72,10 @@ def _get_folder_settings(imap_settings, connection):
             folders['inbox'] = folder[2]
             break
 
-    # Gmail is the only provider that *always* supports copy from inbox ie
-    # label style IMAP rather than folder style.
-    if imap_settings['host'] == 'imap.gmail.com':
-        folders['copy_on_move'] = True
     # Gmail is the only provider (known at this time) that automatically saves
     # emails sent via SMTP to the sent folder, so otherwise we append them via
     # IMAP on send.
-    else:
+    if imap_settings['host'] != 'imap.gmail.com':
         folders['save_sent_copies'] = True
 
     return folders
