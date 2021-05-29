@@ -605,6 +605,18 @@ export default class EmailColumnThread extends React.Component {
         return <span><i className="fa fa-paperclip" /> {attachmentCount}</span>;
     }
 
+    renderLabels() {
+        const folderNames = _.filter(
+            this.props.thread.allFolderNames,
+            name => name !== this.props.columnId && !_.includes(ALIAS_FOLDERS, name),
+        );
+
+        return _.map(
+            folderNames,
+            name => <span className="tag"><i className="fa fa-tag" /> {name}</span>,
+        );
+    }
+
     render() {
         const { connectDragSource, thread } = this.props;
         const latestEmail = thread[0];
@@ -684,6 +696,7 @@ export default class EmailColumnThread extends React.Component {
                 <div className="meta">
                     <i className={`fa fa-${getAccountIconName(latestEmail.account)}`} />
                     &nbsp;{latestEmail.account_name}
+                    {this.renderLabels()}
 
                     <span className="extra-meta">
                         {this.state.starred && <a className="star active"><i className="fa fa-star" /></a>}
