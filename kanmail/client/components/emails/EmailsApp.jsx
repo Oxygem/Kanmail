@@ -41,6 +41,7 @@ export default class EmailsApp extends React.Component {
         return _.concat(
             this.props.columns,  // sync columns first
             ALWAYS_SYNC_FOLDERS,  // then inbox, followed by other alias folders
+            this.props.styleSettings.sidebar_folders,  // finally the users sidebar folders
         );
     }
 
