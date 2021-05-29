@@ -3,8 +3,6 @@ import React from 'react';
 import { PropTypes } from 'prop-types';
 import { DropTarget } from 'react-dnd';
 
-import { ALWAYS_SYNC_FOLDERS } from 'constants.js';
-
 import EmailColumnHeader from 'components/emails/EmailColumnHeader.jsx';
 import EmailColumnThread from 'components/emails/EmailColumnThread.jsx';
 
@@ -87,54 +85,6 @@ class EmailColumn extends React.Component {
         // Surrounding columns
         getPreviousColumn: PropTypes.func.isRequired,
         getNextColumn: PropTypes.func.isRequired,
-    }
-
-    constructor(props) {
-        super(props);
-
-        // Disable sync if this folder is in one of the always sync folders
-        this.shouldNotSync = _.includes(ALWAYS_SYNC_FOLDERS, props.id);
-    }
-
-    componentDidMount() {
-        // Main column doesn't need to update itself
-        if (this.shouldNotSync) {
-            return;
-        }
-
-        // If no threads, we've no state for this
-        if (!this.props.threads) {
-            const { initial_batches, batch_size } = this.props.systemSettings;
-
-            getEmailStore().getFolderEmails(
-                this.props.id,
-                {query: {
-                    reset: true,
-                    batch_size: batch_size * initial_batches,
-                }},
-            // Once initially loaded - immediately sync any changes - initial load
-            // could be completely cached.
-            ).then(this.getNewEmails);
-
-        // We have threads, so immeditely check for new emails
-        } else {
-            this.getNewEmails();
-        }
-
-        // Kick off new email checking at the interval
-        this.newEmailCheck = setInterval(
-            this.getNewEmails,
-            this.props.systemSettings.sync_interval,
-        );
-    }
-
-    componentWillUnmount() {
-        if (this.shouldNotSync) {
-            return;
-        }
-
-        // Remove any pending email check
-        clearInterval(this.newEmailCheck);
     }
 
     componentDidUpdate(prevProps) {

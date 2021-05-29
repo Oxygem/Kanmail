@@ -27,13 +27,21 @@ import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import { subscribe } from 'stores/base.jsx';
 
 
-@subscribe([settingsStore, ['columns', 'accounts', 'systemSettings']])
+@subscribe(settingsStore)
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component {
     static propTypes = {
         columns: PropTypes.array.isRequired,
         accounts: PropTypes.array.isRequired,
         systemSettings: PropTypes.object.isRequired,
+        styleSettings: PropTypes.object.isRequired,
+    }
+
+    getFoldersToSync() {
+        return _.concat(
+            this.props.columns,  // sync columns first
+            ALWAYS_SYNC_FOLDERS,  // then inbox, followed by other alias folders
+        );
     }
 
     componentDidMount() {
@@ -57,7 +65,7 @@ export default class EmailsApp extends React.Component {
         const initialBatchSize = batch_size * initial_batches;
 
         // Load all the alias folders (ie the main column)
-        _.each(ALWAYS_SYNC_FOLDERS, folder => {
+        _.each(this.getFoldersToSync(), folder => {
             // Call this to ensure the column store is populated
             getColumnStore(folder);
 
@@ -71,7 +79,7 @@ export default class EmailsApp extends React.Component {
         });
 
         this.newAliasEmailCheck = setInterval(
-            this.getNewAliasFolderEmails,
+            this.getNewEmails,
             sync_interval,
         );
         updateStore.checkUpdate();
@@ -81,9 +89,9 @@ export default class EmailsApp extends React.Component {
         clearInterval(this.newAliasEmailCheck);
     }
 
-    getNewAliasFolderEmails = () => {
+    getNewEmails = () => {
         _.map(
-            ALWAYS_SYNC_FOLDERS,
+            this.getFoldersToSync(),
             folder => {
                 const columnMetaStore = getColumnMetaStore(folder);
                 if (columnMetaStore.props.isSyncing) {
