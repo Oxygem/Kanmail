@@ -18,9 +18,7 @@ def get_version_data() -> Dict[str, str]:
         }
 
     with open(version_filename, 'r') as f:
-        version_data = f.read()
-
-    return json.loads(version_data)
+        return json.load(f)
 
 
 def get_version() -> str:
