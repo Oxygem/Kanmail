@@ -2,10 +2,13 @@ from os import environ, path
 from sqlite3 import Connection as SQLite3Connection
 from typing import Union
 
+import sentry_sdk
+
 from cheroot.wsgi import Server
 from flask import abort, Flask, request
 from flask.json import JSONEncoder
 from flask_sqlalchemy import SQLAlchemy
+from sentry_sdk.integrations.flask import FlaskIntegration
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
@@ -21,6 +24,7 @@ from kanmail.settings.constants import (
     SERVER_PORT,
     SESSION_TOKEN,
 )
+from kanmail.settings.hidden import get_hidden_value
 
 
 @event.listens_for(Engine, 'connect')
@@ -41,6 +45,14 @@ class JsonEncoder(JSONEncoder):
 
         return super(JsonEncoder, self).default(obj)
 
+
+if DEBUG:
+    logger.debug('Not enabling Sentry logging in debug mode...')
+else:
+    sentry_sdk.init(
+        dsn=get_hidden_value('SENTRY_DSN'),
+        integrations=[FlaskIntegration()],
+    )
 
 app = Flask(
     APP_NAME,

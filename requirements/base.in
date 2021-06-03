@@ -18,6 +18,7 @@ requests==2.25.1
 keyring==19.2.0
 keyrings.alt==3.4.0
 imapclient==2.2.0
+sentry-sdk[flask]==1.1.0
 
 # MacOS requirements
 pyobjc-core==7.2; platform_system == 'Dawrin'
