@@ -12,6 +12,7 @@ a = Analysis(  # noqa: F821
 
         # Generated at build time
         (r'{{ root_dir }}/dist/version.json', 'static/dist'),
+        (r'{{ root_dir }}/dist/hidden.json', 'static/dist'),
         (r'{{ root_dir }}/dist/', 'static/dist/{{ version }}'),
 
         # TLD names

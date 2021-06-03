@@ -15,6 +15,7 @@ TEMP_VERSION_LOCK_FILENAME = path.join(DIST_DIRNAME, '.release_version_lock')
 TEMP_SPEC_FILENAME = path.join(DIST_DIRNAME, '.spec')
 
 VERSION_DATA_FILENAME = path.join(DIST_DIRNAME, 'version.json')
+HIDDEN_DATA_FILENAME = path.join(DIST_DIRNAME, 'hidden.json')
 
 DOCKER_NAME = 'fizzadar/kanmail'
 
