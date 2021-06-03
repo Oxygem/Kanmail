@@ -608,13 +608,14 @@ export default class EmailColumnThread extends React.Component {
     renderLabels() {
         const folderNames = _.filter(
             this.props.thread.allFolderNames,
-            name => name !== this.props.columnId && !_.includes(ALIAS_FOLDERS, name),
+            name => name !== this.props.columnId && name !== 'archive',
         );
 
-        return _.map(
-            folderNames,
-            name => <span className="tag"><i className="fa fa-tag" /> {name}</span>,
-        );
+        if (folderNames.length === 0) {
+            return null;
+        }
+
+        return <span className="tag"><i className="fa fa-tag" /> {folderNames.join(', ')}</span>;
     }
 
     render() {
