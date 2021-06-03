@@ -8,7 +8,11 @@ from typing import Dict
 from .constants import CLIENT_ROOT
 
 
-VALID_HIDDEN_KEYS = ('SENTRY_DSN',)
+VALID_HIDDEN_KEYS = (
+    'SENTRY_DSN',
+    'GOOGLE_OAUTH_CLIENT_ID',
+    'GOOGLE_OAUTH_CLIENT_SECRET',
+)
 
 
 @lru_cache(maxsize=1)
