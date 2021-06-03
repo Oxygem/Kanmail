@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import * as Sentry from '@sentry/react';
 
 import 'fonts/fontawesome/css/font-awesome.css';
 import 'fonts/open-sans/css/open-sans.css';
@@ -7,7 +8,7 @@ import 'style.less';
 
 import { setupThemes } from 'theme.js';
 
-import ErrorBoundary from 'components/ErrorBoundary.jsx';
+import showErrorInformation from 'components/ErrorInformation.jsx';
 import { TheTooltip } from 'components/Tooltip.jsx';
 
 import settingsStore from 'stores/settings.js';
@@ -17,6 +18,12 @@ import settingsStore from 'stores/settings.js';
 import { elementScrollIntoViewPolyfill } from 'seamless-scroll-polyfill/dist/es5/seamless.js';
 elementScrollIntoViewPolyfill();
 
+// Bootstrap Sentry error logging if we're not in debug (dev) mode
+if (window.KANMAIL_DEBUG) {
+    console.debug('Not enabling Sentry logging in debug mode...');
+} else {
+    Sentry.init({dsn: window.KANMAIL_SENTRY_DSN});
+}
 
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
     const rootElement = document.querySelector(selector);
@@ -38,12 +45,12 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
         const rootProps = getPropsFromElement(rootElement);
         console.debug('Settings loaded, bootstrapping app to DOM...');
 
-        ReactDOM.render(<ErrorBoundary>
+        ReactDOM.render(<Sentry.ErrorBoundary fallback={showErrorInformation}>
             <TheTooltip />
             <section className={classNames.join(' ')}>
                 <Component {...rootProps} />
             </section>
-        </ErrorBoundary>, rootElement);
+        </Sentry.ErrorBoundary>, rootElement);
     });
 }
 export default bootApp;

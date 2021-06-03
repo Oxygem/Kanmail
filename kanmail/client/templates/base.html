@@ -40,6 +40,7 @@
         window.KANMAIL_FRAMELESS = {% if frameless %}true{% else %}false{% endif %};
         window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
         window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
+        window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
     </script>
 
     <link rel="stylesheet" type="text/css" href="/static/dist/shared.css" />

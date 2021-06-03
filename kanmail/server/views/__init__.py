@@ -28,6 +28,7 @@ from kanmail.settings.constants import (
     SESSION_TOKEN,
     WEBSITE_URL,
 )
+from kanmail.settings.hidden import get_hidden_value
 from kanmail.version import get_version
 
 
@@ -68,6 +69,7 @@ def _get_render_data():
         'platform': PLATFORM,
         'session_token': SESSION_TOKEN,
         'website_url': WEBSITE_URL,
+        'sentry_dsn': get_hidden_value('SENTRY_DSN'),
     }
 
 

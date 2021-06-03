@@ -5,6 +5,7 @@
   "author": "Nick Barrett <pointlessrambler@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
+    "@sentry/react": "^6.5.0",
     "babel-core": "6.x",
     "babel-eslint": "8.x",
     "babel-loader": "7.x",
