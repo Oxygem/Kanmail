@@ -389,13 +389,17 @@ export default class AccountForm extends React.Component {
                             <label htmlFor="imapSettings-username">Username</label>
                             {this.renderInput('imapSettings', 'username')}
                         </div>
-                        <div className="wide">
+                        {this.state.imapSettings.oauth_provider ?
+                            <div className="wide">
+                                Connected to OAuth provider {this.state.imapSettings.oauth_provider}
+                            </div> :
+                            <div className="wide">
                             <label htmlFor="imapSettings-password">Password</label>
                             {this.renderInput('imapSettings', 'password', {
                                 type: 'password',
                                 placeholder: 'enter to change'
                             })}
-                        </div>
+                        </div>}
                         <div className="three-quarter">
                             <label htmlFor="imapSettings-host">Hostname</label>
                             {this.renderInput('imapSettings', 'host')}
@@ -441,13 +445,17 @@ export default class AccountForm extends React.Component {
                             <label htmlFor="smtpSettings-username">Username</label>
                             {this.renderInput('smtpSettings', 'username')}
                         </div>
-                        <div className="wide">
+                        {this.state.smtpSettings.oauth_provider ?
+                            <div className="wide">
+                                Connected to OAuth provider {this.state.smtpSettings.oauth_provider}
+                            </div> :
+                            <div className="wide">
                             <label htmlFor="smtpSettings-password">Password</label>
                             {this.renderInput('smtpSettings', 'password', {
                                 type: 'password',
                                 placeholder: 'enter to change',
                             })}
-                        </div>
+                        </div>}
                         <div className="three-quarter">
                             <label htmlFor="smtpSettings-host">Hostname</label>
                             {this.renderInput('smtpSettings', 'host')}
