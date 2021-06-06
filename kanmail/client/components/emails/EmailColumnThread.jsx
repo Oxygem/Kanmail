@@ -608,7 +608,7 @@ export default class EmailColumnThread extends React.Component {
     renderLabels() {
         const folderNames = _.filter(
             this.props.thread.allFolderNames,
-            name => name !== this.props.columnId && name !== 'archive',
+            name => name !== this.props.columnId && !_.includes(['archive'], name),
         );
 
         if (folderNames.length === 0) {
