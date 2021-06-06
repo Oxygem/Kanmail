@@ -140,7 +140,7 @@ def validate_settings(
         elif any_key:
             target_spec = spec[KEY]
         else:
-            raise ValueError(f'Missing key: {key}')
+            raise ValueError(f'Unexpected key: {key}')
 
         target_path = path[:]
         target_path.append(key)
@@ -187,6 +187,13 @@ def fix_any_old_setings(settings: dict):
         has_changed = True
 
     for account_settings in settings.get('accounts', []):
+        # Fix for settings.accounts.<name>.folders.copy_on_move being deleted
+        # pre: v1.2104091748
+        folder_settings = account_settings.get('folders')
+        if folder_settings and 'copy_on_move' in folder_settings:
+            folder_settings.pop('copy_on_move')
+            has_changed = True
+
         # Fix for settings.accounts.<name>.imap_connection.port changing from str -> int
         # pre v1.2002191933
         imap_settings = account_settings.get('imap_connection')
