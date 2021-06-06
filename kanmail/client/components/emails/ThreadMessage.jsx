@@ -402,13 +402,22 @@ export default class ThreadMessage extends React.Component {
         });
     }
 
+    isTrashed() {
+        return _.isNumber(this.props.message.folderUids.trash);
+    }
+
     render() {
         const { message } = this.props;
+
+        const classNames = ['message'];
+        if (this.isTrashed()) {
+            classNames.push('trash');
+        }
 
         return (
             <div
                 key={message.message_id}
-                className="message"
+                className={classNames.join(' ')}
                 ref={ref => {
                     if (ref && !this.hasScrolledOnLoad && this.props.scrollToOnLoad) {
                         ensureInView(ref, {behavior: 'smooth'});
