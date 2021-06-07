@@ -4,4 +4,5 @@ import settingsStore from 'stores/settings.js';
 
 bootApp(SettingsApp, 'div[data-settings-app]', () => ({
     settings: settingsStore.props.originalSettings,
+    accountNameToConnected: settingsStore.props.accountNameToConnected,
 }));

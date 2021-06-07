@@ -90,7 +90,7 @@ class AccountListItem extends React.Component {
         if (this.props.connected) {
             return <small className="connected">connected</small>;
         } else {
-            return <small className="not-connected">no connection</small>;
+            return <small className="not-connected">not connected</small>;
         }
     }
 
@@ -119,6 +119,7 @@ export default class AccountList extends React.Component {
         updateAccount: PropTypes.func.isRequired,
         moveAccount: PropTypes.func.isRequired,
         newAccountFormProps: PropTypes.object,
+        accountNameToConnected: PropTypes.object,
     }
 
     constructor(props) {
@@ -163,12 +164,15 @@ export default class AccountList extends React.Component {
             <AccountListItem
                 key={`${i}-${accountSettings.name}`}
                 accountIndex={i}
-                connected={true}
                 accountSettings={accountSettings}
                 deleteAccount={this.props.deleteAccount}
                 editAccount={this.handleClickEditAccount}
                 moveUp={_.partial(this.props.moveAccount, i, -1)}
                 moveDown={_.partial(this.props.moveAccount, i, 1)}
+                connected={
+                    this.props.accountNameToConnected
+                    && this.props.accountNameToConnected[accountSettings.name]
+                }
             />
         ));
     }

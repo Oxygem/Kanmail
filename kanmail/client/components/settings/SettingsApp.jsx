@@ -21,6 +21,7 @@ import { arrayMove } from 'util/array.js';
 export default class SettingsApp extends React.Component {
     static propTypes = {
         settings: PropTypes.object.isRequired,
+        accountNameToConnected: PropTypes.object.isRequired,
     }
 
     constructor(props) {
@@ -31,6 +32,7 @@ export default class SettingsApp extends React.Component {
         this.state = {
             selectedTab: 'accounts',
             accounts: props.settings.accounts,
+            accountNameToConnected: props.accountNameToConnected,
             systemSettings: props.settings.system || {},
             styleSettings: props.settings.style || {},
         };
@@ -74,7 +76,10 @@ export default class SettingsApp extends React.Component {
         const accounts = this.state.accounts;
         accounts.push(newSettings);
 
-        this.setState({accounts});
+        const accountNameToConnected = this.state.accountNameToConnected;
+        accountNameToConnected[name] = true;
+
+        this.setState({accounts, accountNameToConnected});
     }
 
     moveAccount = (index, position) => {
@@ -186,6 +191,7 @@ export default class SettingsApp extends React.Component {
             <div className="settings">
                 <AccountList
                     accounts={this.state.accounts}
+                    accountNameToConnected={this.props.accountNameToConnected}
                     addAccount={this.addAccount}
                     deleteAccount={this.deleteAccount}
                     updateAccount={this.updateAccount}
