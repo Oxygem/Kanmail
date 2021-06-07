@@ -142,7 +142,7 @@ export default class SettingsApp extends React.Component {
                 closeWindow();
                 this.setState({isSaved: true});
             })
-            .catch(err => this.setState({saveError: err}));
+            .catch(err => this.setState({saveError: err, isSaving: false}));
     }
 
     handleBustCache = (ev) => {
@@ -162,16 +162,8 @@ export default class SettingsApp extends React.Component {
         const classes = [];
 
         if (this.state.isSaving) {
-            if (this.state.saveError) {
-                text = `Error saving settings: ${this.state.saveError.data.errorMessage}`;
-                classes.push('error');
-            } else if (this.state.isSaved) {
-                text = 'Settings saved, please close this window & reload the main one';
-                classes.push('disabled');
-            } else {
-                text = 'Saving...';
-                classes.push('disabled');
-            }
+            text = 'Saving...';
+            classes.push('disabled');
         } else {
             classes.push('submit');
         }
@@ -184,6 +176,26 @@ export default class SettingsApp extends React.Component {
                 ref={makeNoDragElement}
             >{text}</button>
         );
+    }
+
+    renderMessage() {
+        if (this.state.saveError) {
+            return (
+                <div className="message error">
+                    Error saving settings: {this.state.saveError.data.errorMessage}
+                </div>
+            );
+        }
+
+        if (this.state.isSaved) {
+            return (
+                <div className="message success">
+                    Settings saved, please close this window &amp; reload the main one.
+                </div>
+            );
+        }
+
+        return null;
     }
 
     renderAccountSettings() {
@@ -454,6 +466,7 @@ export default class SettingsApp extends React.Component {
                 </header>
 
                 <section id="settings">
+                    {this.renderMessage()}
                     {this.state.selectedTab === 'accounts' && this.renderAccountSettings()}
                     {this.state.selectedTab === 'appearance' && this.renderAppearanceSettings()}
                     {this.state.selectedTab === 'sync' && this.renderSyncSettings()}
