@@ -36,7 +36,11 @@ def api_set_settings() -> Response:
     request_data = request.get_json()
 
     accounts = request_data.get('accounts', [])
-    validate_unique_accounts(accounts)
+
+    try:
+        validate_unique_accounts(accounts)
+    except ValueError as e:
+        abort(400, f'{e}')
 
     for account in accounts:
         # IMAP user/password accounts
