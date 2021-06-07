@@ -177,7 +177,7 @@ class ConnectionMixin(object):
 
             if not self.oauth_refresh_token:
                 missing_key = 'token'
-                fix_description = 'Please re-authenticate this account in settings.'
+                fix_description = 'Please delete & re-create this account in settings.'
         else:
             if not self.password:
                 self.password = get_password('account', self.host, self.username)
