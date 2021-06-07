@@ -1,7 +1,7 @@
-from flask import jsonify, request, Response
+from flask import abort, jsonify, request, Response
 
 from kanmail.log import logger
-from kanmail.secrets import set_password
+from kanmail.secrets import get_password, set_password
 from kanmail.server.app import app
 from kanmail.server.mail import reset_accounts
 from kanmail.server.mail.folder_cache import bust_all_caches
@@ -18,8 +18,24 @@ from kanmail.window import get_main_window_size_position, reload_main_window
 
 @app.route('/api/settings', methods=('GET',))
 def api_get_settings() -> Response:
+    settings = get_settings()
+
+    account_name_to_connected = {}
+
+    for account in settings.get('accounts', []):
+        host = account['imap_connection']['host']
+        username = account['imap_connection']['username']
+
+        if account['imap_connection'].get('oauth_provider'):
+            has_password = get_password('oauth-account', host, username) is not None
+        else:
+            has_password = get_password('account', host, username) is not None
+
+        account_name_to_connected[account['name']] = has_password
+
     return jsonify(
-        settings=get_settings(),
+        settings=settings,
+        account_name_to_connected=account_name_to_connected,
         settings_file=SETTINGS_FILE,
     )
 
