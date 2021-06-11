@@ -68,6 +68,7 @@ class GenericAccountForm extends React.Component {
         const handleSettings = (data) => {
             if (data.connected) {
                 this.setState({
+                    newAccountError: null,
                     newAccountAddressEmail: this.state.newAccountUsername,
                     newAccountSettings: data.settings,
                 });
