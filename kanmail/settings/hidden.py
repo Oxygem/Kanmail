@@ -1,6 +1,6 @@
 import pickle
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from functools import lru_cache
 from os import environ, path
 from typing import Dict
@@ -22,10 +22,10 @@ def get_hidden_data() -> Dict[str, str]:
     if not path.exists(hidden_data_filename):
         return {}
 
-    with open(hidden_data_filename, 'r') as f:
+    with open(hidden_data_filename, 'rb') as f:
         hidden_data = f.read()
 
-    return pickle.loads(b64decode(hidden_data['data']))
+    return pickle.loads(b64decode(hidden_data))
 
 
 def get_hidden_value(key: str) -> str:
@@ -39,3 +39,12 @@ def get_hidden_value(key: str) -> str:
         return value
 
     raise KeyError(f'No hidden value available for key: {key}')
+
+
+def generate_hidden_data() -> Dict[str, str]:
+    hidden_data = {}
+
+    for key in VALID_HIDDEN_KEYS:
+        hidden_data[key] = environ[key]
+
+    return b64encode(pickle.dumps(hidden_data))

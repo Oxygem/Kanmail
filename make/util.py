@@ -12,8 +12,11 @@ import tld
 
 from jinja2 import Template
 
+from kanmail.settings.hidden import generate_hidden_data
+
 from .settings import (
     # GITHUB_API_TOKEN,
+    HIDDEN_DATA_FILENAME,
     MAJOR_VERSION,
     MAKE_DIRNAME,
     ROOT_DIRNAME,
@@ -76,6 +79,11 @@ def write_version_data(version):
 def read_version_data():
     with open(VERSION_DATA_FILENAME, 'r') as f:
         return json.load(f)
+
+
+def write_hidden_data():
+    with open(HIDDEN_DATA_FILENAME, 'wb') as f:
+        f.write(generate_hidden_data())
 
 
 def generate_spec(version, onedir=False):

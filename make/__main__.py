@@ -27,6 +27,7 @@ from .util import (
     get_release_version,
     print_and_check_output,
     print_and_run,
+    write_hidden_data,
     write_release_version,
     write_version_data,
 )
@@ -56,6 +57,7 @@ def prepare_release():
     click.echo(f'--> generate {VERSION_DATA_FILENAME}')
     write_release_version(version)
     write_version_data(version)
+    write_hidden_data()
 
     click.echo()
     click.echo(f'Kanmail v{version} release is prepped!')
@@ -109,6 +111,7 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
 
     if not release:
         write_version_data(version)
+        write_hidden_data()
 
     if docker:
         print_and_run((
