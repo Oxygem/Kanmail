@@ -12,12 +12,15 @@ appdirs==1.4.4
     # via pyupdater
 bleach==3.3.0
     # via mdx-linkify
+blinker==1.4
+    # via sentry-sdk
 bsdiff4==1.1.5
     # via pyupdater
 certifi==2020.12.5
     # via
     #   pyupdater
     #   requests
+    #   sentry-sdk
 chardet==4.0.0
     # via
     #   dsdev-utils
@@ -44,6 +47,7 @@ flask==1.0.2
     # via
     #   -r requirements/base.in
     #   flask-sqlalchemy
+    #   sentry-sdk
 idna==2.10
     # via requests
 imapclient==2.2.0
@@ -101,6 +105,8 @@ pywebview==3.4
     # via -r requirements/base.in
 requests==2.25.1
     # via -r requirements/base.in
+sentry-sdk[flask]==1.1.0
+    # via -r requirements/base.in
 six==1.15.0
     # via
     #   bleach
@@ -122,6 +128,7 @@ urllib3==1.26.4
     # via
     #   pyupdater
     #   requests
+    #   sentry-sdk
 webencodings==0.5.1
     # via bleach
 werkzeug==1.0.1
