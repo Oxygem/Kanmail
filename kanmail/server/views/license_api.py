@@ -23,7 +23,7 @@ def api_activate_license() -> Union[Response, Tuple[Response, int]]:
     except ValueError:
         return jsonify(
             activated=False,
-            error='Invalid license format, it should include both email and token.',
+            error_message='Invalid license format, it should include both email and token.',
         ), 400
 
     try:
