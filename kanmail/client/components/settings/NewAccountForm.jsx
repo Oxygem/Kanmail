@@ -451,7 +451,7 @@ export default class NewAccountForm extends React.Component {
         if (this.state.accountType) {
             const Component = ACCOUNT_TYPE_TO_COMPONENT[this.state.accountType];
             return (
-                <form className="account">
+                <form className="account new-account">
                     <Component
                         closeForm={this.props.closeForm}
                         handleAddAccountError={this.handleAddAccountError}
