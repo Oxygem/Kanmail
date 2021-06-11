@@ -118,8 +118,8 @@ export default class AccountList extends React.Component {
         deleteAccount: PropTypes.func.isRequired,
         updateAccount: PropTypes.func.isRequired,
         moveAccount: PropTypes.func.isRequired,
+        accountNameToConnected: PropTypes.object.isRequired,
         newAccountFormProps: PropTypes.object,
-        accountNameToConnected: PropTypes.object,
     }
 
     constructor(props) {

@@ -19,6 +19,7 @@ export default class WelcomeSettings extends React.Component {
 
         this.state = {
             accounts: [],
+            accountNameToConnected: {},
             contactIcons: true,
         };
     }
@@ -43,6 +44,9 @@ export default class WelcomeSettings extends React.Component {
 
         const accounts = this.state.accounts;
         accounts.push(newSettings);
+
+        const accountNameToConnected = this.state.accountNameToConnected;
+        accountNameToConnected[name] = true;
 
         this.setState({accounts});
     }
@@ -146,6 +150,7 @@ export default class WelcomeSettings extends React.Component {
                     </p>
                     <AccountList
                         accounts={this.state.accounts}
+                        accountNameToConnected={this.state.accountNameToConnected}
                         addAccount={this.addAccount}
                         deleteAccount={this.deleteAccount}
                         updateAccount={this.updateAccount}
