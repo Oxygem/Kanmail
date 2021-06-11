@@ -13,6 +13,11 @@ def api_activate_license() -> Union[Response, Tuple[Response, int]]:
     request_data = request.get_json()
     license_data = get_or_400(request_data, 'license')
 
+    # Cleanup any copy/paste issues with the license
+    license_data = license_data.strip()
+    license_data = license_data.strip('-')
+    license_data = license_data.strip()
+
     try:
         email, token = [line.strip() for line in license_data.splitlines()]
     except ValueError:
