@@ -100,7 +100,7 @@ def get_oauth_tokens_from_refresh_token(provider, refresh_token):
     return oauth_response
 
 
-def invalidate_refresh_token(refresh_token):
+def invalidate_access_token(refresh_token):
     tokens = CURRENT_OAUTH_TOKENS.pop(refresh_token, None)
 
     if tokens is None:

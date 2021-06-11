@@ -13,7 +13,7 @@ from kanmail.log import logger
 from kanmail.secrets import get_password, set_password
 from kanmail.settings.constants import DEBUG_SMTP
 
-from .oauth import get_oauth_tokens_from_refresh_token
+from .oauth import get_oauth_tokens_from_refresh_token, invalidate_access_token
 from .smtp import SMTP, SMTP_SSL
 
 DEFAULT_ATTEMPTS = 3
@@ -75,7 +75,6 @@ class ImapConnectionWrapper(object):
                 except (
                     IMAPClientError,
                     IMAPClientAbortError,
-                    LoginError,
                     socket_error,
                 ) as e:
                     if attempts >= self.config.max_attempts:
@@ -83,7 +82,7 @@ class ImapConnectionWrapper(object):
 
                     attempts += 1
                     self.config.log(
-                        'critical',
+                        'warning',
                         f'IMAP error {attempts}/{self.config.max_attempts}: {e}',
                     )
                     self.try_make_imap()
@@ -120,7 +119,14 @@ class ImapConnectionWrapper(object):
         imap.normalise_times = False
 
         if self.config.oauth_provider:
-            imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
+            try:
+                imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
+            except LoginError as e:
+                # TODO: Tidy this up/move it
+                if 'AUTHENTICATIONFAILED' in f'{e}':
+                    self.config.log('info', 'Refreshing OAuth acccess token')
+                    invalidate_access_token(self.config.oauth_refresh_token)
+                    imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
         else:
             imap.login(self.config.username, self.config.password)
 
@@ -253,7 +259,7 @@ class ImapConnectionPool(ConnectionMixin):
             self.log('debug', f'Returned connection to pool: {self.pool.qsize()} (+1)')
 
 
-def _generate_oauth2_string(username, access_token):
+def _generate_smtp_oauth2_string(username, access_token):
     auth_string = f'user={username}\1auth=Bearer {access_token}\1\1'
     auth_string = b64encode(auth_string.encode('utf-8'))
     return auth_string
@@ -314,12 +320,22 @@ class SmtpConnection(ConnectionMixin):
             smtp.starttls()
 
         if self.oauth_provider:
-            oauth_string = _generate_oauth2_string(
-                self.username,
-                self.get_oauth_access_token(),
-            )
+            def do_oauth_login():
+                oauth_string = _generate_smtp_oauth2_string(
+                    self.username,
+                    self.get_oauth_access_token(),
+                )
+                code, text = smtp.docmd('AUTH', f'XOAUTH2 {oauth_string.decode()}')
+                assert code == 235, text  # 235 = "Authentication succeeded" code (rfc4954)
+
             smtp.ehlo()
-            smtp.docmd('AUTH', f'XOAUTH2 {oauth_string.decode()}')
+
+            try:
+                do_oauth_login()
+            except AssertionError:
+                self.log('info', 'Refreshing OAuth acccess token')
+                invalidate_access_token(self.oauth_refresh_token)
+                do_oauth_login()
         else:
             smtp.login(self.username, self.password)
 
