@@ -104,7 +104,7 @@ def invalidate_access_token(refresh_token):
     tokens = CURRENT_OAUTH_TOKENS.pop(refresh_token, None)
 
     if tokens is None:
-        logger.warning('Invalidated non-existent refresh token: %s', refresh_token)
+        logger.warning('Invalidated non-existent refresh token')
 
 
 def set_oauth_tokens(refresh_token, access_token):
