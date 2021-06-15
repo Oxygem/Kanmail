@@ -22,7 +22,17 @@ elementScrollIntoViewPolyfill();
 if (window.KANMAIL_DEBUG) {
     console.debug('Not enabling Sentry logging in debug mode...');
 } else {
-    Sentry.init({dsn: window.KANMAIL_SENTRY_DSN});
+    Sentry.init({
+        dsn: window.KANMAIL_SENTRY_DSN,
+        beforeSend(event, hint) {
+            const error = hint.originalException;
+            // Ignore "expected" network errors (logged serverside) and critical request nonce errors
+            if (error && (error.isNetworkResponseFailure || error.isCriticalRequestNonceFailure)) {
+                return null;
+            }
+            return event;
+        },
+    });
 }
 
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
