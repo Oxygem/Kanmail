@@ -23,7 +23,7 @@ def error_bad_request(e) -> Response:
 def error_connection_exception(e) -> Response:
     error_name = e.__class__.__name__
     message = f'{e} (account={e.account})'
-    logger.exception(f'Network exception in view: {message}')
+    logger.warning(f'Connection settings error in view: {message}')
     return make_response(jsonify(
         status_code=400,
         error_name=error_name,
@@ -35,7 +35,7 @@ def error_connection_exception(e) -> Response:
 def error_network_exception(e) -> Response:
     error_name = e.__class__.__name__
     message = f'{e} (account={e.account})'
-    logger.exception(f'Network exception in view: {message}')
+    logger.warning(f'Network error in view: {message}')
     return make_response(jsonify(
         status_code=503,
         error_name=error_name,
