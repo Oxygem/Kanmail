@@ -11,8 +11,8 @@ let currentCriticalRequestNonce = null;
 function handleReponse(response, method, options) {
     const criticalRequestNonce = options.criticalRequestNonce;
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
-        const error = new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}!`);
-        error.criticalRequestNonceFailure = true;
+        const error = new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}, url=${response.url})!`);
+        error.isCriticalRequestNonceFailure = true;
         throw error;
     }
 
@@ -45,6 +45,7 @@ function handleReponse(response, method, options) {
 
             const error = new Error(`Error fetching: ${method} ${response.url}`);
             error.data = data;
+            error.isNetworkResponseFailure = true;
             throw error;
         });
     }

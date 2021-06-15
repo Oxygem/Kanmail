@@ -197,8 +197,8 @@ class ThreadStore extends BaseStore {
 
             this.triggerUpdate();
         }).catch(e => {
-            if (e.criticalRequestNonceFailure) {
-                return;
+            if (e.isCriticalRequestNonceFailure) {
+                return false;
             }
             this.props.fetching = false;
             this.props.fetchingFailed = true;
