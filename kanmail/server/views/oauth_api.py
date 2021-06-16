@@ -7,7 +7,6 @@ from kanmail.server.mail.oauth import (
     get_oauth_request_url,
     get_oauth_tokens_from_code,
 )
-from kanmail.settings.constants import DEBUG
 
 
 OAUTH_REQUESTS = {}
@@ -53,12 +52,14 @@ def handle_oauth_response():
 
 @add_route('/api/oauth/response/<uid>')
 def get_oauth_response(uid):
-    if DEBUG:
-        response = OAUTH_REQUESTS.get(uid)
-    else:
-        response = OAUTH_REQUESTS.pop(uid, None)
+    response = OAUTH_REQUESTS.get(uid)
 
     if not response:
         abort(404, 'OAuth response not found!')
 
     return jsonify(response)
+
+
+@add_route('/api/oauth/response/<uid>', methods=('DELETE',))
+def delete_oauth_response(uid):
+    OAUTH_REQUESTS.pop(uid)

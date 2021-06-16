@@ -11,7 +11,7 @@ import outlookLogo from 'images/providers/outlook.png';
 import yahooLogo from 'images/providers/yahoo.png';
 import AccountForm from 'components/settings/AccountForm.jsx';
 
-import { get, post } from 'util/requests.js';
+import { delete_, get, post } from 'util/requests.js';
 
 
 class GenericAccountForm extends React.Component {
@@ -252,6 +252,8 @@ class OauthAccountFormMixin extends GenericAccountForm {
                 return;
             }
 
+            // Cleanup the OAuth response in the backend
+            delete_(`/api/oauth/response/${this.state.oauthRequestId}`);
             clearInterval(this.oauthRequestCheck);
 
             const data = {
