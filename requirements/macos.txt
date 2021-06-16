@@ -31,7 +31,7 @@ click==7.0
     # via
     #   -r requirements/base.in
     #   flask
-defusedxml==0.5.0
+defusedxml==0.7.0
     # via -r requirements/base.in
 dnspython==1.15.0
     # via -r requirements/base.in
