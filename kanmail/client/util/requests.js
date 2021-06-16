@@ -5,7 +5,7 @@ import URI from 'urijs';
 import requestStore from 'stores/request.js';
 
 
-let currentCriticalRequestNonce = null;
+let currentCriticalRequestNonce = 0;
 
 
 function handleReponse(response, method, options) {
@@ -61,8 +61,9 @@ function handleReponse(response, method, options) {
 function get_or_delete(method, url, query={}, options={}) {
     const uri = URI(url);
 
-    if (options.criticalRequestNonce) {
-        currentCriticalRequestNonce = options.criticalRequestNonce;
+    if (options.isCriticalRequest) {
+        currentCriticalRequestNonce += 1;
+        options.criticalRequestNonce = currentCriticalRequestNonce;
     }
 
     return (
@@ -84,8 +85,9 @@ export const delete_ = _.partial(get_or_delete, 'DELETE');
 function post_or_put(method, url, data, options={}) {
     const uri = URI(url);
 
-    if (options.criticalRequestNonce) {
-        currentCriticalRequestNonce = options.criticalRequestNonce;
+    if (options.isCriticalRequest) {
+        currentCriticalRequestNonce += 1;
+        options.criticalRequestNonce = currentCriticalRequestNonce;
     }
 
     return (

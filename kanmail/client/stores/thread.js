@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import hash from 'object-hash';
 
 import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
@@ -140,8 +139,6 @@ class ThreadStore extends BaseStore {
     loadThread(thread) {
         // Build a list of (UID, folder, part#) for each message in the thread
         const folderUidParts = makeFolderUidParts(thread);
-        // Make a hash to use as the critical request nonce
-        const criticalRequestNonce = hash(folderUidParts);
 
         const requests = [];
         const emailParts = {};
@@ -160,7 +157,7 @@ class ThreadStore extends BaseStore {
                 `Get email text from ${accountName}/${folderName}`,
                 `/api/emails/${accountName}/${folderName}/text`,
                 {uid: uidList},
-                {criticalRequestNonce},
+                {isCriticalRequest: true},
             ).then(data => {
                 _.each(data.emails, (email, uid) => emailParts[uid] = email);
             });
