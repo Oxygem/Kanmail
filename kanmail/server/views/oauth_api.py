@@ -63,3 +63,4 @@ def get_oauth_response(uid):
 @add_route('/api/oauth/response/<uid>', methods=('DELETE',))
 def delete_oauth_response(uid):
     OAUTH_REQUESTS.pop(uid)
+    return '', 204
