@@ -82,19 +82,28 @@ class ServerWithGetPort(Server):
 server = ServerWithGetPort((SERVER_HOST, SERVER_PORT), app)
 
 
-@app.before_request
-def validate_session_token() -> None:
-    if DEBUG and not IS_APP:  # don't apply in full dev mode
-        return
+def add_route(*route_args, **route_kwargs):
+    if DEBUG and not IS_APP:  # don't apply in full browser dev mode
+        return add_public_route(*route_args, **route_kwargs)
 
-    if request.path.startswith('/api'):
-        # Accept as header (preferred) and query string (images)
-        session_token = request.headers.get(
-            'Kanmail-Session-Token',
-            request.args.get('Kanmail-Session-Token'),
-        )
-        if session_token != SESSION_TOKEN:
-            abort(401, 'Invalid session token provided!')
+    def wrapper(func):
+        def inner(*args, **kwargs):
+            # Accept as header (preferred) and query string (images)
+            session_token = request.headers.get(
+                'Kanmail-Session-Token',
+                request.args.get('Kanmail-Session-Token'),
+            )
+            if session_token != SESSION_TOKEN:
+                abort(401, 'Invalid session token provided!')
+
+            return func(*args, **kwargs)
+        route_kwargs['endpoint'] = func.__name__
+        return app.route(*route_args, **route_kwargs)(inner)
+    return wrapper
+
+
+def add_public_route(*args, **kwargs):
+    return app.route(*args, **kwargs)
 
 
 def boot(prepare_server: bool = True) -> None:

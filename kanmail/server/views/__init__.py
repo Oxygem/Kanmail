@@ -13,7 +13,7 @@ from flask import (
 
 from kanmail.license import check_get_license_email
 from kanmail.log import logger
-from kanmail.server.app import app
+from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.contacts import get_contact_dicts
 from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
@@ -38,22 +38,22 @@ SEND_WINDOW_DATA = {}
 if FROZEN:
     # This view redirects non-versioned static requests (webpack public path is static)
     # to the versioned one when running as a frozen app.
-    @app.route('/static/dist/<filename>')
+    @add_public_route('/static/dist/<filename>')
     def get_dev_static_file(filename):
         return redirect(url_for('static', filename=f'dist/{get_version()}/{filename}'))
 elif DEBUG:
     # Thie view redirects local development static requests to webpack dev server
-    @app.route('/static/dist/<filename>')
+    @add_public_route('/static/dist/<filename>')
     def get_dev_static_file(filename):
         return redirect(f'http://localhost:4421/static/dist/{filename}')
 
 
-@app.route('/favicon.ico')
+@add_public_route('/favicon.ico')
 def favicon():
     return send_from_directory(CLIENT_ROOT, 'icon.png', mimetype='image/png')
 
 
-@app.route('/ping', methods=('GET',))
+@add_public_route('/ping', methods=('GET',))
 def ping():
     return jsonify(ping='pong')
 
@@ -73,7 +73,7 @@ def _get_render_data():
     }
 
 
-@app.route('/', methods=('GET',))
+@add_route('/', methods=('GET',))
 def get_emails():
     return render_template(
         'emails.html',
@@ -81,7 +81,7 @@ def get_emails():
     )
 
 
-@app.route('/meta', methods=('GET',))
+@add_route('/meta', methods=('GET',))
 def get_meta():
     return render_template(
         'meta.html',
@@ -89,7 +89,7 @@ def get_meta():
     )
 
 
-@app.route('/license', methods=('GET',))
+@add_route('/license', methods=('GET',))
 def get_license():
     return render_template(
         'license.html',
@@ -97,7 +97,7 @@ def get_license():
     )
 
 
-@app.route('/settings', methods=('GET',))
+@add_route('/settings', methods=('GET',))
 def get_settings():
     return render_template(
         'settings.html',
@@ -105,7 +105,7 @@ def get_settings():
     )
 
 
-@app.route('/meta-file/<filename>', methods=('GET',))
+@add_route('/meta-file/<filename>', methods=('GET',))
 def get_meta_file(filename):
     file_path = path.join(META_FILE_ROOT, filename)
     if not path.exists(file_path):
@@ -126,7 +126,7 @@ def get_meta_file(filename):
     )
 
 
-@app.route('/contacts', methods=('GET',))
+@add_route('/contacts', methods=('GET',))
 def get_contacts_page():
     contacts = get_contact_dicts()
     contacts = sorted(contacts, key=lambda c: c.get('email', ''))
@@ -138,7 +138,7 @@ def get_contacts_page():
     )
 
 
-@app.route('/send', methods=('GET',))
+@add_route('/send', methods=('GET',))
 def get_send():
     return render_template(
         'send.html',
@@ -147,7 +147,7 @@ def get_send():
     )
 
 
-@app.route('/send/<uid>', methods=('GET',))
+@add_route('/send/<uid>', methods=('GET',))
 def get_send_reply(uid):
     if DEBUG:
         reply = SEND_WINDOW_DATA.get(uid)
@@ -165,7 +165,7 @@ def get_send_reply(uid):
     )
 
 
-@app.route('/create-send', methods=('POST',))
+@add_route('/create-send', methods=('POST',))
 def create_send():
     data = request.get_json()
     message_data = get_or_400(data, 'message')

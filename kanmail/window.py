@@ -5,7 +5,7 @@ import webview
 
 from kanmail.log import logger
 from kanmail.server.app import server
-from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_HOST
+from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_HOST, SESSION_TOKEN
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
@@ -21,7 +21,11 @@ def create_window(
         return False
 
     internal_id = str(uuid4())
-    link = f'http://{SERVER_HOST}:{server.get_port()}{endpoint}?window_id={internal_id}'
+    link = (
+        f'http://{SERVER_HOST}:{server.get_port()}{endpoint}'
+        f'?window_id={internal_id}'
+        f'&Kanmail-Session-Token={SESSION_TOKEN}'
+    )
 
     logger.debug(
         f'Opening window (#{internal_id}) '

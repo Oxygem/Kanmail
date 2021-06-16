@@ -2,7 +2,7 @@ from flask import abort, jsonify, request, Response
 
 from kanmail.log import logger
 from kanmail.secrets import get_password, set_password
-from kanmail.server.app import app
+from kanmail.server.app import add_route
 from kanmail.server.mail import reset_accounts
 from kanmail.server.mail.folder_cache import bust_all_caches
 from kanmail.settings import (
@@ -16,7 +16,7 @@ from kanmail.settings.model import validate_unique_accounts
 from kanmail.window import get_main_window_size_position, reload_main_window
 
 
-@app.route('/api/settings', methods=('GET',))
+@add_route('/api/settings', methods=('GET',))
 def api_get_settings() -> Response:
     settings = get_settings()
 
@@ -47,7 +47,7 @@ def _extract_any_secret(secret_type: str, secret_key: str, obj: dict) -> None:
     set_password(secret_type, obj['host'], obj['username'], obj.pop(secret_key))
 
 
-@app.route('/api/settings', methods=('PUT',))
+@add_route('/api/settings', methods=('PUT',))
 def api_set_settings() -> Response:
     request_data = request.get_json()
 
@@ -78,21 +78,21 @@ def api_set_settings() -> Response:
     return jsonify(saved=True)
 
 
-@app.route('/api/settings', methods=('POST',))
+@add_route('/api/settings', methods=('POST',))
 def api_update_settings() -> Response:
     request_data = request.get_json()
     update_settings(request_data)
     return jsonify(saved=True)
 
 
-@app.route('/api/settings/cache', methods=('DELETE',))
+@add_route('/api/settings/cache', methods=('DELETE',))
 def api_delete_caches() -> Response:
     bust_all_caches()
     reload_main_window()
     return jsonify(deleted=True)
 
 
-@app.route('/api/settings/window', methods=('POST',))
+@add_route('/api/settings/window', methods=('POST',))
 def api_update_window_settings() -> Response:
     if not IS_APP:
         return jsonify(saved=False)  # success response, but not saved (browser mode)

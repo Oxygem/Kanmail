@@ -4,7 +4,7 @@ from flask import jsonify, request
 from imapclient import imapclient
 
 from kanmail.log import logger
-from kanmail.server.app import app
+from kanmail.server.app import add_route
 from kanmail.server.mail import Account
 from kanmail.server.mail.autoconf import get_autoconf_settings
 from kanmail.server.mail.oauth import set_oauth_tokens
@@ -128,7 +128,7 @@ def _test_account_settings(account_settings, get_folder_settings=False):
     return folders or True
 
 
-@app.route('/api/account/test', methods=('POST',))
+@add_route('/api/account/test', methods=('POST',))
 def api_test_account_settings():
     request_data = request.get_json()
 
@@ -158,7 +158,7 @@ def api_test_account_settings():
     return jsonify(connected=True, settings=account_settings)
 
 
-@app.route('/api/account/new', methods=('POST',))
+@add_route('/api/account/new', methods=('POST',))
 def api_test_new_account_settings():
     '''
     Attempt to autoconfigure and connect to a new account using email/password,

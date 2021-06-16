@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from flask import abort, jsonify, redirect, render_template, request
 
-from kanmail.server.app import app
+from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.oauth import (
     get_oauth_request_url,
     get_oauth_tokens_from_code,
@@ -13,12 +13,12 @@ from kanmail.settings.constants import DEBUG
 OAUTH_REQUESTS = {}
 
 
-@app.route('/oauth-complete')
+@add_public_route('/oauth-complete')
 def get_oauth_complete():
     return render_template('oauth_complete.html')
 
 
-@app.route('/api/oauth/request', methods=('POST',))
+@add_route('/api/oauth/request', methods=('POST',))
 def make_oauth_request():
     request_data = request.get_json()
     oauth_provider = request_data['oauth_provider']
@@ -33,7 +33,7 @@ def make_oauth_request():
     return jsonify(auth_url=auth_url, uid=uid)
 
 
-@app.route('/api/oauth/respond')
+@add_route('/api/oauth/respond')
 def handle_oauth_response():
     # Store the OAuth auth code from the server for the app to retrieve
     uid = request.args['uid']
@@ -51,7 +51,7 @@ def handle_oauth_response():
     return redirect('/oauth-complete')
 
 
-@app.route('/api/oauth/response/<uid>')
+@add_route('/api/oauth/response/<uid>')
 def get_oauth_response(uid):
     if DEBUG:
         response = OAUTH_REQUESTS.get(uid)

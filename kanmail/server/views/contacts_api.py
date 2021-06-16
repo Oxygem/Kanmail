@@ -3,7 +3,7 @@ from io import BytesIO
 from flask import abort, jsonify, request, Response, send_file
 from sqlalchemy.exc import IntegrityError
 
-from kanmail.server.app import app
+from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.allowed_images import (
     allow_images_for_email,
     disallow_images_for_email,
@@ -18,7 +18,7 @@ from kanmail.server.mail.icon import get_icon_for_email
 from kanmail.server.util import get_or_400
 
 
-@app.route('/api/contacts', methods=('GET',))
+@add_route('/api/contacts', methods=('GET',))
 def api_get_contacts() -> Response:
     '''
     Get the contacts list.
@@ -28,7 +28,7 @@ def api_get_contacts() -> Response:
     return jsonify(contacts=contacts)
 
 
-@app.route('/api/contacts', methods=('POST',))
+@add_route('/api/contacts', methods=('POST',))
 def api_post_contacts() -> Response:
     '''
     Create a new contact.
@@ -49,7 +49,7 @@ def api_post_contacts() -> Response:
     return jsonify(added=True, id=new_contact.id)
 
 
-@app.route('/api/contacts/<int:contact_id>', methods=('PUT',))
+@add_route('/api/contacts/<int:contact_id>', methods=('PUT',))
 def api_put_contact(contact_id) -> Response:
     '''
     Update a single contact.
@@ -69,7 +69,7 @@ def api_put_contact(contact_id) -> Response:
     return jsonify(updated=True)
 
 
-@app.route('/api/contacts/<int:contact_id>', methods=('DELETE',))
+@add_route('/api/contacts/<int:contact_id>', methods=('DELETE',))
 def api_delete_contact(contact_id) -> Response:
     '''
     Delete a single contact.
@@ -81,19 +81,19 @@ def api_delete_contact(contact_id) -> Response:
     return jsonify(deleted=True)
 
 
-@app.route('/api/contacts/allow-images/<email>', methods=('PUT',))
+@add_route('/api/contacts/allow-images/<email>', methods=('PUT',))
 def api_put_images_for_email(email):
     allow_images_for_email(email)
     return jsonify(added=True)
 
 
-@app.route('/api/contacts/allow-images/<email>', methods=('DELETE',))
+@add_route('/api/contacts/allow-images/<email>', methods=('DELETE',))
 def api_delete_images_for_email(email):
     disallow_images_for_email(email)
     return jsonify(deleted=True)
 
 
-@app.route('/contact-icon/<email>', methods=('GET',))
+@add_public_route('/contact-icon/<email>', methods=('GET',))
 def api_get_contact_image(email) -> Response:
     data, mimetype = get_icon_for_email(email)
     return send_file(BytesIO(data), mimetype=mimetype)
