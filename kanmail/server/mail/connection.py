@@ -321,14 +321,13 @@ class SmtpConnection(ConnectionMixin):
 
         if self.oauth_provider:
             def do_oauth_login():
+                smtp.ehlo()
                 oauth_string = _generate_smtp_oauth2_string(
                     self.username,
                     self.get_oauth_access_token(),
                 )
                 code, text = smtp.docmd('AUTH', f'XOAUTH2 {oauth_string.decode()}')
                 assert code == 235, text  # 235 = "Authentication succeeded" code (rfc4954)
-
-            smtp.ehlo()
 
             try:
                 do_oauth_login()
