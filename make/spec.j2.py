@@ -7,6 +7,7 @@ a = Analysis(  # noqa: F821
     datas=[
         (r'{{ root_dir }}/LICENSE.md', '.'),
         (r'{{ root_dir }}/CHANGELOG.md', '.'),
+        (r'{{ root_dir }}/kanmail/client/icon.png', '.'),
 
         (r'{{ root_dir }}/kanmail/client/templates', 'templates'),
 
