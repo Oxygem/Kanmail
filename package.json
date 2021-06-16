@@ -28,7 +28,6 @@
     "lodash": "4.x",
     "mini-css-extract-plugin": "1.x",
     "moment": "2.x",
-    "object-hash": "1.x",
     "optimize-css-assets-webpack-plugin": "5.x",
     "prop-types": "15.x",
     "randomcolor": "0.x",
