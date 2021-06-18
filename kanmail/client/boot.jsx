@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import * as Sentry from '@sentry/react';
+import posthog from 'posthog-js';
 
 import 'fonts/fontawesome/css/font-awesome.css';
 import 'fonts/open-sans/css/open-sans.css';
@@ -36,6 +37,20 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
     Sentry.setUser({id: window.KANMAIL_DEVICE_ID});
 }
 
+if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_POSTHOG) {
+    console.debug('Not enabling Posthog event logging in debug mode...');
+    posthog.capture = () => {};
+} else {
+    posthog.init(window.KANMAIL_POSTHOG_API_KEY, {
+        api_host: 'https://app.posthog.com',
+        autocapture: false,
+        capture_pageview: false,
+        disable_cookie: true,
+        disable_session_recording: true,
+        loaded: () => posthog.identify(window.KANMAIL_DEVICE_ID),
+    });
+}
+
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
     const rootElement = document.querySelector(selector);
     if (!rootElement) {
@@ -63,5 +78,7 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
             </section>
         </Sentry.ErrorBoundary>, rootElement);
     });
+
+    posthog.capture('[launch app]', {selector: selector});
 }
 export default bootApp;

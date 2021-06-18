@@ -29,6 +29,7 @@
     "mini-css-extract-plugin": "1.x",
     "moment": "2.x",
     "optimize-css-assets-webpack-plugin": "5.x",
+    "posthog-js": "^1.11.3",
     "prop-types": "15.x",
     "randomcolor": "0.x",
     "react": "16.x",

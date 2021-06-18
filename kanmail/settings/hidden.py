@@ -10,6 +10,7 @@ from .constants import CLIENT_ROOT
 
 VALID_HIDDEN_KEYS = (
     'SENTRY_DSN',
+    'POSTHOG_API_KEY',
     'GOOGLE_OAUTH_CLIENT_ID',
     'GOOGLE_OAUTH_CLIENT_SECRET',
 )

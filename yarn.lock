@@ -3120,6 +3120,11 @@ faye-websocket@^0.11.3:
   dependencies:
     websocket-driver ">=0.5.1"
 
+fflate@^0.4.1:
+  version "0.4.8"
+  resolved "https://registry.yarnpkg.com/fflate/-/fflate-0.4.8.tgz#f90b82aefbd8ac174213abb338bd7ef848f0f5ae"
+  integrity sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==
+
 figgy-pudding@^3.5.1:
   version "3.5.2"
   resolved "https://registry.yarnpkg.com/figgy-pudding/-/figgy-pudding-3.5.2.tgz#b4eee8148abb01dcf1d1ac34367d59e12fa61d6e"
@@ -5675,6 +5680,13 @@ postcss@^7.0.0, postcss@^7.0.1, postcss@^7.0.14, postcss@^7.0.27, postcss@^7.0.3
     chalk "^2.4.2"
     source-map "^0.6.1"
     supports-color "^6.1.0"
+
+posthog-js@^1.11.3:
+  version "1.11.3"
+  resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.11.3.tgz#52e0b9265f22505a1ca4f6b5007090cab2692c5b"
+  integrity sha512-udk6Yv34XSzBl5P36H0fFCeL00/BbtjA9KpxvoXyGsxq5zCLkiS0x7FR+qde2AQJ+TNwEY/GZQVXs0hT66+Zng==
+  dependencies:
+    fflate "^0.4.1"
 
 prelude-ls@~1.1.2:
   version "1.1.2"

@@ -56,6 +56,7 @@ DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
 DEBUG_SMTP = environ.get('KANMAIL_DEBUG_SMTP') == 'on'
 DEBUG_LOCKS = environ.get('KANMAIL_DEBUG_LOCKS') == 'on'
 DEBUG_SENTRY = environ.get('KANMAIL_DEBUG_SENTRY') == 'on'
+DEBUG_POSTHOG = environ.get('KANMAIL_DEBUG_POSTHOG') == 'on'
 
 # Flag to tell us whether we're a frozen app (bundled)
 FROZEN = getattr(sys, 'frozen', False)

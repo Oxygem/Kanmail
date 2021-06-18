@@ -45,7 +45,10 @@
 
         window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
         window.KANMAIL_DEBUG_SENTRY = {% if debug_sentry %}true{% else %}false{% endif %};
+        window.KANMAIL_DEBUG_POSTHOG = {% if debug_posthog %}true{% else %}false{% endif %};
+
         window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
+        window.KANMAIL_POSTHOG_API_KEY = '{{ posthog_api_key }}';
     </script>
 
     <link rel="stylesheet" type="text/css" href="/static/dist/shared.css" />
