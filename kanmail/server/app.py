@@ -19,6 +19,7 @@ from kanmail.settings.constants import (
     CLIENT_ROOT,
     CONTACTS_CACHE_DB_FILE,
     DEBUG,
+    DEBUG_SENTRY,
     FOLDER_CACHE_DB_FILE,
     IS_APP,
     SERVER_HOST,
@@ -47,12 +48,14 @@ class JsonEncoder(JSONEncoder):
         return super(JsonEncoder, self).default(obj)
 
 
-if DEBUG:
-    logger.debug('Not enabling Sentry logging in debug mode...')
+if DEBUG and not DEBUG_SENTRY:
+    logger.debug('Not enabling Sentry error logging in debug mode...')
 else:
     sentry_sdk.init(
         dsn=get_hidden_value('SENTRY_DSN'),
         integrations=[FlaskIntegration()],
+        # Don't send stack variables, potentially containing email data
+        with_locals=False,
     )
     # Random identifier for this Kanmail install (no PII)
     sentry_sdk.set_user({'id': get_device_id()})

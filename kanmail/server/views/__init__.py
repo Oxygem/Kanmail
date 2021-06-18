@@ -21,6 +21,7 @@ from kanmail.settings import get_device_id
 from kanmail.settings.constants import (
     CLIENT_ROOT,
     DEBUG,
+    DEBUG_SENTRY,
     FRAMELESS,
     FROZEN,
     IS_APP,
@@ -64,6 +65,7 @@ def _get_render_data():
         'version': get_version(),
         'license_email': check_get_license_email(),
         'debug': DEBUG,
+        'debug_sentry': DEBUG_SENTRY,
         'frameless': FRAMELESS,
         'frozen': FROZEN,
         'is_app': IS_APP,

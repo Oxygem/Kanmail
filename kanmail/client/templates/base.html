@@ -36,12 +36,15 @@
         window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
         window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
         window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
-        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
+
         window.KANMAIL_FRAMELESS = {% if frameless %}true{% else %}false{% endif %};
         window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
 
         window.KANMAIL_DEVICE_ID = '{{ device_id }}';
         window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
+
+        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
+        window.KANMAIL_DEBUG_SENTRY = {% if debug_sentry %}true{% else %}false{% endif %};
         window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
     </script>
 

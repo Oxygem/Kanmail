@@ -19,8 +19,8 @@ import { elementScrollIntoViewPolyfill } from 'seamless-scroll-polyfill/dist/es5
 elementScrollIntoViewPolyfill();
 
 // Bootstrap Sentry error logging if we're not in debug (dev) mode
-if (window.KANMAIL_DEBUG) {
-    console.debug('Not enabling Sentry logging in debug mode...');
+if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
+    console.debug('Not enabling Sentry error logging in debug mode...');
 } else {
     Sentry.init({
         dsn: window.KANMAIL_SENTRY_DSN,
