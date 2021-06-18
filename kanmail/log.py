@@ -2,6 +2,7 @@ import logging
 import sys
 
 from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 import click
 
@@ -60,7 +61,11 @@ def setup_logging(debug: bool, log_file: str) -> int:
     logger.addHandler(stderr_handler)
 
     # Setup the file handler
-    file_handler = logging.FileHandler(log_file)
+    file_handler = TimedRotatingFileHandler(
+        log_file,
+        when='D',
+        backupCount=7,
+    )
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
