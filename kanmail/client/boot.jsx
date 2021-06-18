@@ -54,7 +54,7 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_POSTHOG) {
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
     const rootElement = document.querySelector(selector);
     if (!rootElement) {
-        return;
+        throw new Error(`No root element found matching: ${selector}`);
     }
 
     document.body.removeChild(document.getElementById('no-app'));
