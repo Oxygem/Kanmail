@@ -4,6 +4,7 @@ from copy import deepcopy
 from functools import lru_cache
 from os import makedirs, path
 from typing import Optional, Union
+from uuid import uuid4
 
 from kanmail.log import logger, setup_logging
 
@@ -15,6 +16,7 @@ from .constants import (
     DEFAULT_WINDOW_LEFT,
     DEFAULT_WINDOW_TOP,
     DEFAULT_WINDOW_WIDTH,
+    DEVICE_ID_FILE,
     ICON_CACHE_DIR,
     LOG_FILE,
     SETTINGS_FILE,
@@ -33,6 +35,22 @@ for needed_dir in (APP_DIR, CACHE_DIR, ICON_CACHE_DIR):
 setup_logging(debug=DEBUG, log_file=LOG_FILE)
 
 logger.debug(f'App dir set to: {APP_DIR}')
+
+
+# Device ID - totally random unique identifier for this install of Kanmail, this
+# is used to send anonymous debug, error and usage information.
+#
+
+def get_device_id() -> str:
+    if path.exists(DEVICE_ID_FILE):
+        with open(DEVICE_ID_FILE, 'r') as f:
+            return f.read()
+
+    random_device_id = str(uuid4())
+    with open(DEVICE_ID_FILE, 'w') as f:
+        f.write(random_device_id)
+
+    return random_device_id
 
 
 # "App"/user settings

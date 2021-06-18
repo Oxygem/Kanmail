@@ -17,6 +17,7 @@ from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.contacts import get_contact_dicts
 from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
+from kanmail.settings import get_device_id
 from kanmail.settings.constants import (
     CLIENT_ROOT,
     DEBUG,
@@ -69,6 +70,7 @@ def _get_render_data():
         'platform': PLATFORM,
         'session_token': SESSION_TOKEN,
         'website_url': WEBSITE_URL,
+        'device_id': get_device_id(),
         'sentry_dsn': get_hidden_value('SENTRY_DSN'),
     }
 

@@ -33,6 +33,7 @@ if (window.KANMAIL_DEBUG) {
             return event;
         },
     });
+    Sentry.setUser({id: window.KANMAIL_DEVICE_ID});
 }
 
 const bootApp = (Component, selector, getPropsFromElement=() => {}) => {

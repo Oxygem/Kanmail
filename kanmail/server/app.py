@@ -13,6 +13,7 @@ from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
 from kanmail.log import logger
+from kanmail.settings import get_device_id
 from kanmail.settings.constants import (
     APP_NAME,
     CLIENT_ROOT,
@@ -53,6 +54,8 @@ else:
         dsn=get_hidden_value('SENTRY_DSN'),
         integrations=[FlaskIntegration()],
     )
+    # Random identifier for this Kanmail install (no PII)
+    sentry_sdk.set_user({'id': get_device_id()})
 
 app = Flask(
     APP_NAME,

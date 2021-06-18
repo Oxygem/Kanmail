@@ -35,6 +35,9 @@ FOLDER_CACHE_DB_FILE = path.join(CACHE_DIR, 'folders.db')
 # Window settings/position cache filename
 WINDOW_CACHE_FILE = path.join(CACHE_DIR, 'window_position.json')
 
+# Device ID filename
+DEVICE_ID_FILE = path.join(APP_DIR, '.device_id')
+
 # Settings JSON filename
 SETTINGS_FILE = path.join(APP_DIR, 'settings.json')
 
