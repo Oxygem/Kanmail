@@ -21,6 +21,7 @@ from kanmail.settings import get_device_id
 from kanmail.settings.constants import (
     CLIENT_ROOT,
     DEBUG,
+    DEBUG_POSTHOG,
     DEBUG_SENTRY,
     FRAMELESS,
     FROZEN,
@@ -66,6 +67,7 @@ def _get_render_data():
         'license_email': check_get_license_email(),
         'debug': DEBUG,
         'debug_sentry': DEBUG_SENTRY,
+        'debug_posthog': DEBUG_POSTHOG,
         'frameless': FRAMELESS,
         'frozen': FROZEN,
         'is_app': IS_APP,
@@ -74,6 +76,7 @@ def _get_render_data():
         'website_url': WEBSITE_URL,
         'device_id': get_device_id(),
         'sentry_dsn': get_hidden_value('SENTRY_DSN'),
+        'posthog_api_key': get_hidden_value('POSTHOG_API_KEY'),
     }
 
 
