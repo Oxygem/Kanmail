@@ -8,6 +8,12 @@ import requestStore from 'stores/request.js';
 let currentCriticalRequestNonce = 0;
 
 
+export function newCriticalRequestNonce() {
+    currentCriticalRequestNonce += 1;
+    return currentCriticalRequestNonce;
+}
+
+
 function handleReponse(response, method, options) {
     const criticalRequestNonce = options.criticalRequestNonce;
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
@@ -61,9 +67,8 @@ function handleReponse(response, method, options) {
 function get_or_delete(method, url, query={}, options={}) {
     const uri = URI(url);
 
-    if (options.isCriticalRequest) {
-        currentCriticalRequestNonce += 1;
-        options.criticalRequestNonce = currentCriticalRequestNonce;
+    if (options.criticalRequestNonce) {
+        options.criticalRequestNonce = options.criticalRequestNonce;
     }
 
     return (
@@ -85,9 +90,8 @@ export const delete_ = _.partial(get_or_delete, 'DELETE');
 function post_or_put(method, url, data, options={}) {
     const uri = URI(url);
 
-    if (options.isCriticalRequest) {
-        currentCriticalRequestNonce += 1;
-        options.criticalRequestNonce = currentCriticalRequestNonce;
+    if (options.criticalRequestNonce) {
+        options.criticalRequestNonce = options.criticalRequestNonce;
     }
 
     return (

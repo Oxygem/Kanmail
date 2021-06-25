@@ -9,6 +9,7 @@ import {
     getNextColumnThreadComponent,
     getPreviousColumnThreadComponent,
 } from 'util/threads.js';
+import { newCriticalRequestNonce } from 'util/requests.js';
 
 
 function makeDefaults() {
@@ -143,6 +144,8 @@ class ThreadStore extends BaseStore {
         const requests = [];
         const emailParts = {};
 
+        const criticalRequestNonce = newCriticalRequestNonce();
+
         _.each(folderUidParts, (uidParts, folderName) => {
             const accountName = uidParts[0].message.account_name;
             const uidList = [];
@@ -157,7 +160,7 @@ class ThreadStore extends BaseStore {
                 `Get email text from ${accountName}/${folderName}`,
                 `/api/emails/${accountName}/${folderName}/text`,
                 {uid: uidList},
-                {isCriticalRequest: true},
+                {criticalRequestNonce: criticalRequestNonce},
             ).then(data => {
                 _.each(data.emails, (email, uid) => emailParts[uid] = email);
             });
