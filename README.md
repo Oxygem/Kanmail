@@ -127,7 +127,7 @@ Should use the oldest SDK possible. Kanmail will be compatible with the SDK vers
 ```sh
 export BUILD_ENV_PREFIX=/opt/osx10.10-env
 
-export PATH="$BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin:$BUILD_ENV_PREFIX/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
+export PATH="$BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/Current/bin:$BUILD_ENV_PREFIX/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin"
 
 export MACOSXSDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk
 
@@ -142,7 +142,7 @@ export CPPFLAGS="-I$MACOSXSDK/usr/include -I$BUILD_ENV_PREFIX/include -I$BUILD_E
 
 ##### OpenSSL
 
-Download & untar `openssl-1.0.2u`.
+Download & untar `openssl-1.0.2u`. **On an amd64 Mac:** prefix these commands with `arch -x86_64`.
 
 ```sh
 ./Configure --prefix=$BUILD_ENV_PREFIX \
@@ -157,7 +157,7 @@ make install
 
 ##### Python
 
-Download & untar `Python-3.7.6`.
+Download & untar Python. **On an amd64 Mac:** prefix these commands with `arch -x86_64`.
 
 ```sh
 ./configure --prefix=$BUILD_ENV_PREFIX/ \
@@ -169,7 +169,7 @@ make
 make install PYTHONAPPSDIR=$BUILD_ENV_PREFIX/Applications
 
 # Tidy up
-cd $BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/3.7/bin
+cd $BUILD_ENV_PREFIX/Frameworks/Python.framework/Versions/Current/bin
 ln -s python3 python
 ln -s pip3 pip
 ```
