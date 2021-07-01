@@ -1,3 +1,101 @@
+# v1.2107011421
+
+Big release, top highlight is Google OAuth integration enabling "sign in with Google".
+
+Changes:
+- Fix email header response parsing for Zoho mail.
+- Use one `criticalRequestNonce` per thread load.
+- Fixup build instructions for M1 Macs.
+- Pass Posthog settings to base template.
+- Reoder window settings.
+- Throw a proper error if no root element is found.
+- Add Posthog JS to capture app load events & settings.
+- Add debug sentry flag.
+- Add random device IDs to add to Sentry/Posthog events.
+- Use a `TimedRotatingFileHandler` instead of `FileHandler`.
+- Fix missing response on OAuth delete response API.
+- Update MacOS compiled pip requirements.
+- Remove `object-hash` JS requirement.
+- Use an incremental critical request nonce to fix weirdness.
+- Re-ehlo before attempting to re-auth when refreshing OAuth token for SMTP.
+- Fix missing favicon in builds.
+- Delete OAuth responses only after they're handled.
+- Rework session token route wrapper.
+- Use warning log for view network exceptions.
+- Don't send sentry JS errors for network errors.
+- Cleanup request error handling.
+- Bump defusedxml to v0.7.0.
+- Fix license error response message key.
+- Make new account flow always same width.
+- Hide any previous account error when we connect.
+- Fix connected text on welcome settings.
+- Improve license error message.
+- Cleanup license content before parsing.
+- Don't log refresh tokens.
+- Capture OAuth errors and refresh the access token.
+- Fix missing sentry sdk MacOS requirement.
+- Implement bundling of "hidden" data when building.
+- Update text when failing to connect to OAuth accounts.
+- Move settings errors into dedicated message element.
+- Hide username & password when editing OAuth accounts.
+- Use hint to fix connected/not connected text in account settings.
+- Provide hint on whether an account is connected in settings UI.
+- Properly abort when checking for duplicate account names.
+- Hide password field when editing OAuth email accounts.
+- Add setting migration for removal of `copy_on_move`.
+- Only hide archive when showing other tags a thread has.
+- Highlight trashed messages in thread view.
+- Get Google OAuth settings from hidden data.
+- Fix SMTP oauth2 authentication string/process.
+- Don't assume oauth responses contain a (new) refresh token.
+- Limit the max width of the new account form.
+- Use "sign in with Google" language.
+- Add cancel button when waiting for oAuth consent.
+- Remove Google app password information.
+- Add oauth settings for gmail.
+- Implement OAuth based authentication for IMAP/SMTP connections.
+- Add OAuth handlers, API and support to accounts/settings APIs.
+- Don't add password setting during autoconfiguration.
+- Implement OAuth new account form in settings app.
+- Tidy up tag listing in email column threads.
+- Use `json.load` > `json.loads`.
+- ADd Sentry to the frontend.
+- Add Sentry to the backend server.
+- Add "hidden" data at build time.
+- Sync sidebar folders by default.
+- Move all regular interval email syncs to the main component.
+- Render other folders as labels in threads.
+- Remove complicated "copy on move" feature.
+- Fix sidebar header buttons when frameless.
+- Add tooltips w/keyboard shortcuts to header search/compose buttons.
+- Add c keyboard shortcut to open a new compose window.
+- Rework keyboard shortcut handling to work with combinations.
+- Add s keyboard shortcut to star/unstar threads.
+- Change the search keyboard shortcut from s -> /.
+- Add move button to threads, remove explicit copy shortcut.
+- Use self closing tags for icons.
+- Correct unstar button tooltip text.
+- Make it possible to hide the main column.
+- Enable save sent copies setting by default unless gmail.
+- Add delete on trash setting.
+- Move pyinstaller/pyupdater into base requirements.
+- Prevent paths being passed as download filenames.
+- Add delete emails server API.
+- Filter threads in the trash column to only show trashed messages.
+- Add email store `deleteEmails` function.
+- Show a star on starred threads (not just hover!).
+- Add tooltips to the thread buttons.
+- Add permanent delete button to threads in the trash folder.
+- Reimplement the tooltip in JavaScript.
+- Only trigger stale labels on unassigned bugs.
+- Upgrade pyinstaller & flake8 dev requirements.
+- Upgrade pyobjc to 7.2.
+- Upgrade to Python 3.9.
+- Use node 16.
+- Upgrade yarn packages.
+- Fix webpack argument order.
+- Remove no longer needed MacOS build fixes.
+
 # v1.2104091748
 
 Big release containing many bug fixes and performance improvements. Major feature
