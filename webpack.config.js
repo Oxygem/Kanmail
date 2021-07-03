@@ -69,7 +69,16 @@ module.exports = {
         ],
     },
     optimization: {
-        minimizer: [new TerserJSPlugin({}), new OptimizeCSSAssetsPlugin({})],
+        minimizer: [
+            new TerserJSPlugin({
+                terserOptions: {
+                    mangle: false,
+                    keep_classnames: true,
+                    keep_fnames: true,
+                },
+            }),
+            new OptimizeCSSAssetsPlugin({}),
+        ],
         splitChunks: {
             cacheGroups: {
                 shared: {
