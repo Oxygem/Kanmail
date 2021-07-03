@@ -187,6 +187,12 @@ class Folder(object):
         uids_to_get = []
         uid_to_cached_headers = self.cache.batch_get_headers(email_uids)
 
+        # When an account display name is changed, the underlying headers do not
+        # as they are cached by account user/host names. So simply overwrite the
+        # account_name value.
+        for cached_header in uid_to_cached_headers.values():
+            cached_header['account_name'] = self.account.name
+
         for uid in email_uids:
             cached_headers = uid_to_cached_headers.get(uid)
             if cached_headers:
