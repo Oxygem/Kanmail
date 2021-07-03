@@ -68,7 +68,7 @@ def prepare_release():
 def build_release(release=False, docker=False, build_version=None, onedir=None):
     system_type = 'Docker' if docker else platform.system()
 
-    if system_type != 'Docker':
+    if release and system_type != 'Docker':
         print_and_run(('pip-sync', REQUIREMENTS_FILENAME))
 
     if release and system_type == 'Darwin':
