@@ -1,3 +1,16 @@
+# v1.2107031449
+
+Changes:
+- Bump pyupdater to v4.
+- Update Windows requirements.
+- Only run `pip-sync` during release builds.
+- Don't mangle names when compiling JavaScript.
+- Fix path fields in pyupdater spec template.
+- Fix bug where changing account name breaks cached headers.
+- Fix handling of different return IMAP keys.
+- Fix logo on meta window.
+- Downgrade to python3.8.
+
 # v1.2107011421
 
 Big release, top highlight is Google OAuth integration enabling "sign in with Google".
