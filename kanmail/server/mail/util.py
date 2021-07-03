@@ -52,12 +52,10 @@ def make_contact_tuples(addresses):
 def make_email_headers(account, folder, uid, data, parts):
     # Parse references header into list of reference message IDs
     headers = extract_headers(
-        data.get(
-            b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]',
-            # Zoho mail's IMAP implementation returns the fields wrapped in double quotes
-            # TODO: investigate normalising all return keys
-            data[b'BODY[HEADER.FIELDS ("REFERENCES" "CONTENT-TRANSFER-ENCODING")]']
-        ),
+        data.get(b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]')
+        # Zoho mail's IMAP implementation returns the fields wrapped in double quotes
+        # TODO: investigate normalising all return keys
+        or data[b'BODY[HEADER.FIELDS ("REFERENCES" "CONTENT-TRANSFER-ENCODING")]'],
     )
 
     references = headers.get('References')
