@@ -252,8 +252,6 @@ class OauthAccountFormMixin extends GenericAccountForm {
                 return;
             }
 
-            // Cleanup the OAuth response in the backend
-            delete_(`/api/oauth/response/${this.state.oauthRequestId}`);
             clearInterval(this.oauthRequestCheck);
 
             const data = {
@@ -265,6 +263,9 @@ class OauthAccountFormMixin extends GenericAccountForm {
             };
 
             const handleSettings = (data) => {
+                // Cleanup the OAuth response in the backend
+                delete_(`/api/oauth/response/${this.state.oauthRequestId}`);
+
                 if (data.connected) {
                     this.setState({
                         newAccountAddressEmail: oauthData.response.email,
