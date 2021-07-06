@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from flask import abort, jsonify, redirect, render_template, request
+from requests import RequestException
 
 from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.oauth import (
@@ -38,13 +39,25 @@ def handle_oauth_response():
     uid = request.args['uid']
     auth_code = request.args['code']
 
-    oauth_request = OAUTH_REQUESTS[uid]
+    oauth_request = OAUTH_REQUESTS.get(uid)
 
-    oauth_response = get_oauth_tokens_from_code(
-        oauth_request['provider'],
-        uid,
-        auth_code,
-    )
+    if not oauth_request:
+        return render_template(
+            'oauth_error.html',
+            error='OAuth request not found!',
+        ), 400
+
+    try:
+        oauth_response = get_oauth_tokens_from_code(
+            oauth_request['provider'],
+            uid,
+            auth_code,
+        )
+    except RequestException as e:
+        return render_template(
+            'oauth_error.html',
+            error=f'{e}',
+        )
 
     OAUTH_REQUESTS[uid]['response'] = oauth_response
     return redirect('/oauth-complete')
