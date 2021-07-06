@@ -1,6 +1,7 @@
 import traceback
 
 from flask import jsonify, make_response, Response
+from werkzeug.exceptions import HTTPException
 
 from kanmail.log import logger
 from kanmail.server.app import app
@@ -45,6 +46,9 @@ def error_network_exception(e) -> Response:
 
 @app.errorhandler(Exception)
 def error_unexpected_exception(e) -> Response:
+    if isinstance(e, HTTPException):
+        return e
+
     error_name = e.__class__.__name__
     message = f'{e}'
     trace = traceback.format_exc().strip()
