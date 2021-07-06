@@ -134,7 +134,7 @@ def remove_stale_headers():
     headers_to_delete = []
 
     for header in all_headers:
-        if header.uid not in folder_id_to_uids[header.folder_id]:
+        if header.uid not in folder_id_to_uids.get(header.folder_id, set()):
             logger.info(f'Deleting stale cache header: {header}')
             headers_to_delete.append(header)
 
