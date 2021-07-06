@@ -311,7 +311,7 @@ class Folder(object):
         self.log('debug', 'Fetching message IDs')
 
         with self.get_connection() as connection:
-            message_uids = connection.search(search_query)
+            message_uids = connection.search(search_query, charset='utf-8')
 
         self.log('debug', f'Fetched {len(message_uids)} message UIDs')
 
