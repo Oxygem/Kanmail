@@ -6,6 +6,7 @@ This StackOverflow question: https://stackoverflow.com/questions/46936646
 '''
 
 from kanmail.log import logger
+from kanmail.settings.constants import DEBUG
 
 
 def fix_missing_uids(expected_uid_count, uids):
@@ -56,9 +57,13 @@ def fix_email_uids(email_uids, emails):
             f'missing={missing_uids} ({email_uids} - {returned_uids})'
         ))
 
-        # If not the same length, something really went wrong
+        # If not the same length, we're probably missing some UIDs, this could
+        # be due to another IMAP client or server issue. We can't attempt any
+        # fix here, so return the partial response (unless debugging).
         if len(returned_uids) != len(email_uids):
-            raise error
+            if DEBUG:
+                raise error
+            return emails
 
         # Build map of returned UID -> correct UID
         corrected_uid_map = {}
