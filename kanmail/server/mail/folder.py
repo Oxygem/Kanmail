@@ -159,7 +159,8 @@ class Folder(object):
                 continue
 
             data = data[body_keyname]
-            data = decode_string(data, data_meta, as_str=False)
+            if data is not None:
+                data = decode_string(data, data_meta, as_str=False)
 
             emails[uid] = data
 
