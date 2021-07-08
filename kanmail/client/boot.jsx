@@ -51,7 +51,8 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_POSTHOG) {
     });
 }
 
-const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
+const bootApp = (Component, appName, getPropsFromElement=() => {}) => {
+    const selector = `div[data-${appName}-app]`;
     const rootElement = document.querySelector(selector);
     if (!rootElement) {
         throw new Error(`No root element found matching: ${selector}`);
@@ -79,6 +80,6 @@ const bootApp = (Component, selector, getPropsFromElement=() => {}) => {
         </Sentry.ErrorBoundary>, rootElement);
     });
 
-    posthog.capture('[launch app]', {selector: selector});
+    posthog.capture(`launch-app-${appName}`, {selector: selector});
 }
 export default bootApp;
