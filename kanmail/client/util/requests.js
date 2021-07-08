@@ -14,10 +14,16 @@ export function newCriticalRequestNonce() {
 }
 
 
+class RequestError extends Error {
+    name = 'RequestError';
+    isInternalError = true;
+}
+
+
 function handleReponse(response, method, options) {
     const criticalRequestNonce = options.criticalRequestNonce;
     if (criticalRequestNonce && criticalRequestNonce !== currentCriticalRequestNonce) {
-        const error = new Error(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}, url=${response.url})!`);
+        const error = new RequestError(`Blocked due to old critical request nonce (current=${currentCriticalRequestNonce}, response=${criticalRequestNonce}, url=${response.url})!`);
         error.isCriticalRequestNonceFailure = true;
         throw error;
     }
@@ -43,15 +49,16 @@ function handleReponse(response, method, options) {
                 data.jsonError = e;
             }
 
+            const error = new RequestError(`Error fetching: ${method} ${response.url}`);
+            error.data = data;
+
             if (response.status == 503) {
+                error.isNetworkResponseFailure = true;
                 requestStore.addNetworkError(data);
             } else if (!options.ignoreStatus || !_.includes(options.ignoreStatus, response.status)) {
                 requestStore.addRequestError(data);
             }
 
-            const error = new Error(`Error fetching: ${method} ${response.url}`);
-            error.data = data;
-            error.isNetworkResponseFailure = true;
             throw error;
         });
     }
@@ -61,6 +68,26 @@ function handleReponse(response, method, options) {
     }
 
     return response.json();
+}
+
+
+/*
+    Handle unexpected network request errors (timeout, etc)
+*/
+function handleError(url, error) {
+
+    if (error.isInternalError) {
+        throw error;
+    }
+
+    requestStore.addNetworkError({
+        url: url,
+        status: 'unknown',
+        errorName: 'unknown',
+        errorMessage: error.message,
+    });
+    error.isNetworkResponseFailure = true;
+    throw error;
 }
 
 
@@ -79,6 +106,7 @@ function get_or_delete(method, url, query={}, options={}) {
             }
         })
         .then(response => handleReponse(response, method, options))
+        .catch(error => handleError(url, error))
     );
 }
 
@@ -104,6 +132,7 @@ function post_or_put(method, url, data, options={}) {
             },
         })
         .then(response => handleReponse(response, method, options))
+        .catch(error => handleError(url, error))
     );
 }
 
