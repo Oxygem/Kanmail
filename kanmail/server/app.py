@@ -27,6 +27,7 @@ from kanmail.settings.constants import (
     SESSION_TOKEN,
 )
 from kanmail.settings.hidden import get_hidden_value
+from kanmail.version import get_version
 
 
 @event.listens_for(Engine, 'connect')
@@ -53,6 +54,7 @@ if DEBUG and not DEBUG_SENTRY:
 else:
     sentry_sdk.init(
         dsn=get_hidden_value('SENTRY_DSN'),
+        release=f'kanmail-app@{get_version()}',
         integrations=[FlaskIntegration()],
         # Don't send stack variables, potentially containing email data
         with_locals=False,

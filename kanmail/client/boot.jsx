@@ -25,6 +25,7 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
 } else {
     Sentry.init({
         dsn: window.KANMAIL_SENTRY_DSN,
+        release: `kanmail-app@${window.KANMAIL_VERSION}`,
         beforeSend(event, hint) {
             const error = hint.originalException;
             // Ignore "expected" network errors (logged serverside) and critical request nonce errors
