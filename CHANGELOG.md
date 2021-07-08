@@ -1,3 +1,17 @@
+# v1.2107081657
+
+Changes:
+- Cleanup request error handling.
+- Set release for Sentry.
+- Log which app was loaded to PostHog.
+- Capture/handle OAuth request errors properly.
+- Pass through `werkzeug.HTTPException` errors properly.
+- Ignore missing folder UID lists in cleanup.
+- Pass utf-8 charset when searching against the server.
+- Don't attempt to decode null data.
+- Don't raise error when server returns less than expected messages.
+- Don't delete oauth responses until tested.
+
 # v1.2107031449
 
 Changes:
