@@ -8,7 +8,7 @@ from kanmail.log import logger
 
 from .autoconf_settings import COMMON_ISPDB_DOMAINS
 
-ISPDB_URL = 'https://autoconfig.thunderbird.net/v1.1/'
+ISPDB_URL_FORMATTER = 'https://ispdb.kanmail.io/{domain}/v1.1/config.xml'
 
 
 def get_ispdb_confg(domain: str) -> [dict, dict]:
@@ -21,9 +21,10 @@ def get_ispdb_confg(domain: str) -> [dict, dict]:
 
     logger.debug(f'Looking up thunderbird autoconfig for {domain}')
 
-    response = requests.get(f'{ISPDB_URL}/{domain}')
+    ispdb_url = ISPDB_URL_FORMATTER.format(domain=domain)
+
     try:
-        response = requests.get(f'{ISPDB_URL}/{domain}')
+        response = requests.get(ispdb_url)
     except requests.RequestException as e:
         logger.warning(f'Failed to fetch ISPDB settings for domain: {domain}: {e}')
         return
