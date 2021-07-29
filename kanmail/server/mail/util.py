@@ -55,8 +55,12 @@ def make_email_headers(account, folder, uid, data, parts):
         data.get(b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]')
         # Zoho mail's IMAP implementation returns the fields wrapped in double quotes
         # TODO: investigate normalising all return keys
-        or data[b'BODY[HEADER.FIELDS ("REFERENCES" "CONTENT-TRANSFER-ENCODING")]'],
+        or data.get(b'BODY[HEADER.FIELDS ("REFERENCES" "CONTENT-TRANSFER-ENCODING")]'),
     )
+
+    # TODO: actuall fix this - need to identify which email providers this affects
+    if headers is None:
+        raise KeyError(f'No headers found, got keys: {data.keys()}')
 
     references = headers.get('References')
     if references:
