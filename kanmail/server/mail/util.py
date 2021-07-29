@@ -148,7 +148,7 @@ def decode_header(subject):
 
     for output, encoding in email.header.decode_header(subject):
         if encoding:
-            output = output.decode(encoding)
+            output = output.decode(encoding, 'replace')
         elif isinstance(output, bytes):
             output = decode_string(output)
 
