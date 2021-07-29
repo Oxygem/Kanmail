@@ -382,6 +382,17 @@ const getInitialState = () => ({
     newAccountSettings: null,
 });
 
+const getEmptyAccountSettings = () => ({
+    'imap_connection': {
+        'ssl': true,
+        'ssl_verify_hostname': true,
+    },
+    'smtp_connection': {
+        'ssl': true,
+        'ssl_verify_hostname': true,
+    },
+});
+
 
 export default class NewAccountForm extends React.Component {
     static propTypes = {
@@ -400,10 +411,14 @@ export default class NewAccountForm extends React.Component {
     }
 
     handleAddAccountError = (data) => {
+        let newAccountSettings = getEmptyAccountSettings();
+        if (data.json.settings) {
+            newAccountSettings = _.merge(newAccountSettings, data.json.settings);
+        }
         this.setState({
             isLoadingNewAccount: false,
             manuallyConfiguringAccount: true,
-            newAccountSettings: data.json.settings,
+            newAccountSettings,
             newAccountError: data.errorMessage,
             newAccountErrorType: data.errorName,
         });
@@ -413,16 +428,7 @@ export default class NewAccountForm extends React.Component {
         this.setState({
             isLoadingNewAccount: false,
             manuallyConfiguringAccount: true,
-            newAccountSettings: {
-                'imap_connection': {
-                    'ssl': true,
-                    'ssl_verify_hostname': true,
-                },
-                'smtp_connection': {
-                    'ssl': true,
-                    'ssl_verify_hostname': true,
-                },
-            },
+            newAccountSettings: getEmptyAccountSettings(),
         });
     }
 
