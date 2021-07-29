@@ -20,6 +20,8 @@ def codesign(app_dir):
 
 
 def wait_for_notarization(notarize_request_id):
+    sleep(15)
+
     while True:
         notarize_status = print_and_check_output((
             'xcrun',
