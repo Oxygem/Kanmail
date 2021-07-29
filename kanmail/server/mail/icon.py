@@ -6,6 +6,7 @@ from os import path
 
 import requests
 
+from kanmail.log import logger
 from kanmail.settings.constants import ICON_CACHE_DIR
 
 # This is a transparent 1x1px gif
@@ -45,11 +46,15 @@ def get_icon_for_email(email):
         if isinstance(url, tuple):
             url, params = url
 
-        response = requests.get(url, params=params)
-        if response.status_code == 200:
-            data, mimetype = response.content, response.headers.get('Content-Type')
-            with open(cached_icon_filename, 'w') as f:
-                json.dump([b64encode(data).decode(), mimetype], f)
-            return data, mimetype
+        try:
+            response = requests.get(url, params=params)
+        except requests.RequestException as e:
+            logger.warning(f'Could not fetch icon: {e}')
+        else:
+            if response.status_code == 200:
+                data, mimetype = response.content, response.headers.get('Content-Type')
+                with open(cached_icon_filename, 'w') as f:
+                    json.dump([b64encode(data).decode(), mimetype], f)
+                return data, mimetype
 
     return DEFAULT_ICON_DATA, DEFAULT_ICON_MIMETYPE
