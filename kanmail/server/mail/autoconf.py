@@ -22,6 +22,12 @@ def get_ispdb_confg(domain: str) -> [dict, dict]:
     logger.debug(f'Looking up thunderbird autoconfig for {domain}')
 
     response = requests.get(f'{ISPDB_URL}/{domain}')
+    try:
+        response = requests.get(f'{ISPDB_URL}/{domain}')
+    except requests.RequestException as e:
+        logger.warning(f'Failed to fetch ISPDB settings for domain: {domain}: {e}')
+        return
+
     if response.status_code == 200:
         imap_settings = {}
         smtp_settings = {}
