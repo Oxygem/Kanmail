@@ -19,7 +19,7 @@ from .settings import (
     VERSION_DATA_FILENAME,
 )
 from .util import (
-    # create_github_release,
+    create_github_release,
     create_new_changelog,
     generate_spec,
     generate_version,
@@ -192,7 +192,7 @@ def complete_release():
     print_and_run(('git', 'push'))
     print_and_run(('git', 'push', '--tags'))
 
-    # create_github_release(release_version)
+    create_github_release(release_version)
 
     # Finally, remove the release version lock
     remove(TEMP_VERSION_LOCK_FILENAME)

@@ -13,6 +13,7 @@ NEW_BUILDS_DIRNAME = path.join(ROOT_DIRNAME, 'pyu-data', 'new')
 
 TEMP_VERSION_LOCK_FILENAME = path.join(DIST_DIRNAME, '.release_version_lock')
 TEMP_SPEC_FILENAME = path.join(DIST_DIRNAME, '.spec')
+TEMP_CHANGELOG_NAME = path.join(DIST_DIRNAME, '.changelog')
 
 VERSION_DATA_FILENAME = path.join(DIST_DIRNAME, 'version.json')
 HIDDEN_DATA_FILENAME = path.join(DIST_DIRNAME, 'hidden.json')

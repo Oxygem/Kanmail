@@ -7,7 +7,7 @@ from subprocess import check_output, run
 
 import click
 import pyupdater
-# import requests
+import requests
 import tld
 
 from jinja2 import Template
@@ -15,11 +15,12 @@ from jinja2 import Template
 from kanmail.settings.hidden import generate_hidden_data
 
 from .settings import (
-    # GITHUB_API_TOKEN,
+    GITHUB_API_TOKEN,
     HIDDEN_DATA_FILENAME,
     MAJOR_VERSION,
     MAKE_DIRNAME,
     ROOT_DIRNAME,
+    TEMP_CHANGELOG_NAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
     VERSION_DATA_FILENAME,
@@ -121,6 +122,9 @@ def create_new_changelog(version, git_changes):
     if not new_changelog:
         raise click.BadParameter('Invalid changelog!')
 
+    with open(TEMP_CHANGELOG_NAME, 'w') as f:
+        f.write(new_changelog)
+
     with open('CHANGELOG.md', 'r') as f:
         current_changelog = f.read()
 
@@ -129,25 +133,27 @@ def create_new_changelog(version, git_changes):
         f.write(changelog)
 
 
-# def create_github_release(version):
-#     # Swap out the title line in the changelog for a link to the downloads page (tag title is
-#     # already shown in github UI).
-#     changelog = get_new_changelog()
-#     changelog_lines = changelog.splitlines()
-#     changelog_lines[0] = '[**Download the latest Kanmail here**](https://kanmail.io/download).'
-#     changelog = '\n'.join(changelog)
+def create_github_release(version):
+    # Swap out the title line in the changelog for a link to the downloads page (tag title is
+    # already shown in github UI).
+    with open(TEMP_CHANGELOG_NAME, 'r') as f:
+        changelog = f.read()
 
-#     response = requests.post(
-#         'https://api.github.com/repos/fizzadar/Kanmail/releases',
-#         json={
-#             'tag_name': f'v{version}',
-#             'body': changelog,
-#         },
-#         headers={
-#             'Authorization': f'token {GITHUB_API_TOKEN}',
-#         },
-#     )
-#     response.raise_for_status()
+    changelog_lines = changelog.splitlines()
+    changelog_lines[0] = '[**Download the latest Kanmail here**](https://kanmail.io/download).'
+    changelog = '\n'.join(changelog)
+
+    response = requests.post(
+        'https://api.github.com/repos/fizzadar/Kanmail/releases',
+        json={
+            'tag_name': f'v{version}',
+            'body': changelog,
+        },
+        headers={
+            'Authorization': f'token {GITHUB_API_TOKEN}',
+        },
+    )
+    response.raise_for_status()
 
 
 def get_release_version():
