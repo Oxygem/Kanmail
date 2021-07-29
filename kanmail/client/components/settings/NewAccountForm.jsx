@@ -77,7 +77,9 @@ class GenericAccountForm extends React.Component {
 
             if (data.json.did_autoconf) {
                 this.setState({
-                    newAccountError: 'Invalid email or password!',
+                    newAccountError: (
+                        <span>Invalid email or password! You may need to enable IMAP access with your provider. See <a onClick={() => openLink('https://kanmail.io/docs/email-providers')}><strong>our help page for more information</strong></a>. Provider error:<br /><code>{data.json.error_message}</code></span>
+                    ),
                     isLoadingNewAccount: false,
                 });
                 return;
