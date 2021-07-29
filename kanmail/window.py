@@ -148,7 +148,7 @@ def init_window_hacks() -> None:
         # in the sidebar header.
 
         # Normally set by webview.start but importing cocoa before breaks that
-        cocoa._debug = DEBUG
+        cocoa._debug = {'mode': DEBUG}
 
         class CustomBrowserView(cocoa.BrowserView):
             def first_show(self, *args, **kwargs):
