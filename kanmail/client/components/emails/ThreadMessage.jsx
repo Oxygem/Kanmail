@@ -6,6 +6,7 @@ import { openLink } from 'window.js';
 
 import Avatar from 'components/Avatar.jsx';
 import ThreadMessageAttachment from 'components/emails/ThreadMessageAttachment.jsx';
+import threadStore from 'stores/thread.js';
 
 import { ensureInView } from 'util/element.js';
 import { cleanHtml } from 'util/html.js';
@@ -363,6 +364,15 @@ export default class ThreadMessage extends React.Component {
             folder_name,
             uid,
         } = this.props.message;
+
+        if (body.error) {
+            return <div>
+                Error fetching message content: {body.error}.&nbsp;
+                <a onClick={() => threadStore.reloadThread()}>
+                    Click here to reload the thread
+                </a>.
+            </div>;
+        }
 
         let html = body.html || body.text;
         if (this.state.showPlainText) {

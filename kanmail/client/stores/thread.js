@@ -206,6 +206,10 @@ class ThreadStore extends BaseStore {
         });
     }
 
+    reloadThread() {
+        this.loadThread(this.props.thread);
+    }
+
     close(triggerUpdate=true) {
         if (!this.isOpen) {
             return;

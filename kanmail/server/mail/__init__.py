@@ -164,9 +164,14 @@ def get_folder_email_texts(account_key, folder_name, uids):
     uid_to_html_part_number = {}
 
     uid_to_headers = folder.get_email_headers(uids)
+    uid_to_error = {}
 
     for uid in uids:
-        headers = uid_to_headers[uid]
+        headers = uid_to_headers.get(uid)
+
+        if not headers:
+            uid_to_error[uid] = 'Missing headers'
+            continue
 
         uid_to_allow_images[uid] = all(
             is_email_allowed_images(email)
@@ -192,6 +197,8 @@ def get_folder_email_texts(account_key, folder_name, uids):
             if text:
                 uid_parts.append((uid, text))
                 uid_to_text_part_number[uid] = text
+        else:
+            uid_to_error[uid] = 'No text or HTML content'
 
     uid_part_data = _get_folder_email_parts(account_key, folder_name, uid_parts)
 
@@ -213,6 +220,12 @@ def get_folder_email_texts(account_key, folder_name, uids):
             'text': text_data,
             'html': html_data,
         }
+
+    for uid, error in uid_to_error.items():
+        uid_part_data_with_cids[uid] = {
+            'error': error,
+        }
+
     return uid_part_data_with_cids
 
 
