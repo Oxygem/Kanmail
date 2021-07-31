@@ -128,6 +128,7 @@ export default class Filters extends React.Component {
         folders: PropTypes.array.isRequired,
         accountName: PropTypes.string,
         updateVersion: PropTypes.string,
+        updateError: PropTypes.string,
     }
 
     constructor(props) {
@@ -241,6 +242,16 @@ export default class Filters extends React.Component {
     }
 
     renderUpdateLink() {
+        if (this.props.updateError) {
+            return (
+                <li><a onClick={() => openLink('https://kanmail.io/download')}>
+                    <span className="update error">
+                        Error downloading update: <code>{this.props.updateError}</code>.<br />Please re-download the latest version from the Kanmail website.
+                    </span>
+                </a></li>
+            );
+        }
+
         if (!this.props.updateVersion) {
             return;
         }

@@ -17,6 +17,7 @@ class UpdateStore extends BaseStore {
             updateVersion: null,
             updateReady: false,
             updateDownloading: false,
+            updateError: null,
         };
     }
 
@@ -36,6 +37,10 @@ class UpdateStore extends BaseStore {
         // Just do the post - it'll nuke the window!
         return post('/api/update').then(() => {
             this.props.updateReady = true;
+            this.triggerUpdate();
+        }).catch((e) => {
+            this.props.updateDownloading = false;
+            this.props.updateError = e.data ? e.data.errorMessage : 'unknown';
             this.triggerUpdate();
         });
     }
