@@ -1,3 +1,20 @@
+# v1.2107311301
+
+Changes:
+- Return & display error information when fetching email texts.
+- Handle update errors in the UI.
+- Fix handling account UI when failing to auto setup a new acccount.
+- Improve error when we autoconf but login still fails.
+- Add temporary handling of missing header errors.
+- Switch to the GitHub hosted ISPDB.
+- Capture & log request errors contacting the ISPDB.
+- Restore auto creation of GitHub releases.
+- Fix pywebview debug in window hacks.
+- Wait before starting to check for notarization status.
+- Replace invalid header characters when decoding.
+- Catch and log request errors fetching contact icons.
+- Add `pywin32` Windows requirement.
+
 # v1.2107081657
 
 Changes:
