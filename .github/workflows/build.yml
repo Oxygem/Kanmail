@@ -41,6 +41,9 @@ jobs:
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
 
+      - name: Copy in fake config file
+        run: cp make/github-config.pyu .pyupdater/config.pyu
+
       - name: Build
         run: python -m make
         env:
