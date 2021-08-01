@@ -11,7 +11,7 @@ jobs:
       matrix:
         include:
           - name: Windows
-            runs-on: windows-2019
+            runs-on: windows-2016
             requirements-file: windows.txt
 
     name: Build ${{ matrix.name }}
