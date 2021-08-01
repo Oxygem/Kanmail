@@ -6,9 +6,16 @@ on:
       - windows-github-builds
 
 jobs:
-  build-windows:
-    name: Windows Build
-    runs-on: windows-2019
+  build:
+    strategy:
+      matrix:
+        include:
+          - name: Windows
+            runs-on: windows-2019
+            requirements-file: windows.txt
+
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
 
     steps:
       - name: Checkout
@@ -36,7 +43,7 @@ jobs:
         run: pip install pip-tools
 
       - name: Sync pip packages
-        run: pip-sync requirements/windows.txt
+        run: pip-sync requirements/${{ matrix.requirements-file }}
 
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
