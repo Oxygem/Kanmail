@@ -46,12 +46,15 @@ a = Analysis(  # noqa: F821
 # and reduces the Linux build size significantly.
 
 def _should_include_binary(binary_tuple):
-    path, _, type_ = binary_tuple
-    if not path.startswith('lib') or path.startswith('lib/'):
+    dest = binary_tuple[0]
+    if dest.startswith('lib-dynload'):
         return True
 
-    lib_name, _ = path.split('.', 1)
-    if lib_name in ('libpython3', 'libcrypto', 'libffi', 'libssl', 'libbz2'):
+    src = binary_tuple[1]
+    if fnmatch.fnmatch(src, '*python*'):
+        return True
+
+   if not src.startswith('/lib') and not src.startswith('/usr/lib'):
         return True
 
     return False
