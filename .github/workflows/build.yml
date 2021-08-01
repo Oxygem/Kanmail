@@ -1,0 +1,42 @@
+name: "Build Kanmail"
+
+on:
+  push:
+    branches:
+      - windows-github-builds
+
+jobs:
+  build-windows:
+    name: Windows Build
+    runs-on: windows-2019
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # JavaScript client build
+      - name: Install yarn
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.1.0
+
+      - name: Install yarn packages
+        run: yarn install --frozen-lockfile
+
+      - name: Build JS bundle
+        run: yarn build
+
+      # Python app build
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8.10
+
+      - name: Install pip-tools
+        run: pip install pip-tools
+
+      - name: Sync pip packages
+        run: pip-sync requirements/windows.txt
+
+      - name: Build
+        run: python -m make
