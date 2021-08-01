@@ -54,7 +54,7 @@ def _should_include_binary(binary_tuple):
     if fnmatch.fnmatch(src, '*python*'):
         return True
 
-   if not src.startswith('/lib') and not src.startswith('/usr/lib'):
+    if not src.startswith('/lib') and not src.startswith('/usr/lib'):
         return True
 
     return False
