@@ -30,6 +30,10 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: "10.14"
 
     steps:
+      - name: Install apt packages
+        if: ${{ matrix.name == 'Linux' }}
+        run: sudo apt update && sudo apt install libcairo2-dev libgirepository1.0-dev libgtk-3-dev libwebkit2gtk-4.0-37 gir1.2-webkit2-4.0
+
       - name: Checkout
         uses: actions/checkout@v2
 
