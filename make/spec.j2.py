@@ -46,6 +46,8 @@ a = Analysis(  # noqa: F821
 # and reduces the Linux build size significantly.
 
 def _should_include_binary(binary_tuple):
+    import fnmatch
+
     dest = binary_tuple[0]
     if dest.startswith('lib-dynload'):
         return True
@@ -57,6 +59,7 @@ def _should_include_binary(binary_tuple):
     if not src.startswith('/lib') and not src.startswith('/usr/lib'):
         return True
 
+    print('Skip bundling library: {0} -> {1}'.format(src, dest))
     return False
 
 a.binaries = list(filter(_should_include_binary, a.binaries))
