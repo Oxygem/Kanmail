@@ -15,7 +15,7 @@ if __name__ == '__main__':
             click.echo(f'Removing {filename}')
             unlink(filename)
 
-    print_and_run('rm -rf dist/* build/* pyu-data/new/*', shell=True)
+    print_and_run('rm -rf dist/* dist/.changelog build/* pyu-data/new/*', shell=True)
     print_and_run(('git', 'checkout', '--', 'CHANGELOG.md'))
 
     click.echo('Cleaning complete!')
