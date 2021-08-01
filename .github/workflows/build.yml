@@ -26,6 +26,9 @@ jobs:
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.runs-on }}
 
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.14"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
