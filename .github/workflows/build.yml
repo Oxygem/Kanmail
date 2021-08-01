@@ -15,6 +15,10 @@ jobs:
             runs-on: windows-2016
             requirements-file: windows.txt
 
+          - name: macOS
+            runs-on: macos-10.15
+            requirements-file: macos.txt
+
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.runs-on }}
 
