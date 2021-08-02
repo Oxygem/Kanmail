@@ -35,11 +35,11 @@ jobs:
         run: sudo apt update && sudo apt install libcairo2-dev libgirepository1.0-dev libgtk-3-dev libwebkit2gtk-4.0-37 gir1.2-webkit2-4.0
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f  # v2.3.4
 
       # JavaScript client build
       - name: Install yarn
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@aa759c6c94d3800c55b8601f21ba4b2371704cb7  # 2.3.0
         with:
           node-version: 16.1.0
 
@@ -51,7 +51,7 @@ jobs:
 
       # Python app build
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6  # v2.2.2
         with:
           python-version: 3.8.10
 
