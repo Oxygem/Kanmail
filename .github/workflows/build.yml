@@ -62,11 +62,8 @@ jobs:
           curl https://www.python.org/ftp/python/3.8.10/python-3.8.10-macosx10.9.pkg -o "python.pkg"
           sudo installer -pkg python.pkg -target /
 
-      - name: Install pip-tools
-        run: pip3 install pip-tools
-
       - name: Sync pip packages
-        run: pip-sync requirements/${{ matrix.requirements-file }}
+        run: pip3 install -r requirements/${{ matrix.requirements-file }}
 
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
