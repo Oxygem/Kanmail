@@ -62,7 +62,7 @@ jobs:
           curl https://www.python.org/ftp/python/3.8.10/python-3.8.10-macosx10.9.pkg -o "python.pkg"
           sudo installer -pkg python.pkg -target /
 
-      - name: Sync pip packages
+      - name: Install pip packages
         run: pip3 install -r requirements/${{ matrix.requirements-file }}
 
       - name: Make empty .pyupdater directory
@@ -72,7 +72,9 @@ jobs:
         run: cp make/github-config.pyu .pyupdater/config.pyu
 
       - name: Build
-        run: python3 -m make
+        run: |
+          export PATH="/Library/Frameworks/Python.framework/Versions/3.8/bin/:$PATH"
+          python3 -m make
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
