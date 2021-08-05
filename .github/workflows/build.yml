@@ -63,7 +63,7 @@ jobs:
           sudo installer -pkg python.pkg -target /
 
       - name: Install pip-tools
-        run: pip install pip-tools
+        run: pip3 install pip-tools
 
       - name: Sync pip packages
         run: pip-sync requirements/${{ matrix.requirements-file }}
@@ -75,7 +75,7 @@ jobs:
         run: cp make/github-config.pyu .pyupdater/config.pyu
 
       - name: Build
-        run: python -m make
+        run: python3 -m make
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
@@ -84,7 +84,7 @@ jobs:
 
       # Upload app to S3
       - name: Install AWS CLI
-        run: pip install awscli
+        run: pip3 install awscli
 
       - name: Upload to S3
         run: aws s3 sync --no-progress pyu-data/new/ s3://builds.kanmail.io/
