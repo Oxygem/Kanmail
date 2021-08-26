@@ -115,7 +115,9 @@ def _validate_key(value, spec, path):
 def validate_unique_accounts(accounts):
     account_names = set()
     for account in accounts:
-        account_name = account['name']
+        account_name = account['name'].strip()
+        if not account_name:
+            raise ValueError('All accounts must have a name!')
         if account_name in account_names:
             raise ValueError('Cannot have duplicate account names!')
         account_names.add(account_name)
