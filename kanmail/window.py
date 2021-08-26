@@ -5,10 +5,20 @@ import webview
 
 from kanmail.log import logger
 from kanmail.server.app import server
-from kanmail.settings.constants import DEBUG, FRAMELESS, IS_APP, SERVER_HOST, SESSION_TOKEN
+from kanmail.settings.constants import FRAMELESS, IS_APP, SERVER_HOST, SESSION_TOKEN
 
 ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
+
+UNIQUE_KEY_TO_LOCALIZATION = {
+    'settings': {
+        'global.quit': 'Close without saving',
+        'global.cancel': 'Return to settings',
+        'global.quitConfirmation': (
+            'Any changes will be lost, do you still want to close the window?'
+        ),
+    },
+}
 
 
 def create_window(
@@ -39,10 +49,12 @@ def create_window(
             destroy_window(old_window_id)
 
     window = webview.create_window(
-        'Kanmail', link,
+        'Kanmail',
+        link,
         frameless=FRAMELESS,
         easy_drag=False,
         text_select=True,
+        localization=UNIQUE_KEY_TO_LOCALIZATION.get(unique_key),
         **kwargs,
     )
 
@@ -128,16 +140,6 @@ def reposition_traffic_light_buttons(window):
 
 
 def init_window_hacks() -> None:
-    # Although this is supported in the pywebview API - we're overriding the defaults
-    # for all windows with context of one (settings) window. Currently this is the
-    # only place we wish to confirm exit, so it's not an issue.
-    # TODO Issue to track per-window customization: https://github.com/r0x0r/pywebview/issues/697
-    webview.localization.localization['global.quit'] = 'Close without saving'
-    webview.localization.localization['global.cancel'] = 'Return to settings'
-    webview.localization.localization['global.quitConfirmation'] = (
-        'Any changes will be lost, do you still want to close the window?'
-    )
-
     try:
         from webview.platforms import cocoa
     except ImportError:
@@ -146,9 +148,6 @@ def init_window_hacks() -> None:
         # This cocoa specific hack shows the traffic light buttons (pywebview hides these
         # in frameless mode by default) and also moves them so they look better placed
         # in the sidebar header.
-
-        # Normally set by webview.start but importing cocoa before breaks that
-        cocoa._debug = {'mode': DEBUG}
 
         class CustomBrowserView(cocoa.BrowserView):
             def first_show(self, *args, **kwargs):
