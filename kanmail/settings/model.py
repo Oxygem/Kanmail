@@ -34,6 +34,8 @@ MODEL = {
         'group_single_sender_threads': (bool, True),
         'show_help_button': (bool, True),
         # 'group_threads_by_subject': (bool, False),
+        'disable_error_logging': (bool, False),
+        'disable_analytics': (bool, False),
     },
     'style': {
         'header_background': str,

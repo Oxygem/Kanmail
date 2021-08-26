@@ -22,6 +22,8 @@ elementScrollIntoViewPolyfill();
 // Bootstrap Sentry error logging if we're not in debug (dev) mode
 if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
     console.debug('Not enabling Sentry error logging in debug mode...');
+} else if (window.KANMAIL_DISABLE_ERROR_LOGGING) {
+    console.debug('Not enabling Sentry error logging per user settings');
 } else {
     Sentry.init({
         dsn: window.KANMAIL_SENTRY_DSN,
@@ -40,6 +42,9 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
 
 if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_POSTHOG) {
     console.debug('Not enabling Posthog event logging in debug mode...');
+    posthog.capture = () => {};
+} else if (window.KANMAIL_DISABLE_ANALYTICS) {
+    console.debug('Not enabling Posthog event logging per user settings');
     posthog.capture = () => {};
 } else {
     posthog.init(window.KANMAIL_POSTHOG_API_KEY, {

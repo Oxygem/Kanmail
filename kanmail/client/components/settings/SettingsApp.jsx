@@ -377,7 +377,45 @@ export default class SettingsApp extends React.Component {
                     />
                 </div>
 
-                 <div className="settings advanced" id="system">
+                {window.KANMAIL_LICENSED && <div className="settings licensed">
+                    <div>
+                        <i className="yellow fa fa-star" /> Exclusive settings
+                    </div>
+
+                    <div className="checkbox">
+                        <label htmlFor="disable_error_logging">
+                            Disable error logging
+                            <small>Prevent Kanmail sending anonymous error logs to Sentry</small>
+                        </label>
+                        <input
+                            type="checkbox"
+                            id="disable_error_logging"
+                            checked={this.state.systemSettings.disable_error_logging}
+                            onChange={_.partial(
+                                this.handleCheckboxUpdate,
+                                'systemSettings', 'disable_error_logging',
+                            )}
+                        />
+                    </div>
+
+                    <div className="checkbox">
+                        <label htmlFor="disable_analytics">
+                            Disable analytics
+                            <small>Prevent Kanmail sending anonymous analytics to Posthog</small>
+                        </label>
+                        <input
+                            type="checkbox"
+                            id="disable_analytics"
+                            checked={this.state.systemSettings.disable_analytics}
+                            onChange={_.partial(
+                                this.handleCheckboxUpdate,
+                                'systemSettings', 'disable_analytics',
+                            )}
+                        />
+                    </div>
+                </div>}
+
+                <div className="settings advanced" id="system">
                     <div>
                         <i className="red fa fa-exclamation-triangle" /> Danger zone
                     </div>
@@ -456,9 +494,9 @@ export default class SettingsApp extends React.Component {
                             onClick={_.partial(this.selectTab, 'appearance')}
                         ><i className="fa fa-paint-brush" /> Appearance</button>
                         <button
-                            className={this.state.selectedTab === 'sync' && 'active'}
-                            onClick={_.partial(this.selectTab, 'sync')}
-                        ><i className="fa fa-refresh" /> Sync</button>
+                            className={this.state.selectedTab === 'system' && 'active'}
+                            onClick={_.partial(this.selectTab, 'system')}
+                        ><i className="fa fa-cog" /> System</button>
                     </div>
                     <div>
                         {this.renderSaveButton()}
@@ -469,7 +507,7 @@ export default class SettingsApp extends React.Component {
                     {this.renderMessage()}
                     {this.state.selectedTab === 'accounts' && this.renderAccountSettings()}
                     {this.state.selectedTab === 'appearance' && this.renderAppearanceSettings()}
-                    {this.state.selectedTab === 'sync' && this.renderSyncSettings()}
+                    {this.state.selectedTab === 'system' && this.renderSyncSettings()}
                 </section>
             </section>
         );

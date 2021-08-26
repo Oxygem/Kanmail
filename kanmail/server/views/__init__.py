@@ -17,7 +17,7 @@ from kanmail.server.app import add_public_route, add_route
 from kanmail.server.mail.contacts import get_contact_dicts
 from kanmail.server.mail.util import markdownify
 from kanmail.server.util import get_or_400
-from kanmail.settings import get_device_id
+from kanmail.settings import get_device_id, get_system_setting
 from kanmail.settings.constants import (
     CLIENT_ROOT,
     DEBUG,
@@ -77,6 +77,8 @@ def _get_render_data():
         'device_id': get_device_id(),
         'sentry_dsn': get_hidden_value('SENTRY_DSN'),
         'posthog_api_key': get_hidden_value('POSTHOG_API_KEY'),
+        'disable_error_logging': get_system_setting('disable_error_logging'),
+        'disable_analytics': get_system_setting('disable_analytics'),
     }
 
 

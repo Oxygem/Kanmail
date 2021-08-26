@@ -35,21 +35,24 @@
         window.KANMAIL_PLATFORM = '{{ platform }}';
         window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
 
-        window.KANMAIL_FRAMELESS = {% if frameless %}true{% else %}false{% endif %};
-        window.KANMAIL_IS_APP = {% if is_app %}true{% else %}false{% endif %};
+        window.KANMAIL_FRAMELESS = {{ frameless|tojson }};
+        window.KANMAIL_IS_APP = {{ is_app|tojson }};
 
         window.KANMAIL_DEVICE_ID = '{{ device_id }}';
         window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
 
-        window.KANMAIL_LICENSED = {% if license_email %}true{% else %}false{% endif %};
+        window.KANMAIL_LICENSED = {{ license_email|tojson }};
         window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
 
-        window.KANMAIL_DEBUG = {% if debug %}true{% else %}false{% endif %};
-        window.KANMAIL_DEBUG_SENTRY = {% if debug_sentry %}true{% else %}false{% endif %};
-        window.KANMAIL_DEBUG_POSTHOG = {% if debug_posthog %}true{% else %}false{% endif %};
+        window.KANMAIL_DEBUG = {{ debug|tojson }};
+        window.KANMAIL_DEBUG_SENTRY = {{ debug_sentry|tojson }};
+        window.KANMAIL_DEBUG_POSTHOG = {{ debug_posthog|tojson }};
 
         window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
         window.KANMAIL_POSTHOG_API_KEY = '{{ posthog_api_key }}';
+
+        window.KANMAIL_DISABLE_ERROR_LOGGING = {{ disable_error_logging|tojson }};
+        window.KANMAIL_DISABLE_ANALYTICS = {{ disable_analytics|tojson }};
     </script>
 
     <link rel="stylesheet" type="text/css" href="/static/dist/shared.css" />
