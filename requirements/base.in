@@ -1,5 +1,7 @@
 # Client
-pywebview==3.4
+# pywebview==3.5
+git+git://github.com/Fizzadar/pywebview@fix-should-close-macos
+# pending: https://github.com/r0x0r/pywebview/pull/769
 pyupdater==4.0.0
 pyinstaller==4.3
 
