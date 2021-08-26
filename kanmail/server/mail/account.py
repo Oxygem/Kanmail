@@ -71,7 +71,7 @@ class Account(object):
                 if NOSELECT_FLAG in flags:
                     continue
 
-                if name == alias_folders['inbox']:
+                if name == alias_folders.get('inbox'):
                     continue
 
                 name_without_prefix = name
