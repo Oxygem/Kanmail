@@ -42,6 +42,7 @@ MODEL = {
         'sidebar_folders': [str],
         'theme_light': (str, 'default'),
         'theme_dark': (str, 'default-dark'),
+        'compact_columns': (bool, False),
     },
     'accounts': [
         {

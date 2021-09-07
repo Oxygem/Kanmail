@@ -221,34 +221,55 @@ export default class SettingsApp extends React.Component {
 
         return (
             <div className="settings" id="style">
-                <label htmlFor="theme_light">
-                    Light theme
-                    <small>Theme to use when the system theme is light</small>
-                </label>
-                <div className="select-wrapper">
-                    <Select
-                        classNamePrefix="react-select"
-                        options={themeOptions}
-                        value={this.state.styleSettings.theme_light}
-                        onChange={_.partial(
-                            this.handleSettingUpdate,
-                            'styleSettings', 'theme_light',
-                        )}
-                    />
+                <div className="flex">
+                    <div className="half">
+                        <label htmlFor="theme_light">
+                            Light theme
+                            <small>Theme to use when the system theme is light</small>
+                        </label>
+                        <div className="select-wrapper">
+                            <Select
+                                classNamePrefix="react-select"
+                                options={themeOptions}
+                                value={this.state.styleSettings.theme_light}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'theme_light',
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="half">
+                        <label htmlFor="theme_dark">
+                            Dark theme
+                            <small>Theme to use when the system theme is dark</small>
+                        </label>
+                        <div className="select-wrapper">
+                            <Select
+                                classNamePrefix="react-select"
+                                options={themeOptions}
+                                value={this.state.styleSettings.theme_dark}
+                                onChange={_.partial(
+                                    this.handleSettingUpdate,
+                                    'styleSettings', 'theme_dark',
+                                )}
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <label htmlFor="theme_dark">
-                    Dark theme
-                    <small>Theme to use when the system theme is dark</small>
-                </label>
-                <div className="select-wrapper">
-                    <Select
-                        classNamePrefix="react-select"
-                        options={themeOptions}
-                        value={this.state.styleSettings.theme_dark}
+                <div className="checkbox">
+                    <label htmlFor="compact_columns">
+                        Use compact column layout
+                    </label>
+                    <input
+                        type="checkbox"
+                        id="compact_columns"
+                        checked={this.state.styleSettings.compact_columns}
                         onChange={_.partial(
-                            this.handleSettingUpdate,
-                            'styleSettings', 'theme_dark',
+                            this.handleCheckboxUpdate,
+                            'styleSettings', 'compact_columns',
                         )}
                     />
                 </div>
