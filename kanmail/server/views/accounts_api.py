@@ -98,7 +98,7 @@ def _test_account_settings(account_settings, get_folder_settings=False):
             if not settings.get(key):
                 raise TestAccountSettingsError(
                     settings_type,
-                    f'Missing {settings_type} setting: {key}',
+                    f'Missing {settings_type.upper()} setting: {key}',
                 )
 
     new_account = Account('Unsaved test account', account_settings)

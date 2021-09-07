@@ -299,7 +299,7 @@ export default class AccountForm extends React.Component {
         if (this.props.isAddingNewAccount) formClasses.push('new');
 
         const getTabButtonClass = tabName => (
-            this.state.editingTab == tabName ? 'submit' : 'inactive'
+            this.state.editingTab == tabName ? 'active' : 'inactive'
         );
 
         const setTab = (tabName, ev) => {
@@ -339,7 +339,7 @@ export default class AccountForm extends React.Component {
 
                     <div className="error">{this.state.error}</div>
 
-                    <div className="wide button-set">
+                    <div className="wide button-set tabs">
                         {this.props.isAddingNewAccount || <button
                             className={getTabButtonClass('address')}
                             onClick={_.partial(setTab, 'address')}
@@ -353,12 +353,12 @@ export default class AccountForm extends React.Component {
                         <button
                             className={getTabButtonClass('imap')}
                             onClick={_.partial(setTab, 'imap')}
-                        >Incoming server</button>
+                        >Incoming (IMAP) server</button>
                         &nbsp;
                         <button
                             className={getTabButtonClass('smtp')}
                             onClick={_.partial(setTab, 'smtp')}
-                        >Outgoing server</button>
+                        >Outgoing (SMTP) server</button>
                     </div>
                 </div>
 
