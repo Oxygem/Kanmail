@@ -47,7 +47,8 @@ section#contacts {
         display: flex;
 
         input {
-            width: auto;
+            width: 48%;
+            margin-right: 2%;
         }
 
         div {
@@ -59,7 +60,9 @@ section#contacts {
             position: relative;
             border-radius: 4px;
             margin-right: 10px;
-            margin-top: 4px;
+            margin-top: 2px;
+            overflow: hidden;
+            min-width: 28px;
 
             img {
                 width: 22px;
@@ -72,7 +75,7 @@ section#contacts {
                 right: 0;
                 text-align: center;
                 color: white;
-                margin-top: 6px;
+                margin-top: 1px;
             }
         }
 
@@ -82,10 +85,12 @@ section#contacts {
 
         div.text {
             margin-top: 3px;
+            word-break: break-all;
         }
 
         div.buttons {
-            width: 25%;
+            width: 170px;
+            min-width: 170px;
             text-align: right;
         }
     }
