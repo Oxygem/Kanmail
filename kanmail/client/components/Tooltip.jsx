@@ -9,8 +9,11 @@ import { subscribe } from 'stores/base.jsx';
 export class TheTooltip extends React.Component {
     static propTypes = {
         visible: PropTypes.bool.isRequired,
-        text: PropTypes.string.isRequired,
-        targetElement: PropTypes.object.isRequired,
+        targetElement: PropTypes.object,
+        text: PropTypes.oneOfType([
+            PropTypes.object,
+            PropTypes.string,
+        ]),
     }
 
     render() {
@@ -36,7 +39,10 @@ export class TheTooltip extends React.Component {
 export default class Tooltip extends React.Component {
     static propTypes = {
         children: PropTypes.node.isRequired,
-        text: PropTypes.string.isRequired,
+        text: PropTypes.oneOfType([
+            PropTypes.object,
+            PropTypes.string,
+        ]),
     }
 
     componentWillUnmount() {
