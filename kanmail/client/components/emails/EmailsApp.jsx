@@ -153,7 +153,7 @@ export default class EmailsApp extends React.Component {
 
     renderColumnsSection() {
         return (
-            <section id="columns" className={this.props.styleSettings.compact_columns && 'compact'}>
+            <section id="columns" className={this.props.styleSettings.compact_columns ? 'compact' : undefined}>
                 <Search />
                 {this.renderColumns()}
                 <AddNewColumnForm />
