@@ -209,9 +209,9 @@ class FakeIMAPClient(object):
         return self._ensure_folder(folder_name).status
 
     def find_special_folder(self, alias_name):
-        return alias_name
+        return str(alias_name)
 
-    def search(self, query):
+    def search(self, query, charset=None):
         random_sleep()
         return self._current_folder.uids
 
