@@ -19,6 +19,11 @@ WORKDIR /opt/kanmail
 
 RUN chown -R kanmail:kanmail /opt/kanmail
 
+RUN mkdir -p /home/kanmail/.config/kanmail \
+ && chown -R kanmail:kanmail /home/kanmail
+
+VOLUME /home/kanmail/.config/kanmail
+
 USER kanmail
 
 ENTRYPOINT [ "/opt/kanmail/scripts/run_server.py" ]
