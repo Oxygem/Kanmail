@@ -287,8 +287,10 @@ export default class Filters extends React.Component {
                 </a>
             </li></ul>}
 
-            <ul>{this.renderMainFolderLinks()}</ul>
-            <ul>{this.renderOtherFolderLinks()}</ul>
+            <ul>
+                {this.renderMainFolderLinks()}
+                {this.renderOtherFolderLinks()}
+            </ul>
 
             <ul>
                 <li className={_.isNull(this.props.accountName) ? 'active': ''}><a
