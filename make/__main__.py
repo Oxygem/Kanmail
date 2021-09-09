@@ -162,15 +162,19 @@ def complete_release():
         )
 
     release_version = get_release_version()
+    docker_image_tag = f'{DOCKER_NAME}:{release_version}'
 
     try:
         # Check output to hide the JSON dump
-        print_and_check_output(('docker', 'image', 'inspect', f'{DOCKER_NAME}:{release_version}'))
+        print_and_check_output(('docker', 'image', 'inspect', docker_image_tag))
     except CalledProcessError:
         if not click.confirm('No Docker image found, OK to skip?'):
             raise
     else:
-        print_and_run(('docker', 'push', f'{DOCKER_NAME}:{release_version}'))
+        print_and_run(('docker', 'push', docker_image_tag))
+        docker_latest_tag = f'{DOCKER_NAME}:latest'
+        print_and_run(('docker', 'tag', docker_latest_tag, docker_image_tag))
+        print_and_run(('docker', 'push', docker_latest_tag))
 
     if not click.confirm((
         f'Are you SURE v{release_version} is ready to release '
