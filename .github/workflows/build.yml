@@ -3,7 +3,7 @@ name: "Build Kanmail"
 on:
   push:
     branches:
-      - windows-github-builds
+      - main
 
 jobs:
   build:
