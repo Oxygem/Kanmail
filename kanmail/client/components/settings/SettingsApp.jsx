@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Select, { Creatable } from 'react-select';
 
 import AccountList from 'components/settings/AccountList.jsx';
+import AccountSettingsMixin from 'components/settings/AccountSettingsMixin.jsx';
 
 import { THEME_NAMES } from 'constants.js';
 import keyboard from 'keyboard.js';
@@ -15,10 +16,9 @@ import {
 } from 'window.js';
 
 import { delete_, put } from 'util/requests.js';
-import { arrayMove } from 'util/array.js';
 
 
-export default class SettingsApp extends React.Component {
+export default class SettingsApp extends AccountSettingsMixin {
     static propTypes = {
         settings: PropTypes.object.isRequired,
         accountNameToConnected: PropTypes.object.isRequired,
@@ -53,39 +53,6 @@ export default class SettingsApp extends React.Component {
             label: this.state.styleSettings.theme_dark,
             value: this.state.styleSettings.theme_dark,
         };
-    }
-
-    deleteAccount = (accountIndex) => {
-        const accounts = _.filter(this.state.accounts, (_, i) => i !== accountIndex);
-        this.setState({accounts});
-    }
-
-    updateAccount = (accountIndex, newSettings) => {
-        if (!this.state.accounts[accountIndex]) {
-            throw Error('nope');
-        }
-
-        const accounts = this.state.accounts;
-        accounts[accountIndex] = newSettings;
-        this.setState({accounts});
-    }
-
-    addAccount = (name, newSettings) => {
-        newSettings.name = name;
-
-        const accounts = this.state.accounts;
-        accounts.push(newSettings);
-
-        const accountNameToConnected = this.state.accountNameToConnected;
-        accountNameToConnected[name] = true;
-
-        this.setState({accounts, accountNameToConnected});
-    }
-
-    moveAccount = (index, position) => {
-        const accounts = this.state.accounts;
-        arrayMove(accounts, index, index + position);
-        this.setState({accounts});
     }
 
     handleSettingUpdate = (stateKey, key, value) => {

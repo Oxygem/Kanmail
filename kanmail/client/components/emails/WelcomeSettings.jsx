@@ -2,16 +2,16 @@ import _ from 'lodash';
 import React from 'react';
 
 import AccountList from 'components/settings/AccountList.jsx';
+import AccountSettingsMixin from 'components/settings/AccountSettingsMixin.jsx';
 
 import img from 'icon.png';
 import keyboard from 'keyboard.js';
 import { makeDragElement } from 'window.js';
 
 import { put } from 'util/requests.js';
-import { arrayMove } from 'util/array.js';
 
 
-export default class WelcomeSettings extends React.Component {
+export default class WelcomeSettings extends AccountSettingsMixin {
     constructor(props) {
         super(props);
 
@@ -22,39 +22,6 @@ export default class WelcomeSettings extends React.Component {
             accountNameToConnected: {},
             contactIcons: true,
         };
-    }
-
-    deleteAccount = (accountIndex) => {
-        const accounts = _.filter(this.state.accounts, (_, i) => i !== accountIndex);
-        this.setState({accounts});
-    }
-
-    updateAccount = (accountIndex, newSettings) => {
-        if (!this.state.accounts[accountIndex]) {
-            throw Error('nope');
-        }
-
-        const accounts = this.state.accounts;
-        accounts[accountIndex] = newSettings;
-        this.setState({accounts});
-    }
-
-    addAccount = (name, newSettings) => {
-        newSettings.name = name;
-
-        const accounts = this.state.accounts;
-        accounts.push(newSettings);
-
-        const accountNameToConnected = this.state.accountNameToConnected;
-        accountNameToConnected[name] = true;
-
-        this.setState({accounts});
-    }
-
-    moveAccount = (index, position) => {
-        const accounts = this.state.accounts;
-        arrayMove(accounts, index, index + position);
-        this.setState({accounts});
     }
 
     handleSaveSettings = (ev) => {
