@@ -53,19 +53,23 @@ class AccountAddress extends React.Component {
         const { contactTuple } = this.props;
 
         return (
-            <div className="half">
-                <label>Name</label>
-                <input
-                    type="text"
-                    value={contactTuple[0]}
-                    onChange={this.props.updateName}
-                />
-                <label>Email</label>
-                <input
-                    type="text"
-                    value={contactTuple[1]}
-                    onChange={this.props.updateEmail}
-                />
+            <div className="wide flex contact">
+                <div className="contact-address">
+                    <label>Name</label>
+                    <input
+                        type="text"
+                        value={contactTuple[0]}
+                        onChange={this.props.updateName}
+                    />
+                </div>
+                <div className="contact-address">
+                    <label>Email</label>
+                    <input
+                        type="text"
+                        value={contactTuple[1]}
+                        onChange={this.props.updateEmail}
+                    />
+                </div>
                 <button
                     type="submit"
                     className="cancel"
@@ -276,21 +280,19 @@ export default class AccountForm extends React.Component {
             );
         }
 
-        return (
-            <div>
-                <div className="wide">
-                    <label htmlFor={`${settingKey}-username`}>Username</label>
-                    {this.renderInput(settingKey, 'username')}
-                </div>
-                <div className="wide">
-                    <label htmlFor={`${settingKey}-password`}>Password</label>
-                    {this.renderInput(settingKey, 'password', {
-                        type: 'password',
-                        placeholder: 'enter to change'
-                    })}
-                </div>
+        return [
+            <div className="half" key="username">
+                <label htmlFor={`${settingKey}-username`}>Username</label>
+                {this.renderInput(settingKey, 'username')}
+            </div>,
+            <div className="half" key="password">
+                <label htmlFor={`${settingKey}-password`}>Password</label>
+                {this.renderInput(settingKey, 'password', {
+                    type: 'password',
+                    placeholder: 'enter to change'
+                })}
             </div>
-        );
+        ];
     }
 
     render() {
@@ -364,7 +366,7 @@ export default class AccountForm extends React.Component {
 
                 <div className={this.state.editingTab == 'address' ? 'wide' : 'hidden'}>
                     <div className="flex wide">{this.renderAddresses()}</div>
-                    <button className="submit" onClick={this.handleAddAddress}>
+                    <button className="submit add-contact-button" onClick={this.handleAddAddress}>
                         Add address
                     </button>
                 </div>
