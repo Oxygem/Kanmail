@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { openFile } from 'window.js';
 
 import requestStore from 'stores/request.js';
+import { formatBytes } from 'util/string.js';
 
 
 export default class ThreadMessageAttachment extends React.Component {
@@ -64,7 +65,7 @@ export default class ThreadMessageAttachment extends React.Component {
 
         let nameOrIcon = name;
         let topMeta = `${part.type}/${part.subtype}`;
-        let bottomMeta = `${part.size} bytes`;
+        let bottomMeta = formatBytes(part.size);
 
         if (this.state.downloaded) {
             nameOrIcon = <i className="fa fa-tick"></i>;
