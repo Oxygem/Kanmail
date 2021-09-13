@@ -22,7 +22,6 @@ from .settings import (
     ROOT_DIRNAME,
     TEMP_CHANGELOG_NAME,
     TEMP_SPEC_FILENAME,
-    TEMP_VERSION_LOCK_FILENAME,
     VERSION_DATA_FILENAME,
 )
 
@@ -157,10 +156,8 @@ def create_github_release(version):
 
 
 def get_release_version():
-    with open(TEMP_VERSION_LOCK_FILENAME, 'r') as f:
-        return f.read().strip()
-
-
-def write_release_version(version):
-    with open(TEMP_VERSION_LOCK_FILENAME, 'w') as f:
-        f.write(version)
+    return (
+        check_output('git', 'tag', '--points-at', 'HEAD')
+        .decode()
+        .strip()
+    )

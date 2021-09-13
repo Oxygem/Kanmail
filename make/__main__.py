@@ -16,7 +16,6 @@ from .settings import (
     REQUIREMENTS_FILENAME,
     TEMP_SPEC_FILENAME,
     TEMP_VERSION_LOCK_FILENAME,
-    VERSION_DATA_FILENAME,
 )
 from .util import (
     create_github_release,
@@ -28,7 +27,6 @@ from .util import (
     print_and_check_output,
     print_and_run,
     write_hidden_data,
-    write_release_version,
     write_version_data,
 )
 
@@ -53,11 +51,6 @@ def prepare_release():
 
     if not path.isdir(DIST_DIRNAME):
         makedirs(DIST_DIRNAME)
-
-    click.echo(f'--> generate {VERSION_DATA_FILENAME}')
-    write_release_version(version)
-    write_version_data(version)
-    write_hidden_data()
 
     click.echo()
     click.echo(f'Kanmail v{version} release is prepped!')
@@ -109,9 +102,8 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = generate_spec(version, onedir=onedir)
 
-    if not release:
-        write_version_data(version)
-        write_hidden_data()
+    write_version_data(version)
+    write_hidden_data()
 
     if docker:
         print_and_run((
