@@ -2,6 +2,7 @@ name: "Build Kanmail"
 
 on:
   push:
+    tags:
     branches:
       - main
 
@@ -73,8 +74,13 @@ jobs:
       - name: Copy in fake config file
         run: cp make/github-config.pyu .pyupdater/config.pyu
 
-      - name: Build
-        run: python3 -m make
+      - name: Make build
+        run: |
+          if [ "${GITHUB_REF##*/}" = "main" ]; then
+            python3 -m make
+          else
+            python3 -m make --release
+          fi
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
