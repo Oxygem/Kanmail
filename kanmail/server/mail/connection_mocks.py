@@ -31,6 +31,8 @@ OTHER_FOLDERS = [
     'Waiting',
     'Needs Reply',
 ]
+FAKER_MIME_TYPE_CATEGORIES = ['audio', 'image', 'text']
+
 
 fake = Faker()
 
@@ -59,6 +61,34 @@ def make_fake_addresses():
     ])
 
 
+def make_fake_attachment():
+    category = choice(FAKER_MIME_TYPE_CATEGORIES)
+    extension = fake.file_extension(category=category)
+    name = fake.file_name(extension=extension)
+
+    return (
+        category.upper().encode(),  # type
+        extension.upper().encode(),  # subtype
+        (b'NAME', name),  # meta
+        None,
+        None,
+        b'UTF-8',  # charset
+        choice(range(1000, 100000)),  # size
+    )
+
+
+def make_fake_bodystructure():
+    simple_text_bodystructure = (b'TEXT', b'PLAIN', None, None, None, b'UTF-8', 100)
+
+    if choice(range(100)) < 81:  # 80% chance of simple
+        return simple_text_bodystructure
+
+    n_attachments = choice((1, 1, 1, 1, 1, 1, 2, 3))
+    attachments = [make_fake_attachment() for _ in range(n_attachments)]
+
+    return ([simple_text_bodystructure, (attachments,)],)
+
+
 def make_fake_fetch_data(folder, uid):
     body_text = fake.paragraphs(choice((2, 3, 4, 5, 6, 7, 8, 9)))
 
@@ -71,7 +101,7 @@ def make_fake_fetch_data(folder, uid):
 
     fake_data = {
         b'FLAGS': ['\\Seen'],
-        b'BODYSTRUCTURE': (b'TEXT', b'PLAIN', None, None, None, b'UTF-8', 100),
+        b'BODYSTRUCTURE': make_fake_bodystructure(),
         b'BODY[1]<0>': f'{body_text[0][:500]}',
         b'BODY[1]': '\n\n'.join(body_text),
         b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]': headers,
