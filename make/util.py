@@ -160,4 +160,4 @@ def get_release_version():
         check_output(('git', 'tag', '--points-at', 'HEAD'))
         .decode()
         .strip()
-    )
+    ) or None

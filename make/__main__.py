@@ -57,23 +57,14 @@ def prepare_release():
     click.echo()
 
 
-def build_release(release=False, docker=False, build_version=None, onedir=None):
+def build_release(is_release=False, docker=False, build_version=None, onedir=None):
     system_type = 'Docker' if docker else platform.system()
 
-    if release and system_type != 'Docker':
+    if is_release and system_type != 'Docker':
         print_and_run(('pip-sync', REQUIREMENTS_FILENAME))
 
-    if release and system_type == 'Darwin':
-        for key, value in (
-            ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
-            ('NOTARIZE_PASSWORD_KEYCHAIN_NAME', NOTARIZE_PASSWORD_KEYCHAIN_NAME),
-        ):
-            if not value:
-                raise click.ClickException(
-                    f'No `{key}` environment variable provided!',
-                )
-
-        # Refuse to build release unless we're specifically in the special MacOS X build env
+    # Refuse to build release unless we're specifically in the special MacOS X build env
+    if is_release and system_type == 'Darwin':
         if environ.get('MACOSX_DEPLOYMENT_TARGET') != MACOSX_DEPLOYMENT_TARGET:
             raise click.ClickException((
                 'Refusing to build on MacOS where MACOSX_DEPLOYMENT_TARGET is not '
@@ -83,12 +74,12 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
     js_bundle_filename = path.join(DIST_DIRNAME, 'emails.js')
     js_bundle_exists = path.exists(js_bundle_filename)
     if not js_bundle_exists:
-        if not release and click.confirm('No JS bundle exists, build it?'):
+        if not is_release and click.confirm('No JS bundle exists, build it?'):
             print_and_run(('yarn', 'run', 'build'))
         else:
             raise click.ClickException(f'No JS bundle exists ({js_bundle_filename}), exiting!')
 
-    if release:
+    if is_release:
         version = get_release_version()
     else:
         if build_version:
@@ -124,14 +115,10 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
             specfile,
         ))
 
-        # Now use `codesign` to sign the package with a Developer ID
-        if release and system_type == 'Darwin':
-            codesign_and_notarize(version)
-
     click.echo()
     click.echo(f'Kanmail v{version} for {system_type} built!')
 
-    if not release:
+    if not is_release:
         click.echo('Single build complete...')
         return
 
@@ -146,7 +133,20 @@ def build_release(release=False, docker=False, build_version=None, onedir=None):
     click.echo()
 
 
+# TODO: fix this
 def complete_release():
+    for key, value in (
+        ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
+        ('NOTARIZE_PASSWORD_KEYCHAIN_NAME', NOTARIZE_PASSWORD_KEYCHAIN_NAME),
+    ):
+        if not value:
+            raise click.ClickException(
+                f'No `{key}` environment variable provided!',
+            )
+
+    # Now use `codesign` to sign the package with a Developer ID
+    codesign_and_notarize(get_release_version())
+
     if not GITHUB_API_TOKEN:
         raise click.ClickException(
             'No `GITHUB_API_TOKEN` environment variable provided!',
@@ -196,46 +196,44 @@ def complete_release():
 
 
 @click.command()
-@click.option('--complete', is_flag=True, default=False)
-@click.option('--release', is_flag=True, default=False)
+@click.option('--complete-release', is_flag=True, default=False)
+@click.option('--start-release', is_flag=True, default=False)
 @click.option('--docker', is_flag=True, default=False)
 @click.option('--onedir', is_flag=True, default=False)
 @click.option('--version', default=None)
-def build_or_release(complete, release, docker, version, onedir):
+def build_or_release(complete_release, start_release, docker, version, onedir):
     click.echo('### Kanmail build & release script')
     click.echo()
 
     release_version = get_release_version()
 
-    if complete and not release:
-        raise click.UsageError('Cannot have --complete without --release!')
+    if complete_release and not release_version:
+        raise click.UsageError('Cannot --complete-release, no tag exists!')
 
-    if complete and not release_version:
-        raise click.UsageError('Cannot --complete, no tag exists!')
-
-    if complete:
-        click.echo('--> [3/3] completeing relase')
+    if complete_release:
+        click.echo('--> [3/3] completing relase')
         complete_release()
         return
 
-    # If the version lock exists we're actually building for a given platform
-    if release_version or not release:
-        if release_version and not release:
-            raise click.UsageError('Cannot build when preparing a release!')
-
-        if version and release:
-            raise click.UsageError('Cannot --version with --release!')
-
-        if onedir and release:
-            raise click.UsageError('Cannot --onedir with --release!')
-
-        click.echo('--> [2*/3] building release')
-        build_release(release=release, docker=docker, build_version=version, onedir=onedir)
+    if start_release:
+        click.echo('--> [1/3] preparing release')
+        prepare_release()
         return
 
-    # No version lock so let's create one and prepare start-of-release
-    click.echo('--> [1/3] preparing release')
-    prepare_release()
+    if release_version:
+        if version:
+            raise click.UsageError('Cannot --version with git tag!')
+
+        if onedir:
+            raise click.UsageError('Cannot --onedir with git tag!')
+
+    click.echo('--> [2*/3] building release')
+    build_release(
+        is_release=release_version is not None,
+        docker=docker,
+        build_version=version,
+        onedir=onedir,
+    )
 
 
 if __name__ == '__main__':
