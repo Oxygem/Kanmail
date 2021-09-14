@@ -157,7 +157,7 @@ def create_github_release(version):
 
 def get_release_version():
     return (
-        check_output('git', 'tag', '--points-at', 'HEAD')
+        check_output(('git', 'tag', '--points-at', 'HEAD'))
         .decode()
         .strip()
     )
