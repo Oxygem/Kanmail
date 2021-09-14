@@ -1,6 +1,6 @@
 import platform
 
-from os import environ, makedirs, path, remove
+from os import environ, makedirs, path
 from subprocess import CalledProcessError
 
 import click
@@ -15,7 +15,6 @@ from .settings import (
     NOTARIZE_PASSWORD_KEYCHAIN_NAME,
     REQUIREMENTS_FILENAME,
     TEMP_SPEC_FILENAME,
-    TEMP_VERSION_LOCK_FILENAME,
 )
 from .util import (
     create_github_release,
@@ -190,8 +189,6 @@ def complete_release():
 
     create_github_release(release_version)
 
-    # Finally, remove the release version lock
-    remove(TEMP_VERSION_LOCK_FILENAME)
     click.echo(f'--> Kanmail v{release_version} released!')
 
     if click.confirm('Run cleanup?', default=True):
@@ -208,15 +205,13 @@ def build_or_release(complete, release, docker, version, onedir):
     click.echo('### Kanmail build & release script')
     click.echo()
 
-    version_lock_exists = path.exists(TEMP_VERSION_LOCK_FILENAME)
+    release_version = get_release_version()
 
     if complete and not release:
         raise click.UsageError('Cannot have --complete without --release!')
 
-    if complete and not version_lock_exists:
-        raise click.UsageError(
-            f'Cannot --complete, no {TEMP_VERSION_LOCK_FILENAME} exists!',
-        )
+    if complete and not release_version:
+        raise click.UsageError('Cannot --complete, no tag exists!')
 
     if complete:
         click.echo('--> [3/3] completeing relase')
@@ -224,8 +219,8 @@ def build_or_release(complete, release, docker, version, onedir):
         return
 
     # If the version lock exists we're actually building for a given platform
-    if version_lock_exists or not release:
-        if version_lock_exists and not release:
+    if release_version or not release:
+        if release_version and not release:
             raise click.UsageError('Cannot build when preparing a release!')
 
         if version and release:
