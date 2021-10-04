@@ -1,6 +1,6 @@
 import platform
 
-from os import environ, makedirs, path
+from os import environ, path
 from subprocess import CalledProcessError
 
 import click
@@ -13,7 +13,6 @@ from .settings import (
     GITHUB_API_TOKEN,
     MACOSX_DEPLOYMENT_TARGET,
     NOTARIZE_PASSWORD_KEYCHAIN_NAME,
-    REQUIREMENTS_FILENAME,
     TEMP_SPEC_FILENAME,
 )
 from .util import (
@@ -45,23 +44,23 @@ def prepare_release():
     click.echo('--> create changelog')
     create_new_changelog(version, git_changes)
 
-    click.echo('--> building clientside bundle')
-    print_and_run(('yarn', 'run', 'build'))
-
-    if not path.isdir(DIST_DIRNAME):
-        makedirs(DIST_DIRNAME)
+    print_and_run(('git', 'add', 'CHANGELOG.md'))
+    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}.'))
+    print_and_run((
+        'git', 'tag',
+        '-a', f'v{version}',
+        '-m', f'v{version}',
+    ))
+    print_and_run(('git', 'push'))
+    print_and_run(('git', 'push', '--tags'))
 
     click.echo()
     click.echo(f'Kanmail v{version} release is prepped!')
-    click.echo(f'Re-run {click.style("scripts/release.py", bold=True)} to build on each platform')
     click.echo()
 
 
 def build_release(is_release=False, docker=False, build_version=None, onedir=None):
     system_type = 'Docker' if docker else platform.system()
-
-    if is_release and system_type != 'Docker':
-        print_and_run(('pip-sync', REQUIREMENTS_FILENAME))
 
     # Refuse to build release unless we're specifically in the special MacOS X build env
     if is_release and system_type == 'Darwin':
@@ -81,13 +80,13 @@ def build_release(is_release=False, docker=False, build_version=None, onedir=Non
 
     if is_release:
         version = get_release_version()
+        click.echo(f'--> building release v{version} on {system_type}')
     else:
         if build_version:
             version = build_version
         else:
             version = generate_version()
-
-    click.echo(f'--> building v{version} on {system_type}')
+        click.echo(f'--> building non-release v{version} on {system_type}')
 
     click.echo(f'--> generate {TEMP_SPEC_FILENAME}')
     specfile = generate_spec(version, onedir=onedir)
@@ -173,19 +172,8 @@ def complete_release():
     )):
         raise click.Abort('User is not sure!')
 
-    print_and_run(('git', 'add', 'CHANGELOG.md'))
-    print_and_run(('git', 'commit', '-m', f'Update changelog for v{release_version}.'))
-    print_and_run((
-        'git', 'tag',
-        '-a', f'v{release_version}',
-        '-m', f'v{release_version}',
-    ))
-
     print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
     print_and_run(('pyupdater', 'upload', '--service', 's3'))
-
-    print_and_run(('git', 'push'))
-    print_and_run(('git', 'push', '--tags'))
 
     create_github_release(release_version)
 
