@@ -1,3 +1,61 @@
+# v1.2110040834
+
+Changes:
+- Make build commmand work on Windows.
+- Fix `check_output` call.
+- Remove leftover temp version lock references.
+- Cleanup version release handling.
+- Add attachments to IMAP connection mock bodystructure output.
+- Improve formatting of bytes in attachments.
+- Run build work flow on push & tag.
+- Cleanup account form styling.
+- De-duplicate account settings state handling functions.
+- Bump to upstream pywebview commit (MacOS reqs only for now).
+- Run the build workflow on main branch.
+- Update MacOS requirements.
+- Add the latest docker tag when making a release.
+- Fix add contact form styles.
+- Hide any overflow on email thread avatar initials.
+- Merge the main + user folders in the sidebar.
+- Improve account settings error handling UX.
+- Don't pass `false` as a classname, use undefined.
+- Fix button & form styling bugs in contacts app.
+- Fix two bugs in the connection mocks.
+- Add compact columns style/setting.
+- Fix prop type validation on tooltip components.
+- Don't assume the inbox alias setting exists.
+- Add licensed settings to disable Sentry/Posthog.
+- Fix account name validation.
+- Update for pywebview 3.5.
+- Use git version of pywebview with bugfix.
+- Fixes for building Linux client in Docker.
+- Add comment for MacOS Python package install/build.
+- Use github path to fix macOS path.
+- Try to fix macOS path before building.
+- Don't use `pip-tools` in builds just normal pip reqs.
+- Use python3/pip3 commands.
+- Install macOS pkg with old macosx SDK target.
+- Pin specific commits for third party actions.
+- More fixes for the binary filtering in spec.
+- Fix indentation in spec file.
+- Update docker reqs & fix Docker builds.
+- Update spec exclusion of libraries.
+- Install gtk/cairo/webkit apt packages when building for Linux.
+- Downgrade werkzeug in linux requirements.
+- Set `MACOSX_DEPLOYMENT_TARGET=10.14` in build workflow.
+- Add Linux build & requirements.
+- Ensure clean script removes any release changelog file.
+- Add macOS build target.
+- Cleanup build action.
+- Use Windows server 2016.
+- Use matrix strategy for build action.
+- Add fake pyu config for GitHub builds.
+- Upload the build to S3 once complete.
+- Pass through secrets when building the app.
+- Make an empty `.pyupdater` directory before building.
+- Setup Windows build workflow.
+- Add Windows `pywin32` requirement.
+
 # v1.2107311301
 
 Changes:
