@@ -67,7 +67,7 @@ def build_release(is_release=False, docker=False, build_version=None, onedir=Non
         if environ.get('MACOSX_DEPLOYMENT_TARGET') != MACOSX_DEPLOYMENT_TARGET:
             raise click.ClickException((
                 'Refusing to build on MacOS where MACOSX_DEPLOYMENT_TARGET is not '
-                'set to 10.12 (need to setup env?).'
+                f'set to {MACOSX_DEPLOYMENT_TARGET} (need to setup env?).'
             ))
 
     js_bundle_filename = path.join(DIST_DIRNAME, 'emails.js')
