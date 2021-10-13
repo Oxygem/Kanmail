@@ -1,3 +1,13 @@
+# v1.2110131703
+
+Contains an urgent fix for the latest Windows build.
+
+Changes:
+- Finish complete release script.
+- Tolerate wobbly MacOS notarization process.
+- Update Windows requirements.
+- Update dev requirements.
+
 # v1.2110040834
 
 Changes:
