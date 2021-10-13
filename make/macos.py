@@ -1,6 +1,9 @@
 from os import path, unlink
 from shutil import rmtree
+from subprocess import CalledProcessError
 from time import sleep
+
+import click
 
 from .settings import CODESIGN_KEY_NAME, NOTARIZE_PASSWORD_KEYCHAIN_NAME
 from .util import print_and_check_output, print_and_run
@@ -11,6 +14,7 @@ def codesign(app_dir):
         'codesign',
         '--deep',
         '--timestamp',
+        '--force',
         '--options', 'runtime',
         '--entitlements', 'make/entitlements.plist',
         '--sign', CODESIGN_KEY_NAME,
@@ -23,18 +27,21 @@ def wait_for_notarization(notarize_request_id):
     sleep(15)
 
     while True:
-        notarize_status = print_and_check_output((
-            'xcrun',
-            'altool',
-            '--password', f'@keychain:{NOTARIZE_PASSWORD_KEYCHAIN_NAME}',
-            '--notarization-info', notarize_request_id,
-        ))
+        try:
+            notarize_status = print_and_check_output((
+                'xcrun',
+                'altool',
+                '--password', f'@keychain:{NOTARIZE_PASSWORD_KEYCHAIN_NAME}',
+                '--notarization-info', notarize_request_id,
+            ))
 
-        if 'Status: in progress' not in notarize_status:
-            break
+            if 'Status: in progress' not in notarize_status:
+                break
+        except CalledProcessError as e:
+            click.echo('Error running notarize info command:')
+            click.echo(click.style(e.output, 'red'))
 
         sleep(15)
-
     return 'Status: success' in notarize_status
 
 
