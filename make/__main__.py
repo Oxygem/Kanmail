@@ -133,7 +133,7 @@ def build_release(is_release=False, docker=False, build_version=None, onedir=Non
 
 
 # TODO: fix this
-def complete_release():
+def download_and_complete_release():
     for key, value in (
         ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
         ('NOTARIZE_PASSWORD_KEYCHAIN_NAME', NOTARIZE_PASSWORD_KEYCHAIN_NAME),
@@ -143,16 +143,25 @@ def complete_release():
                 f'No `{key}` environment variable provided!',
             )
 
+    version = get_release_version()
+
+    for filename in (
+        f'Kanmail-mac-{version}.tar.gz',
+        f'Kanmail-nix64-{version}.tar.gz',
+        f'Kanmail-win-{version}.zip',
+    ):
+        if not path.exists(path.join('pyu-data', 'new', filename)):
+            print_and_run(('aws', 's3', 'cp', f's3://builds.kanmail.io/{filename}', 'pyu-data/new'))
+
     # Now use `codesign` to sign the package with a Developer ID
-    codesign_and_notarize(get_release_version())
+    codesign_and_notarize(version)
 
     if not GITHUB_API_TOKEN:
         raise click.ClickException(
             'No `GITHUB_API_TOKEN` environment variable provided!',
         )
 
-    release_version = get_release_version()
-    docker_image_tag = f'{DOCKER_NAME}:{release_version}'
+    docker_image_tag = f'{DOCKER_NAME}:{version}'
 
     try:
         # Check output to hide the JSON dump
@@ -167,7 +176,7 @@ def complete_release():
         print_and_run(('docker', 'push', docker_latest_tag))
 
     if not click.confirm((
-        f'Are you SURE v{release_version} is ready to release '
+        f'Are you SURE v{version} is ready to release '
         '(commit changelog -> package -> sign -> upload)?'
     )):
         raise click.Abort('User is not sure!')
@@ -175,9 +184,9 @@ def complete_release():
     print_and_run(('pyupdater', 'pkg', '--process', '--sign'))
     print_and_run(('pyupdater', 'upload', '--service', 's3'))
 
-    create_github_release(release_version)
+    create_github_release(version)
 
-    click.echo(f'--> Kanmail v{release_version} released!')
+    click.echo(f'--> Kanmail v{version} released!')
 
     if click.confirm('Run cleanup?', default=True):
         print_and_run(('python', '-m', 'make.clean'))
@@ -200,7 +209,7 @@ def build_or_release(complete_release, start_release, docker, version, onedir):
 
     if complete_release:
         click.echo('--> [3/3] completing relase')
-        complete_release()
+        download_and_complete_release()
         return
 
     if start_release:
