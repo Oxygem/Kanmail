@@ -2,6 +2,7 @@ honcho==1.0.1
 
 # Build/release
 pyupdater-s3-plugin==4.1.2
+awscli==1.20.53
 
 # Testing
 Faker==0.9.2
