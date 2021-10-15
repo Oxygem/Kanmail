@@ -396,7 +396,7 @@ const getEmptyAccountSettings = () => ({
 
 export default class NewAccountForm extends React.Component {
     static propTypes = {
-        addAccount: PropTypes.func.isRequired,
+        addItem: PropTypes.func.isRequired,
         closeForm: PropTypes.func.isRequired,
     }
 
@@ -433,7 +433,7 @@ export default class NewAccountForm extends React.Component {
     }
 
     completeAddNewAccount = (_, accountSettings) => {
-        this.props.addAccount(accountSettings.name, accountSettings);
+        this.props.addItem(accountSettings.name, accountSettings);
         this.props.closeForm();
     }
 
@@ -453,8 +453,8 @@ export default class NewAccountForm extends React.Component {
                 accountSettings={newAccountSettings}
                 error={this.state.newAccountError}
                 errorType={this.state.newAccountErrorType}
-                deleteAccount={this.resetState}
-                updateAccount={this.completeAddNewAccount}
+                deleteItem={this.resetState}
+                addItem={this.completeAddNewAccount}
                 closeForm={this.props.closeForm}
             />
         }

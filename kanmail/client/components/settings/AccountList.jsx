@@ -1,17 +1,17 @@
-import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import AccountForm from 'components/settings/AccountForm.jsx';
 import NewAccountForm from 'components/settings/NewAccountForm.jsx';
+import OverlayItemList from 'components/settings/OverlayItemList.jsx';
 
 
 class AccountListItem extends React.Component {
     static propTypes = {
-        accountSettings: PropTypes.object.isRequired,
-        deleteAccount: PropTypes.func.isRequired,
+        itemData: PropTypes.object.isRequired,
+        deleteItem: PropTypes.func.isRequired,
         editAccount: PropTypes.func.isRequired,
-        accountIndex: PropTypes.number.isRequired,
+        itemIndex: PropTypes.number.isRequired,
         moveUp: PropTypes.func.isRequired,
         moveDown: PropTypes.func.isRequired,
         connected: PropTypes.bool.isRequired,
@@ -34,7 +34,7 @@ class AccountListItem extends React.Component {
 
     handleClickEdit = (ev) => {
         ev.preventDefault();
-        this.props.editAccount(this.props.accountIndex);
+        this.props.editAccount(this.props.itemIndex);
     }
 
     handleClickDelete = (ev) => {
@@ -47,7 +47,7 @@ class AccountListItem extends React.Component {
             return;
         }
 
-        this.props.deleteAccount(this.props.accountIndex);
+        this.props.deleteItem(this.props.itemIndex);
         return;
     }
 
@@ -99,11 +99,11 @@ class AccountListItem extends React.Component {
             <div className="account">
                 <div className="wide">
                     {this.renderViewButtons()}
-                    <strong>{this.props.accountSettings.name}</strong>
+                    <strong>{this.props.itemData.name}</strong>
                     &nbsp;
                     {this.renderConnectedText()}
                     <br />
-                    {this.props.accountSettings.imap_connection.username}
+                    {this.props.itemData.imap_connection.username}
                 </div>
             </div>
         );
@@ -122,100 +122,17 @@ export default class AccountList extends React.Component {
         newAccountFormProps: PropTypes.object,
     }
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            addingAccount: false,
-            editingAccountIndex: null,
-        };
-    }
-
-    handleClickAddAccount = () => {
-        this.setState({
-            addingAccount: true,
-            editingAccountIndex: null,
-        });
-    }
-
-    handleClickCancelAddAccount = () => {
-        this.setState({
-            addingAccount: false,
-            editingAccountIndex: null,
-        });
-    }
-
-    handleClickEditAccount = (accountIndex) => {
-        this.setState({
-            addingAccount: false,
-            editingAccountIndex: accountIndex,
-        });
-    }
-
-    handleClickCancelEditAccount = () => {
-        this.setState({
-            addingAccount: false,
-            editingAccountIndex: null,
-        });
-    }
-
-    renderAccounts() {
-        return _.map(this.props.accounts, (accountSettings, i) => (
-            <AccountListItem
-                key={`${i}-${accountSettings.name}`}
-                accountIndex={i}
-                accountSettings={accountSettings}
-                deleteAccount={this.props.deleteAccount}
-                editAccount={this.handleClickEditAccount}
-                moveUp={_.partial(this.props.moveAccount, i, -1)}
-                moveDown={_.partial(this.props.moveAccount, i, 1)}
-                connected={
-                    this.props.accountNameToConnected
-                    && this.props.accountNameToConnected[accountSettings.name]
-                }
-            />
-        ));
-    }
-
-    renderAccountForm() {
-        if (this.state.addingAccount) {
-            return (
-                <div id="account-form-overlay">
-                    <NewAccountForm
-                        closeForm={this.handleClickCancelAddAccount}
-                        addAccount={this.props.addAccount}
-                        {...this.props.newAccountFormProps}
-                    />
-                </div>
-            );
-        }
-
-        if (!_.isNull(this.state.editingAccountIndex)) {
-            return (
-                <div id="account-form-overlay">
-                    <AccountForm
-                        connected={true}
-                        accountIndex={this.state.editingAccountIndex}
-                        accountSettings={this.props.accounts[this.state.editingAccountIndex]}
-                        updateAccount={this.props.updateAccount}
-                        closeForm={this.handleClickCancelEditAccount}
-                    />
-                </div>
-            );
-        }
-
-        return null;
-    }
-
     render() {
-        return (
-            <div id="accounts">
-                {this.renderAccounts()}
-                <button className="submit" onClick={this.handleClickAddAccount}>
-                    Add new account
-                </button>
-                {this.renderAccountForm()}
-            </div>
-        );
+        return <OverlayItemList
+            items={this.props.accounts}
+            addItem={this.props.addAccount}
+            deleteItem={this.props.deleteAccount}
+            updateItem={this.props.updateAccount}
+            moveItem={this.props.moveAccount}
+            itemComponent={AccountListItem}
+            itemFormComponent={AccountForm}
+            newItemFormComponent={NewAccountForm}
+            newItemName="account"
+        />
     }
 }

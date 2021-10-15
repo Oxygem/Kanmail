@@ -29,12 +29,12 @@ const getInitialState = (props) => {
         connected: props.connected,
     };
 
-    if (props.accountSettings) {
-        state.name = props.accountSettings.name,
-        state.imapSettings = _.clone(props.accountSettings.imap_connection);
-        state.smtpSettings = _.clone(props.accountSettings.smtp_connection);
-        state.folderSettings = _.clone(props.accountSettings.folders) || {};
-        state.contactSettings = _.clone(props.accountSettings.contacts) || [];
+    if (props.itemData) {
+        state.name = props.itemData.name,
+        state.imapSettings = _.clone(props.itemData.imap_connection);
+        state.smtpSettings = _.clone(props.itemData.smtp_connection);
+        state.folderSettings = _.clone(props.itemData.folders) || {};
+        state.contactSettings = _.clone(props.itemData.contacts) || [];
     }
 
     return state;
@@ -83,9 +83,9 @@ class AccountAddress extends React.Component {
 
 export default class AccountForm extends React.Component {
     static propTypes = {
-        accountSettings: PropTypes.object.isRequired,
-        accountIndex: PropTypes.number,
-        updateAccount: PropTypes.func,
+        itemData: PropTypes.object.isRequired,
+        itemIndex: PropTypes.number,
+        updateItem: PropTypes.func,
         isAddingNewAccount: PropTypes.bool,
         closeForm: PropTypes.func,
     }
@@ -157,7 +157,7 @@ export default class AccountForm extends React.Component {
                 updatedSettings.folders = data.settings.folders;
             }
 
-            this.props.updateAccount(this.props.accountIndex, updatedSettings);
+            this.props.updateItem(this.props.itemIndex, updatedSettings);
 
             this.setState({connected: true});
 
