@@ -38,7 +38,7 @@ def create_window(
     )
 
     logger.debug(
-        f'Opening window (#{internal_id}) '
+        f'Opening window ({internal_id}) '
         f'url={endpoint} kwargs={kwargs}',
     )
 
