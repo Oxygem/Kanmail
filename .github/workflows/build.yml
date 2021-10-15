@@ -70,6 +70,22 @@ jobs:
       - name: Install pip packages
         run: pip3 install -r requirements/${{ matrix.requirements-file }}
 
+      # TODO: fix dev reqs to be installable alongside OS specific ones
+      - name: Install pip development packages
+        run: pip3 install -r requirements/development.txt pip-tools
+
+      # Run the tests
+      - name: Test the app
+        run: honcho run pytest -s
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+      - name: Update requirements for build
+        run: pip-sync requirements/${{ matrix.requirements-file }}
+
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
 
