@@ -1,10 +1,9 @@
-import 'react-quill/dist/quill.snow.css';
-
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Select, { AsyncCreatable } from 'react-select';
-import ReactQuill from 'react-quill';
+
+import Editor from 'components/Editor.jsx';
 
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
@@ -13,13 +12,6 @@ import { closeWindow, makeDragElement, makeNoDragElement } from 'window.js';
 
 import { cleanHtml } from 'util/html.js'
 import { post } from 'util/requests.js'
-
-import Quill from 'quill';
-
-// Use divs > p, see: https://github.com/quilljs/quill/issues/861#issuecomment-239961806
-var Block = Quill.import('blots/block');
-Block.tagName = 'DIV';
-Quill.register(Block, true);
 
 
 function makeContactLabel(contactTuple) {
@@ -98,8 +90,8 @@ export default class SendApp extends React.Component {
             bcc: [],
 
             subject: '',
-            body: '',
-            textBody: '',
+            messageHtml: '',
+            messageText: '',
 
             attachments: [],
             attachmentData: {},
@@ -164,8 +156,8 @@ export default class SendApp extends React.Component {
 
             // Figure out where to put the actual message (edit or reply/forward)
             if (props.message.edit) {
-                this.state.textBody = props.message.body.text;
-                this.state.body = props.message.body.html;
+                this.state.messageText = props.message.body.text;
+                this.state.messageHtml = props.message.body.html;
             } else {
                 this.state.includeQuote = true;
                 this.state.replyToMessageId = props.message.message_id;
@@ -194,8 +186,8 @@ export default class SendApp extends React.Component {
         emailData.attachment_data = this.state.attachmentData;
 
         // Attach the HTML + plaintext copy
-        emailData.html = this.state.body;
-        emailData.text = this.state.textBody;
+        emailData.html = this.state.messageHtml;
+        emailData.text = this.state.messageText;
 
         _.each(['to', 'cc', 'bcc'], key => {
             const value = this.state[key];
@@ -220,7 +212,7 @@ export default class SendApp extends React.Component {
     handleEditorStateChange = (value, delta, source, editor) => {
         this.setState({
             body: value,
-            textBody: editor.getText(),
+            messageText: editor.getText(),
         });
     }
 
@@ -554,8 +546,8 @@ export default class SendApp extends React.Component {
                             id="textarea-body"
                             className={editorClasses.join(' ')}
                         >
-                            <ReactQuill
-                                value={this.state.body}
+                            <Editor
+                                value={this.state.messageHtml}
                                 onChange={this.handleEditorStateChange}
                                 modules={modules}
                                 formats={formats}
