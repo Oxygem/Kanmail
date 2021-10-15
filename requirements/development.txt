@@ -6,6 +6,8 @@
 #
 appnope==0.1.2
     # via ipython
+attrs==21.2.0
+    # via pytest
 awscli==1.20.53
     # via -r requirements/development.in
 backcall==0.2.0
@@ -38,6 +40,8 @@ flake8-quotes==3.2.0
     # via -r requirements/development.in
 honcho==1.0.1
     # via -r requirements/development.in
+iniconfig==1.1.1
+    # via pytest
 ipdb==0.12
     # via -r requirements/development.in
 ipython==7.5.0
@@ -56,16 +60,22 @@ mypy==0.761
     # via -r requirements/development.in
 mypy-extensions==0.4.3
     # via mypy
+packaging==21.0
+    # via pytest
 parso==0.8.2
     # via jedi
 pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
+pluggy==1.0.0
+    # via pytest
 prompt-toolkit==2.0.10
     # via ipython
 ptyprocess==0.7.0
     # via pexpect
+py==1.10.0
+    # via pytest
 pyasn1==0.4.8
     # via rsa
 pycodestyle==2.7.0
@@ -76,6 +86,8 @@ pyflakes==2.3.1
     # via flake8
 pygments==2.10.0
     # via ipython
+pytest==6.2.5
+    # via -r requirements/development.in
 python-dateutil==2.8.2
     # via
     #   botocore
@@ -97,6 +109,8 @@ six==1.16.0
     #   python-dateutil
 text-unidecode==1.2
     # via faker
+toml==0.10.2
+    # via pytest
 traitlets==5.1.0
     # via ipython
 typed-ast==1.4.3

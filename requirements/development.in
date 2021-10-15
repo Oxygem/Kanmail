@@ -6,6 +6,7 @@ awscli==1.20.53
 
 # Testing
 Faker==0.9.2
+pytest==6.2.5
 
 # Linting
 mypy==0.761
