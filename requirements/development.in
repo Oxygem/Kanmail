@@ -16,5 +16,5 @@ flake8-commas==2.0.0
 flake8-import-order==0.18.1
 
 # Debugging
-ipython==7.5.0
+ipython==7.28.0
 ipdb==0.12
