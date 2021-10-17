@@ -474,15 +474,15 @@ export default class SettingsApp extends AccountSettingsMixin {
                     <h2>Settings</h2>
                     <div className="button-set" ref={makeNoDragElement}>
                         <button
-                            className={this.state.selectedTab === 'accounts' && 'active'}
+                            className={this.state.selectedTab === 'accounts' ? 'active' : ''}
                             onClick={_.partial(this.selectTab, 'accounts')}
                         ><i className="fa fa-envelope" /> Accounts</button>
                         <button
-                            className={this.state.selectedTab === 'appearance' && 'active'}
+                            className={this.state.selectedTab === 'appearance' ? 'active' : ''}
                             onClick={_.partial(this.selectTab, 'appearance')}
                         ><i className="fa fa-paint-brush" /> Appearance</button>
                         <button
-                            className={this.state.selectedTab === 'system' && 'active'}
+                            className={this.state.selectedTab === 'system' ? 'active' : ''}
                             onClick={_.partial(this.selectTab, 'system')}
                         ><i className="fa fa-cog" /> System</button>
                     </div>
