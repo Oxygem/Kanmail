@@ -9,11 +9,10 @@ class SignatureListItem extends React.Component {
     static propTypes = {
         itemData: PropTypes.object.isRequired,
         deleteItem: PropTypes.func.isRequired,
-        editSignature: PropTypes.func.isRequired,
-        signatureIndex: PropTypes.number.isRequired,
+        editItem: PropTypes.func.isRequired,
+        itemIndex: PropTypes.number.isRequired,
         moveUp: PropTypes.func.isRequired,
         moveDown: PropTypes.func.isRequired,
-        connected: PropTypes.bool.isRequired,
     }
 
     constructor(props) {
@@ -33,7 +32,7 @@ class SignatureListItem extends React.Component {
 
     handleClickEdit = (ev) => {
         ev.preventDefault();
-        this.props.editSignature(this.props.signatureIndex);
+        this.props.editItem(this.props.itemIndex);
     }
 
     handleClickDelete = (ev) => {
@@ -46,7 +45,7 @@ class SignatureListItem extends React.Component {
             return;
         }
 
-        this.props.deleteItem(this.props.signatureIndex);
+        this.props.deleteItem(this.props.itemIndex);
         return;
     }
 
@@ -91,8 +90,11 @@ class SignatureListItem extends React.Component {
                 <div className="wide">
                     {this.renderViewButtons()}
                     <strong>{this.props.itemData.name}</strong>
-                    &nbsp;
-                    <br />
+                    <div
+                        dangerouslySetInnerHTML={{
+                            __html: this.props.itemData.html,
+                        }}
+                    />
                 </div>
             </div>
         );
@@ -102,18 +104,17 @@ class SignatureListItem extends React.Component {
 
 export default class SignatureList extends React.Component {
     static propTypes = {
-        accounts: PropTypes.array.isRequired,
+        signatures: PropTypes.array.isRequired,
         addSignature: PropTypes.func.isRequired,
         deleteSignature: PropTypes.func.isRequired,
         updateSignature: PropTypes.func.isRequired,
         moveSignature: PropTypes.func.isRequired,
-        accountNameToConnected: PropTypes.object.isRequired,
         newSignatureFormProps: PropTypes.object,
     }
 
     render() {
         return <OverlayItemList
-            items={this.props.accounts}
+            items={this.props.signatures}
             addItem={this.props.addSignature}
             deleteItem={this.props.deleteSignature}
             updateItem={this.props.updateSignature}

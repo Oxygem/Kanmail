@@ -17,14 +17,10 @@ const getInitialState = (props) => {
         accountId: props.accountId,
 
         name: '',
-        signatureText: '',
-        signatureHtml: '',
     };
 
     if (props.itemData) {
         state.name = props.itemData.name;
-        state.signatureText = props.itemData.text;
-        state.signatureHtml = props.itemData.html;
     }
 
     return state;
@@ -33,10 +29,10 @@ const getInitialState = (props) => {
 
 export default class SignatureForm extends React.Component {
     static propTypes = {
-        itemData: PropTypes.object.isRequired,
+        itemData: PropTypes.object,
         itemIndex: PropTypes.number,
         updateItem: PropTypes.func,
-        isAddingNewSignature: PropTypes.bool,
+        addItem: PropTypes.func,
         closeForm: PropTypes.func,
     }
 
@@ -45,45 +41,32 @@ export default class SignatureForm extends React.Component {
         this.state = getInitialState(props);
     }
 
-    resetState = () => {
-        const state = getInitialState(this.props);
-        this.setState(state);
-    }
-
-    handleClickCancel = (ev) => {
+    handleSubmit = (ev) => {
         ev.preventDefault();
 
-
-        this.resetState();
-    }
-
-    handleUpdate = (settingsKey, key, ev) => {
-        let value = ev.target.value;
-        if (value && ev.target.type === 'number') {
-            value = parseInt(value);
+        if (!this.state.name) {
+            this.setState({error: 'Please input a name for this signature.'});
+            return;
         }
 
-        const target = this.state[settingsKey];
-        target[key] = value;
+        const newItemData = {
+            name: this.state.name,
+            text: this.editor.getText(),
+            html: this.editor.getHtml(),
+        };
 
-        this.setState({
-            [settingsKey]: target,
-        });
-    }
+        if (this.props.itemData) {
+            this.props.updateItem(this.props.itemIndex, newItemData);
+        } else {
+            this.props.addItem(newItemData);
+        }
 
-    handleCheckboxUpdate = (settingsKey, key, ev) => {
-        const target = this.state[settingsKey];
-        target[key] = ev.target.checked;
-
-        this.setState({
-            [settingsKey]: target,
-        });
+        this.props.closeForm();
     }
 
     render() {
         const formClasses = ['account'];
         if (this.state.editing) formClasses.push('active');
-        if (this.props.isAddingNewSignature) formClasses.push('new');
 
         const saveButtonClasses = ['submit'];
         if (this.state.isSaving) {
@@ -97,8 +80,8 @@ export default class SignatureForm extends React.Component {
                         <button
                             type="submit"
                             className={saveButtonClasses.join(' ')}
-                            onClick={this.handleTestConnection}
-                        >{this.props.isAddingNewSignature ? 'Add account' : 'Update'}</button>
+                            onClick={this.handleSubmit}
+                        >{this.props.itemData ? 'Update' : 'Add Signature'}</button>
                         &nbsp;
                         <button
                             type="submit"
@@ -117,8 +100,11 @@ export default class SignatureForm extends React.Component {
                     <div className="error">{this.state.error}</div>
                 </div>
 
-                <div>
-                    <Editor />
+                <div className="wide">
+                    <Editor
+                        initialHtml={this.props.itemData && this.props.itemData.html}
+                        ref={editor => this.editor = editor}
+                    />
                 </div>
             </form>
         );

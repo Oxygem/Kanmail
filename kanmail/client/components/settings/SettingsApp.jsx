@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import Select, { Creatable } from 'react-select';
 
 import AccountList from 'components/settings/AccountList.jsx';
-import AccountSettingsMixin from 'components/settings/AccountSettingsMixin.jsx';
+import SignatureList from 'components/settings/SignatureList.jsx';
+import { AccountAndSignatureSettingsMixin } from 'components/settings/OverlayItemList.jsx';
 
 import { THEME_NAMES } from 'constants.js';
 import keyboard from 'keyboard.js';
@@ -18,7 +19,7 @@ import {
 import { delete_, put } from 'util/requests.js';
 
 
-export default class SettingsApp extends AccountSettingsMixin {
+export default class SettingsApp extends AccountAndSignatureSettingsMixin {
     static propTypes = {
         settings: PropTypes.object.isRequired,
         accountNameToConnected: PropTypes.object.isRequired,
@@ -33,6 +34,7 @@ export default class SettingsApp extends AccountSettingsMixin {
             selectedTab: 'accounts',
             accounts: props.settings.accounts,
             accountNameToConnected: props.accountNameToConnected,
+            signatures: props.settings.signatures,
             systemSettings: props.settings.system || {},
             styleSettings: props.settings.style || {},
         };
@@ -91,6 +93,7 @@ export default class SettingsApp extends AccountSettingsMixin {
 
         const newSettings = {
             accounts: this.state.accounts,
+            signatures: this.state.signatures,
             system: this.state.systemSettings,
             style: _.clone(this.state.styleSettings),
             columns: this.props.settings.columns,
@@ -175,6 +178,14 @@ export default class SettingsApp extends AccountSettingsMixin {
                     deleteAccount={this.deleteAccount}
                     updateAccount={this.updateAccount}
                     moveAccount={this.moveAccount}
+                />
+
+                <SignatureList
+                    signatures={this.state.signatures}
+                    addSignature={this.addSignature}
+                    deleteSignature={this.deleteSignature}
+                    updateSignature={this.updateSignature}
+                    moveSignature={this.moveSignature}
                 />
             </div>
         );
