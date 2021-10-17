@@ -11,7 +11,7 @@ export default class OverlayItemList extends React.Component {
         updateItem: PropTypes.func.isRequired,
         moveItem: PropTypes.func.isRequired,
         newItemName: PropTypes.string.isRequired,
-        // accountNameToConnected: PropTypes.object.isRequired,
+        extraItemProps: PropTypes.object,
     }
 
     constructor(props) {
@@ -58,13 +58,10 @@ export default class OverlayItemList extends React.Component {
                 itemIndex={i}
                 itemData={itemData}
                 deleteItem={this.props.deleteItem}
-                editAccount={this.handleClickEditItem}
+                editItem={this.handleClickEditItem}
                 moveUp={_.partial(this.props.moveItem, i, -1)}
                 moveDown={_.partial(this.props.moveItem, i, 1)}
-                // connected={
-                //     this.props.accountNameToConnected
-                //     && this.props.accountNameToConnected[accountSettings.name]
-                // }
+                {...this.props.extraItemProps}
             />
         ));
     }

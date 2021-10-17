@@ -10,11 +10,11 @@ class AccountListItem extends React.Component {
     static propTypes = {
         itemData: PropTypes.object.isRequired,
         deleteItem: PropTypes.func.isRequired,
-        editAccount: PropTypes.func.isRequired,
+        editItem: PropTypes.func.isRequired,
         itemIndex: PropTypes.number.isRequired,
         moveUp: PropTypes.func.isRequired,
         moveDown: PropTypes.func.isRequired,
-        connected: PropTypes.bool.isRequired,
+        accountNameToConnected: PropTypes.object.isRequired,
     }
 
     constructor(props) {
@@ -22,6 +22,13 @@ class AccountListItem extends React.Component {
         this.state = {
             deleteConfirm: false,
         }
+    }
+
+    isConnected = () => {
+        return (
+            this.props.accountNameToConnected
+            && this.props.accountNameToConnected[this.props.itemData.name]
+        );
     }
 
     handleClickCancel = (ev) => {
@@ -34,7 +41,7 @@ class AccountListItem extends React.Component {
 
     handleClickEdit = (ev) => {
         ev.preventDefault();
-        this.props.editAccount(this.props.itemIndex);
+        this.props.editItem(this.props.itemIndex);
     }
 
     handleClickDelete = (ev) => {
@@ -87,7 +94,7 @@ class AccountListItem extends React.Component {
     }
 
     renderConnectedText() {
-        if (this.props.connected) {
+        if (this.isConnected()) {
             return <small className="connected">connected</small>;
         } else {
             return <small className="not-connected">not connected</small>;
@@ -133,6 +140,9 @@ export default class AccountList extends React.Component {
             itemFormComponent={AccountForm}
             newItemFormComponent={NewAccountForm}
             newItemName="account"
+            extraItemProps={{
+                accountNameToConnected: this.props.accountNameToConnected,
+            }}
         />
     }
 }

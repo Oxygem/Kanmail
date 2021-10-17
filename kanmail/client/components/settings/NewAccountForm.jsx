@@ -433,7 +433,7 @@ export default class NewAccountForm extends React.Component {
     }
 
     completeAddNewAccount = (_, accountSettings) => {
-        this.props.addItem(accountSettings.name, accountSettings);
+        this.props.addItem(accountSettings);
         this.props.closeForm();
     }
 
@@ -454,7 +454,7 @@ export default class NewAccountForm extends React.Component {
                 error={this.state.newAccountError}
                 errorType={this.state.newAccountErrorType}
                 deleteItem={this.resetState}
-                addItem={this.completeAddNewAccount}
+                updateItem={this.completeAddNewAccount}
                 closeForm={this.props.closeForm}
             />
         }
