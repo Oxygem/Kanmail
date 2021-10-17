@@ -24,6 +24,13 @@ MODEL = {
     'contacts': [
         [str, str],
     ],
+    'signatures': [
+        {
+            'name': str,
+            'text': str,
+            'html': str,
+        },
+    ],
     'system': {
         'batch_size': (int, 50),
         'initial_batches': (int, 3),
