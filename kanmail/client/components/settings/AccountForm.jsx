@@ -133,6 +133,11 @@ export default class AccountForm extends React.Component {
     handleTestConnection = (ev) => {
         ev.preventDefault();
 
+        if (!this.state.name) {
+            this.setState({error: 'Please input a name for this account.'});
+            return;
+        }
+
         this.setState({isSaving: true});
 
         post('/api/account/test', {
