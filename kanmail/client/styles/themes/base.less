@@ -98,21 +98,33 @@ input, textarea {
     background: @inputBackgroundColor;
     border-color: @inputBorderColor;
 
-    &:hover, &:focus {
+    &:hover {
         border-color: @inputBorderHoverColor;
+    }
+
+    &:focus {
+        border-color: @formBorderGreyActive;
     }
 }
 
 
 .draftail-editor {
+    background: transparent;
+
     blockquote {
         border-left: 2px solid @lightGrey;
         padding-left: 10px;
         margin: 0;
     }
 
+    .drafteditor-root {
+        color: @bodyTextColor;
+    }
+
     .draftail-toolbar {
         background: transparent;
+        border-color: @inputBorderColor;
+        color: @bodyTextColor;
     }
 
     .draftail-toolbarbutton {
@@ -125,8 +137,36 @@ input, textarea {
     }
 
     .draftail-toolbarbutton--active {
-        background: @lightGrey;
+        background: @headerButtonHoverColor;
         border: none;
+
+        &:hover {
+            background: @headerButtonHoverColor;
+        }
+    }
+
+    .public-DraftEditorPlaceholder-inner {
+        color: @lightestTextGrey;
+    }
+
+    [data-draftail-balloon] {
+        &:hover {
+            &::before, &::after {
+                transition: all 0.1s ease-out !important;
+            }
+        }
+    }
+
+    &:hover {
+        .draftail-toolbar {
+            border-color: @inputBorderHoverColor;
+        }
+    }
+
+    &.draftail-editor--focus {
+        .draftail-toolbar {
+            border-color: @formBorderGreyActive;
+        }
     }
 }
 
@@ -550,18 +590,6 @@ section#new-email {
     form {
         label {
             color: @lightestTextGrey;
-        }
-
-        div input {
-            border-color: @formBorderGrey;
-
-            &:hover {
-                border-color: @formBorderGreyHover;
-            }
-
-            &:focus {
-                border-color: @formBorderGreyActive;
-            }
         }
 
         blockquote#reply-quote {

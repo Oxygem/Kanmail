@@ -14,6 +14,7 @@ export class TheTooltip extends React.Component {
             PropTypes.object,
             PropTypes.string,
         ]),
+        extraTop: PropTypes.number,
     }
 
     render() {
@@ -22,12 +23,13 @@ export class TheTooltip extends React.Component {
         }
 
         const position = this.props.targetElement.getBoundingClientRect();
+        const extraTop = this.props.extraTop || 0;
 
         return (
             <div
                 className="tooltip"
                 style={{
-                    top: position.top - 4,
+                    top: position.top - 4 + extraTop,
                     left: position.left + position.width + 10,
                 }}
             >{this.props.text}</div>
@@ -43,6 +45,7 @@ export default class Tooltip extends React.Component {
             PropTypes.object,
             PropTypes.string,
         ]),
+        extraTop: PropTypes.number,
     }
 
     componentWillUnmount() {
@@ -53,7 +56,11 @@ export default class Tooltip extends React.Component {
         return (
             <div
                 className="tooltip-wrapper"
-                onMouseEnter={() => tooltipStore.show(this.props.text, this.element)}
+                onMouseEnter={() => tooltipStore.show(
+                    this.props.text,
+                    this.element,
+                    this.props.extraTop,
+                )}
                 onMouseLeave={() => tooltipStore.hide()}
                 ref={div => this.element = div}
             >

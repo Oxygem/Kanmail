@@ -15,3 +15,8 @@ export function ensureInView(element, alignToTop) {
         element.scrollIntoView(alignToTop);
     }
 }
+
+
+export function stopEventPropagation(ev) {
+    ev.stopPropagation();
+}

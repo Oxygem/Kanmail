@@ -19,6 +19,7 @@ class SettingsStore extends BaseStore {
         this.props = {
             columns: [],
             accounts: [],
+            signatures: [],
             accountNameToConnected: {},
             systemSettings: {},
             styleSettings: {},
@@ -92,6 +93,7 @@ class SettingsStore extends BaseStore {
         return get('/api/settings').then(data => {
             this.props.columns = data.settings.columns || [];
             this.props.accounts = data.settings.accounts || [];
+            this.props.signatures = data.settings.signatures || [];
             this.props.accountNameToConnected = data.account_name_to_connected || {};
 
             this.props.systemSettings = data.settings.system || {};

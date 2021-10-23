@@ -40,7 +40,6 @@ def make_email_message(
     # If replying to another message
     reply_to_message_id=None,
     reply_to_message_references=None,
-    reply_to_html=None,
     raise_for_no_recipients=True,
 ):
     text = text or ''
@@ -84,9 +83,6 @@ def make_email_message(
     # Make/attach the HTML part, including any quote
     if not html:
         html = markdownify(text)
-
-    if reply_to_html:
-        html = f'{html}<blockquote>{reply_to_html}</blockquote>'
 
     message.add_alternative(html, subtype='html')
 

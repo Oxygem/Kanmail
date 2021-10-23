@@ -1,10 +1,21 @@
 import _ from 'lodash';
 
 
-export function cleanHtml(html, returnElement=false) {
-    // Parse the message into DOM
+export function documentFromHtml(html) {
     const parser = new DOMParser();
-    const tempDocument = parser.parseFromString(html, 'text/html');
+    return parser.parseFromString(html, 'text/html');
+}
+
+
+export function popElementFromDocument(doc, selector) {
+    const element = doc.querySelector(selector);
+    element.parentNode.removeChild(element);
+    return element;
+}
+
+
+export function cleanHtml(html, returnElement=false) {
+    const tempDocument = documentFromHtml(html);
 
     // Strip crappy tags
     _.each(tempDocument.body.querySelectorAll(

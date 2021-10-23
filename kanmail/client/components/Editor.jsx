@@ -59,6 +59,8 @@ const ENTITY_TYPES = [
 export default class Editor extends React.Component {
     static propTypes = {
         initialHtml: PropTypes.string,
+        placeholder: PropTypes.string,
+        controls: PropTypes.array,
     }
 
     constructor(props) {
@@ -82,16 +84,23 @@ export default class Editor extends React.Component {
         return this.state.editorState.getCurrentContent().getPlainText();
     }
 
+    focus() {
+        this.editor.focus();
+    }
+
     render() {
         return (
             <DraftailEditor
+                placeholder={this.props.placeholder}
                 editorState={this.state.editorState}
                 onChange={(editorState) => this.setState({editorState})}
                 inlineStyles={INLINE_STYLES}
                 blockTypes={BLOCK_TYPES}
                 entityTypes={ENTITY_TYPES}
+                controls={this.props.controls}
                 onFocus={this.keyboardWasEnabled ? keyboard.disable :null}
                 onBlur={this.keyboardWasEnabled ? keyboard.enable : null}
+                ref={editor => this.editor = editor}
             />
         );
     }

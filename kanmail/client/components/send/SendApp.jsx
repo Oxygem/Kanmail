@@ -4,14 +4,20 @@ import PropTypes from 'prop-types';
 import Select, { AsyncCreatable } from 'react-select';
 
 import Editor from 'components/Editor.jsx';
+import Tooltip from 'components/Tooltip.jsx';
 
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
 
 import { closeWindow, makeDragElement, makeNoDragElement } from 'window.js';
 
-import { cleanHtml } from 'util/html.js'
+import { cleanHtml, documentFromHtml, popElementFromDocument } from 'util/html.js'
 import { post } from 'util/requests.js'
+import { stopEventPropagation } from 'util/element.js';
+
+
+const KANMAIL_SIGNATURE_BEGIN = 'KANMAIL_SIGNATURE_BEGIN';
+const KANMAIL_QUOTE_BEGIN = 'KANMAIL_QUOTE_BEGIN';
 
 
 function makeContactLabel(contactTuple) {
@@ -63,6 +69,7 @@ export default class SendApp extends React.Component {
     static propTypes = {
         accounts: PropTypes.array.isRequired,
         contacts: PropTypes.array.isRequired,
+        signatures: PropTypes.array.isRequired,
         message: PropTypes.object,
     }
 
@@ -100,6 +107,10 @@ export default class SendApp extends React.Component {
             replyToMessageId: null,
             replyToMessageReferences: null,
             replyToQuoteHtml: null,
+
+            selectedSignatureIdx: -1,
+            signatureHtml: null,
+            signatureText: null,
         }
 
         if (props.message) {
@@ -156,13 +167,42 @@ export default class SendApp extends React.Component {
 
             // Figure out where to put the actual message (edit or reply/forward)
             if (props.message.edit) {
-                this.state.messageText = props.message.body.text;
-                this.state.messageHtml = props.message.body.html;
+                const doc = documentFromHtml(props.message.body.html);
+                const quote = popElementFromDocument(doc, 'blockquote#kanmail-quote');
+                const signature = popElementFromDocument(doc, 'div#kanmail-signature');
+                this.state.messageHtml = doc.body.innerHTML;
+                this.state.replyToQuoteHtml = quote.innerHTML;
+                this.state.signatureHtml = signature.innerHTML;
+                this.state.includeQuote = true;
+                // Copy the reply to message ID as this was already set on save
+                this.state.replyToMessageId = props.message.in_reply_to;
+                this.state.replyToMessageReferences = props.message.originalReferences;
+
+                const messageText = [];
+                const signatureText = [];
+                const quoteText = [];
+                const lines = props.message.body.text.split(/\r?\n/);
+                let target = messageText;
+                _.each(lines, line => {
+                    if (line === KANMAIL_SIGNATURE_BEGIN) {
+                        target = signatureText;
+                        return;
+                    } else if (line === KANMAIL_QUOTE_BEGIN) {
+                        target = quoteText;
+                        return;
+                    }
+                    target.push(line);
+                });
+
+                this.state.messageText = messageText;
+                this.state.replyToQuoteText = quoteText;
+                this.state.signatureText = signatureText;
             } else {
                 this.state.includeQuote = true;
                 this.state.replyToMessageId = props.message.message_id;
                 this.state.replyToMessageReferences = props.message.originalReferences;
-                this.state.replyToQuoteHtml = props.message.body.html || props.message.body.text;
+                this.state.replyToQuoteHtml = props.message.body.html;
+                this.state.replyToQuoteText = props.message.body.text;
             }
         }
     }
@@ -176,7 +216,7 @@ export default class SendApp extends React.Component {
         );
     }
 
-    getEmailData() {
+    getEmailData(isDraft=false) {
         const emailData = _.pick(this.state, [
             'subject',
             'attachments',
@@ -186,8 +226,8 @@ export default class SendApp extends React.Component {
         emailData.attachment_data = this.state.attachmentData;
 
         // Attach the HTML + plaintext copy
-        emailData.html = this.state.messageHtml;
-        emailData.text = this.state.messageText;
+        emailData.html = this.editor.getHtml();
+        emailData.text = this.editor.getText();
 
         _.each(['to', 'cc', 'bcc'], key => {
             const value = this.state[key];
@@ -200,6 +240,37 @@ export default class SendApp extends React.Component {
         const accountTuple = this.state.accountContact.value;
         emailData.from = [accountTuple[1], accountTuple[2]];
 
+        // Add any signature data
+        if (this.state.selectedSignatureIdx > -1) {
+            const signatureHtml = this.props.signatures[this.state.selectedSignatureIdx].html;
+            const signatureText = this.props.signatures[this.state.selectedSignatureIdx].text;
+
+            if (isDraft) {
+                emailData.html += `<div id="kanmail-signature">${signatureHtml}</div>`;
+                emailData.text += `\n${KANMAIL_SIGNATURE_BEGIN}\n${signatureText}`;
+            } else {
+                emailData.html += signatureHtml;
+                emailData.text += `\n${signatureText}`;
+            }
+        }
+
+        // Add any reply data
+        emailData.reply_to_message_id = this.state.replyToMessageId;
+        emailData.reply_to_message_references = this.state.replyToMessageReferences;
+
+        if (this.state.includeQuote) {
+            if (this.state.replyToQuoteHtml) {
+                emailData.html += isDraft ?
+                    `<blockquote id="kanmail-quote">${this.state.replyToQuoteHtml}</blockquote>` :
+                    `<blockquote>${this.state.replyToQuoteHtml}</blockquote>`;
+            }
+            if (this.state.replyToQuoteText) {
+                emailData.text += isDraft ?
+                    `\n\n${KANMAIL_QUOTE_BEGIN}\n${this.state.replyToQuoteText}` :
+                    `\n\n---\n${this.state.replyToQuoteText}`;
+            }
+        }
+
         return [accountTuple[0], emailData];
     }
 
@@ -207,13 +278,6 @@ export default class SendApp extends React.Component {
         this.setState({
             [field]: ev.target.value,
         })
-    }
-
-    handleEditorStateChange = (value, delta, source, editor) => {
-        this.setState({
-            body: value,
-            messageText: editor.getText(),
-        });
     }
 
     handleIncludeQuoteChange = () => {
@@ -235,9 +299,6 @@ export default class SendApp extends React.Component {
         this.setState({isSending: true});
 
         const [accountKey, emailData] = this.getEmailData();
-        emailData.replyToMessageId = this.state.replyToMessageId;
-        emailData.replyToMessageReferences = this.state.replyToMessageReferences;
-        emailData.replyToQuoteHtml = this.state.replyToQuoteHtml;
 
         post(`/api/emails/${accountKey}`, emailData)
             .then(() => {
@@ -259,7 +320,7 @@ export default class SendApp extends React.Component {
 
         this.setState({isSending: true});
 
-        const [accountKey, emailData] = this.getEmailData();
+        const [accountKey, emailData] = this.getEmailData(true);
 
         post(`/api/emails/${accountKey}/drafts`, emailData)
             .then(() => {
@@ -304,8 +365,12 @@ export default class SendApp extends React.Component {
         fileSelector.click();
     }
 
+    handleSelectSignature = (ev) => {
+        this.setState({selectedSignatureIdx: ev.value});
+    }
+
     renderQuote() {
-        if (!this.props.message || this.props.message.edit) {
+        if (!this.props.message) {
             return;
         }
 
@@ -428,17 +493,37 @@ export default class SendApp extends React.Component {
             buttonText = `Attach files (${this.state.attachments.length})`;
         }
 
+        const button = <button
+            className="attach"
+            onClick={this.handleClickAttach}
+            ref={makeNoDragElement}
+        ><i className="fa fa-paperclip" /> {buttonText}</button>;
+
+        if (this.state.attachments.length === 0) {
+            return button;
+        }
+
         const attachments = _.map(this.state.attachments, attachment => (
             <li key={attachment}>{getFilename(attachment)}</li>
         ));
 
         return (
-            <button
-                className="attach"
-                onClick={this.handleClickAttach}
-                ref={makeNoDragElement}
-            ><i className="fa fa-paperclip" /> {buttonText}{attachments}</button>
+            <Tooltip text={attachments} extraTop={16}>{button}</Tooltip>
         );
+    }
+
+    renderSignature() {
+        let signatureHtml = this.state.signatureHtml;
+
+        if (this.state.selectedSignatureIdx > -1) {
+            signatureHtml = this.props.signatures[this.state.selectedSignatureIdx].html;
+        }
+
+        if (!signatureHtml) {
+            return null;
+        }
+
+        return <div dangerouslySetInnerHTML={{__html: signatureHtml}} />;
     }
 
     render() {
@@ -469,28 +554,40 @@ export default class SendApp extends React.Component {
             };
         });
 
-        const modules = {
-            toolbar: [
-                [
-                    'bold', 'italic', 'underline', 'blockquote', 'link',
-                    {'list': 'ordered'}, {'list': 'bullet'},
-                ],
-            ],
-        };
-
-        const formats = [
-            'bold', 'italic', 'underline', 'blockquote', 'link',
-            'list', 'bullet',
-        ];
-
         const editorClasses = [];
 
-        if (this.state.editorActive) editorClasses.push('active');
-        if (this.props.message && this.state.includeQuote) editorClasses.push('short');
+        if (this.state.editorActive) {
+            editorClasses.push('active');
+        }
+
+        const signatureOptions = _.map(
+            this.props.signatures,
+            (signature, i) => ({
+                value: i,
+                label: signature.name,
+            }),
+        );
+        signatureOptions.unshift({value: -1, label: 'Select signature'});
+
+        const signatureSelector = <Select
+            className="signature-select"
+            classNamePrefix="react-select"
+            options={signatureOptions}
+            value={signatureOptions[this.state.selectedSignatureIdx + 1]}
+            onChange={this.handleSelectSignature}
+        />;
 
         return (
-            <section id="new-email" className={window.KANMAIL_PLATFORM}>
-                <header className="new-email flex header-bar" ref={makeDragElement}>
+            <section
+                id="new-email"
+                className={window.KANMAIL_PLATFORM}
+                onClick={() => this.editor && this.editor.focus()}
+            >
+                <header
+                    className="new-email flex header-bar"
+                    onClick={stopEventPropagation}
+                    ref={makeDragElement}
+                >
                     <h2>New Email</h2>
                     <div>
                         {this.renderAttachButton()}
@@ -499,67 +596,80 @@ export default class SendApp extends React.Component {
                     </div>
                 </header>
 
-                <form>
-                    <div className="third">
-                        <label htmlFor="account">Account</label>
-                        <Select
-                            id="account"
-                            classNamePrefix="react-select"
-                            options={accountOptions}
-                            value={this.state.accountContact}
-                            onChange={_.partial(
-                                this.handleSelectChange, 'accountContact',
-                            )}
-                        />
-                    </div>
+                <form
+                    className="flex flex-vertical flex-nowrap"
+                    onClick={() => this.editor && this.editor.focus()}
+                >
+                    <div
+                        className="flex form-top"
+                        onClick={stopEventPropagation}
+                    >
+                        <div className="wide">
+                            <label htmlFor="to">To</label>
+                            {this.renderAddressBookSelect(contactOptions, 'to')}
+                        </div>
 
-                    <div className="two-third">
-                        <label htmlFor="to">To</label>
-                        {this.renderAddressBookSelect(contactOptions, 'to')}
-                    </div>
+                        <div className="wide">
+                            <label htmlFor="cc">CC</label>
+                            {this.renderAddressBookSelect(contactOptions, 'cc')}
+                        </div>
 
-                    <div className="half">
-                        <label htmlFor="cc">CC</label>
-                        {this.renderAddressBookSelect(contactOptions, 'cc')}
-                    </div>
+                        <div className="wide">
+                            <label htmlFor="bcc">BCC</label>
+                            {this.renderAddressBookSelect(contactOptions, 'bcc')}
+                        </div>
 
-                    <div className="half">
-                        <label htmlFor="bcc">BCC</label>
-                        {this.renderAddressBookSelect(contactOptions, 'bcc')}
-                    </div>
+                        <div className="wide">
+                            <label htmlFor="account">From</label>
+                            <Select
+                                id="account"
+                                classNamePrefix="react-select"
+                                options={accountOptions}
+                                value={this.state.accountContact}
+                                onChange={_.partial(
+                                    this.handleSelectChange, 'accountContact',
+                                )}
+                            />
+                        </div>
 
-                    <div className="wide">
-                        <label htmlFor="subject">Subject</label>
-                        <div id="subject-wrapper">
+                        <div className="wide subject">
                             <input
                                 id="subject"
                                 type="text"
                                 value={this.state.subject}
+                                placeholder="Subject"
                                 onChange={_.partial(this.handleInputChange, 'subject')}
                             />
                         </div>
                     </div>
 
-                    <div className="wide">
-                        <label htmlFor="body" id="message-label">Message</label>
-                        <div
-                            id="textarea-body"
-                            className={editorClasses.join(' ')}
-                        >
-                            <Editor
-                                value={this.state.messageHtml}
-                                onChange={this.handleEditorStateChange}
-                                modules={modules}
-                                formats={formats}
-                                placeholder="Write something..."
-                                onFocus={() => this.setState({editorActive: true})}
-                                onBlur={() => this.setState({editorActive: false})}
-                            />
+                    <div
+                        className="flex form-content"
+                        onClick={stopEventPropagation}
+                    >
+                        <div className="wide">
+                            <div
+                                id="textarea-body"
+                                className={editorClasses.join(' ')}
+                            >
+                                <Editor
+                                    initialHtml={this.state.messageHtml}
+                                    placeholder="Write something..."
+                                    controls={[() => signatureSelector]}
+                                    onFocus={() => this.setState({editorActive: true})}
+                                    onBlur={() => this.setState({editorActive: false})}
+                                    ref={editor => this.editor = editor}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="wide">
-                        {this.renderQuote()}
+                        <div className="wide signature">
+                            {this.renderSignature()}
+                        </div>
+
+                        <div className="wide quote">
+                            {this.renderQuote()}
+                        </div>
                     </div>
                 </form>
             </section>

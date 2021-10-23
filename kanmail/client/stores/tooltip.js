@@ -6,6 +6,7 @@ function makeDefaults() {
         visible: false,
         text: null,
         targetElement: null,
+        extraTop: 0,
     };
 }
 
@@ -18,10 +19,11 @@ class TooltipStore extends BaseStore {
         this.props = makeDefaults();
     }
 
-    show(text, targetElement) {
+    show(text, targetElement, extraTop=0) {
         this.props.visible = true;
         this.props.text = text;
         this.props.targetElement = targetElement;
+        this.props.extraTop = extraTop;
         this.triggerUpdate();
     }
 

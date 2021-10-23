@@ -125,6 +125,14 @@ input {
     &.justify-left {
         justify-content: left;
     }
+
+    &.flex-vertical {
+        flex-direction: column;
+    }
+
+    &.flex-nowrap {
+        flex-wrap: nowrap;
+    }
 }
 
 
@@ -153,9 +161,10 @@ button {
 
 input, textarea {
     width: 100%;
-    border-radius: @borderRadius;
+    // border-radius: @borderRadius;
     padding: 5px;
-    border: 1px solid;
+    border: 0px solid;
+    border-bottom-width: 1px;
     font-size: @textSize;
 
     &:hover, &:focus {
@@ -187,7 +196,7 @@ span.multi-subject {
 }
 
 .tooltip {
-    z-index: 9999;
+    z-index: 1100;
     position: absolute;
     font-size: @smallTextSize;
     border-radius: @borderRadius;

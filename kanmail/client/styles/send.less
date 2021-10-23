@@ -2,18 +2,22 @@
     New email (send app) form */
 
 section#new-email {
-    padding-top: @topHeight + 5px;
+    padding-top: @topHeight;
     height: 100%;
     position: relative;
 
     form {
-        margin: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
+        padding: 10px 10px 0 10px;
+        position: absolute;
+        width: 100%;
+        top: @topHeight;
+        bottom: 0;
+        justify-content: flex-start;
+        margin: 0;
 
         label {
-            width: 55px;
+            // width: 55px;
+            padding-left: 10px;
             text-align: right;
             padding-right: 2px;
             font-size: 14px;
@@ -26,9 +30,7 @@ section#new-email {
             padding: 2px 9px;
             margin: 0 2px;
             font-size: 14px;
-            border: 1px solid;
             width: 100%;
-            border-radius: @borderRadius;
             outline: none;
         }
 
@@ -41,68 +43,81 @@ section#new-email {
         }
 
         div#account, div#to, div#cc, div#bcc {
-            margin-left: 60px;
+            margin-left: 50px;
         }
 
-        div#subject-wrapper {
-            margin-left: 58px;
-            margin-right: 2px;
+        div.subject input {
+            font-weight: bold;
+            margin-left: 0px;
         }
 
         label#message-label {
             margin-top: 5px;
         }
 
-        div#textarea-body {
-            position: absolute;
-            right: 20px;
-            bottom: 90px;
-            left: 70px;
-            top: 180px;
+        div.form-top {
+            position: relative;
+            z-index: 3;
+        }
 
-            &.short {
-                bottom: 150px;
+        div.form-content {
+            overflow: auto;
+        }
+
+        div#textarea-body {
+            .draftail-editor {
+                border: none;
+                height: 100%;
+
+                .draftail-toolbar {
+                    position: fixed;
+                    top: auto;
+                    margin-top: -40px;
+                    left: 10px;
+                    right: 10px;
+                    z-index: 2;
+
+                    div.signature-select {
+                        position: absolute;
+                        right: 0;
+                        top: 7px;
+                        width: 175px;
+
+                        div.react-select__control {
+                            border-bottom-width: 0px;
+                        }
+                    }
+                }
+
+                .drafteditor-root {
+                    margin-top: 40px;
+                }
+
+                .public-drafteditor-content {
+                    padding-bottom: 0;
+                }
             }
         }
 
         blockquote#reply-quote {
             margin: 0;
-            max-height: 100px;
-            right: 20px;
-            left: 70px;
+            // max-height: 100px;
             overflow-y: auto;
-            position: absolute;
-            bottom: 50px;
+            border: 1px solid @formBorderGrey;
 
             * {
                 pointer-events: none;
             }
         }
 
-        label#include_quote {
-            width: auto;
-        }
-        input#include_quote {
-            width: auto;
-            margin-left: 60px;
-        }
-
         #include-quote {
-            position: absolute;
-            bottom: 7px;
-            left: 145px;
-            width: 200px;
-
-            &.sending {
-                left: 130px;
-            }
-
             label {
                 width: auto;
                 padding-left: 1px;
+                position: relative;
             }
             input {
-                height: 32px;
+                width: auto;
             }
         }
 
@@ -131,22 +146,15 @@ section#new-email {
             }
         }
 
+        div.signature, div.quote {
+            margin: 13px 10px 0 10px;
+        }
 
-        /*
-            Quill editor overrides */
+        div.signature {
+            margin-bottom: 10px;
 
-        div#textarea-body {
-            .ql-editor {
-                padding: 8px 8px;
-            }
-
-            .ql-toolbar.ql-snow {
-                padding: 4px 1px;
-            }
-
-            .ql-container {
-                font-size: 14px;
-                font-family: 'Open Sans';
+            p {
+                margin: 0;
             }
         }
     }
