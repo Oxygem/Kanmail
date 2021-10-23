@@ -374,9 +374,9 @@ export default class ThreadMessage extends React.Component {
             </div>;
         }
 
-        let html = body.html || body.text;
+        let html = body.html || body.text_as_html;
         if (this.state.showPlainText) {
-            html = body.text;
+            html = body.text_as_html;
         }
 
         const contentIds = body.cid_to_part;

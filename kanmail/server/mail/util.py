@@ -21,7 +21,7 @@ def markdownify(text, linkify=True):
     if linkify:
         extensions.append(LinkifyExtension())
 
-    return markdown(text, extensions)
+    return markdown(text=text, extensions=extensions)
 
 
 def format_address(address):
