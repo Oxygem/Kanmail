@@ -125,6 +125,7 @@ export default class Filters extends React.Component {
         updateReady: PropTypes.bool.isRequired,
         updateDownloading: PropTypes.bool.isRequired,
         styleSettings: PropTypes.object.isRequired,
+        systemSettings: PropTypes.object.isRequired,
         folders: PropTypes.array.isRequired,
         accountName: PropTypes.string,
         updateVersion: PropTypes.string,
@@ -155,9 +156,12 @@ export default class Filters extends React.Component {
             const handleClick = () => {
                 const columnMetaStore = getColumnMetaStore(folderName);
 
+                const { initial_batches, batch_size } = this.props.systemSettings;
+                const initialBatchSize = batch_size * initial_batches;
+
                 // Sync when changing folders or re-clicking the active one
                 if (!columnMetaStore.props.isSyncing) {
-                    mainEmailStore.syncFolderEmails(folderName);
+                    mainEmailStore.initializeOrSyncFolder(folderName, initialBatchSize);
                 }
 
                 if (this.props.mainColumn !== folderName) {

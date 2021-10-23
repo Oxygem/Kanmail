@@ -12,6 +12,24 @@ class MainEmails extends BaseEmails {
 
         // We start with the main store active!
         this.active = true;
+
+        // Track which folders we've initialized
+        this.initializedFolderNames = new Set();
+    }
+
+    initializeOrSyncFolder = (folderName, batchSize) => {
+        if (this.initializedFolderNames.has(folderName)) {
+            return this.syncFolderEmails(folderName);
+        } else {
+            this.initializedFolderNames.add(folderName);
+            return this.getFolderEmails(
+                folderName,
+                {query: {
+                    reset: true,
+                    batch_size: batchSize,
+                }},
+            ).then(this.syncFolderEmails(folderName));
+        }
     }
 
     syncFolderEmails = (folderName, options={}) => {
