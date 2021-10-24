@@ -205,20 +205,21 @@ def get_folder_email_texts(account_key, folder_name, uids):
     # Build the output object
     uid_part_data_with_cids = {}
     for uid, part_data in uid_part_data.items():
-        text_data = html_data = None
+        text_data = html_data = text_as_html = None
 
         if uid in uid_to_html_part_number:
             html_data = uid_part_data[uid][uid_to_html_part_number[uid]]
 
         if uid in uid_to_text_part_number:
             text_data = uid_part_data[uid][uid_to_text_part_number[uid]]
+            text_as_html = markdownify(text_data)
 
         uid_part_data_with_cids[uid] = {
             'cid_to_part': uid_to_content_ids.get(uid),
             'allow_images': uid_to_allow_images.get(uid),
             'text': text_data,
             'html': html_data,
-            'text_as_html': markdownify(text_data),
+            'text_as_html': text_as_html,
         }
 
     for uid, error in uid_to_error.items():
