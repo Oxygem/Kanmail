@@ -4,9 +4,8 @@ import { BaseStore } from 'stores/base.jsx';
 function makeDefaults() {
     return {
         open: false,
-        action: null,
-        subject: null,
-        moveData: null,
+        inputHandler: null,
+        extraProps: {},
     };
 }
 
@@ -24,16 +23,20 @@ class ControlStore extends BaseStore {
         this.props = makeDefaults();
     }
 
-    open = (action, subject, moveData) => {
-        this.props.open = true;
-        this.props.action = action;
-        this.props.subject = subject;
-        this.props.moveData = moveData;
+    open = (inputHandler, extraProps={}) => {
+        this.props = {
+            open: true,
+            inputHandler: inputHandler,
+            extraProps: extraProps,
+        };
         this.triggerUpdate();
     }
 
-    close = () => {
+    close = (triggerInputHandler=true) => {
         if (this.props.open) {
+            if (triggerInputHandler) {
+                this.props.inputHandler(null);
+            }
             this.props = makeDefaults();
             this.triggerUpdate();
         }

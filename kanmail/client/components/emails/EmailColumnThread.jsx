@@ -14,14 +14,16 @@ import controlStore from 'stores/control.js';
 import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
 import settingsStore from 'stores/settings.js';
+import folderStore from 'stores/folders.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { getColumnStore } from 'stores/columns.js';
 
 import { getAccountIconName } from 'util/accounts.js';
-import { formatAddress, formatDate } from 'util/string.js';
+import { formatAddress, formatDate, capitalizeFirstLetter } from 'util/string.js';
 import {
     getThreadColumnMessageIds,
     getMoveDataFromThreadComponent,
+    moveOrCopyThread,
 } from 'util/threads.js';
 
 
@@ -309,6 +311,34 @@ export default class EmailColumnThread extends React.Component {
         const subject = this.props.thread[0].subject;
         const moveData = getMoveDataFromThreadComponent(this);
         controlStore.open('move', subject, moveData);
+
+        const controlInputHandler = (value) => {
+            if (!value) {
+                return;
+            }
+
+            moveOrCopyThread(
+                moveData,
+                value.value,
+                keyboard.setMovingCurrentThread,
+            );
+        }
+
+        const folderOptions = Array.prototype.concat(
+            _.map(folderStore.props.folders, folderName => ({
+                value: folderName,
+                label: folderName,
+            })),
+            _.map(ALIAS_FOLDERS, folderName => ({
+                value: folderName,
+                label: capitalizeFirstLetter(folderName),
+            })),
+        );
+
+        controlStore.open(controlInputHandler, {
+            selectOptions: folderOptions,
+            header: <span>Move <strong>{subject}</strong>...</span>,
+        });
     }
 
     /*

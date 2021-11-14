@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
@@ -9,66 +8,79 @@ import controlStore from 'stores/control.js';
 import folderStore from 'stores/folders.js';
 import { subscribe } from 'stores/base.jsx';
 
-import { capitalizeFirstLetter } from 'util/string.js';
-import { moveOrCopyThread } from 'util/threads.js';
-
 
 @subscribe(folderStore)
 class ControlInput extends React.Component {
     static propTypes = {
-        folders: PropTypes.array.isRequired,
-        action: PropTypes.string,
-        subject: PropTypes.string,
-        moveData: PropTypes.object,
+        inputHandler: PropTypes.func.isRequired,
+        selectOptions: PropTypes.array,
+        header: PropTypes.object,
+    }
+
+    constructor(props) {
+        super(props);
+
+        this.keyboardWasEnabled = !keyboard.disabled;
+
+        this.state = {
+            inputValue: '',
+        };
     }
 
     handleSelectChange = (value) => {
-        const { action, moveData } = this.props;
+        this.props.inputHandler(value);
+        this.handleClose();
+    }
 
-        if (action !== 'move') {
-            throw new Error(`${action} is not a valid control action!`);
-        }
-
-        moveOrCopyThread(
-            moveData,
-            value.value,
-            keyboard.setMovingCurrentThread,
-        );
+    handleFormSubmit = (ev) => {
+        ev.preventDefault();
+        this.props.inputHandler(this.state.inputValue);
         this.handleClose();
     }
 
     handleClose = () => {
-        controlStore.close();
-        setTimeout(keyboard.enable, 0);  // prevent the *current* keyboard event executing
+        controlStore.close(false);
+        if (this.keyboardWasEnabled) {
+            setTimeout(keyboard.enable, 0);  // prevent the *current* keyboard event executing
+        }
     }
 
     render () {
-        const folderOptions = _.map(this.props.folders, folderName => ({
-            value: folderName,
-            label: folderName,
-        }));
+        const { header, selectOptions } = this.props;
+
+        let input;
+
+        if (selectOptions) {
+            input = <Select
+                id="control-input"
+                classNamePrefix="react-select"
+                options={selectOptions}
+                autoFocus={true}
+                openMenuOnFocus={true}
+                closeMenuOnSelect={false}
+                menuIsOpen={true}
+                onMenuClose={this.handleClose}
+                onChange={this.handleSelectChange}
+                onFocus={this.keyboardWasEnabled ? keyboard.disable :null}
+                onBlur={this.keyboardWasEnabled ? keyboard.enable : null}
+            />;
+        } else {
+            input = <form onSubmit={this.handleFormSubmit}>
+                <input
+                    id="control-input"
+                    value={this.state.inputValue}
+                    onChange={(ev) => this.setState({inputValue: ev.target.value})}
+                    ref={(input) => input && input.focus()}
+                />
+            </form>;
+        }
 
         return (
             <div>
                 <section id="control-background">
                     <section id="control">
-                        <p>
-                            {capitalizeFirstLetter(this.props.action)}&nbsp;
-                            <strong>{this.props.subject}</strong>...
-                        </p>
-                        <Select
-                            id="control-input"
-                            classNamePrefix="react-select"
-                            options={folderOptions}
-                            autoFocus={true}
-                            openMenuOnFocus={true}
-                            closeMenuOnSelect={false}
-                            menuIsOpen={true}
-                            onMenuClose={this.handleClose}
-                            onChange={this.handleSelectChange}
-                            onFocus={keyboard.disable}
-                            onBlur={keyboard.enable}
-                        />
+                        <p>{header}</p>
+                        {input}
                     </section>
                 </section>
             </div>
@@ -81,9 +93,8 @@ class ControlInput extends React.Component {
 export default class ControlInputWrapper extends React.Component {
     static propTypes = {
         open: PropTypes.bool.isRequired,
-        action: PropTypes.string,
-        subject: PropTypes.string,
-        moveData: PropTypes.object,
+        inputHandler: PropTypes.func.isRequired,
+        extraProps: PropTypes.bool.isRequired,
     }
 
     render() {
@@ -91,6 +102,9 @@ export default class ControlInputWrapper extends React.Component {
             return null;
         }
 
-        return <ControlInput {...this.props} />;
+        return <ControlInput
+            inputHandler={this.props.inputHandler}
+            {...this.props.extraProps}
+        />;
     }
 }
