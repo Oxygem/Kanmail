@@ -5,6 +5,7 @@ import Select, { AsyncCreatable } from 'react-select';
 
 import Editor from 'components/Editor.jsx';
 import Tooltip from 'components/Tooltip.jsx';
+import ControlInput from 'components/emails/ControlInput.jsx';
 
 import settingsStore from 'stores/settings.js'
 import { subscribe } from 'stores/base.jsx'
@@ -583,6 +584,8 @@ export default class SendApp extends React.Component {
                 className={window.KANMAIL_PLATFORM}
                 onClick={() => this.editor && this.editor.focus()}
             >
+                <ControlInput />
+
                 <header
                     className="new-email flex header-bar"
                     onClick={stopEventPropagation}
@@ -597,6 +600,7 @@ export default class SendApp extends React.Component {
                 </header>
 
                 <form
+                    id="send-form"
                     className="flex flex-vertical flex-nowrap"
                     onClick={() => this.editor && this.editor.focus()}
                 >

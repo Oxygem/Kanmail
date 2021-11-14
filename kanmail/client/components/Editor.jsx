@@ -1,13 +1,81 @@
 import 'draft-js/dist/Draft.css';
 import 'draftail/dist/draftail.css';
 
-import React from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { EditorState } from 'draft-js';
+import { EditorState, RichUtils } from 'draft-js';
 import { convertFromHTML, convertToHTML } from 'draft-convert';
 import { DraftailEditor, BLOCK_TYPE, ENTITY_TYPE, INLINE_STYLE } from 'draftail';
 
 import keyboard from 'keyboard.js';
+
+import Tooltip from 'components/Tooltip.jsx';
+import controlStore from 'stores/control.js';
+
+
+class LinkSource extends Component {
+    static propTypes = {
+        editorState: PropTypes.object.isRequired,
+        entityType: PropTypes.string.isRequired,
+        onComplete: PropTypes.func.isRequired,
+    }
+
+    componentDidMount() {
+        const handleSubmit = (value) => {
+            const { editorState, entityType, onComplete } = this.props
+
+            if (value) {
+                const content = editorState.getCurrentContent()
+                const contentStateWithEntity = content.createEntity(
+                    entityType.type, 'MUTABLE', {url: value},
+                );
+                const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+                const nextState = RichUtils.toggleLink(
+                    editorState,
+                    editorState.getSelection(),
+                    entityKey,
+                );
+                onComplete(nextState)
+            } else {
+                onComplete(editorState)
+            }
+        }
+
+        controlStore.open(handleSubmit, {
+            header: <span>URL to link</span>,
+        });
+    }
+
+    render() {
+        return null;
+    }
+}
+
+
+class LinkDecorator extends Component {
+    static propTypes = {
+        entityKey: PropTypes.string.isRequired,
+        contentState: PropTypes.object.isRequired,
+        children: PropTypes.array.isRequired,
+        onRemove: PropTypes.func.isRequired,
+    }
+
+    onClick = (ev) => {
+        ev.preventDefault();
+        this.props.onRemove(this.props.entityKey);
+    }
+
+    render() {
+        const { contentState, entityKey, children } = this.props;
+        const { url } = contentState.getEntity(entityKey).getData()
+
+        return (
+        <Tooltip text={`${url} (click to remove)`}>
+            <a onClick={this.onClick}>{children}</a>
+        </Tooltip>
+        )
+    }
+}
 
 
 const INLINE_STYLES = [
@@ -52,6 +120,8 @@ const ENTITY_TYPES = [
     {
         type: ENTITY_TYPE.LINK,
         icon: <i className="fa fa-link"></i>,
+        source: LinkSource,
+        decorator: LinkDecorator,
     },
 ];
 

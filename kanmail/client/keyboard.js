@@ -189,6 +189,12 @@ class Keyboard {
                 searchStore.close();
                 return;
             }
+
+            if (controlStore.props.open && key === keys.ESCAPE) {
+                controlStore.close();
+                return;
+            }
+
             return;
         }
 
