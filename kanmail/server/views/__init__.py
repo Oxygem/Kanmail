@@ -82,7 +82,11 @@ def _get_render_data():
     }
 
 
-@add_route('/', methods=('GET',))
+# If we're not running in app mode (ie, Docker/server), we don't want to require the session token on index
+index_route_handler = add_route if IS_APP else add_public_route
+
+
+@index_route_handler('/', methods=('GET',))
 def get_emails():
     return render_template(
         'emails.html',
