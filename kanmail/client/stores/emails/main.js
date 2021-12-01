@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
-import { getColumnMetaStore } from 'stores/columns.js';
+import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 
 import BaseEmails from 'stores/emails/base.js';
 
@@ -22,6 +22,11 @@ class MainEmails extends BaseEmails {
             return this.syncFolderEmails(folderName);
         } else {
             this.initializedFolderNames.add(folderName);
+
+            // Ensure the column stores are created
+            getColumnStore(folderName);
+            getColumnMetaStore(folderName);
+
             return this.getFolderEmails(
                 folderName,
                 {query: {
