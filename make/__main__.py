@@ -172,7 +172,7 @@ def download_and_complete_release():
     else:
         print_and_run(('docker', 'push', docker_image_tag))
         docker_latest_tag = f'{DOCKER_NAME}:latest'
-        print_and_run(('docker', 'tag', docker_latest_tag, docker_image_tag))
+        print_and_run(('docker', 'tag', docker_image_tag, docker_latest_tag))
         print_and_run(('docker', 'push', docker_latest_tag))
 
     if not click.confirm((
