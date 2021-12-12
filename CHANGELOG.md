@@ -1,3 +1,35 @@
+# v1.2112121539
+
+This release adds support for signatures and huge improvements to the send message editor.
+
+Changes:
+- Remove unused release script.
+- Don't check session token on index in non-app mode.
+- Always create column + meta stores.
+- Implement link entities in the editor component using control input.
+- Make control input component/store more flexible.
+- Only generate text as HTML if there's text data.
+- Rewrite email send app.
+- Fix contact delete button.
+- Separate text from HTML-ified text in messages.
+- Fix loading folders after initial app start.
+- Add some basic styles to the drafttail editor.
+- Add draft-js and remove quill.
+- Add signatures to the settings model.
+- Add signatures to settings.
+- Fix using false boolean in class name.
+- Complete conversion of account list to use overlay list base.
+- Don't allow saving account form with an empty name.
+- Extract common editor component parts.
+- Extract common list overlay component methods.
+- Add basic app run test.
+- Improve exit handling in main script.
+- Add test stage before building.
+- Disable Linux build/test for now.
+- Bump ipython dev requirement.
+- Add pytest dev requirement.
+- fix config volume permission issues
+
 # v1.2110131703
 
 Contains an urgent fix for the latest Windows build.
