@@ -132,7 +132,6 @@ def build_release(is_release=False, docker=False, build_version=None, onedir=Non
     click.echo()
 
 
-# TODO: fix this
 def download_and_complete_release():
     for key, value in (
         ('CODESIGN_KEY_NAME', CODESIGN_KEY_NAME),
@@ -151,7 +150,11 @@ def download_and_complete_release():
         f'Kanmail-win-{version}.zip',
     ):
         if not path.exists(path.join('pyu-data', 'new', filename)):
-            print_and_run(('aws', 's3', 'cp', f's3://builds.kanmail.io/{filename}', 'pyu-data/new'))
+            try:
+                print_and_run(('aws', 's3', 'cp', f's3://builds.kanmail.io/{filename}', 'pyu-data/new'))
+            except CalledProcessError:
+                if not click.confirm(f'Error fetching build: {filename}, OK to skip?'):
+                    raise
 
     # Now use `codesign` to sign the package with a Developer ID
     codesign_and_notarize(version)
