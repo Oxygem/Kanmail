@@ -140,7 +140,7 @@ def create_github_release(version):
 
     changelog_lines = changelog.splitlines()
     changelog_lines[0] = '[**Download the latest Kanmail here**](https://kanmail.io/download).'
-    changelog = '\n'.join(changelog)
+    changelog = '\n'.join(changelog_lines)
 
     response = requests.post(
         'https://api.github.com/repos/fizzadar/Kanmail/releases',
