@@ -124,7 +124,7 @@ def get_meta_file(filename):
     if not path.exists(file_path):
         abort(404, 'This file does not exist!')
 
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         file_data = f.read()
 
     file_data = markdownify(file_data, linkify=False)
