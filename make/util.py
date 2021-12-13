@@ -156,8 +156,11 @@ def create_github_release(version):
 
 
 def get_release_version():
-    return (
+    git_tag = (
         check_output(('git', 'tag', '--points-at', 'HEAD'))
         .decode()
         .strip()
-    ) or None
+    )
+    if git_tag:
+        # Strip off the vX.YZ...
+        return git_tag[1:]
