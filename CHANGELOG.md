@@ -1,3 +1,10 @@
+# v1.2112131141
+
+Changes:
+- Ensure we load meta files with utf8 encoding.
+- Strip off git tag v prefix.
+- Fix call to docker tag.
+
 # v1.2112121539
 
 This release adds support for signatures and huge improvements to the send message editor.
