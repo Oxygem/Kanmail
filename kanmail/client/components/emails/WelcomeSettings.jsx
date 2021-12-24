@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 
 import AccountList from 'components/settings/AccountList.jsx';
-import AccountSettingsMixin from 'components/settings/OverlayItemList.jsx';
+import { AccountSettingsMixin } from 'components/settings/OverlayItemList.jsx';
 
 import img from 'icon.png';
 import keyboard from 'keyboard.js';
