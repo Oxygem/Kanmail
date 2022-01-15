@@ -1,3 +1,11 @@
+# v1.2201151710
+
+This release fixes SMTP with Outlook accounts.
+
+Changes:
+- Re-implement the "copy from inbox" feature.
+- Bring in Python 3.8 SMTP fix.
+
 # v1.2112242054
 
 Changes:
