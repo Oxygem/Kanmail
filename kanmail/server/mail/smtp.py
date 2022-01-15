@@ -9,6 +9,13 @@ import base64
 import hmac
 import smtplib
 
+from smtplib import (
+    _MAXCHALLENGE,
+    encode_base64,
+    SMTPAuthenticationError,
+    SMTPException,
+)
+
 
 class SMTP(smtplib.SMTP):
     def auth(self, mechanism, authobject, *, initial_response_ok=True):
@@ -20,7 +27,7 @@ class SMTP(smtplib.SMTP):
                 data = authobject(challenge)
         It will be called to process the server's challenge response; the
         challenge argument it is passed will be a bytes.  It should return
-        bytes data that will be base64 encoded and sent to the server.
+        an ASCII string that will be base64 encoded and sent to the server.
         Keyword arguments:
             - initial_response_ok: Allow sending the RFC 4954 initial-response
               to the AUTH command, if the authentication methods supports it.
@@ -31,19 +38,28 @@ class SMTP(smtplib.SMTP):
         mechanism = mechanism.upper()
         initial_response = (authobject() if initial_response_ok else None)
         if initial_response is not None:
-            response = smtplib.encode_base64(initial_response.encode('utf-8'), eol='')
+            response = encode_base64(initial_response.encode('utf-8'), eol='')
             (code, resp) = self.docmd("AUTH", mechanism + " " + response)
+            self._auth_challenge_count = 1
         else:
             (code, resp) = self.docmd("AUTH", mechanism)
+            self._auth_challenge_count = 0
         # If server responds with a challenge, send the response.
-        if code == 334:
+        while code == 334:
+            self._auth_challenge_count += 1
             challenge = base64.decodebytes(resp)
-            response = smtplib.encode_base64(
+            response = encode_base64(
                 authobject(challenge).encode('utf-8'), eol='')
             (code, resp) = self.docmd(response)
+            # If server keeps sending challenges, something is wrong.
+            if self._auth_challenge_count > _MAXCHALLENGE:
+                raise SMTPException(
+                    "Server AUTH mechanism infinite loop. Last response: "
+                    + repr((code, resp))
+                )
         if code in (235, 503):
             return (code, resp)
-        raise smtplib.SMTPAuthenticationError(code, resp)
+        raise SMTPAuthenticationError(code, resp)
 
     def auth_cram_md5(self, challenge=None):
         """ Authobject to use with CRAM-MD5 authentication. Requires self.user
