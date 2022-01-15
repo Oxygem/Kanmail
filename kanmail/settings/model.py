@@ -68,6 +68,7 @@ MODEL = {
                 # Folder settings
                 'save_sent_copies': bool,
                 'delete_on_trash': bool,
+                'copy_from_inbox': bool,
                 # Folder aliases
                 **{
                     alias: str

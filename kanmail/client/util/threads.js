@@ -1,9 +1,9 @@
 import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
+import settingsStore from 'stores/settings.js';
 import { getColumnStore } from 'stores/columns.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
-
 
 export function moveOrCopyThread(moveData, targetFolder, setIsMovingFunction=null) {
     setIsMovingFunction = setIsMovingFunction || moveData.sourceThreadComponent.setIsMoving;
@@ -11,6 +11,11 @@ export function moveOrCopyThread(moveData, targetFolder, setIsMovingFunction=nul
 
     const { messageUids, oldColumn, accountName, thread } = moveData;
     const emailStore = getEmailStore();
+
+    const accountSettings = settingsStore.getAccountSettings(accountName);
+    const handler =
+        accountSettings.folders.copy_from_inbox === true && oldColumn == 'inbox' ?
+        emailStore.copyEmails : emailStore.moveEmails;
 
     const targetColumnStore = getColumnStore(targetFolder);
     targetColumnStore.addIncomingThread(thread);
@@ -21,7 +26,7 @@ export function moveOrCopyThread(moveData, targetFolder, setIsMovingFunction=nul
     }
 
     const moveThread = () => {
-        emailStore.moveEmails(accountName, messageUids, oldColumn, targetFolder).then(() => {
+        handler(accountName, messageUids, oldColumn, targetFolder).then(() => {
             emailStore.syncFolderEmails(
                 oldColumn,
                 {accountName: accountName},
