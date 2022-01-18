@@ -311,7 +311,11 @@ class Folder(object):
         self.log('debug', 'Fetching message IDs')
 
         with self.get_connection() as connection:
-            message_uids = connection.search(search_query, charset='utf-8')
+            try:
+                # Certain IMAP servers (Outlook) don't support UTF-8, even in 2022.
+                message_uids = connection.search(search_query)
+            except UnicodeEncodeError:
+                message_uids = connection.search(search_query, charset='utf-8')
 
         self.log('debug', f'Fetched {len(message_uids)} message UIDs')
 
