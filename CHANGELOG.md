@@ -1,3 +1,11 @@
+# v1.2201182059
+
+More fixes for Outlook accounts.
+
+Changes:
+- Always fetch IMAP capabilities when opening new connections.
+- Fix support for IMAP servers that still don't support UTF-8 (Outlook).
+
 # v1.2201151710
 
 This release fixes SMTP with Outlook accounts.
