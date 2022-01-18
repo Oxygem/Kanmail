@@ -133,6 +133,10 @@ class ImapConnectionWrapper(object):
         if self._selected_folder:
             imap.select_folder(self._selected_folder)
 
+        # Ensure the IMAP object has capabilities cached as this is used internally
+        # within imapclient.
+        imap.capabilities()
+
         self._imap = imap
         self.config.log('info', f'Connected to IMAP server: {server_string}')
 
