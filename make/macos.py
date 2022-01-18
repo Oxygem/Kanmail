@@ -5,7 +5,11 @@ from time import sleep
 
 import click
 
-from .settings import CODESIGN_KEY_NAME, NOTARIZE_PASSWORD_KEYCHAIN_NAME
+from .settings import (
+    CODESIGN_KEY_NAME,
+    NOTARIZE_PASSWORD_KEYCHAIN_NAME,
+    NOTARIZE_TEAM_ID,
+)
 from .util import print_and_check_output, print_and_run
 
 
@@ -55,6 +59,7 @@ def notarize(version, app_dir, zip_filename):
             '--notarize-app',
             '--primary-bundle-id', version,
             '--password', f'@keychain:{NOTARIZE_PASSWORD_KEYCHAIN_NAME}',
+            '--team-id', NOTARIZE_TEAM_ID,
             '--file', zip_filename,
         ))
 
