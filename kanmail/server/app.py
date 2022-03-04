@@ -20,6 +20,7 @@ from kanmail.settings.constants import (
     CONTACTS_CACHE_DB_FILE,
     DEBUG,
     DEBUG_SENTRY,
+    DEACTIVATE_SENTRY,
     FOLDER_CACHE_DB_FILE,
     IS_APP,
     SERVER_HOST,
@@ -51,7 +52,7 @@ class JsonEncoder(JSONEncoder):
 
 if DEBUG and not DEBUG_SENTRY:
     logger.debug('Not enabling Sentry error logging in debug mode...')
-elif get_system_setting('disable_error_logging'):
+elif get_system_setting('disable_error_logging') or DEACTIVATE_SENTRY:
     logger.debug('Disabling Sentry per user settings')
 else:
     sentry_sdk.init(

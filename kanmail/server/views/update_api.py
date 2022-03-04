@@ -3,11 +3,15 @@ from flask import abort, jsonify, Response
 from kanmail.server.app import add_route
 from kanmail.update import check_device_update, update_device
 from kanmail.version import get_version
+from kanmail.settings.constants import WATCH_UPDATE
 
 
 @add_route('/api/update', methods=('GET',))
 def api_check_update() -> Response:
-    update = check_device_update()
+    if WATCH_UPDATE:
+        update = check_device_update()
+    else:
+        update = None
 
     if update:
         return jsonify(update=update.version, current_version=get_version())

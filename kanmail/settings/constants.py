@@ -51,6 +51,14 @@ LOG_FILE = path.join(APP_DIR, 'Kanmail.log')
 # Environment flags
 #
 
+# Flag for opting-in/out from update watching/retrieving
+WATCH_UPDATE = environ.get('KANMAIL_UPDATE', 'on') == 'on'
+
+# Flag to deactivate external APIs
+DEACTIVATE_SENTRY = environ.get('KANMAIL_SENTRY', 'on') == 'off'
+DEACTIVATE_POSTHOG = environ.get('KANMAIL_POSTHOG', 'on') == 'off'
+DEACTIVATE_OAUTH = environ.get('KANMAIL_OAUTH', 'on') == 'off'
+
 # Flag to tell us whether we're running in debug mode
 DEBUG = environ.get('KANMAIL_DEBUG') == 'on'
 DEBUG_SMTP = environ.get('KANMAIL_DEBUG_SMTP') == 'on'

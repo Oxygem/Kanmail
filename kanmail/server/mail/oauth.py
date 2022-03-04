@@ -4,9 +4,10 @@ from requests import Request
 
 from kanmail.log import logger
 from kanmail.server.app import server
-from kanmail.settings.constants import SESSION_TOKEN
+from kanmail.settings.constants import SESSION_TOKEN, DEACTIVATE_OAUTH
 
-from .oauth_settings import OAUTH_PROVIDERS
+if not DEACTIVATE_OAUTH:
+    from .oauth_settings import OAUTH_PROVIDERS
 
 
 CURRENT_OAUTH_TOKENS = {}
