@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    env_file:
+      - .env
+    container_name: kanmail
+    ports:
+      - "4420:4420"
+    volumes:
+      - kanmail_data:/home/kanmail/.config/kanmail/
+    restart: always
+volumes:
+  kanmail_data: {}
