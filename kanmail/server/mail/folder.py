@@ -56,11 +56,14 @@ class Folder(object):
         # Set of UIDs we've "seen" - ie ones not to return again
         self.seen_email_uids = set()
 
-        if self.check_exists():
-            try:
+        try:
+            if self.check_exists():
                 self.get_and_set_email_uids()
-            except (ImapConnectionError, IMAPClientError):
-                pass
+        except (ImapConnectionError, IMAPClientError):
+            cached_uids = self.get_cached_uids()
+            if cached_uids:
+                self.exists = True
+                self.email_uids = cached_uids
 
     def __str__(self):
         return f'Folder({self.account.name}/{self.name})'
@@ -278,15 +281,20 @@ class Folder(object):
         if not self.query:
             self.cache.set_uids(self.email_uids)
 
-    def get_email_uids(self, use_cache=True):
+    def get_cached_uids(self):
         # If we're not a query folder we can try for cached UIDs
+        cached_uids = self.cache.get_uids()
+        if cached_uids:
+            self.log(
+                'debug',
+                f'Loaded {len(cached_uids)} cached message IDs',
+            )
+            return cached_uids
+
+    def get_email_uids(self, use_cache=True):
         if use_cache and not self.query:
-            cached_uids = self.cache.get_uids()
+            cached_uids = self.get_cached_uids()
             if cached_uids:
-                self.log(
-                    'debug',
-                    f'Loaded {len(cached_uids)} cached message IDs',
-                )
                 return cached_uids
 
         # Searching
