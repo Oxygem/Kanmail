@@ -1,6 +1,7 @@
 from collections import defaultdict
 from threading import Lock
 
+from kanmail.log import logger
 from kanmail.server.util import execute_threaded
 from kanmail.settings import get_settings
 
@@ -41,7 +42,14 @@ def reset_accounts():
 
 def get_all_folders():
     def get_folders(account):
-        return account.name, account.get_folders()
+        folders = []
+
+        try:
+            folders = account.get_folders()
+        except Exception as e:
+            logger.warning(f'Failed to load folders for {account}: {e}')
+
+        return account.name, folders
 
     account_folder_names = execute_threaded(get_folders, [
         (account,)
