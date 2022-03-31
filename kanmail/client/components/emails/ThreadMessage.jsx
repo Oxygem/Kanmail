@@ -11,7 +11,7 @@ import threadStore from 'stores/thread.js';
 import { ensureInView } from 'util/element.js';
 import { cleanHtml } from 'util/html.js';
 import { put, delete_ } from 'util/requests.js';
-import { formatAddress, formatDate } from 'util/string.js';
+import { formatAddress, formatDate, encodeFolderName } from 'util/string.js';
 import { openReplyToMessageWindow } from 'util/message.js';
 
 
@@ -387,7 +387,7 @@ export default class ThreadMessage extends React.Component {
                 return;
             }
             const cid = img.src.slice(4);
-            img.src = `/api/emails/${account_name}/${folder_name}/${uid}/${contentIds[cid]}?Kanmail-Session-Token=${window.KANMAIL_SESSION_TOKEN}`;
+            img.src = `/api/emails/${account_name}/${encodeFolderName(folder_name)}/${uid}/${contentIds[cid]}?Kanmail-Session-Token=${window.KANMAIL_SESSION_TOKEN}`;
         });
 
         return <div

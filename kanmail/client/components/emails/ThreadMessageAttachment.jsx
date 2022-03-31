@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { openFile } from 'window.js';
 
 import requestStore from 'stores/request.js';
-import { formatBytes } from 'util/string.js';
+import { formatBytes, encodeFolderName } from 'util/string.js';
 
 
 export default class ThreadMessageAttachment extends React.Component {
@@ -40,7 +40,7 @@ export default class ThreadMessageAttachment extends React.Component {
 
         requestStore.get(
             `Fetch message part in ${account_name}/${folder_name}: ${uid}/${partId}`,
-            `/api/emails/${account_name}/${folder_name}/${uid}/${partId}/download`,
+            `/api/emails/${account_name}/${encodeFolderName(folder_name)}/${uid}/${partId}/download`,
             {filename: part.name || 'unknown'},
         ).then(data => {
             if (data.saved) {

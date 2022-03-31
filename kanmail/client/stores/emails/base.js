@@ -273,10 +273,11 @@ export default class BaseEmails {
 
         return requestStore.post(
             `Move emails from ${oldColumn} -> ${newColumn}`,
-            `/api/emails/${accountKey}/${oldColumn}/move`,
+            `/api/emails/${accountKey}/move`,
             {
-                message_uids: messageUids,
+                old_folder: oldColumn,
                 new_folder: newColumn,
+                message_uids: messageUids,
             },
         );
     }
@@ -299,10 +300,11 @@ export default class BaseEmails {
 
         return requestStore.post(
             `Move emails from ${oldColumn} -> ${newColumn}`,
-            `/api/emails/${accountKey}/${oldColumn}/copy`,
+            `/api/emails/${accountKey}/copy`,
             {
-                message_uids: messageUids,
+                old_folder: oldColumn,
                 new_folder: newColumn,
+                message_uids: messageUids,
             },
         );
     }
@@ -316,8 +318,11 @@ export default class BaseEmails {
 
         return requestStore.post(
             `Star ${messageUids.length} emails in ${folderName}`,
-            `/api/emails/${accountKey}/${folderName}/star`,
-            {message_uids: messageUids},
+            `/api/emails/${accountKey}/star`,
+            {
+                folder: folderName,
+                message_uids: messageUids,
+            },
         ).then(() => {
             _.each(messageUids, uid => {
                 const email = this.getEmailFromAccountFolder(
@@ -338,8 +343,11 @@ export default class BaseEmails {
 
         return requestStore.post(
             `Unstar ${messageUids.length} emails in ${folderName}`,
-            `/api/emails/${accountKey}/${folderName}/unstar`,
-            {message_uids: messageUids},
+            `/api/emails/${accountKey}/unstar`,
+            {
+                folder: folderName,
+                message_uids: messageUids,
+            },
         ).then(() => {
             _.each(messageUids, uid => {
                 const email = this.getEmailFromAccountFolder(
@@ -362,8 +370,11 @@ export default class BaseEmails {
 
         return requestStore.post(
             `Delete ${messageUids.length} emails in ${folderName}`,
-            `/api/emails/${accountKey}/${folderName}/delete`,
-            {message_uids: messageUids},
+            `/api/emails/${accountKey}/delete`,
+            {
+                folder: folderName,
+                message_uids: messageUids,
+            },
         ).then(() => {
             _.each(messageUids, uid => {
                 const email = this.getEmailFromAccountFolder(

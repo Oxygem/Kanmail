@@ -1,4 +1,6 @@
+from functools import wraps
 from os import path
+from urllib.parse import unquote
 
 from flask import jsonify, make_response, request, Response
 
@@ -18,7 +20,7 @@ from kanmail.server.mail import (
     unstar_folder_emails,
 )
 from kanmail.server.mail.message import make_email_message
-from kanmail.server.util import get_list_or_400, get_or_400
+from kanmail.server.util import get_list_or_400, get_or_400, pop_or_400
 from kanmail.settings.constants import IS_APP
 from kanmail.window import get_main_window
 
@@ -34,7 +36,21 @@ def api_get_folders() -> Response:
     return jsonify(folders=folders, folder_meta=meta)
 
 
+def _fix_flask_path_fail(func):
+    '''
+    Fix for nonsense from werkzeug: https://github.com/pallets/flask/issues/900
+    On the frontend side we double encode the folder name as a workaround.
+    '''
+
+    @wraps(func)
+    def decorated(account, folder, *args, **kwargs):
+        folder = unquote(folder)
+        return func(account, folder, *args, **kwargs)
+    return decorated
+
+
 @add_route('/api/emails/<account>/<folder>', methods=('GET',))
+@_fix_flask_path_fail
 def api_get_account_folder_emails(account, folder) -> Response:
     '''
     Get (more) emails for a folder in a given account.
@@ -58,6 +74,7 @@ def api_get_account_folder_emails(account, folder) -> Response:
 
 
 @add_route('/api/emails/<account>/<folder>/sync', methods=('GET',))
+@_fix_flask_path_fail
 def api_sync_account_folder_emails(account, folder) -> Response:
     '''
     Sync emails within a folder for a given account.
@@ -84,6 +101,7 @@ def api_sync_account_folder_emails(account, folder) -> Response:
 
 
 @add_route('/api/emails/<account>/<folder>/text', methods=('GET',))
+@_fix_flask_path_fail
 def api_get_account_email_texts(account, folder) -> Response:
     '''
     Get a specific list of email texts by UID for a given account/folder.
@@ -97,6 +115,7 @@ def api_get_account_email_texts(account, folder) -> Response:
 
 
 @add_route('/api/emails/<account>/<folder>/<int:uid>/<part_number>', methods=('GET',))
+@_fix_flask_path_fail
 def api_get_account_email_part(account, folder, uid, part_number) -> Response:
     '''
     Return a specific part of an email by account/folder/UID.
@@ -117,6 +136,7 @@ def api_get_account_email_part(account, folder, uid, part_number) -> Response:
 
 
 @add_route('/api/emails/<account>/<folder>/<int:uid>/<part_number>/download', methods=('GET',))
+@_fix_flask_path_fail
 def api_download_account_email_part(account, folder, uid, part_number) -> Response:
     '''
     Download a specific part of an email by account/folder/UID.
@@ -153,43 +173,46 @@ def api_download_account_email_part(account, folder, uid, part_number) -> Respon
     return jsonify(saved=True, filename=local_filename)
 
 
-@add_route('/api/emails/<account>/<folder>/move', methods=('POST',))
-def api_move_account_emails(account, folder) -> Response:
+@add_route('/api/emails/<account>/move', methods=('POST',))
+def api_move_account_emails(account) -> Response:
     '''
     Move emails from one folder to another within a given account.
     '''
 
     request_data = request.get_json()
-    message_uids = get_or_400(request_data, 'message_uids')
+    old_folder = get_or_400(request_data, 'old_folder')
     new_folder = get_or_400(request_data, 'new_folder')
+    message_uids = get_or_400(request_data, 'message_uids')
 
-    move_folder_emails(account, folder, message_uids, new_folder)
+    move_folder_emails(account, old_folder, message_uids, new_folder)
 
     return jsonify(moved=True)
 
 
-@add_route('/api/emails/<account>/<folder>/copy', methods=('POST',))
-def api_copy_account_emails(account, folder) -> Response:
+@add_route('/api/emails/<account>/copy', methods=('POST',))
+def api_copy_account_emails(account) -> Response:
     '''
     Copy emails from one folder to another within a given account.
     '''
 
     request_data = request.get_json()
-    message_uids = get_or_400(request_data, 'message_uids')
+    old_folder = get_or_400(request_data, 'old_folder')
     new_folder = get_or_400(request_data, 'new_folder')
+    message_uids = get_or_400(request_data, 'message_uids')
 
-    copy_folder_emails(account, folder, message_uids, new_folder)
+    copy_folder_emails(account, old_folder, message_uids, new_folder)
 
     return jsonify(copied=True)
 
 
-@add_route('/api/emails/<account>/<folder>/star', methods=('POST',))
-def api_star_account_emails(account, folder) -> Response:
+@add_route('/api/emails/<account>/star', methods=('POST',))
+def api_star_account_emails(account) -> Response:
     '''
     Star emails in a given account/folder.
     '''
 
     request_data = request.get_json()
+    folder = get_or_400(request_data, 'folder')
     message_uids = get_or_400(request_data, 'message_uids')
 
     star_folder_emails(account, folder, message_uids)
@@ -197,13 +220,14 @@ def api_star_account_emails(account, folder) -> Response:
     return jsonify(starred=True)
 
 
-@add_route('/api/emails/<account>/<folder>/unstar', methods=('POST',))
-def api_unstar_account_emails(account, folder) -> Response:
+@add_route('/api/emails/<account>/unstar', methods=('POST',))
+def api_unstar_account_emails(account) -> Response:
     '''
     Unstar emails in a given account/folder.
     '''
 
     request_data = request.get_json()
+    folder = get_or_400(request_data, 'folder')
     message_uids = get_or_400(request_data, 'message_uids')
 
     unstar_folder_emails(account, folder, message_uids)
@@ -211,13 +235,14 @@ def api_unstar_account_emails(account, folder) -> Response:
     return jsonify(unstarred=True)
 
 
-@add_route('/api/emails/<account>/<folder>/delete', methods=('POST',))
-def api_delete_account_emails(account, folder) -> Response:
+@add_route('/api/emails/<account>/delete', methods=('POST',))
+def api_delete_account_emails(account) -> Response:
     '''
     Delete emails in a given account/folder.
     '''
 
     request_data = request.get_json()
+    folder = get_or_400(request_data, 'folder')
     message_uids = get_or_400(request_data, 'message_uids')
 
     delete_folder_emails(account, folder, message_uids)
@@ -225,13 +250,15 @@ def api_delete_account_emails(account, folder) -> Response:
     return jsonify(unstarred=True)
 
 
-@add_route('/api/emails/<account>/<folder>', methods=('POST',))
-def api_append_account_folder_email(account, folder) -> Response:
+@add_route('/api/emails/<account>', methods=('POST',))
+def api_append_account_folder_email(account) -> Response:
     '''
     Create and append a message to a folder (ie drafts).
     '''
 
     request_data = request.get_json()
+    folder = pop_or_400(request_data, 'folder')
+
     message = make_email_message(
         from_=request_data.pop('from', None),  # argname can't be from
         raise_for_no_recipients=False,
@@ -243,14 +270,14 @@ def api_append_account_folder_email(account, folder) -> Response:
     return jsonify(saved=True)
 
 
-@add_route('/api/emails/<account_key>', methods=('POST',))
-def api_send_account_email(account_key) -> Response:
+@add_route('/api/emails/<account>', methods=('POST',))
+def api_send_account_email(account) -> Response:
     '''
     Create (send) emails from one of the accounts.
     '''
 
     request_data = request.get_json()
-    account = get_account(account_key)
+    account = get_account(account)
 
     account.send_email(
         from_=request_data.pop('from', None),  # argname can't be from

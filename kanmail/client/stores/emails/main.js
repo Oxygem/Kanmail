@@ -2,8 +2,8 @@ import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
-
 import BaseEmails from 'stores/emails/base.js';
+import { encodeFolderName } from 'util/string.js';
 
 
 class MainEmails extends BaseEmails {
@@ -61,7 +61,7 @@ class MainEmails extends BaseEmails {
     }
 
     syncEmails(accountKey, folderName, options={}) {
-        const url = `/api/emails/${accountKey}/${folderName}/sync`;
+        const url = `/api/emails/${accountKey}/${encodeFolderName(folderName)}/sync`;
         const query = options.query || {};
 
         if (!options.skipUnreadSync) {
@@ -134,7 +134,7 @@ class MainEmails extends BaseEmails {
 
         return requestStore.get(
             `Get emais in ${accountKey}/${folderName}`,
-            `/api/emails/${accountKey}/${folderName}`,
+            `/api/emails/${accountKey}/${encodeFolderName(folderName)}`,
             query,
         ).then(data => {
             this.setMetaForAccountFolder(accountKey, folderName, data.meta);

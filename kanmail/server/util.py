@@ -47,6 +47,15 @@ def get_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
     return data
 
 
+def pop_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
+    data = obj.pop(key)
+
+    if not data:
+        abort(400, f'missing data: {key}')
+
+    return data
+
+
 def get_list_or_400(obj: ImmutableMultiDict, key: str, **kwargs) -> Optional[list]:
     data = obj.getlist(key, **kwargs)
 

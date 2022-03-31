@@ -2,8 +2,8 @@ import _ from 'lodash';
 
 import requestStore from 'stores/request.js';
 import { getColumnMetaStore } from 'stores/columns.js';
-
 import BaseEmails from 'stores/emails/base.js';
+import { encodeFolderName } from 'util/string.js';
 
 
 class SearchEmails extends BaseEmails {
@@ -44,7 +44,7 @@ class SearchEmails extends BaseEmails {
     }
 
     searchEmails(accountKey, folderName, options={}) {
-        const url = `/api/emails/${accountKey}/${folderName}`;
+        const url = `/api/emails/${accountKey}/${encodeFolderName(folderName)}`;
         const query = options.query || {};
         query.query = this.searchValue;
 

@@ -3,6 +3,7 @@ import _ from 'lodash';
 import requestStore from 'stores/request.js';
 import { BaseStore } from 'stores/base.jsx';
 
+import { encodeFolderName } from 'util/string.js';
 import {
     getNextThreadComponent,
     getPreviousThreadComponent,
@@ -158,7 +159,7 @@ class ThreadStore extends BaseStore {
             // Make the request
             const request = requestStore.get(
                 `Get email text from ${accountName}/${folderName}`,
-                `/api/emails/${accountName}/${folderName}/text`,
+                `/api/emails/${accountName}/${encodeFolderName(folderName)}/text`,
                 {uid: uidList},
                 {criticalRequestNonce: criticalRequestNonce},
             ).then(data => {

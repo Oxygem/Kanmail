@@ -2,6 +2,11 @@ import _ from 'lodash';
 import moment from 'moment';
 
 
+export function encodeFolderName(name) {
+    return encodeURIComponent(encodeURIComponent(name));
+}
+
+
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
