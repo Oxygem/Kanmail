@@ -87,11 +87,23 @@ def make_email_headers(account, folder, uid, data, parts):
 
     encoding = body_meta.get('encoding') if body_meta else None
 
+    # Some servers return data under non-standard keys - there are so many
+    # different IMAP implementations it's impossible to handle them all by hand,
+    # so attempt to locate the body by looking for a body-like key.
+    body_key = b'BODY[1]<0>'
+    if body_key not in data:
+        for key in data.keys():
+            if isinstance(key, bytes) and key.startswith(b'BODY'):
+                body_key = key
+                break
+
     # Attempt to extract an excerpt
-    excerpt = extract_excerpt(
-        data[b'BODY[1]<0>'],
-        body_meta,
-    )
+    excerpt = None
+    if body_key in data:
+        excerpt = extract_excerpt(
+            data[body_key],
+            body_meta,
+        )
 
     # Make the summary dict!
     envelope = data[b'ENVELOPE']
