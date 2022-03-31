@@ -34,6 +34,10 @@ if (window.KANMAIL_DEBUG && !window.KANMAIL_DEBUG_SENTRY) {
             if (error && (error.isNetworkResponseFailure || error.isCriticalRequestNonceFailure)) {
                 return null;
             }
+            // Ignore errors that were captured (and thus reported) by the server
+            if (error && error.data && error.data.errorName) {
+                return null;
+            }
             return event;
         },
     });
