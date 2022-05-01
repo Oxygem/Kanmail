@@ -1,0 +1,43 @@
+name: "Compile Kanmail pip Requirements"
+
+on:
+  push:
+    branches:
+      - requirement-compiles
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - name: Windows
+            runs-on: windows-2016
+
+          - name: macOS
+            runs-on: macos-10.15
+
+          - name: Linux
+            runs-on: ubuntu-18.04
+
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f  # v2.3.4
+        with:
+          fetch-depth: 0  # ensure we fetch tags
+
+      - name: Install Python
+        uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6  # v2.2.2
+        with:
+          python-version: 3.9.9
+
+      - name: Install pip-tools
+        run: pip3 install pip-tools
+
+      - name: Compile (& print) Requirements
+        run: pip-compile requirements/base.in
+
+      - name: Compile (& print) Development Requirements
+        run: pip-compile requirements/base-development.in
