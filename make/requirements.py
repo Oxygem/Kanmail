@@ -4,6 +4,7 @@ from os import path
 import click
 
 from .settings import (
+    BASE_DEVELOPMENT_REQUIREMENTS_FILENAME,
     BASE_REQUIREMENTS_FILENAME,
     DEVELOPMENT_REQUIREMENTS_FILENAME,
     REQUIREMENTS_FILENAME,
@@ -27,11 +28,13 @@ def cli():
 def install(dev):
     _ensure_pip_tools_installed()
 
-    requirements_files = (REQUIREMENTS_FILENAME,)
-    if dev:
-        requirements_files = (REQUIREMENTS_FILENAME, DEVELOPMENT_REQUIREMENTS_FILENAME)
+    requirements_file = (
+        DEVELOPMENT_REQUIREMENTS_FILENAME
+        if dev
+        else REQUIREMENTS_FILENAME
+    )
 
-    print_and_run(('pip-sync', *requirements_files))
+    print_and_run(('pip-sync', requirements_file))
 
     click.echo('Requirements setup complete!')
 
@@ -57,7 +60,8 @@ def update_dev():
     print_and_run((
         'pip-compile',
         '-q',
-        path.relpath(DEVELOPMENT_REQUIREMENTS_FILENAME).replace('.txt', '.in'),
+        f'--output-file={path.relpath(DEVELOPMENT_REQUIREMENTS_FILENAME)}',
+        path.relpath(BASE_DEVELOPMENT_REQUIREMENTS_FILENAME),
     ))
 
     click.echo(f'Development requirements file updated: {DEVELOPMENT_REQUIREMENTS_FILENAME}')

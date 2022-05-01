@@ -40,10 +40,10 @@ REQUIREMENTS_DIRNAME = path.join(ROOT_DIRNAME, 'requirements')
 
 platform = platform.system().lower()
 if platform == 'darwin':
-    REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'macos.txt')
-else:
-    REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, f'{platform}.txt')
+    platform = 'macos'
 
-DEVELOPMENT_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'development.txt')
+REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, f'{platform}.txt')
+DEVELOPMENT_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, f'{platform}-development.txt')
 
 BASE_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'base.in')
+BASE_DEVELOPMENT_REQUIREMENTS_FILENAME = path.join(REQUIREMENTS_DIRNAME, 'base-development.in')
