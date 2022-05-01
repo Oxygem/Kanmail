@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.8.10-alpine3.13
+FROM --platform=linux/amd64 python:3.9.12-alpine3.15
 
 LABEL maintainer="Nick Barrett, Oxygem <hello@oxygem.com>"
 

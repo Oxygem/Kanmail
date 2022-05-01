@@ -29,6 +29,7 @@ jobs:
 
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.9"
+      PYTHON_VERSION: "3.9.12"
 
     steps:
       - name: Install apt packages
@@ -57,15 +58,15 @@ jobs:
         if: ${{ matrix.name != 'macOS' }}
         uses: actions/setup-python@dc73133d4da04e56a135ae2246682783cc7c7cb6  # v2.2.2
         with:
-          python-version: 3.8.10
+          python-version: 3.9.12
 
       # See: https://github.com/actions/virtual-environments/issues/1256#issuecomment-770270252
       - name: Install macOS Python pkg
         if: ${{ matrix.name == 'macOS' }}
         run: |
-          curl https://www.python.org/ftp/python/3.8.10/python-3.8.10-macosx10.9.pkg -o "python.pkg"
+          curl https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-macosx10.9.pkg -o "python.pkg"
           sudo installer -pkg python.pkg -target /
-          echo "/Library/Frameworks/Python.framework/Versions/3.8/bin/" >> $GITHUB_PATH
+          echo "/Library/Frameworks/Python.framework/Versions/3.9/bin/" >> $GITHUB_PATH
 
       - name: Install pip packages
         run: pip3 install -r requirements/${{ matrix.requirements-file }}
