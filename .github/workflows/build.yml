@@ -38,7 +38,7 @@ jobs:
     steps:
       - name: "[Linux] Install apt packages"
         if: ${{ matrix.name == 'Linux' }}
-        run: sudo apt update && sudo apt install libcairo2-dev libgirepository1.0-dev libgtk-3-dev libwebkit2gtk-4.0-37 gir1.2-webkit2-4.0
+        run: sudo apt update && sudo apt install libcairo2-dev libgirepository1.0-dev libgtk-3-dev libwebkit2gtk-4.0-37 gir1.2-webkit2-4.0 xvfb
 
       - name: "[Windows] Install webview2-runtime"
         if: ${{ matrix.name == 'Windows' }}
@@ -84,10 +84,18 @@ jobs:
         run: pip3 install -r requirements/${{ matrix.basename }}-development.txt pip-tools
 
       # Run the tests
-      - name: Test the app
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          run: honcho run pytest -sv
+      - name: "[MacOS, Windows] Run Tests"
+        if: ${{ matrix.name != 'Linux' }}
+        run: honcho run pytest -sv
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+
+      - name: "[Linux] Run Tests"
+        if: ${{ matrix.name == 'Linux' }}
+        run: xvfb-run honcho run pytest -sv
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
