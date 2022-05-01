@@ -18,4 +18,4 @@ flake8-import-order==0.18.1
 
 # Debugging
 ipython==7.28.0
-ipdb==0.12
+ipdb==0.13.9

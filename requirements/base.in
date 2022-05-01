@@ -1,13 +1,13 @@
 # Client
 pywebview==3.6.3
 pyupdater==4.0.0
-pyinstaller==4.3
+pyinstaller==4.10
 
 # Server
 cheroot==8.3.0
 click==7.0
-flask==1.0.2
-flask-sqlalchemy==2.4.1
+flask==1.1.4
+flask-sqlalchemy==2.5.1
 sqlalchemy==1.3.13
 markdown==2.6.9
 mdx-linkify==1.0
@@ -19,6 +19,11 @@ keyring==19.2.0
 keyrings.alt==3.4.0
 imapclient==2.2.0
 sentry-sdk[flask]==1.1.0
+
+# Compatibility requirements - not direct but specified to avoid conflicts with
+# packages that don't respect semver properly.
+cffi==1.15.0
+markupsafe==2.0.1
 
 # MacOS requirements
 pyobjc-core==7.2; platform_system == "Dawrin"
