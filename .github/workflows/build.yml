@@ -14,15 +14,15 @@ jobs:
         include:
           - name: Windows
             runs-on: windows-2019
-            requirements-file: windows.txt
+            basename: windows
 
           - name: macOS
             runs-on: macos-10.15
-            requirements-file: macos.txt
+            basename: macos
 
           # - name: Linux
           #   runs-on: ubuntu-18.04
-          #   requirements-file: linux.txt
+          #   basename: linux
 
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.runs-on }}
@@ -69,11 +69,11 @@ jobs:
           echo "/Library/Frameworks/Python.framework/Versions/3.9/bin/" >> $GITHUB_PATH
 
       - name: Install pip packages
-        run: pip3 install -r requirements/${{ matrix.requirements-file }}
+        run: pip3 install -r requirements/${{ matrix.basename }}.txt
 
       # TODO: fix dev reqs to be installable alongside OS specific ones
       - name: Install pip development packages
-        run: pip3 install -r requirements/development.txt pip-tools
+        run: pip3 install -r requirements/${{ matrix.basename }}-development.txt pip-tools
 
       # Run the tests
       - name: Test the app
@@ -85,7 +85,7 @@ jobs:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
 
       - name: Update requirements for build
-        run: pip-sync requirements/${{ matrix.requirements-file }}
+        run: pip-sync requirements/${{ matrix.basename }}.txt
 
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
