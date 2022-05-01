@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - name: Windows
-            runs-on: windows-2016
+            runs-on: windows-2019
             requirements-file: windows.txt
 
           - name: macOS
