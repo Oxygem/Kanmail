@@ -2,6 +2,7 @@ import ssl
 
 from base64 import b64encode
 from contextlib import contextmanager
+from imaplib import IMAP4
 from queue import LifoQueue
 from socket import error as socket_error
 from time import time
@@ -75,6 +76,7 @@ class ImapConnectionWrapper(object):
                 except (
                     IMAPClientError,
                     IMAPClientAbortError,
+                    IMAP4.abort,
                     socket_error,
                 ) as e:
                     if attempts >= self.config.max_attempts:
