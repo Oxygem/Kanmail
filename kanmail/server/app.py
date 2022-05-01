@@ -22,7 +22,6 @@ from kanmail.settings.constants import (
     DEBUG_SENTRY,
     DEACTIVATE_SENTRY,
     FOLDER_CACHE_DB_FILE,
-    IS_APP,
     SERVER_HOST,
     SERVER_PORT,
     SESSION_TOKEN,
@@ -94,9 +93,6 @@ server = ServerWithGetPort((SERVER_HOST, SERVER_PORT), app)
 
 
 def add_route(*route_args, **route_kwargs):
-    if DEBUG and not IS_APP:  # don't apply in full browser dev mode
-        return add_public_route(*route_args, **route_kwargs)
-
     def wrapper(func):
         def inner(*args, **kwargs):
             # Accept as header (preferred) and query string (images)

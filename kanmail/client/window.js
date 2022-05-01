@@ -94,7 +94,7 @@ export function openWindow(path, options={}) {
         });
     } else {
         window.open(
-            path,
+            `${path}?Kanmail-Session-Token=${window.KANMAIL_SESSION_TOKEN}`,
             options.title,
             `width=${options.width},height=${options.height}`,
         );
