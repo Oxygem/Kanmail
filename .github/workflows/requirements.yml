@@ -3,7 +3,7 @@ name: "Compile Kanmail pip Requirements"
 on:
   push:
     branches:
-      - requirement-compiles
+      - main
 
 jobs:
   build:
