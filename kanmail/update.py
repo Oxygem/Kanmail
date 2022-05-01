@@ -24,7 +24,11 @@ def check_device_update():
         f'Checking for updates (channel={version_data["channel"]}, '
         f'currentVersion={version_data["version"]})...'
     ))
-    client.refresh()
+
+    try:
+        client.refresh()
+    except AttributeError:
+        pass
 
     update = client.update_check(
         APP_NAME, version_data['version'],
