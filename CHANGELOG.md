@@ -1,3 +1,43 @@
+# v1.2205081824
+
+Slow release to get out this one due to unforseen complications with Windows
+testing. Next up focus is on the Windows version including a proper installer.
+
+Changes:
+- Only run Linux tests with xvfb
+- Bump python version file
+- Run the tests with xvfb on Linux
+- Add FUNDING config
+- Cleanup of build action, start building Linux again
+- Install webview2-runtime on Windows before build
+- Only run requirements workflow on req file change
+- Make pytest verbose
+- Use Python 3.8 for Windows builds
+- Use platform specific requirements for build
+- Add compiled development requirements
+- Update compiled requirements
+- Upload compiled requirements as artifacts
+- Upgrade to python v3.9.12
+- Don't throw error for bug in pyupdater refresh method
+- Fixup requirement versions
+- Run requirements compilation on main branch
+- Upgrade pip before compiling requirements
+- Upgrade Windows version in workflows
+- Add requirements compile workflow
+- Upgrade to pywebview 3.6
+- Generate development requirements each platform
+- Pass session token to newly opened windows in browser mode
+- Capture `IMAP4.Abort` errors
+- Add a basic docker-compose.yml for deployment convenience
+- Add options to deactivate external APIs + opt-out for update
+- Rework emails API to work around flask/werkzeug path handling fails
+- Improve handling of body IMAP responses
+- Stop sending JS `RequestError`s to Sentry that the server already handled
+- Include tracebacks for all error logs
+- Fix offline not loading cached date
+- Don't fail folders endpoint for individual account issues
+- Add notarize team ID support/envvar.
+
 # v1.2201182059
 
 More fixes for Outlook accounts.
