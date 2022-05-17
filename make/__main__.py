@@ -45,7 +45,7 @@ def prepare_release():
     create_new_changelog(version, git_changes)
 
     print_and_run(('git', 'add', 'CHANGELOG.md'))
-    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}.'))
+    print_and_run(('git', 'commit', '-m', f'Update changelog for v{version}'))
     print_and_run((
         'git', 'tag',
         '-a', f'v{version}',
