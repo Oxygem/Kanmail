@@ -3,6 +3,9 @@ pywebview==3.6.3
 pyupdater==4.0.0
 pyinstaller==4.10
 
+# Pinned due to newer versions breaking with pyupdater==4.0
+dsdev-utils==1.0.5
+
 # Server
 cheroot==8.3.0
 click==7.0
