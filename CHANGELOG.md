@@ -1,3 +1,12 @@
+# v1.2206171656
+
+Changes:
+- Fix editing emails without quotes
+- Fix email send & save button handling / API
+- Pin `dsdev-utils` package to avoid bug
+- Fix cryptography version in Docker requirements
+- Cleanup changelog commit message
+
 # v1.2205081824
 
 Slow release to get out this one due to unforseen complications with Windows
