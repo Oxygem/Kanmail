@@ -42,7 +42,8 @@ jobs:
 
       - name: "[Windows] Install webview2-runtime"
         if: ${{ matrix.name == 'Windows' }}
-        run: choco install webview2-runtime
+        # TODO: don't use ignore-checksums, why is this broken upstream?
+        run: choco install --ignore-checksums webview2-runtime
 
       - name: Checkout
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f  # v2.3.4
