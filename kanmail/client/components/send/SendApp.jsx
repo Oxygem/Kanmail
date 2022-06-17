@@ -172,8 +172,8 @@ export default class SendApp extends React.Component {
                 const quote = popElementFromDocument(doc, 'blockquote#kanmail-quote');
                 const signature = popElementFromDocument(doc, 'div#kanmail-signature');
                 this.state.messageHtml = doc.body.innerHTML;
-                this.state.replyToQuoteHtml = quote.innerHTML;
-                this.state.signatureHtml = signature.innerHTML;
+                this.state.replyToQuoteHtml = quote ? quote.innerHTML : null;
+                this.state.signatureHtml = signature ? signature.innerHTML : null;
                 this.state.includeQuote = true;
                 // Copy the reply to message ID as this was already set on save
                 this.state.replyToMessageId = props.message.in_reply_to;
@@ -376,7 +376,7 @@ export default class SendApp extends React.Component {
     }
 
     renderQuote() {
-        if (!this.props.message) {
+        if (!this.props.message || !this.state.replyToQuoteHtml) {
             return;
         }
 

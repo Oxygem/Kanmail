@@ -9,6 +9,9 @@ export function documentFromHtml(html) {
 
 export function popElementFromDocument(doc, selector) {
     const element = doc.querySelector(selector);
+    if (!element) {
+        return;
+    }
     element.parentNode.removeChild(element);
     return element;
 }
