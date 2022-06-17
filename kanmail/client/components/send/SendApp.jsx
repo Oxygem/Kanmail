@@ -301,8 +301,7 @@ export default class SendApp extends React.Component {
 
         const [accountKey, emailData] = this.getEmailData();
 
-        post(`/api/emails/${accountKey}`, {
-            folder: 'drafts',
+        post(`/api/emails/${accountKey}/send`, {
             ...emailData,
         })
             .then(() => {
@@ -326,7 +325,10 @@ export default class SendApp extends React.Component {
 
         const [accountKey, emailData] = this.getEmailData(true);
 
-        post(`/api/emails/${accountKey}`, emailData)
+        post(`/api/emails/${accountKey}/append`, {
+            folder: 'drafts',
+            ...emailData,
+        })
             .then(() => {
                 closeWindow();
                 this.setState({isSent: true});

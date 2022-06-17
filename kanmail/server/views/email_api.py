@@ -250,7 +250,7 @@ def api_delete_account_emails(account) -> Response:
     return jsonify(unstarred=True)
 
 
-@add_route('/api/emails/<account>', methods=('POST',))
+@add_route('/api/emails/<account>/append', methods=('POST',))
 def api_append_account_folder_email(account) -> Response:
     '''
     Create and append a message to a folder (ie drafts).
@@ -270,7 +270,7 @@ def api_append_account_folder_email(account) -> Response:
     return jsonify(saved=True)
 
 
-@add_route('/api/emails/<account>', methods=('POST',))
+@add_route('/api/emails/<account>/send', methods=('POST',))
 def api_send_account_email(account) -> Response:
     '''
     Create (send) emails from one of the accounts.
