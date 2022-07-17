@@ -103,17 +103,15 @@ exe = EXE(  # noqa: F821
 )
 
 
-# Generate the directory (for Mac bundle or if --onedir)
+# Generate the directory
 #
 
-{% if platform_name == 'mac' or onedir %}  # noqa
 coll = COLLECT(  # noqa: F821
     exe, a.binaries, a.zipfiles, a.datas,
     strip=False,
     upx=False,
     name='{{ platform_name }}',
 )
-{% endif %}  # noqa
 
 
 # Build MacOS app bundle
