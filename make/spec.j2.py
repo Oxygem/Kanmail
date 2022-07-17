@@ -76,14 +76,8 @@ pyz = PYZ(  # noqa: F821
 
 exe = EXE(  # noqa: F821
     pyz, a.scripts,
-
-{% if platform_name == 'mac' or onedir %}  # noqa
     [],
     exclude_binaries=True,
-{% elif platform_name in ('nix64', 'win') %}  # noqa
-    a.binaries, a.zipfiles, a.datas, [],
-{% endif %}  # noqa
-
     name='{{ platform_name }}',
     debug=False,
     bootloader_ignore_signals=False,
