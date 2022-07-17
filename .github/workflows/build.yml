@@ -5,6 +5,7 @@ on:
     tags:
     branches:
       - main
+      - onedir-builds
 
 jobs:
   build:
