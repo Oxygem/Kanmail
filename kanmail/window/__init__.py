@@ -113,35 +113,10 @@ def get_main_window_size_position() -> Dict[str, int]:
     }
 
 
-def show_traffic_light_buttons(window):
-    import AppKit
-
-    buttons = [
-        window.standardWindowButton_(AppKit.NSWindowCloseButton),
-        window.standardWindowButton_(AppKit.NSWindowZoomButton),
-        window.standardWindowButton_(AppKit.NSWindowMiniaturizeButton),
-    ]
-
-    for button in buttons:
-        button.setHidden_(False)
-
-
-def reposition_traffic_light_buttons(window):
-    import AppKit
-
-    button = window.standardWindowButton_(AppKit.NSWindowCloseButton)
-    titlebar_container_view = button.superview().superview()
-    titlebar_container_rect = titlebar_container_view.frame()
-    titlebar_container_rect.size.height += 22
-    titlebar_container_rect.origin.y -= 13
-    titlebar_container_rect.size.width += 22
-    titlebar_container_rect.origin.x += 13
-    titlebar_container_view._.frame = AppKit.NSValue.valueWithRect_(titlebar_container_rect)
-
-
 def init_window_hacks() -> None:
     try:
         from webview.platforms import cocoa
+        from .macos import show_traffic_light_buttons, reposition_traffic_light_buttons
     except ImportError:
         pass
     else:
