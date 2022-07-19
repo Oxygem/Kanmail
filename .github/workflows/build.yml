@@ -15,18 +15,15 @@ jobs:
         include:
           - name: Windows
             runs-on: windows-2019
-            basename: windows
             # pythonnet is not 3.9 compatible, so Windows is behind
             python-version: "3.8.10"
 
           - name: macOS
             runs-on: macos-10.15
-            basename: macos
             python-version: "3.9.12"
 
           - name: Linux
             runs-on: ubuntu-18.04
-            basename: linux
             python-version: "3.9.12"
 
     name: Build ${{ matrix.name }}
@@ -77,17 +74,18 @@ jobs:
           sudo installer -pkg python.pkg -target /
           echo "/Library/Frameworks/Python.framework/Versions/3.9/bin/" >> $GITHUB_PATH
 
-      - name: Install pip packages
-        run: pip3 install -r requirements/${{ matrix.basename }}.txt
+      # Bootstrap requirements, pip to install pipx, pipx to install poetry. The below install
+      # with poetry will then remove pipx, leaving an orphaned isolated poetry.
+      - name: Install Poetry via pipx
+        run: pip3 install pipx && pipx install "poetry<2"
 
-      # TODO: fix dev reqs to be installable alongside OS specific ones
-      - name: Install pip development packages
-        run: pip3 install -r requirements/${{ matrix.basename }}-development.txt pip-tools
+      - name: Install packages with Poetry
+        run: poetry install --no-root --remove-untracked
 
       # Run the tests
       - name: "[MacOS, Windows] Run Tests"
         if: ${{ matrix.name != 'Linux' }}
-        run: honcho run pytest -sv
+        run: poetry run honcho run pytest -sv
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
@@ -96,15 +94,15 @@ jobs:
 
       - name: "[Linux] Run Tests"
         if: ${{ matrix.name == 'Linux' }}
-        run: xvfb-run honcho run pytest -sv
+        run: xvfb-run poetry run honcho run pytest -sv
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
 
-      - name: Update requirements for build
-        run: pip-sync requirements/${{ matrix.basename }}.txt
+      - name: Remove development dependencies
+        run: poetry install --no-root --no-dev --remove-untracked
 
       - name: Make empty .pyupdater directory
         run: mkdir .pyupdater
@@ -113,7 +111,7 @@ jobs:
         run: cp make/github-config.pyu .pyupdater/config.pyu
 
       - name: Make build
-        run: python3 -m make
+        run: poetry run python -m make
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
