@@ -24,15 +24,15 @@ def lock_function(func):
 def lock_class_method(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not hasattr(self, 'lock'):
+        if not hasattr(self, "lock"):
             self.lock = RLock()
 
         if DEBUG_LOCKS:
-            logger.debug(f'Acquire lock for {self}')
+            logger.debug(f"Acquire lock for {self}")
         with self.lock:
             return_value = func(self, *args, **kwargs)
         if DEBUG_LOCKS:
-            logger.debug(f'Release lock for {self}')
+            logger.debug(f"Release lock for {self}")
         return return_value
 
     return wrapper
@@ -42,7 +42,7 @@ def get_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
     data = obj.get(key)
 
     if not data:
-        abort(400, f'missing data: {key}')
+        abort(400, f"missing data: {key}")
 
     return data
 
@@ -51,7 +51,7 @@ def pop_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
     data = obj.pop(key)
 
     if not data:
-        abort(400, f'missing data: {key}')
+        abort(400, f"missing data: {key}")
 
     return data
 

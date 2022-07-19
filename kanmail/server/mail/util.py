@@ -1,7 +1,6 @@
 import email.header
 import quopri
 import re
-
 from base64 import b64decode
 from binascii import Error as BinasciiError
 
@@ -13,9 +12,9 @@ from kanmail.log import logger
 
 def markdownify(text, linkify=True):
     extensions = [
-        'markdown.extensions.extra',
-        'markdown.extensions.nl2br',  # turn newlines into breaks
-        'markdown.extensions.sane_lists',
+        "markdown.extensions.extra",
+        "markdown.extensions.nl2br",  # turn newlines into breaks
+        "markdown.extensions.sane_lists",
     ]
 
     if linkify:
@@ -33,7 +32,7 @@ def format_address(address):
     if address.host:
         bits.append(decode_string(address.host))
 
-    return '@'.join(bits)
+    return "@".join(bits)
 
 
 def make_contact_tuple(address):
@@ -52,7 +51,7 @@ def make_contact_tuples(addresses):
 def make_email_headers(account, folder, uid, data, parts):
     # Parse references header into list of reference message IDs
     headers = extract_headers(
-        data.get(b'BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]')
+        data.get(b"BODY[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]")
         # Zoho mail's IMAP implementation returns the fields wrapped in double quotes
         # TODO: investigate normalising all return keys
         or data.get(b'BODY[HEADER.FIELDS ("REFERENCES" "CONTENT-TRANSFER-ENCODING")]'),
@@ -60,40 +59,40 @@ def make_email_headers(account, folder, uid, data, parts):
 
     # TODO: actuall fix this - need to identify which email providers this affects
     if headers is None:
-        raise KeyError(f'No headers found, got keys: {data.keys()}')
+        raise KeyError(f"No headers found, got keys: {data.keys()}")
 
-    references = headers.get('References')
+    references = headers.get("References")
     if references:
         references = references.split()
 
         # This is a fix for some badly build email clients that join message ID
         # references by comma, rather than the standard space *rolls eyes*.
-        if len(references) == 1 and '>,<' in references[0]:
-            references = references[0].split(',')
+        if len(references) == 1 and ">,<" in references[0]:
+            references = references[0].split(",")
 
     body_meta = None
 
-    if '1' in parts:
-        body_meta = parts['1']
-    elif '1.1' in parts:
-        body_meta = parts['1.1']
+    if "1" in parts:
+        body_meta = parts["1"]
+    elif "1.1" in parts:
+        body_meta = parts["1.1"]
 
     if not body_meta:
-        content_transfer_encoding = headers.get('Content-Transfer-Encoding')
+        content_transfer_encoding = headers.get("Content-Transfer-Encoding")
         if content_transfer_encoding:
             body_meta = {
-                'encoding': content_transfer_encoding,
+                "encoding": content_transfer_encoding,
             }
 
-    encoding = body_meta.get('encoding') if body_meta else None
+    encoding = body_meta.get("encoding") if body_meta else None
 
     # Some servers return data under non-standard keys - there are so many
     # different IMAP implementations it's impossible to handle them all by hand,
     # so attempt to locate the body by looking for a body-like key.
-    body_key = b'BODY[1]<0>'
+    body_key = b"BODY[1]<0>"
     if body_key not in data:
         for key in data.keys():
-            if isinstance(key, bytes) and key.startswith(b'BODY'):
+            if isinstance(key, bytes) and key.startswith(b"BODY"):
                 body_key = key
                 break
 
@@ -106,7 +105,7 @@ def make_email_headers(account, folder, uid, data, parts):
         )
 
     # Make the summary dict!
-    envelope = data[b'ENVELOPE']
+    envelope = data[b"ENVELOPE"]
     subject = decode_header(envelope.subject)
 
     date = None
@@ -121,41 +120,37 @@ def make_email_headers(account, folder, uid, data, parts):
     reply_to = make_contact_tuples(envelope.reply_to)
 
     return {
-        'uid': uid,
-        'seq': data[b'SEQ'],
-        'flags': data[b'FLAGS'],
-        'size': data[b'RFC822.SIZE'],
-        'excerpt': excerpt,
-        'content_encoding': encoding,
-        'parts': parts,
-
+        "uid": uid,
+        "seq": data[b"SEQ"],
+        "flags": data[b"FLAGS"],
+        "size": data[b"RFC822.SIZE"],
+        "excerpt": excerpt,
+        "content_encoding": encoding,
+        "parts": parts,
         # Internal meta
-        'account_name': account.name,
-        'server_folder_name': folder.name,
-        'folder_name': folder.alias_name,
-
+        "account_name": account.name,
+        "server_folder_name": folder.name,
+        "folder_name": folder.alias_name,
         # Envelope data
-        'date': date,
-        'subject': subject,
-
+        "date": date,
+        "subject": subject,
         # Address data
-        'from': from_,
-        'to': to,
-        'send': send,
-        'cc': cc,
-        'bcc': bcc,
-        'reply_to': reply_to,
-
+        "from": from_,
+        "to": to,
+        "send": send,
+        "cc": cc,
+        "bcc": bcc,
+        "reply_to": reply_to,
         # Threading
-        'in_reply_to': envelope.in_reply_to,
-        'message_id': envelope.message_id,
-        'references': references,
+        "in_reply_to": envelope.in_reply_to,
+        "message_id": envelope.message_id,
+        "references": references,
     }
 
 
 def decode_header(subject):
     if subject is None:
-        return ''
+        return ""
 
     bits = []
 
@@ -164,13 +159,13 @@ def decode_header(subject):
 
     for output, encoding in email.header.decode_header(subject):
         if encoding:
-            output = output.decode(encoding, 'replace')
+            output = output.decode(encoding, "replace")
         elif isinstance(output, bytes):
             output = decode_string(output)
 
         bits.append(output)
 
-    return ''.join(bits)
+    return "".join(bits)
 
 
 def decode_string(string, string_meta=None, as_str=True):
@@ -179,16 +174,16 @@ def decode_string(string, string_meta=None, as_str=True):
 
     if string_meta:
         # Encoding *must* be provided
-        encoding = string_meta['encoding'].lower()
+        encoding = string_meta["encoding"].lower()
 
-        if 'charset' in string_meta:
-            charset = string_meta['charset'].lower()
+        if "charset" in string_meta:
+            charset = string_meta["charset"].lower()
 
     # Remove any quoted printable stuff
-    if encoding == 'quoted-printable':
+    if encoding == "quoted-printable":
         string = quopri.decodestring(string)
 
-    if encoding == 'base64':
+    if encoding == "base64":
         try:
             string = b64decode(string)
 
@@ -207,13 +202,13 @@ def decode_string(string, string_meta=None, as_str=True):
             if not valid_bits:
                 raise
 
-            string = b'\n'.join(valid_bits)
+            string = b"\n".join(valid_bits)
 
     if charset:
-        string = string.decode(charset, 'replace')
+        string = string.decode(charset, "replace")
 
     if as_str and isinstance(string, bytes):
-        string = string.decode('utf-8', 'replace')
+        string = string.decode("utf-8", "replace")
 
     return string
 
@@ -223,13 +218,13 @@ def _extract_excerpt(raw_body, raw_body_meta):
     raw_body = decode_string(raw_body, raw_body_meta)
 
     # Remove any style tags *and* content
-    raw_body = re.sub(r'<style.*>.*(?:</style>)?', '', raw_body, flags=re.DOTALL)
+    raw_body = re.sub(r"<style.*>.*(?:</style>)?", "", raw_body, flags=re.DOTALL)
 
     # Remove any other tags
-    raw_body = re.sub(r'<.*?>', '', raw_body)
+    raw_body = re.sub(r"<.*?>", "", raw_body)
 
     # Remove any tag starts (ie <thing ... with no end due to cutoff)
-    raw_body = re.sub(r'<[^>]*', '', raw_body)
+    raw_body = re.sub(r"<[^>]*", "", raw_body)
 
     lines = []
 
@@ -239,10 +234,10 @@ def _extract_excerpt(raw_body, raw_body_meta):
         if not line:
             continue
 
-        if line[0] in ('#', '-'):
+        if line[0] in ("#", "-"):
             continue
 
-        if re.match(r'^Content-[A-Za-z\-]+:', line):
+        if re.match(r"^Content-[A-Za-z\-]+:", line):
             continue
 
         if line in lines:  # remove duplicates (ie text+html versions)
@@ -253,7 +248,7 @@ def _extract_excerpt(raw_body, raw_body_meta):
     if not lines:
         return
 
-    body = '\n'.join(lines)
+    body = "\n".join(lines)
     return body
 
 
@@ -265,27 +260,23 @@ def extract_excerpt(raw_body, raw_body_meta):
         )
 
     except Exception as e:
-        logger.warning((
-            'Could not extract excerpt: '
-            f'{e} (data={raw_body}, meta={raw_body_meta})'
-        ))
+        logger.warning(
+            ("Could not extract excerpt: " f"{e} (data={raw_body}, meta={raw_body_meta})")
+        )
 
 
 def extract_headers(raw_message):
     message = decode_string(raw_message)
     parser = email.parser.HeaderParser()
 
-    return {
-        key: decode_header(header)
-        for key, header in parser.parsestr(message).items()
-    }
+    return {key: decode_header(header) for key, header in parser.parsestr(message).items()}
 
 
 def _parse_bodystructure_list(items):
-    '''
+    """
     Given a list of items ('KEY', 'value', 'OTHER_KEY', 'other_value'), returns
     a dict representation. Handles nested lists.
-    '''
+    """
 
     data = {}
 
@@ -313,14 +304,16 @@ def _parse_bodystructure(bodystructure, item_number=None):
     if isinstance(type_or_bodies, list):
         for i, body in enumerate(type_or_bodies, 1):
             if item_number:
-                nested_item_number = f'{item_number}.{i}'
+                nested_item_number = f"{item_number}.{i}"
             else:
-                nested_item_number = f'{i}'
+                nested_item_number = f"{i}"
 
-            items.update(_parse_bodystructure(
-                body,
-                item_number=nested_item_number,
-            ))
+            items.update(
+                _parse_bodystructure(
+                    body,
+                    item_number=nested_item_number,
+                )
+            )
 
     else:
         subtype = decode_string(bodystructure[1])
@@ -330,14 +323,14 @@ def _parse_bodystructure(bodystructure, item_number=None):
         content_id = bodystructure[3]
         if content_id:
             content_id = decode_string(content_id)
-            content_id = content_id.strip('<>')
+            content_id = content_id.strip("<>")
 
         data = {
-            'type': decode_string(type_or_bodies),
-            'subtype': subtype,
-            'encoding': encoding,
-            'content_id': content_id,
-            'size': size,
+            "type": decode_string(type_or_bodies),
+            "subtype": subtype,
+            "encoding": encoding,
+            "content_id": content_id,
+            "size": size,
         }
 
         extra_data = {}
@@ -349,16 +342,16 @@ def _parse_bodystructure(bodystructure, item_number=None):
             if isinstance(bit, tuple) and len(bit) > 1:
                 extra_data.update(_parse_bodystructure_list(bit))
 
-        if b'CHARSET' in extra_data:
-            data['charset'] = decode_string(extra_data[b'CHARSET'])
+        if b"CHARSET" in extra_data:
+            data["charset"] = decode_string(extra_data[b"CHARSET"])
 
-        if b'NAME' in extra_data:
-            data['name'] = decode_string(extra_data[b'NAME'])
+        if b"NAME" in extra_data:
+            data["name"] = decode_string(extra_data[b"NAME"])
 
-        any_attachment_data = extra_data.get(b'ATTACHMENT') or extra_data.get(b'INLINE')
+        any_attachment_data = extra_data.get(b"ATTACHMENT") or extra_data.get(b"INLINE")
         if any_attachment_data:
-            if b'FILENAME' in any_attachment_data:
-                data['name'] = decode_string(any_attachment_data[b'FILENAME'])
+            if b"FILENAME" in any_attachment_data:
+                data["name"] = decode_string(any_attachment_data[b"FILENAME"])
 
         item_number = item_number or 1
         items[item_number] = data
@@ -370,28 +363,28 @@ def parse_bodystructure(bodystructure):
     try:
         items = _parse_bodystructure(bodystructure)
     except Exception as e:
-        logger.warning(f'Could not parse bodystructure: {e} (struct={bodystructure})')
+        logger.warning(f"Could not parse bodystructure: {e} (struct={bodystructure})")
 
         raise
 
     # Attach shortcuts -> part IDs
-    items['attachments'] = []
+    items["attachments"] = []
 
     for number, part in list(items.items()):
-        if number == 'attachments':
+        if number == "attachments":
             continue
 
-        if part['type'].upper() == 'TEXT':
-            subtype = part['subtype'].upper()
+        if part["type"].upper() == "TEXT":
+            subtype = part["subtype"].upper()
 
-            if 'html' not in items and subtype == 'HTML':
-                items['html'] = number
+            if "html" not in items and subtype == "HTML":
+                items["html"] = number
                 continue
 
-            if 'plain' not in items and subtype == 'PLAIN':
-                items['plain'] = number
+            if "plain" not in items and subtype == "PLAIN":
+                items["plain"] = number
                 continue
 
-        items['attachments'].append(number)
+        items["attachments"].append(number)
 
     return items

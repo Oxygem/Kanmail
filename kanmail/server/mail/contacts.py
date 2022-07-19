@@ -6,11 +6,9 @@ from kanmail.server.util import lock_function
 
 
 class Contact(db.Model):
-    __bind_key__ = 'contacts'
-    __tablename__ = 'contacts'
-    __table_args__ = (
-        db.UniqueConstraint('email', 'name'),
-    )
+    __bind_key__ = "contacts"
+    __tablename__ = "contacts"
+    __table_args__ = (db.UniqueConstraint("email", "name"),)
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -19,9 +17,9 @@ class Contact(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'email': self.email,
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
         }
 
 
@@ -38,14 +36,11 @@ def get_contact_dicts():
 
 
 def get_contact_tuple_to_contact():
-    return {
-        (contact.name, contact.email): contact
-        for contact in get_contacts()
-    }
+    return {(contact.name, contact.email): contact for contact in get_contacts()}
 
 
 def save_contact(contact):
-    logger.debug(f'Saving contact: {contact}')
+    logger.debug(f"Saving contact: {contact}")
 
     db.session.add(contact)
     db.session.commit()
@@ -54,7 +49,7 @@ def save_contact(contact):
 
 
 def save_contacts(*contacts):
-    logger.debug(f'Saving {len(contacts)} contacts')
+    logger.debug(f"Saving {len(contacts)} contacts")
 
     for contact in contacts:
         db.session.add(contact)
@@ -64,7 +59,7 @@ def save_contacts(*contacts):
 
 
 def delete_contact(contact):
-    logger.debug(f'Deleting contact: {contact}')
+    logger.debug(f"Deleting contact: {contact}")
 
     db.session.delete(contact)
     db.session.commit()
@@ -78,16 +73,16 @@ def is_valid_contact(name, email):
     if not name:
         return False
 
-    if any(s in email for s in ('noreply', 'no-reply', 'donotreply')):
+    if any(s in email for s in ("noreply", "no-reply", "donotreply")):
         return False
 
-    if email.startswith('reply'):
+    if email.startswith("reply"):
         return False
 
-    if email.startswith('bounce'):
+    if email.startswith("bounce"):
         return False
 
-    if ' via ' in name:
+    if " via " in name:
         return False
 
     return True
@@ -100,11 +95,11 @@ def add_contacts(contacts):
 
     for name, email in contacts:
         if not is_valid_contact(name, email):
-            logger.debug(f'Not saving invalid contact: ({name} {email})')
+            logger.debug(f"Not saving invalid contact: ({name} {email})")
             continue
 
         if (name, email) in existing_contacts:
-            logger.debug(f'Already have contact: ({name} {email})')
+            logger.debug(f"Already have contact: ({name} {email})")
             continue
 
         new_contact = Contact(name=name, email=email)

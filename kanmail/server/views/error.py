@@ -1,6 +1,6 @@
 import traceback
 
-from flask import jsonify, make_response, Response
+from flask import Response, jsonify, make_response
 from werkzeug.exceptions import HTTPException
 
 from kanmail.log import logger
@@ -13,37 +13,46 @@ from kanmail.server.mail.connection import ConnectionSettingsError, ImapConnecti
 @app.errorhandler(404)
 @app.errorhandler(405)
 def error_bad_request(e) -> Response:
-    return make_response(jsonify(
-        status_code=e.code,
-        error_name=e.name,
-        error_message=e.description,
-    ), e.code)
+    return make_response(
+        jsonify(
+            status_code=e.code,
+            error_name=e.name,
+            error_message=e.description,
+        ),
+        e.code,
+    )
 
 
 @app.errorhandler(ConnectionSettingsError)
 def error_connection_exception(e) -> Response:
     error_name = e.__class__.__name__
-    message = f'{e} (account={e.account})'
+    message = f"{e} (account={e.account})"
     trace = traceback.format_exc().strip()
-    logger.warning(f'Connection settings error in view: {message}: {trace}')
-    return make_response(jsonify(
-        status_code=400,
-        error_name=error_name,
-        error_message=message,
-    ), 400)
+    logger.warning(f"Connection settings error in view: {message}: {trace}")
+    return make_response(
+        jsonify(
+            status_code=400,
+            error_name=error_name,
+            error_message=message,
+        ),
+        400,
+    )
 
 
 @app.errorhandler(ImapConnectionError)
 def error_network_exception(e) -> Response:
     error_name = e.__class__.__name__
-    message = f'{e} (account={e.account})'
+    message = f"{e} (account={e.account})"
     trace = traceback.format_exc().strip()
-    logger.warning(f'Network error in view: {message}: {trace}')
-    return make_response(jsonify(
-        status_code=503,
-        error_name=error_name,
-        error_message=message,
-    ), 503)
+    logger.warning(f"Network error in view: {message}: {trace}")
+    return make_response(
+        jsonify(
+            status_code=503,
+            error_name=error_name,
+            error_message=message,
+        ),
+        503,
+    )
 
 
 @app.errorhandler(Exception)
@@ -52,12 +61,15 @@ def error_unexpected_exception(e) -> Response:
         return e
 
     error_name = e.__class__.__name__
-    message = f'{e}'
+    message = f"{e}"
     trace = traceback.format_exc().strip()
-    logger.exception(f'Unexpected exception in view: {message}: {trace}')
-    return make_response(jsonify(
-        status_code=500,
-        error_name=error_name,
-        error_message=message,
-        traceback=trace,
-    ), 500)
+    logger.exception(f"Unexpected exception in view: {message}: {trace}")
+    return make_response(
+        jsonify(
+            status_code=500,
+            error_name=error_name,
+            error_message=message,
+            traceback=trace,
+        ),
+        500,
+    )

@@ -1,5 +1,4 @@
 import json
-
 from copy import deepcopy
 from functools import lru_cache
 from os import makedirs, path
@@ -24,7 +23,6 @@ from .constants import (
 )
 from .model import fix_any_old_setings, get_default_settings, validate_settings
 
-
 # Bootstrap logging before we use logging!
 #
 
@@ -34,20 +32,21 @@ for needed_dir in (APP_DIR, CACHE_DIR, ICON_CACHE_DIR):
 
 setup_logging(debug=DEBUG, log_file=LOG_FILE)
 
-logger.debug(f'App dir set to: {APP_DIR}')
+logger.debug(f"App dir set to: {APP_DIR}")
 
 
 # Device ID - totally random unique identifier for this install of Kanmail, this
 # is used to send anonymous debug, error and usage information.
 #
 
+
 def get_device_id() -> str:
     if path.exists(DEVICE_ID_FILE):
-        with open(DEVICE_ID_FILE, 'r') as f:
+        with open(DEVICE_ID_FILE, "r") as f:
             return f.read()
 
     random_device_id = str(uuid4())
-    with open(DEVICE_ID_FILE, 'w') as f:
+    with open(DEVICE_ID_FILE, "w") as f:
         f.write(random_device_id)
 
     return random_device_id
@@ -55,6 +54,7 @@ def get_device_id() -> str:
 
 # "App"/user settings
 #
+
 
 def _merge_settings(
     base_config: dict,
@@ -66,15 +66,18 @@ def _merge_settings(
     for key, value in new_config.items():
         # If this key is a dict in the old config, merge those
         if key in base_config and isinstance(value, dict):
-            changed_keys.extend(_merge_settings(
-                base_config[key], new_config[key],
-                key_prefix=key,
-            ))
+            changed_keys.extend(
+                _merge_settings(
+                    base_config[key],
+                    new_config[key],
+                    key_prefix=key,
+                )
+            )
         else:
             if base_config.get(key) != new_config[key]:
                 base_config[key] = new_config[key]
                 if key_prefix:
-                    changed_keys.append(f'{key_prefix}.{key}')
+                    changed_keys.append(f"{key_prefix}.{key}")
                 else:
                     changed_keys.append(key)
 
@@ -86,7 +89,7 @@ def get_settings() -> dict:
     settings = get_default_settings()
 
     if path.exists(SETTINGS_FILE):
-        with open(SETTINGS_FILE, 'r') as file:
+        with open(SETTINGS_FILE, "r") as file:
             data = file.read()
 
         user_settings = json.loads(data)
@@ -94,7 +97,7 @@ def get_settings() -> dict:
         if has_changed:
             set_settings(user_settings)
 
-        logger.debug(f'Loaded settings: {user_settings}')
+        logger.debug(f"Loaded settings: {user_settings}")
 
         # Merge the user settings ontop of the defaults
         _merge_settings(settings, user_settings)
@@ -106,14 +109,14 @@ def get_system_setting(
     key: str,
     default: Optional[dict] = None,
 ) -> Union[None, str, int]:
-    return get_settings()['system'].get(key, default)
+    return get_settings()["system"].get(key, default)
 
 
 def get_style_setting(
     key: str,
     default: Optional[dict] = None,
 ) -> Union[None, str, int]:
-    return get_settings()['style'].get(key, default)
+    return get_settings()["style"].get(key, default)
 
 
 def get_settings_copy():
@@ -140,10 +143,10 @@ def update_settings(settings_updates: dict) -> list:
 def set_settings(new_settings: dict) -> None:
     validate_settings(new_settings)
 
-    logger.debug(f'Writing new settings: {new_settings}')
+    logger.debug(f"Writing new settings: {new_settings}")
     json_data = json.dumps(new_settings, indent=4)
 
-    with open(SETTINGS_FILE, 'w') as file:
+    with open(SETTINGS_FILE, "w") as file:
         file.write(json_data)
 
     get_settings.cache_clear()
@@ -151,22 +154,22 @@ def set_settings(new_settings: dict) -> None:
 
 def get_window_settings() -> dict:
     settings = {
-        'width': DEFAULT_WINDOW_WIDTH,
-        'height': DEFAULT_WINDOW_HEIGHT,
-        'x': DEFAULT_WINDOW_LEFT,
-        'y': DEFAULT_WINDOW_TOP,
+        "width": DEFAULT_WINDOW_WIDTH,
+        "height": DEFAULT_WINDOW_HEIGHT,
+        "x": DEFAULT_WINDOW_LEFT,
+        "y": DEFAULT_WINDOW_TOP,
     }
 
     if path.exists(WINDOW_CACHE_FILE):
-        with open(WINDOW_CACHE_FILE, 'r') as f:
+        with open(WINDOW_CACHE_FILE, "r") as f:
             data = json.load(f)
 
-        logger.debug(f'Loaded window settings: {data}')
+        logger.debug(f"Loaded window settings: {data}")
 
         for key, value in data.items():
-            if key.startswith('WINDOW_'):  # COMPAT w/old style
-                key = key.split('_')[1].lower()
-                logger.warning(f'Updated old window setting: WINDOW_{key} -> {key}')
+            if key.startswith("WINDOW_"):  # COMPAT w/old style
+                key = key.split("_")[1].lower()
+                logger.warning(f"Updated old window setting: WINDOW_{key} -> {key}")
 
             if key in settings:
                 settings[key] = value
@@ -176,13 +179,13 @@ def get_window_settings() -> dict:
 
 def set_window_settings(width: int, height: int, left: int, top: int) -> None:
     window_settings = {
-        'width': width,
-        'height': height,
-        'x': left,
-        'y': top,
+        "width": width,
+        "height": height,
+        "x": left,
+        "y": top,
     }
 
-    logger.debug(f'Writing window settings: {window_settings}')
+    logger.debug(f"Writing window settings: {window_settings}")
 
-    with open(WINDOW_CACHE_FILE, 'w') as f:
+    with open(WINDOW_CACHE_FILE, "w") as f:
         f.write(json.dumps(window_settings))

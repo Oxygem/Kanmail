@@ -4,28 +4,24 @@ from flask import abort, jsonify, redirect, render_template, request
 from requests import RequestException
 
 from kanmail.server.app import add_public_route, add_route
-from kanmail.server.mail.oauth import (
-    get_oauth_request_url,
-    get_oauth_tokens_from_code,
-)
-
+from kanmail.server.mail.oauth import get_oauth_request_url, get_oauth_tokens_from_code
 
 OAUTH_REQUESTS = {}
 
 
-@add_public_route('/oauth-complete')
+@add_public_route("/oauth-complete")
 def get_oauth_complete():
-    return render_template('oauth_complete.html')
+    return render_template("oauth_complete.html")
 
 
-@add_route('/api/oauth/request', methods=('POST',))
+@add_route("/api/oauth/request", methods=("POST",))
 def make_oauth_request():
     request_data = request.get_json()
-    oauth_provider = request_data['oauth_provider']
+    oauth_provider = request_data["oauth_provider"]
 
     uid = str(uuid4())
     OAUTH_REQUESTS[uid] = {
-        'provider': oauth_provider,
+        "provider": oauth_provider,
     }
 
     auth_url = get_oauth_request_url(oauth_provider, uid)
@@ -33,47 +29,50 @@ def make_oauth_request():
     return jsonify(auth_url=auth_url, uid=uid)
 
 
-@add_route('/api/oauth/respond')
+@add_route("/api/oauth/respond")
 def handle_oauth_response():
     # Store the OAuth auth code from the server for the app to retrieve
-    uid = request.args['uid']
-    auth_code = request.args['code']
+    uid = request.args["uid"]
+    auth_code = request.args["code"]
 
     oauth_request = OAUTH_REQUESTS.get(uid)
 
     if not oauth_request:
-        return render_template(
-            'oauth_error.html',
-            error='OAuth request not found!',
-        ), 400
+        return (
+            render_template(
+                "oauth_error.html",
+                error="OAuth request not found!",
+            ),
+            400,
+        )
 
     try:
         oauth_response = get_oauth_tokens_from_code(
-            oauth_request['provider'],
+            oauth_request["provider"],
             uid,
             auth_code,
         )
     except RequestException as e:
         return render_template(
-            'oauth_error.html',
-            error=f'{e}',
+            "oauth_error.html",
+            error=f"{e}",
         )
 
-    OAUTH_REQUESTS[uid]['response'] = oauth_response
-    return redirect('/oauth-complete')
+    OAUTH_REQUESTS[uid]["response"] = oauth_response
+    return redirect("/oauth-complete")
 
 
-@add_route('/api/oauth/response/<uid>')
+@add_route("/api/oauth/response/<uid>")
 def get_oauth_response(uid):
     response = OAUTH_REQUESTS.get(uid)
 
     if not response:
-        abort(404, 'OAuth response not found!')
+        abort(404, "OAuth response not found!")
 
     return jsonify(response)
 
 
-@add_route('/api/oauth/response/<uid>', methods=('DELETE',))
+@add_route("/api/oauth/response/<uid>", methods=("DELETE",))
 def delete_oauth_response(uid):
     OAUTH_REQUESTS.pop(uid)
-    return '', 204
+    return "", 204

@@ -11,35 +11,34 @@ ID_TO_WINDOW = {}  # internal ID -> window object
 UNIQUE_NAME_TO_ID = {}  # name -> internal ID for unique windows
 
 UNIQUE_KEY_TO_LOCALIZATION = {
-    'settings': {
-        'global.quit': 'Close without saving',
-        'global.cancel': 'Return to settings',
-        'global.quitConfirmation': (
-            'Any changes will be lost, do you still want to close the window?'
+    "settings": {
+        "global.quit": "Close without saving",
+        "global.cancel": "Return to settings",
+        "global.quitConfirmation": (
+            "Any changes will be lost, do you still want to close the window?"
         ),
     },
 }
 
 
 def create_window(
-    endpoint: str = '/',
+    endpoint: str = "/",
     unique_key: Optional[str] = None,
     **kwargs,
 ) -> Union[str, bool]:
     if not IS_APP:
-        logger.warning('Cannot open window in server mode!')
+        logger.warning("Cannot open window in server mode!")
         return False
 
     internal_id = str(uuid4())
     link = (
-        f'http://{SERVER_HOST}:{server.get_port()}{endpoint}'
-        f'?window_id={internal_id}'
-        f'&Kanmail-Session-Token={SESSION_TOKEN}'
+        f"http://{SERVER_HOST}:{server.get_port()}{endpoint}"
+        f"?window_id={internal_id}"
+        f"&Kanmail-Session-Token={SESSION_TOKEN}"
     )
 
     logger.debug(
-        f'Opening window ({internal_id}) '
-        f'url={endpoint} kwargs={kwargs}',
+        f"Opening window ({internal_id}) " f"url={endpoint} kwargs={kwargs}",
     )
 
     # Nuke any existing unique window
@@ -49,7 +48,7 @@ def create_window(
             destroy_window(old_window_id)
 
     window = webview.create_window(
-        'Kanmail',
+        "Kanmail",
         link,
         frameless=FRAMELESS,
         easy_drag=False,
@@ -77,7 +76,7 @@ def destroy_window(internal_id: str) -> None:
         else:
             return
 
-    logger.warning(f'Tried to destroy non-existant window: {internal_id}')
+    logger.warning(f"Tried to destroy non-existant window: {internal_id}")
 
 
 def resize_window(internal_id: str, width: int, height: int) -> None:
@@ -86,37 +85,38 @@ def resize_window(internal_id: str, width: int, height: int) -> None:
     if window:
         window.resize(width, height)
 
-    logger.warning(f'Tried to resize non-existant window: {internal_id}')
+    logger.warning(f"Tried to resize non-existant window: {internal_id}")
 
 
 def reload_main_window() -> None:
     if IS_APP:
         window = get_main_window()
-        window.evaluate_js('window.location.reload()')
+        window.evaluate_js("window.location.reload()")
 
 
 def get_main_window() -> webview.Window:
-    return ID_TO_WINDOW[UNIQUE_NAME_TO_ID['main']]
+    return ID_TO_WINDOW[UNIQUE_NAME_TO_ID["main"]]
 
 
 def destroy_main_window() -> None:
-    destroy_window(UNIQUE_NAME_TO_ID['main'])
+    destroy_window(UNIQUE_NAME_TO_ID["main"])
 
 
 def get_main_window_size_position() -> Dict[str, int]:
     window = get_main_window()
     return {
-        'left': window.x,
-        'top': window.y,
-        'width': window.width,
-        'height': window.height,
+        "left": window.x,
+        "top": window.y,
+        "width": window.width,
+        "height": window.height,
     }
 
 
 def init_window_hacks() -> None:
     try:
         from webview.platforms import cocoa
-        from .macos import show_traffic_light_buttons, reposition_traffic_light_buttons
+
+        from .macos import reposition_traffic_light_buttons, show_traffic_light_buttons
     except ImportError:
         pass
     else:

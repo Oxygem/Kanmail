@@ -5,23 +5,22 @@ import keyring
 
 from kanmail.settings.constants import CACHE_DIR, PLATFORM
 
-
-if PLATFORM == 'Windows':
+if PLATFORM == "Windows":
     from keyring.backends.Windows import WinVaultKeyring as KeyringClass
-elif PLATFORM == 'Darwin':
+elif PLATFORM == "Darwin":
     from keyring.backends.OS_X import Keyring as KeyringClass
 else:
     from keyrings.alt.file import PlaintextKeyring
 
     class KeyringClass(PlaintextKeyring):  # type: ignore
-        file_path = path.join(CACHE_DIR, '.secrets')
+        file_path = path.join(CACHE_DIR, ".secrets")
 
 
 keyring.set_keyring(KeyringClass())
 
 
 def _make_password_name(section, host) -> str:
-    return f'Kanmail {section}: {host}'
+    return f"Kanmail {section}: {host}"
 
 
 def set_password(section, host, username, password) -> bool:

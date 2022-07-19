@@ -1,8 +1,5 @@
 from functools import wraps
-from pickle import (
-    dumps as pickle_dumps,
-    loads as pickle_loads,
-)
+from pickle import dumps as pickle_dumps, loads as pickle_loads
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -26,16 +23,15 @@ def execute_if_enabled(func):
 # Folder -> Folderheader -> FolderHeaderPart
 #
 
-class FolderCacheItem(db.Model):
-    '''
-    Store folder UID list and validity.
-    '''
 
-    __bind_key__ = 'folders'
-    __tablename__ = 'folder_cache_item'
-    __table_args__ = (
-        db.UniqueConstraint('account_name', 'folder_name'),
-    )
+class FolderCacheItem(db.Model):
+    """
+    Store folder UID list and validity.
+    """
+
+    __bind_key__ = "folders"
+    __tablename__ = "folder_cache_item"
+    __table_args__ = (db.UniqueConstraint("account_name", "folder_name"),)
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -46,19 +42,17 @@ class FolderCacheItem(db.Model):
     uids = db.Column(db.Text)
 
     def __str__(self):
-        return f'{self.account_name}/{self.folder_name}'
+        return f"{self.account_name}/{self.folder_name}"
 
 
 class FolderHeaderCacheItem(db.Model):
-    '''
+    """
     Email header data, attached to the relevant folder.
-    '''
+    """
 
-    __bind_key__ = 'folders'
-    __tablename__ = 'folder_header_cache_item'
-    __table_args__ = (
-        db.UniqueConstraint('uid', 'folder_id'),
-    )
+    __bind_key__ = "folders"
+    __tablename__ = "folder_header_cache_item"
+    __table_args__ = (db.UniqueConstraint("uid", "folder_id"),)
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -67,13 +61,13 @@ class FolderHeaderCacheItem(db.Model):
 
     folder_id = db.Column(
         db.Integer,
-        db.ForeignKey('folder_cache_item.id', ondelete='CASCADE'),
+        db.ForeignKey("folder_cache_item.id", ondelete="CASCADE"),
         nullable=False,
     )
-    folder = db.relationship('FolderCacheItem')
+    folder = db.relationship("FolderCacheItem")
 
     def __str__(self):
-        return f'{self.folder}/{self.uid}'
+        return f"{self.folder}/{self.uid}"
 
 
 # class FolderHeaderPartCacheItem(db.Model):
@@ -100,13 +94,13 @@ class FolderHeaderCacheItem(db.Model):
 
 
 def _make_account_key(settings):
-    imap_settings = settings['imap_connection']
+    imap_settings = settings["imap_connection"]
     return f'{imap_settings["username"]}@{imap_settings["host"]}'
 
 
 def remove_stale_folders():
     settings = get_settings()
-    accounts = settings['accounts']
+    accounts = settings["accounts"]
     account_names = set()
     for account in accounts:
         account_names.add(_make_account_key(account))
@@ -116,11 +110,11 @@ def remove_stale_folders():
 
     for folder in all_folders:
         if folder.account_name not in account_names:
-            logger.info(f'Deleting stale cache folder: {folder}')
+            logger.info(f"Deleting stale cache folder: {folder}")
             delete_cache_items(folder)
             deleted += 1
 
-    logger.info(f'Deleted {deleted}/{len(all_folders)} cache folders')
+    logger.info(f"Deleted {deleted}/{len(all_folders)} cache folders")
 
 
 def remove_stale_headers():
@@ -135,25 +129,25 @@ def remove_stale_headers():
 
     for header in all_headers:
         if header.uid not in folder_id_to_uids.get(header.folder_id, set()):
-            logger.info(f'Deleting stale cache header: {header}')
+            logger.info(f"Deleting stale cache header: {header}")
             headers_to_delete.append(header)
 
     if headers_to_delete:
         delete_cache_items(*headers_to_delete)
 
-    logger.info(f'Deleted {len(headers_to_delete)}/{len(all_headers)} cache headers')
+    logger.info(f"Deleted {len(headers_to_delete)}/{len(all_headers)} cache headers")
 
 
 def vacuum_folder_cache():
-    with db.get_engine(bind='folders').begin() as conn:
-        conn.execute('VACUUM')
+    with db.get_engine(bind="folders").begin() as conn:
+        conn.execute("VACUUM")
 
-    logger.info('Folder cache DB vacuumed')
+    logger.info("Folder cache DB vacuumed")
 
 
 @execute_if_enabled
 def bust_all_caches():
-    logger.warning('Busting all cache items!')
+    logger.warning("Busting all cache items!")
     FolderCacheItem.query.delete()
     db.session.commit()
 
@@ -173,14 +167,14 @@ def delete_cache_items(*items):
 class FolderCache(object):
     def __init__(self, folder):
         self.folder = folder
-        self.name = f'{self.folder.account.name}/{self.folder.name}'
+        self.name = f"{self.folder.account.name}/{self.folder.name}"
 
         # Use user@host for the cache key, so we invalidate when accounts are changed
         # TODO: cache cleanup
         self.cache_key = _make_account_key(self.folder.account.settings)
 
     def __str__(self):
-        return f'FolderCache({self.name})'
+        return f"FolderCache({self.name})"
 
     @lock_class_method
     def get_folder_cache_item(self):
@@ -200,18 +194,18 @@ class FolderCache(object):
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[{self}]: {message}')
+        func(f"[{self}]: {message}")
 
     @execute_if_enabled
     def bust(self):
-        self.log('warning', 'busting the cache!')
+        self.log("warning", "busting the cache!")
         delete_cache_items(self.get_folder_cache_item())
 
     # Single operations
     #
 
     def set_uid_validity(self, uid_validity):
-        self.log('debug', f'Save UID validity: {uid_validity}')
+        self.log("debug", f"Save UID validity: {uid_validity}")
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uid_validity = uid_validity
         save_cache_items(folder_cache_item)
@@ -222,7 +216,7 @@ class FolderCache(object):
             return int(uid_validity)
 
     def set_uids(self, uids):
-        self.log('debug', f'Saving {len(uids)} UIDs')
+        self.log("debug", f"Saving {len(uids)} UIDs")
         folder_cache_item = self.get_folder_cache_item()
         folder_cache_item.uids = pickle_dumps(uids)
         save_cache_items(folder_cache_item)
@@ -234,7 +228,7 @@ class FolderCache(object):
 
     @execute_if_enabled
     def set_headers(self, uid, headers):
-        self.log('debug', f'Set headers for UID {uid}: {headers}')
+        self.log("debug", f"Set headers for UID {uid}: {headers}")
 
         headers_data = pickle_dumps(headers)
 
@@ -276,7 +270,7 @@ class FolderCache(object):
     def get_parts(self, uid):
         headers = self.get_headers(uid)
         if headers:
-            return headers['parts']
+            return headers["parts"]
 
     # Batch operations
     #
@@ -285,22 +279,17 @@ class FolderCache(object):
         if not CACHE_ENABLED:
             return {}
 
-        matched_headers = (
-            FolderHeaderCacheItem.query
-            .filter_by(folder_id=self.get_folder_cache_item().id)
-            .filter(FolderHeaderCacheItem.uid.in_(uids))
-        )
+        matched_headers = FolderHeaderCacheItem.query.filter_by(
+            folder_id=self.get_folder_cache_item().id
+        ).filter(FolderHeaderCacheItem.uid.in_(uids))
 
-        return {
-            header.uid: header
-            for header in matched_headers
-        }
+        return {header.uid: header for header in matched_headers}
 
     def batch_get_headers(self, uids):
         if not CACHE_ENABLED:
             return {}
 
-        self.log('debug', f'Batch get {len(uids)} headers')
+        self.log("debug", f"Batch get {len(uids)} headers")
 
         return {
             uid: pickle_loads(header.data)
@@ -309,7 +298,7 @@ class FolderCache(object):
 
     @execute_if_enabled
     def batch_set_headers(self, uid_to_headers):
-        self.log('debug', f'Batch set {len(uid_to_headers)} headers')
+        self.log("debug", f"Batch set {len(uid_to_headers)} headers")
 
         existing_headers = self.batch_get_header_items(uid_to_headers.keys())
         items_to_save = []
@@ -322,10 +311,12 @@ class FolderCache(object):
                 existing_header.data = headers_data
                 items_to_save.append(existing_header)
             else:
-                items_to_save.append(FolderHeaderCacheItem(
-                    folder_id=self.get_folder_cache_item().id,
-                    uid=uid,
-                    data=headers_data,
-                ))
+                items_to_save.append(
+                    FolderHeaderCacheItem(
+                        folder_id=self.get_folder_cache_item().id,
+                        uid=uid,
+                        data=headers_data,
+                    )
+                )
 
         save_cache_items(*items_to_save)

@@ -4,11 +4,9 @@ from kanmail.server.app import db
 
 
 class AllowedImage(db.Model):
-    __bind_key__ = 'contacts'
-    __tablename__ = 'allowed_images'
-    __table_args__ = (
-        db.UniqueConstraint('email'),
-    )
+    __bind_key__ = "contacts"
+    __tablename__ = "allowed_images"
+    __table_args__ = (db.UniqueConstraint("email"),)
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(300))

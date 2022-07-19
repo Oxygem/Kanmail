@@ -1,5 +1,4 @@
 import ssl
-
 from base64 import b64encode
 from contextlib import contextmanager
 from imaplib import IMAP4
@@ -65,10 +64,10 @@ class ImapConnectionWrapper(object):
                     ret = func(*args, **kwargs)
 
                     took = (time() - start) * 1000
-                    self.config.log('debug', (
-                        f'Completed IMAP action: '
-                        f'{key}({args}, {kwargs}) in {took}ms'
-                    ))
+                    self.config.log(
+                        "debug",
+                        (f"Completed IMAP action: " f"{key}({args}, {kwargs}) in {took}ms"),
+                    )
 
                     return ret
 
@@ -84,8 +83,8 @@ class ImapConnectionWrapper(object):
 
                     attempts += 1
                     self.config.log(
-                        'warning',
-                        f'IMAP error {attempts}/{self.config.max_attempts}: {e}',
+                        "warning",
+                        f"IMAP error {attempts}/{self.config.max_attempts}: {e}",
                     )
                     self.try_make_imap()
                     func = getattr(self._imap, key)
@@ -100,14 +99,14 @@ class ImapConnectionWrapper(object):
 
     def make_imap(self):
         server_string = (
-            f'{self.config.username}@{self.config.host}:{self.config.port} '
-            f'(ssl={self.config.ssl})'
+            f"{self.config.username}@{self.config.host}:{self.config.port} "
+            f"(ssl={self.config.ssl})"
         )
-        self.config.log('debug', f'Connecting to IMAP server: {server_string}')
+        self.config.log("debug", f"Connecting to IMAP server: {server_string}")
 
         ssl_context = ssl.create_default_context()
         if self.config.ssl_verify_hostname is False:
-            self.config.log('warning', 'Disabling SSL hostname verification!')
+            self.config.log("warning", "Disabling SSL hostname verification!")
             ssl_context.check_hostname = False
 
         imap = IMAPClient(
@@ -125,8 +124,8 @@ class ImapConnectionWrapper(object):
                 imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
             except LoginError as e:
                 # TODO: Tidy this up/move it
-                if 'AUTHENTICATIONFAILED' in f'{e}':
-                    self.config.log('info', 'Refreshing OAuth acccess token')
+                if "AUTHENTICATIONFAILED" in f"{e}":
+                    self.config.log("info", "Refreshing OAuth acccess token")
                     invalidate_access_token(self.config.oauth_refresh_token)
                     imap.oauth2_login(self.config.username, self.config.get_oauth_access_token())
         else:
@@ -140,7 +139,7 @@ class ImapConnectionWrapper(object):
         imap.capabilities()
 
         self._imap = imap
-        self.config.log('info', f'Connected to IMAP server: {server_string}')
+        self.config.log("info", f"Connected to IMAP server: {server_string}")
 
     def set_selected_folder(self, selected_folder):
         self.select_folder(selected_folder)
@@ -156,11 +155,11 @@ class ImapConnectionWrapper(object):
 
 class ConnectionMixin(object):
     def __str__(self):
-        return f'[{self.connection_type} Connection]: {self.host}:{self.port}'
+        return f"[{self.connection_type} Connection]: {self.host}:{self.port}"
 
     def log(self, method, message):
         func = getattr(logger, method)
-        func(f'[{self.connection_type} Account: {self.account}]: {message}')
+        func(f"[{self.connection_type} Account: {self.account}]: {message}")
 
     def get_oauth_access_token(self):
         oauth_tokens = get_oauth_tokens_from_refresh_token(
@@ -168,16 +167,16 @@ class ConnectionMixin(object):
             self.oauth_refresh_token,
         )
 
-        if oauth_tokens['refresh_token'] != self.oauth_refresh_token:
-            self.oauth_refresh_token = oauth_tokens['refresh_token']
+        if oauth_tokens["refresh_token"] != self.oauth_refresh_token:
+            self.oauth_refresh_token = oauth_tokens["refresh_token"]
             set_password(
-                'oauth-account',
+                "oauth-account",
                 self.host,
                 self.username,
                 self.oauth_refresh_token,
             )
 
-        return oauth_tokens['access_token']
+        return oauth_tokens["access_token"]
 
     def check_auth_settings(self):
         missing_key = None
@@ -185,28 +184,28 @@ class ConnectionMixin(object):
 
         if self.oauth_provider:
             if not self.oauth_refresh_token:
-                self.oauth_refresh_token = get_password('oauth-account', self.host, self.username)
+                self.oauth_refresh_token = get_password("oauth-account", self.host, self.username)
 
             if not self.oauth_refresh_token:
-                missing_key = 'token'
-                fix_description = 'Please delete & re-create this account in settings.'
+                missing_key = "token"
+                fix_description = "Please delete & re-create this account in settings."
         else:
             if not self.password:
-                self.password = get_password('account', self.host, self.username)
+                self.password = get_password("account", self.host, self.username)
 
             if not self.password:
-                missing_key = 'password'
-                fix_description = 'Please re-enter your password in settings.'
+                missing_key = "password"
+                fix_description = "Please re-enter your password in settings."
 
         if missing_key:
             raise ConnectionSettingsError(
                 self.account,
-                f'Missing {self.connection_type} {missing_key}! {fix_description}',
+                f"Missing {self.connection_type} {missing_key}! {fix_description}",
             )
 
 
 class ImapConnectionPool(ConnectionMixin):
-    connection_type = 'IMAP'
+    connection_type = "IMAP"
 
     def __init__(
         self,
@@ -246,7 +245,7 @@ class ImapConnectionPool(ConnectionMixin):
         self.check_auth_settings()
 
         connection = self.pool.get()
-        self.log('debug', f'Got connection from pool: {self.pool.qsize()} (-1)')
+        self.log("debug", f"Got connection from pool: {self.pool.qsize()} (-1)")
 
         try:
             if selected_folder:
@@ -259,20 +258,20 @@ class ImapConnectionPool(ConnectionMixin):
                 if selected_folder:
                     connection.unset_selected_folder()
             except Exception:
-                self.log('warning', 'Failed to unselect folder!')
+                self.log("warning", "Failed to unselect folder!")
 
             self.pool.put(connection)
-            self.log('debug', f'Returned connection to pool: {self.pool.qsize()} (+1)')
+            self.log("debug", f"Returned connection to pool: {self.pool.qsize()} (+1)")
 
 
 def _generate_smtp_oauth2_string(username, access_token):
-    auth_string = f'user={username}\1auth=Bearer {access_token}\1\1'
-    auth_string = b64encode(auth_string.encode('utf-8'))
+    auth_string = f"user={username}\1auth=Bearer {access_token}\1\1"
+    auth_string = b64encode(auth_string.encode("utf-8"))
     return auth_string
 
 
 class SmtpConnection(ConnectionMixin):
-    connection_type = 'SMTP'
+    connection_type = "SMTP"
 
     def __init__(
         self,
@@ -302,15 +301,13 @@ class SmtpConnection(ConnectionMixin):
     def get_connection(self):
         self.check_auth_settings()
 
-        server_string = (
-            f'{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})'
-        )
-        self.log('debug', f'Connecting to SMTP server: {server_string}')
+        server_string = f"{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})"
+        self.log("debug", f"Connecting to SMTP server: {server_string}")
 
         if self.ssl:
             ssl_context = ssl.create_default_context()
             if self.ssl_verify_hostname is False:
-                self.log('warning', 'Disabling SSL hostname verification!')
+                self.log("warning", "Disabling SSL hostname verification!")
                 ssl_context.check_hostname = False
 
             smtp = SMTP_SSL(self.host, self.port, context=ssl_context)
@@ -326,19 +323,20 @@ class SmtpConnection(ConnectionMixin):
             smtp.starttls()
 
         if self.oauth_provider:
+
             def do_oauth_login():
                 smtp.ehlo()
                 oauth_string = _generate_smtp_oauth2_string(
                     self.username,
                     self.get_oauth_access_token(),
                 )
-                code, text = smtp.docmd('AUTH', f'XOAUTH2 {oauth_string.decode()}')
+                code, text = smtp.docmd("AUTH", f"XOAUTH2 {oauth_string.decode()}")
                 assert code == 235, text  # 235 = "Authentication succeeded" code (rfc4954)
 
             try:
                 do_oauth_login()
             except AssertionError:
-                self.log('info', 'Refreshing OAuth acccess token')
+                self.log("info", "Refreshing OAuth acccess token")
                 invalidate_access_token(self.oauth_refresh_token)
                 do_oauth_login()
         else:
