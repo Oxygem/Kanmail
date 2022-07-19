@@ -70,12 +70,12 @@ function getWindowId() {
 
 
 export function closeWindow() {
-    get('/close-window', {window_id: getWindowId()});
+    get('/window/close', {window_id: getWindowId()});
 }
 
 
 export function resizeWindow(width, height) {
-    get('/resize-window', {window_id: getWindowId(), width, height});
+    get('/window/resize', {window_id: getWindowId(), width, height});
 }
 
 
@@ -88,7 +88,7 @@ export function openWindow(path, options={}) {
     }
 
     if (window.KANMAIL_IS_APP) {
-        get('/open-window', {
+        get('/window/open', {
             url: path,
             ...options,
         });
@@ -144,7 +144,7 @@ export function openSend() {
 
 export function openLink(link) {
     if (window.KANMAIL_IS_APP) {
-        get('/open-link', {
+        get('/window/open-link', {
             url: link,
         });
     } else {
@@ -153,7 +153,7 @@ export function openLink(link) {
 }
 
 export function openFile(filename) {
-    get('/open-link', {
+    get('/window/open-link', {
         url: `file://${filename}`,
     });
 }

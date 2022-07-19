@@ -41,7 +41,7 @@ class TestAppRun(TestCase):
             assert ping_response.json() == {'ping': 'pong'}
 
             close_window_response = requests.get(
-                'http://127.0.0.1:4420/close-window',
+                'http://127.0.0.1:4420/window/close',
                 params={
                     'Kanmail-Session-Token': session_id,
                     'window_id': window_id,

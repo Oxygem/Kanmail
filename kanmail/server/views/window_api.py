@@ -10,7 +10,7 @@ from kanmail.server.app import add_route
 from kanmail.window import create_window, destroy_window, resize_window
 
 
-@add_route('/open-link', methods=('GET',))
+@add_route('/window/open-link', methods=('GET',))
 def open_link() -> Tuple[str, int]:
     link = request.args['url']
 
@@ -27,7 +27,7 @@ def open_link() -> Tuple[str, int]:
     abort(500, 'Could not open link!')
 
 
-@add_route('/open-window', methods=('GET',))
+@add_route('/window/open', methods=('GET',))
 def open_window() -> Tuple[str, int]:
     link = request.args['url']
 
@@ -43,13 +43,13 @@ def open_window() -> Tuple[str, int]:
     return '', 204
 
 
-@add_route('/close-window', methods=('GET',))
+@add_route('/window/close', methods=('GET',))
 def close_window() -> Tuple[str, int]:
     destroy_window(request.args['window_id'])
     return '', 204
 
 
-@add_route('/resize-window', methods=('GET',))
+@add_route('/window/resize', methods=('GET',))
 def window_resize() -> Tuple[str, int]:
     resize_window(
         request.args['window_id'],
