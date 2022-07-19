@@ -62,10 +62,10 @@ apt install build-essential pkg-config git python3-dev libcairo2-dev libgireposi
 
 #### Python
 
-Kanmail requires Python `3.7` and uses `pip-tools` to manage requirements. There's a wrapper script to handle installing/updating requirements:
+Kanmail requires Python `3.9` and uses `poetry` to manage requirements, install with:
 
 ```
-python -m make.requirements install [--dev]
+poetry install
 ```
 
 #### JavaScript
