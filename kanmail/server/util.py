@@ -38,19 +38,22 @@ def lock_class_method(func):
     return wrapper
 
 
-def get_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
-    data = obj.get(key)
+sentinel = object()
 
-    if not data:
+
+def get_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
+    data = obj.get(key, sentinel)
+
+    if data is sentinel:
         abort(400, f"missing data: {key}")
 
     return data
 
 
 def pop_or_400(obj: ImmutableMultiDict, key: str) -> Union[None, str, dict]:
-    data = obj.pop(key)
+    data = obj.pop(key, sentinel)
 
-    if not data:
+    if data is sentinel:
         abort(400, f"missing data: {key}")
 
     return data
