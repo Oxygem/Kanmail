@@ -102,7 +102,9 @@ def add_route(*route_args, **route_kwargs):
             if session_token != SESSION_TOKEN:
                 abort(401, "Invalid session token provided!")
 
-            return func(*args, **kwargs)
+            response = func(*args, **kwargs)
+            logger.debug("Completed route handler %s", func.__name__)
+            return response
 
         route_kwargs["endpoint"] = func.__name__
         return app.route(*route_args, **route_kwargs)(inner)
