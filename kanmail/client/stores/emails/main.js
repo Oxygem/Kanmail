@@ -1,9 +1,11 @@
 import _ from 'lodash';
 
+import { INBOX } from 'constants.js';
 import requestStore from 'stores/request.js';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 import BaseEmails from 'stores/emails/base.js';
-import { encodeFolderName } from 'util/string.js';
+import { encodeFolderName, formatAddress } from 'util/string.js';
+import { post } from 'util/requests.js';
 
 
 class MainEmails extends BaseEmails {
@@ -12,6 +14,9 @@ class MainEmails extends BaseEmails {
 
         // We start with the main store active!
         this.active = true;
+
+        // Send notifications for this store's inbox
+        this.sendNotifications = true;
 
         // Track which folders we've initialized
         this.initializedFolderNames = new Set();
@@ -102,6 +107,16 @@ class MainEmails extends BaseEmails {
                     data.new_emails,
                 );
                 changed = true;
+
+                if (this.sendNotifications && folderName == INBOX) {
+                    data.new_emails.map(email => {
+                        post('/api/notifications/send', {
+                            title: email.subject,
+                            subtitle: email.from.map(formatAddress).join(', '),
+                            body: email.excerpt,
+                        });
+                    });
+                }
             }
 
             if (changed || options.forceProcess) {
