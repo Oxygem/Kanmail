@@ -6,6 +6,7 @@ from queue import LifoQueue
 from socket import error as socket_error
 from time import time
 
+import certifi
 from imapclient import IMAPClient
 from imapclient.exceptions import IMAPClientAbortError, IMAPClientError, LoginError
 
@@ -104,7 +105,10 @@ class ImapConnectionWrapper(object):
         )
         self.config.log("debug", f"Connecting to IMAP server: {server_string}")
 
-        ssl_context = ssl.create_default_context()
+        cafile = certifi.where()
+        self.config.log("debug", f"Using cafile={cafile}")
+        ssl_context = ssl.create_default_context(cafile=cafile)
+
         if self.config.ssl_verify_hostname is False:
             self.config.log("warning", "Disabling SSL hostname verification!")
             ssl_context.check_hostname = False
@@ -302,10 +306,13 @@ class SmtpConnection(ConnectionMixin):
         self.check_auth_settings()
 
         server_string = f"{self.username}@{self.host}:{self.port} (ssl={self.ssl}, tls={self.tls})"
-        self.log("debug", f"Connecting to SMTP server: {server_string}")
+        self.log("info", f"Connecting to SMTP server: {server_string}")
 
         if self.ssl:
-            ssl_context = ssl.create_default_context()
+            cafile = certifi.where()
+            self.log("debug", f"Using cafile={cafile}")
+
+            ssl_context = ssl.create_default_context(cafile=cafile)
             if self.ssl_verify_hostname is False:
                 self.log("warning", "Disabling SSL hostname verification!")
                 ssl_context.check_hostname = False
