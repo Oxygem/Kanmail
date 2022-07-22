@@ -1,17 +1,17 @@
 import _ from 'lodash';
 import ReactDOM from 'react-dom';
 
-import { ALIAS_FOLDERS } from 'constants.js';
+import { ALIAS_FOLDERS, INBOX } from 'constants.js';
 import { messageThreader } from 'threading.js';
-
 import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
-
 import {
     getColumnStore,
     getColumnStoreKeys,
     getColumnMetaStore,
  } from 'stores/columns.js';
+import { getSidebarFolderLinkStore } from 'stores/sidebarFolderLinks.js';
+import { post } from 'util/requests.js';
 
 
 function isEmailUnread(email) {
@@ -93,7 +93,7 @@ export default class BaseEmails {
         this.reset()
 
         this.processEmailChanges = _.debounce(
-            this.processEmailChanges,
+            this._processEmailChanges,
             250,
             {maxWait: 1000},
         );
@@ -412,7 +412,17 @@ export default class BaseEmails {
         });
     }
 
-    processEmailChanges(options={}) {
+    setInboxUnreadCount() {
+        post('/api/notifications/set-count', {count: this.unreadThreadCount});
+        getSidebarFolderLinkStore(INBOX).setUnreadCount(this.unreadThreadCount);
+    }
+
+    reduceInboxUnreadCount() {
+        this.unreadThreadCount -= 1;
+        this.setInboxUnreadCount();
+    }
+
+    _processEmailChanges(options={}) {
         /*
             Turn our single global list of emails into threads and assign to
             folders/columns, pushing updates to the relevant `ColumnStores` on
@@ -556,6 +566,11 @@ export default class BaseEmails {
                     this.meta[columnName],
                     (meta, accountKey) => metaStore.setAccountMeta(accountKey, meta),
                 );
+
+                if (this.sendNotifications && columnName === INBOX) {
+                    this.unreadThreadCount = _.filter(threads, thread => thread.unread).length;
+                    this.setInboxUnreadCount();
+                }
             });
         });
 

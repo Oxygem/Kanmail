@@ -1,12 +1,14 @@
+export const INBOX = 'inbox';
+
 export const ALWAYS_SYNC_FOLDERS = [
-    'inbox',
+    INBOX,
     'archive',
     'sent',
     'trash',
 ];
 
 export const ALIAS_FOLDERS = [  // this defines the display order
-    'inbox',
+    INBOX,
     'sent',
     'drafts',
     'archive',
@@ -15,7 +17,7 @@ export const ALIAS_FOLDERS = [  // this defines the display order
 ];
 
 export const ALIAS_TO_ICON = {
-    'inbox': 'inbox',
+    [INBOX]: 'inbox',
     'sent': 'paper-plane',
     'drafts': 'pencil',
     'archive': 'archive',

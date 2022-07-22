@@ -13,6 +13,7 @@ import folderStore from 'stores/folders.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 import mainEmailStore from 'stores/emails/main.js';
+import { getSidebarFolderLinkStore } from 'stores/sidebarFolderLinks.js';
 
 import { getAccountIconName } from 'util/accounts.js';
 import { capitalizeFirstLetter } from 'util/string.js';
@@ -50,6 +51,13 @@ function collect(connect, monitor) {
 }
 
 
+function getSidebarFolderLink(folderName) {
+    return subscribe(
+        getSidebarFolderLinkStore(folderName),
+    )(SidebarFolderLink);
+}
+
+
 @DropTarget('email', folderLinkTarget, collect)
 class SidebarFolderLink extends React.Component {
     static propTypes = {
@@ -58,6 +66,7 @@ class SidebarFolderLink extends React.Component {
         iconClassName: PropTypes.string.isRequired,
         isActive: PropTypes.bool.isRequired,
         handleClick: PropTypes.func.isRequired,
+        unreadCount: PropTypes.number.isRequired,
 
         isOver: PropTypes.bool.isRequired,
         canDrop: PropTypes.bool.isRequired,
@@ -96,6 +105,14 @@ class SidebarFolderLink extends React.Component {
         return null;
     }
 
+    renderUnreadCount() {
+        if (this.props.unreadCount) {
+            return <span className="unread-count">{this.props.unreadCount}</span>;
+        }
+
+        return null;
+    }
+
     render() {
         const { connectDropTarget } = this.props;
 
@@ -109,6 +126,7 @@ class SidebarFolderLink extends React.Component {
                     <i className={`fa fa-${this.props.iconName} ${this.props.iconClassName}`}></i>
                     {capitalizeFirstLetter(this.props.folderName)}
                     {this.renderPinButton()}
+                    {this.renderUnreadCount()}
                 </a>
             </li>
         );
@@ -169,7 +187,8 @@ export default class Filters extends React.Component {
                 }
             }
 
-            return <SidebarFolderLink
+            const WrappedSidebarFolderLink = getSidebarFolderLink(folderName);
+            return <WrappedSidebarFolderLink
                 key={folderName}
                 folderName={folderName}
                 isActive={isActive}

@@ -3,7 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { DragSource } from 'react-dnd';
 
-import { ALIAS_FOLDERS } from 'constants.js';
+import { ALIAS_FOLDERS, INBOX } from 'constants.js';
 
 import keyboard from 'keyboard.js';
 
@@ -17,6 +17,7 @@ import settingsStore from 'stores/settings.js';
 import folderStore from 'stores/folders.js';
 import { getEmailStore } from 'stores/emailStoreProxy.js';
 import { getColumnStore } from 'stores/columns.js';
+import mainEmailStore from 'stores/emails/main.js';
 
 import { getAccountIconName } from 'util/accounts.js';
 import { formatAddress, formatDate, capitalizeFirstLetter } from 'util/string.js';
@@ -96,6 +97,8 @@ export default class EmailColumnThread extends React.Component {
 
         this.mouseMoveEvents = 0;
 
+        this.sendNotifications = this.props.columnId == INBOX;
+
         this.state = {
             starred: starred,
             unread: unread,
@@ -125,6 +128,9 @@ export default class EmailColumnThread extends React.Component {
                 getEmailStore().setEmailsRead(_.map(this.props.thread, message => (
                     `${message.account_name}-${message.message_id}`
                 )));
+                if (this.sendNotifications) {
+                    mainEmailStore.reduceInboxUnreadCount();
+                }
             }
             this.setState({
                 unread: false,
@@ -243,6 +249,10 @@ export default class EmailColumnThread extends React.Component {
             // Read the emails via the column store, just in case we re-render the column
             const columnStore = getColumnStore(this.props.columnId);
             columnStore.readThread(this.props.thread);
+
+            if (this.sendNotifications) {
+                mainEmailStore.reduceInboxUnreadCount();
+            }
         }
 
         // Set as open (triggers highlight)
@@ -415,6 +425,10 @@ export default class EmailColumnThread extends React.Component {
             return;
         }
 
+        if (this.sendNotifications && this.state.unread) {
+            mainEmailStore.reduceInboxUnreadCount();
+        }
+
         this.setState({
             archiving: true,
             locked: true,
@@ -439,6 +453,10 @@ export default class EmailColumnThread extends React.Component {
         if (this.state.locked) {
             console.debug('Thread locked, not trashing!');
             return;
+        }
+
+        if (this.sendNotifications && this.state.unread) {
+            mainEmailStore.reduceInboxUnreadCount();
         }
 
         this.setState({
