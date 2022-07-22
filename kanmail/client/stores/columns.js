@@ -212,5 +212,5 @@ export function getColumnMetaStore(name) {
 }
 
 export function getColumnMetaStoreKeys() {
-    return _.keys(columnStores);
+    return _.keys(columnMetaStores);
 }

@@ -331,7 +331,7 @@ class Folder(object):
             except UnicodeEncodeError:
                 message_uids = connection.search(search_query, charset="utf-8")
 
-        self.log("debug", f"Fetched {len(message_uids)} message UIDs")
+        self.log("info", f"Fetched {len(message_uids)} message UIDs")
 
         uids = set(message_uids)
         return uids

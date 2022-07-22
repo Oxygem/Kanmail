@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { get, post } from 'util/requests';
+import { get, post } from 'util/requests.js';
 
 
 export function makeDragElement(element) {

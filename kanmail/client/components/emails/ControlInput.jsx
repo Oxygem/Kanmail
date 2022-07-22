@@ -12,7 +12,7 @@ import { subscribe } from 'stores/base.jsx';
 @subscribe(folderStore)
 class ControlInput extends React.Component {
     static propTypes = {
-        inputHandler: PropTypes.func.isRequired,
+        inputHandler: PropTypes.func,
         selectOptions: PropTypes.array,
         header: PropTypes.object,
     }
@@ -93,8 +93,8 @@ class ControlInput extends React.Component {
 export default class ControlInputWrapper extends React.Component {
     static propTypes = {
         open: PropTypes.bool.isRequired,
-        inputHandler: PropTypes.func.isRequired,
-        extraProps: PropTypes.bool.isRequired,
+        extraProps: PropTypes.object.isRequired,
+        inputHandler: PropTypes.func,
     }
 
     render() {
