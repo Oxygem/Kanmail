@@ -18,7 +18,7 @@
     "draft-convert": "^2.1.12",
     "draft-js": "0.10.5",
     "draftail": "1.x",
-    "eslint": "4.x",
+    "eslint": "7.x",
     "eslint-import-resolver-webpack": "0.x",
     "eslint-plugin-babel": "4.x",
     "eslint-plugin-import": "2.x",
@@ -46,16 +46,14 @@
     "webpack": "4.x",
     "webpack-cli": "4.x",
     "webpack-dev-server": "3.x",
-    "whatwg-fetch": "2.x"
+    "whatwg-fetch": "2.x",
+    "eslint-plugin-prettier": "4.2.1",
+    "prettier": "2.7.1"
   },
   "scripts": {
     "build": "webpack --mode=production",
     "dev": "webpack serve --mode=development",
     "lint": "eslint --cache --ext .js,.jsx kanmail/client/",
     "lint-fix": "eslint --cache --fix --ext .js,.jsx kanmail/client/"
-  },
-  "devDependencies": {
-    "eslint-plugin-prettier": "4.2.1",
-    "prettier": "2.7.1"
   }
 }

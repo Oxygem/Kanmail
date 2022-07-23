@@ -14,7 +14,8 @@
         "import/default": [2],
         "import/export": [2],
         "import/first": [2],
-        "import/no-duplicates": [2]
+        "import/no-duplicates": [2],
+        "prettier/prettier": "error"
     },
     "settings": {
         "import/resolver": "webpack"
