@@ -16,8 +16,10 @@ class SidebarFolderLinkStore extends BaseStore {
   }
 
   setUnreadCount(count) {
-    this.props.unreadCount = count;
-    this.triggerUpdate(["unreadCount"]);
+    if (count !== this.props.unreadCount) {
+      this.props.unreadCount = count;
+      this.triggerUpdate(["unreadCount"]);
+    }
   }
 }
 

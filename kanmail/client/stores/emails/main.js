@@ -6,6 +6,7 @@ import { getColumnStore, getColumnMetaStore } from "stores/columns.js";
 import BaseEmails from "stores/emails/base.js";
 import { encodeFolderName, formatAddress } from "util/string.js";
 import { post } from "util/requests.js";
+import { getSidebarFolderLinkStore } from "stores/sidebarFolderLinks.js";
 
 class MainEmails extends BaseEmails {
   constructor() {
@@ -14,12 +15,31 @@ class MainEmails extends BaseEmails {
     // We start with the main store active!
     this.active = true;
 
-    // Send notifications for this store's inbox
-    this.sendNotifications = true;
-
     // Track which folders we've initialized
     this.initializedFolderNames = new Set();
   }
+
+  setInboxUnreadCount() {
+    post("/api/notifications/set-count", { count: this.unreadThreadCount });
+    getSidebarFolderLinkStore(INBOX).setUnreadCount(this.unreadThreadCount);
+  }
+
+  reduceInboxUnreadCount() {
+    this.unreadThreadCount -= 1;
+    this.setInboxUnreadCount();
+  }
+
+  onProcessColumnHook = (columnName, threads) => {
+    if (columnName === INBOX) {
+      this.unreadThreadCount = _.filter(
+        threads,
+        (thread) => thread.unread
+      ).length;
+      this.setInboxUnreadCount();
+    } else {
+      getSidebarFolderLinkStore(columnName).setUnreadCount(0);
+    }
+  };
 
   initializeOrSyncFolder = (folderName, batchSize) => {
     if (this.initializedFolderNames.has(folderName)) {
@@ -103,7 +123,7 @@ class MainEmails extends BaseEmails {
           );
           changed = true;
 
-          if (this.sendNotifications && folderName == INBOX) {
+          if (folderName == INBOX) {
             data.new_emails.map((email) => {
               post("/api/notifications/send", {
                 title: email.subject,

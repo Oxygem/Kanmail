@@ -4,6 +4,7 @@ import requestStore from "stores/request.js";
 import { getColumnMetaStore } from "stores/columns.js";
 import BaseEmails from "stores/emails/base.js";
 import { encodeFolderName } from "util/string.js";
+import { getSidebarFolderLinkStore } from "stores/sidebarFolderLinks.js";
 
 class SearchEmails extends BaseEmails {
   setSearchValue(value) {
@@ -19,6 +20,10 @@ class SearchEmails extends BaseEmails {
     // Set the value
     this.searchValue = value;
   }
+
+  onProcessColumnHook = (columnName, threads) => {
+    getSidebarFolderLinkStore(columnName).setUnreadCount(threads.length);
+  };
 
   syncFolderEmails = (folderName, options = {}) => {
     // Nowt

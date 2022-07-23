@@ -1,7 +1,7 @@
 import _ from "lodash";
 import ReactDOM from "react-dom";
 
-import { ALIAS_FOLDERS, INBOX } from "constants.js";
+import { ALIAS_FOLDERS } from "constants.js";
 import { messageThreader } from "threading.js";
 import requestStore from "stores/request.js";
 import settingsStore from "stores/settings.js";
@@ -10,8 +10,6 @@ import {
   getColumnStoreKeys,
   getColumnMetaStore,
 } from "stores/columns.js";
-import { getSidebarFolderLinkStore } from "stores/sidebarFolderLinks.js";
-import { post } from "util/requests.js";
 
 function isEmailUnread(email) {
   return !_.includes(email.flags, "\\Seen");
@@ -436,15 +434,8 @@ export default class BaseEmails {
     });
   }
 
-  setInboxUnreadCount() {
-    post("/api/notifications/set-count", { count: this.unreadThreadCount });
-    getSidebarFolderLinkStore(INBOX).setUnreadCount(this.unreadThreadCount);
-  }
-
-  reduceInboxUnreadCount() {
-    this.unreadThreadCount -= 1;
-    this.setInboxUnreadCount();
-  }
+  // To be implemented by subclass
+  onProcessColumnHook() {}
 
   _processEmailChanges(options = {}) {
     /*
@@ -587,13 +578,7 @@ export default class BaseEmails {
           metaStore.setAccountMeta(accountKey, meta)
         );
 
-        if (this.sendNotifications && columnName === INBOX) {
-          this.unreadThreadCount = _.filter(
-            threads,
-            (thread) => thread.unread
-          ).length;
-          this.setInboxUnreadCount();
-        }
+        this.onProcessColumnHook(columnName, threads);
       });
     });
 
