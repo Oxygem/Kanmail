@@ -97,10 +97,6 @@ function handleError(url, error) {
 function get_or_delete(method, url, query = {}, options = {}) {
   const uri = URI(url);
 
-  if (options.criticalRequestNonce) {
-    options.criticalRequestNonce = options.criticalRequestNonce;
-  }
-
   return fetch(uri.query(query), {
     method,
     headers: {
@@ -116,10 +112,6 @@ export const delete_ = _.partial(get_or_delete, "DELETE");
 
 function post_or_put(method, url, data, options = {}) {
   const uri = URI(url);
-
-  if (options.criticalRequestNonce) {
-    options.criticalRequestNonce = options.criticalRequestNonce;
-  }
 
   return fetch(uri, {
     method,
