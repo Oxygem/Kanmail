@@ -2,160 +2,168 @@
     New email (send app) form */
 
 section#new-email {
-    padding-top: @topHeight;
-    height: 100%;
-    position: relative;
+  padding-top: @topHeight;
+  height: 100%;
+  position: relative;
 
-    form#send-form {
-        padding: 10px 10px 0 10px;
-        position: absolute;
-        width: 100%;
-        top: @topHeight;
-        bottom: 0;
-        justify-content: flex-start;
-        margin: 0;
+  form#send-form {
+    padding: 10px 10px 0 10px;
+    position: absolute;
+    width: 100%;
+    top: @topHeight;
+    bottom: 0;
+    justify-content: flex-start;
+    margin: 0;
 
-        label {
-            // width: 55px;
-            padding-left: 10px;
-            text-align: right;
-            padding-right: 2px;
-            font-size: 14px;
-            margin-bottom: 10px;
-            position: absolute;
-            margin-top: 4px;
-        }
-
-        div input {
-            padding: 2px 9px;
-            margin: 0 2px;
-            font-size: 14px;
-            width: 100%;
-            outline: none;
-        }
-
-        input#subject {
-            height: 32px;
-        }
-
-        div.wide, div.wide, div.two-third, div.third, div.half {
-            margin-bottom: 5px;
-        }
-
-        div#account, div#to, div#cc, div#bcc {
-            margin-left: 50px;
-        }
-
-        div.subject input {
-            font-weight: bold;
-            margin-left: 0px;
-        }
-
-        label#message-label {
-            margin-top: 5px;
-        }
-
-        div.form-top {
-            position: relative;
-            z-index: 3;
-        }
-
-        div.form-content {
-            overflow: auto;
-        }
-
-        div#textarea-body {
-            .draftail-editor {
-                border: none;
-                height: 100%;
-
-                .draftail-toolbar {
-                    position: fixed;
-                    top: auto;
-                    margin-top: -40px;
-                    left: 10px;
-                    right: 10px;
-                    z-index: 2;
-
-                    div.signature-select {
-                        position: absolute;
-                        right: 0;
-                        top: 7px;
-                        width: 175px;
-
-                        div.react-select__control {
-                            border-bottom-width: 0px;
-                        }
-                    }
-                }
-
-                .drafteditor-root {
-                    margin-top: 40px;
-                }
-
-                .public-drafteditor-content {
-                    padding-bottom: 0;
-                }
-            }
-        }
-
-        blockquote#reply-quote {
-            margin: 0;
-            // max-height: 100px;
-            overflow-y: auto;
-            border: 1px solid @formBorderGrey;
-
-            * {
-                pointer-events: none;
-            }
-        }
-
-        #include-quote {
-            label {
-                width: auto;
-                padding-left: 1px;
-                position: relative;
-            }
-            input {
-                width: auto;
-            }
-        }
-
-        div.buttons {
-            left: 60px;
-            padding: 5px 10px;
-            font-size: 16px;
-            border: none;
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-
-            button.send.submit {
-                border-radius: @borderRadius 0 0 @borderRadius;
-            }
-
-            button.save {
-                border-radius: 0 @borderRadius @borderRadius 0;
-            }
-
-            button.attach {
-                left: auto;
-                right: 20px;
-                bottom: 10px;
-                float: right;
-            }
-        }
-
-        div.signature, div.quote {
-            margin: 13px 10px 0 10px;
-        }
-
-        div.signature {
-            margin-bottom: 10px;
-
-            p {
-                margin: 0;
-            }
-        }
+    label {
+      // width: 55px;
+      padding-left: 10px;
+      text-align: right;
+      padding-right: 2px;
+      font-size: 14px;
+      margin-bottom: 10px;
+      position: absolute;
+      margin-top: 4px;
     }
+
+    div input {
+      padding: 2px 9px;
+      margin: 0 2px;
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+    }
+
+    input#subject {
+      height: 32px;
+    }
+
+    div.wide,
+    div.wide,
+    div.two-third,
+    div.third,
+    div.half {
+      margin-bottom: 5px;
+    }
+
+    div#account,
+    div#to,
+    div#cc,
+    div#bcc {
+      margin-left: 50px;
+    }
+
+    div.subject input {
+      font-weight: bold;
+      margin-left: 0px;
+    }
+
+    label#message-label {
+      margin-top: 5px;
+    }
+
+    div.form-top {
+      position: relative;
+      z-index: 3;
+    }
+
+    div.form-content {
+      overflow: auto;
+    }
+
+    div#textarea-body {
+      .draftail-editor {
+        border: none;
+        height: 100%;
+
+        .draftail-toolbar {
+          position: fixed;
+          top: auto;
+          margin-top: -40px;
+          left: 10px;
+          right: 10px;
+          z-index: 2;
+
+          div.signature-select {
+            position: absolute;
+            right: 0;
+            top: 7px;
+            width: 175px;
+
+            div.react-select__control {
+              border-bottom-width: 0px;
+            }
+          }
+        }
+
+        .drafteditor-root {
+          margin-top: 40px;
+        }
+
+        .public-drafteditor-content {
+          padding-bottom: 0;
+        }
+      }
+    }
+
+    blockquote#reply-quote {
+      margin: 0;
+      // max-height: 100px;
+      overflow-y: auto;
+      border: 1px solid @formBorderGrey;
+
+      * {
+        pointer-events: none;
+      }
+    }
+
+    #include-quote {
+      label {
+        width: auto;
+        padding-left: 1px;
+        position: relative;
+      }
+      input {
+        width: auto;
+      }
+    }
+
+    div.buttons {
+      left: 60px;
+      padding: 5px 10px;
+      font-size: 16px;
+      border: none;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+
+      button.send.submit {
+        border-radius: @borderRadius 0 0 @borderRadius;
+      }
+
+      button.save {
+        border-radius: 0 @borderRadius @borderRadius 0;
+      }
+
+      button.attach {
+        left: auto;
+        right: 20px;
+        bottom: 10px;
+        float: right;
+      }
+    }
+
+    div.signature,
+    div.quote {
+      margin: 13px 10px 0 10px;
+    }
+
+    div.signature {
+      margin-bottom: 10px;
+
+      p {
+        margin: 0;
+      }
+    }
+  }
 }

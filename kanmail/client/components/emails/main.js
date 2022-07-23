@@ -1,4 +1,4 @@
-import bootApp from 'boot.jsx';
-import EmailsApp from 'components/emails/EmailsApp.jsx';
+import bootApp from "boot.jsx";
+import EmailsApp from "components/emails/EmailsApp.jsx";
 
-bootApp(EmailsApp, 'emails');
+bootApp(EmailsApp, "emails");

@@ -2,51 +2,51 @@
     Control input overlay */
 
 section#control-background {
-    position: absolute;
-    z-index: 9;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background: rgba(100, 100, 100, 0.6);
+  position: absolute;
+  z-index: 9;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(100, 100, 100, 0.6);
 }
 
 section#control {
-    margin: 200px auto 0 auto;
-    width: 600px;
-    background: white;
-    border-radius: @borderRadius @borderRadius 0 0;
+  margin: 200px auto 0 auto;
+  width: 600px;
+  background: white;
+  border-radius: @borderRadius @borderRadius 0 0;
+  font-size: @bigTextSize;
+
+  p {
+    padding: 20px 20px 0 20px;
+    margin: 0;
+  }
+
+  div.react-select__control {
+    margin-top: 10px;
+    border: none;
     font-size: @bigTextSize;
+    padding: 0 20px;
+  }
 
-    p {
-        padding: 20px 20px 0 20px;
-        margin: 0;
-    }
+  div.react-select__menu {
+    border: none;
+    border-radius: 0 0 @borderRadius @borderRadius;
+  }
 
-    div.react-select__control {
-        margin-top: 10px;
-        border: none;
-        font-size: @bigTextSize;
-        padding: 0 20px;
-    }
+  div.react-select__option {
+    padding: 4px 20px;
+  }
 
-    div.react-select__menu {
-        border: none;
-        border-radius: 0 0 @borderRadius @borderRadius;
-    }
+  div.react-select__indicators {
+    display: none;
+  }
 
-    div.react-select__option {
-        padding: 4px 20px;
-    }
-
-    div.react-select__indicators {
-        display: none;
-    }
-
-    input {
-        margin: 10px 0;
-        font-size: @bigTextSize;
-        padding: 0 20px;
-        border: none;
-    }
+  input {
+    margin: 10px 0;
+    font-size: @bigTextSize;
+    padding: 0 20px;
+    border: none;
+  }
 }

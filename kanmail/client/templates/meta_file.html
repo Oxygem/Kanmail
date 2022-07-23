@@ -1,13 +1,8 @@
-{% extends 'base.html' %}
-
-{% block page_title %}Meta: {{ filename }}{% endblock %}
-
-{% block js_file %}metaFile{% endblock %}
-
-{% block app_container %}
-    <div
-        data-meta-file-app
-        data-file-title="{{ file_title }}"
-        data-file="{{ file_data }}"
-    ></div>
+{% extends 'base.html' %} {% block page_title %}Meta: {{ filename }}{% endblock
+%} {% block js_file %}metaFile{% endblock %} {% block app_container %}
+<div
+  data-meta-file-app
+  data-file-title="{{ file_title }}"
+  data-file="{{ file_data }}"
+></div>
 {% endblock %}

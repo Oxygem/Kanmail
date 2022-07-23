@@ -2,205 +2,205 @@
     Threads overlay */
 
 section#thread-background {
-    position: absolute;
-    z-index: 9;
-    left: 0;
-    top: 0;
-    width: @sidebarWidth;
-    bottom: 0;
-    background: rgba(100, 100, 100, 0.6);
+  position: absolute;
+  z-index: 9;
+  left: 0;
+  top: 0;
+  width: @sidebarWidth;
+  bottom: 0;
+  background: rgba(100, 100, 100, 0.6);
 }
 
 section#thread {
-    z-index: 9;
+  z-index: 9;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: @sidebarWidth;
+  right: 0;
+  border-left: 1px solid;
+
+  h1 {
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+    padding-top: 15px;
+    font-size: @titleTextSize;
+    height: @topHeight;
+    background: white;
+    border-bottom: 1px solid;
+    overflow: auto;
+    font-weight: 600;
+  }
+
+  section#content {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    top: @topHeight;
+    padding-top: 10px;
+    bottom: 0;
+    left: 0;
+    right: @threadSidebarWidth;
     position: absolute;
+
+    .scrollbar;
+  }
+
+  section#meta {
+    width: @threadSidebarWidth;
+    right: 0;
     top: 0;
     bottom: 0;
-    left: @sidebarWidth;
-    right: 0;
+    padding: 20px 10px 10px 10px;
+    position: absolute;
     border-left: 1px solid;
 
-    h1 {
-        margin: 0 0 10px 0;
-        padding-left: 20px;
-        padding-top: 15px;
-        font-size: @titleTextSize;
-        height: @topHeight;
-        background: white;
-        border-bottom: 1px solid;
-        overflow: auto;
-        font-weight: 600;
-    }
-
-    section#content {
-        overflow-x: hidden;
-        overflow-y: scroll;
-        top: @topHeight;
-        padding-top: 10px;
-        bottom: 0;
-        left: 0;
-        right: @threadSidebarWidth;
-        position: absolute;
-
-        .scrollbar;
-    }
-
-    section#meta {
-        width: @threadSidebarWidth;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        padding: 20px 10px 10px 10px;
-        position: absolute;
-        border-left: 1px solid;
-
-        button#close {
-            width: 100%;
-            margin-bottom: 16px;
-        }
-
-        button {
-            font-size: @textSize;
-        }
-
-        button span {
-            display: block;
-            font-weight: normal;
-            font-size: @smallTextSize;
-            margin-top: 4px;
-        }
-
-        div#other-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-
-            button {
-                width: 48%;
-                padding: 5px;
-                margin-bottom: 10px;
-            }
-        }
-
-        div#respond-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-
-            button {
-                width: 48%;
-                padding: 10px 0;
-                margin-bottom: 10px;
-            }
-        }
-    }
-
-    a.show-all-messages {
-        font-size: 12px;
+    button#close {
+      width: 100%;
+      margin-bottom: 16px;
     }
 
     button {
-        padding: 3px;
+      font-size: @textSize;
+    }
+
+    button span {
+      display: block;
+      font-weight: normal;
+      font-size: @smallTextSize;
+      margin-top: 4px;
+    }
+
+    div#other-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+
+      button {
+        width: 48%;
+        padding: 5px;
+        margin-bottom: 10px;
+      }
+    }
+
+    div#respond-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+
+      button {
+        width: 48%;
+        padding: 10px 0;
+        margin-bottom: 10px;
+      }
+    }
+  }
+
+  a.show-all-messages {
+    font-size: 12px;
+  }
+
+  button {
+    padding: 3px;
+    font-size: @smallTextSize;
+    border: none;
+  }
+
+  div.message {
+    margin-bottom: 5px;
+    padding: 0 20px;
+    border-bottom: 1px solid;
+
+    div.content {
+      width: 100%;
+      position: relative;
+
+      p {
+        margin: 5px;
+      }
+    }
+
+    div.meta {
+      padding: 10px;
+      margin: 0 -5px;
+
+      span.meta-text {
         font-size: @smallTextSize;
-        border: none;
-    }
+      }
 
-    div.message {
-        margin-bottom: 5px;
-        padding: 0 20px;
-        border-bottom: 1px solid;
+      div.date {
+        text-align: right;
+      }
 
-        div.content {
-            width: 100%;
+      div.addresses {
+        div.avatar {
+          width: 44px;
+          height: 44px;
+          border-radius: 44px;
+          line-height: 44px;
+          text-align: center;
+          float: left;
+          margin-right: 5px;
+          position: relative;
+          color: white;
+
+          span {
             position: relative;
+            z-index: 1;
+          }
 
-            p {
-                margin: 5px;
-            }
+          img {
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-radius: 44px;
+            width: 44px;
+            height: 44px;
+          }
         }
+      }
 
-        div.meta {
-            padding: 10px;
-            margin: 0 -5px;
-
-            span.meta-text {
-                font-size: @smallTextSize;
-            }
-
-            div.date {
-                text-align: right;
-            }
-
-            div.addresses {
-                div.avatar {
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 44px;
-                    line-height: 44px;
-                    text-align: center;
-                    float: left;
-                    margin-right: 5px;
-                    position: relative;
-                    color: white;
-
-                    span {
-                        position: relative;
-                        z-index: 1;
-                    }
-
-                    img {
-                        position: absolute;
-                        left: 0;
-                        right: 0;
-                        border-radius: 44px;
-                        width: 44px;
-                        height: 44px;
-                    }
-                }
-            }
-
-            .no-select;
-            cursor: pointer;
-        }
-
-        &.trash div.meta {
-            opacity: 0.5;
-        }
-
-        div.controls {
-            width: 100%;
-            font-size: @smallTextSize;
-            margin-bottom: 20px;
-
-            .no-select;
-
-            span.right {
-                float: right;
-
-                i {
-                    margin: 0 2px 0 5px;
-                }
-            }
-
-            span.tag {
-                padding: 2px;
-                margin-left: 2px;
-            }
-        }
-
-        pre {
-            word-wrap: break-word;
-        }
-
-        .attachment-link {
-            cursor: pointer;
-            padding: 5px;
-            display: inline-block;
-
-            .attachment-meta {
-                display: block;
-                font-size: @smallTextSize;
-            }
-        }
+      .no-select;
+      cursor: pointer;
     }
+
+    &.trash div.meta {
+      opacity: 0.5;
+    }
+
+    div.controls {
+      width: 100%;
+      font-size: @smallTextSize;
+      margin-bottom: 20px;
+
+      .no-select;
+
+      span.right {
+        float: right;
+
+        i {
+          margin: 0 2px 0 5px;
+        }
+      }
+
+      span.tag {
+        padding: 2px;
+        margin-left: 2px;
+      }
+    }
+
+    pre {
+      word-wrap: break-word;
+    }
+
+    .attachment-link {
+      cursor: pointer;
+      padding: 5px;
+      display: inline-block;
+
+      .attachment-meta {
+        display: block;
+        font-size: @smallTextSize;
+      }
+    }
+  }
 }

@@ -6,9 +6,8 @@
         "es6": true,
         "commonjs": true
     },
-    "plugins": ["react", "import"],
+    "plugins": ["react", "import", "prettier"],
     "rules": {
-        "quotes": [2, "single"],
         "no-console": [0],
         "import/no-unresolved": [2],
         "import/named": [2],

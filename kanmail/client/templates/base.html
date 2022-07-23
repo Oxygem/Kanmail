@@ -1,62 +1,70 @@
 <html>
-<head>
+  <head>
     <title>Kanmail {% block page_title %}{% endblock %}</title>
     <style type="text/css">
-        body {
-            background: white;
-            font-family: Sans-Serif;
-            font-size: 16px;
-        }
-        a {
-            color: #FC4CB5;
-            text-decoration: none;
-        }
-        div#no-app {
-            width: 600px;
-            margin: 100px auto;
-        }
-        div#no-app img {
-            width: 48px;
-            float: left;
-            margin: -12px 10px 0 -58px;
-        }
+      body {
+        background: white;
+        font-family: Sans-Serif;
+        font-size: 16px;
+      }
+      a {
+        color: #fc4cb5;
+        text-decoration: none;
+      }
+      div#no-app {
+        width: 600px;
+        margin: 100px auto;
+      }
+      div#no-app img {
+        width: 48px;
+        float: left;
+        margin: -12px 10px 0 -58px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="no-app">
-        <h1><img src="/favicon.ico" /> Kanmail is loading...</h1>
-        <p>If nothing happens please go to: <a target="_blank" rel="noreferrer" href="https://kanmail.io/support">kanmail.io/support</a></p>
+      <h1><img src="/favicon.ico" /> Kanmail is loading...</h1>
+      <p>
+        If nothing happens please go to:
+        <a target="_blank" rel="noreferrer" href="https://kanmail.io/support"
+          >kanmail.io/support</a
+        >
+      </p>
     </div>
 
     {% block app_container %}{% endblock %}
 
     <script type="text/javascript">
-        window.KANMAIL_VERSION = '{{ version }}';
-        window.KANMAIL_PLATFORM = '{{ platform }}';
-        window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
+      window.KANMAIL_VERSION = '{{ version }}';
+      window.KANMAIL_PLATFORM = '{{ platform }}';
+      window.KANMAIL_WEBSITE_URL = '{{ website_url }}';
 
-        window.KANMAIL_FRAMELESS = {{ frameless|tojson }};
-        window.KANMAIL_IS_APP = {{ is_app|tojson }};
+      window.KANMAIL_FRAMELESS = {{ frameless|tojson }};
+      window.KANMAIL_IS_APP = {{ is_app|tojson }};
 
-        window.KANMAIL_DEVICE_ID = '{{ device_id }}';
-        window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
+      window.KANMAIL_DEVICE_ID = '{{ device_id }}';
+      window.KANMAIL_SESSION_TOKEN = '{{ session_token }}';
 
-        window.KANMAIL_LICENSED = {{ license_email|tojson }};
-        window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
+      window.KANMAIL_LICENSED = {{ license_email|tojson }};
+      window.KANMAIL_LICENSE_EMAIL = '{{ license_email }}';
 
-        window.KANMAIL_DEBUG = {{ debug|tojson }};
-        window.KANMAIL_DEBUG_SENTRY = {{ debug_sentry|tojson }};
-        window.KANMAIL_DEBUG_POSTHOG = {{ debug_posthog|tojson }};
+      window.KANMAIL_DEBUG = {{ debug|tojson }};
+      window.KANMAIL_DEBUG_SENTRY = {{ debug_sentry|tojson }};
+      window.KANMAIL_DEBUG_POSTHOG = {{ debug_posthog|tojson }};
 
-        window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
-        window.KANMAIL_POSTHOG_API_KEY = '{{ posthog_api_key }}';
+      window.KANMAIL_SENTRY_DSN = '{{ sentry_dsn }}';
+      window.KANMAIL_POSTHOG_API_KEY = '{{ posthog_api_key }}';
 
-        window.KANMAIL_DISABLE_ERROR_LOGGING = {{ disable_error_logging|tojson }};
-        window.KANMAIL_DISABLE_ANALYTICS = {{ disable_analytics|tojson }};
+      window.KANMAIL_DISABLE_ERROR_LOGGING = {{ disable_error_logging|tojson }};
+      window.KANMAIL_DISABLE_ANALYTICS = {{ disable_analytics|tojson }};
     </script>
 
     <link rel="stylesheet" type="text/css" href="/static/dist/shared.css" />
     <script type="text/javascript" src="/static/dist/shared.js"></script>
-    <script type="text/javascript" src="/static/dist/{{ self.js_file() }}.js"></script>
-</body>
+    <script
+      type="text/javascript"
+      src="/static/dist/{{ self.js_file() }}.js"
+    ></script>
+  </body>
 </html>

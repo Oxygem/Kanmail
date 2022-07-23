@@ -2,236 +2,238 @@
     Settings */
 
 section#settings {
-    top: @topHeight;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    overflow-y: auto;
-    position: fixed;
+  top: @topHeight;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  position: fixed;
 
-    button.main-button {
-        margin-left: 20px;
-        margin-top: 20px;
-        margin-bottom: 20px;
+  button.main-button {
+    margin-left: 20px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  div.message {
+    padding: 10px 20px;
+    font-weight: 700;
+    text-align: center;
+    color: @white;
+
+    &.error {
+      background: @red;
     }
 
+    &.success {
+      background: @green;
+    }
+  }
 
-    div.message {
-        padding: 10px 20px;
-        font-weight: 700;
-        text-align: center;
-        color: @white;
+  div.settings {
+    padding: 20px;
 
-        &.error {
-            background: @red;
-        }
+    label {
+      display: block;
 
-        &.success {
-            background: @green;
-        }
+      small {
+        display: block;
+      }
     }
 
-    div.settings {
-        padding: 20px;
-
-        label {
-            display: block;
-
-            small {
-                display: block;
-            }
-        }
-
-        > input {
-            margin-bottom: 30px;
-        }
-
-        .select-wrapper {
-            padding-bottom: 30px;
-        }
-
-        div.no-input {
-            margin-top: 30px;
-        }
+    > input {
+      margin-bottom: 30px;
     }
 
-    div.checkbox {
-        margin-bottom: 30px;
-        display: flex;
-        label {
-            width: 300px;
-        }
+    .select-wrapper {
+      padding-bottom: 30px;
     }
 
-    form.account {
-        padding-bottom: 20px;
+    div.no-input {
+      margin-top: 30px;
     }
+  }
+
+  div.checkbox {
+    margin-bottom: 30px;
+    display: flex;
+    label {
+      width: 300px;
+    }
+  }
+
+  form.account {
+    padding-bottom: 20px;
+  }
 }
 
 section#welcome-settings {
-    margin: 0 auto;
-    width: 820px;
+  margin: 0 auto;
+  width: 820px;
 
-    h2 {
-        margin-top: 160px;
+  h2 {
+    margin-top: 160px;
+  }
+
+  img {
+    vertical-align: middle;
+    margin-top: -10px;
+  }
+
+  > p {
+    margin: 20px 0;
+    font-size: 18px;
+
+    button {
+      margin-top: 10px;
     }
-
-    img {
-        vertical-align: middle;
-        margin-top: -10px;
-    }
-
-    > p {
-        margin: 20px 0;
-        font-size: 18px;
-
-        button {
-            margin-top: 10px;
-        }
-    }
+  }
 }
 
 div#accounts {
-    margin-bottom: 30px;
+  margin-bottom: 30px;
 
-    h2 {
-        margin-bottom: 0;
+  h2 {
+    margin-bottom: 0;
+  }
+
+  > small {
+    display: block;
+    margin-left: 10px;
+  }
+
+  div.hidden {
+    display: none;
+  }
+
+  .account {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px;
+    margin: 0 0 10px 0;
+    border-radius: @borderRadius;
+
+    &.active {
+      border: 1px solid;
     }
 
-    > small {
-        display: block;
-        margin-left: 10px;
+    i {
+      float: right;
     }
 
-    div.hidden {
-        display: none;
+    label {
+      display: block;
+      margin-top: 10px;
+
+      &.checkbox {
+        display: inline-block;
+      }
     }
 
-    .account {
+    div.top-bar {
+      margin-bottom: 20px;
+    }
+
+    div.right {
+      float: right;
+      text-align: right;
+      margin-top: 10px;
+    }
+
+    div.error,
+    div.tabs {
+      margin-top: 10px;
+    }
+
+    input#name {
+      width: 300px;
+    }
+
+    h3 {
+      margin-top: 8px;
+
+      img,
+      i {
+        width: 48px;
+        vertical-align: middle;
+        margin-top: -10px;
+        margin-right: 14px;
+        float: none;
+        font-size: 48px;
+      }
+    }
+
+    .contact {
+      margin-bottom: 5px;
+
+      .contact-address {
+        flex-grow: 1;
+        margin-right: 5px;
+      }
+
+      button {
+        height: 24px;
+        margin-top: 36px;
+      }
+    }
+
+    .add-contact-button {
+      margin-top: 10px;
+    }
+  }
+
+  div.account-form-overlay {
+    position: fixed;
+    z-index: 9;
+    top: @topHeight;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+
+    form.account {
+      margin: 30px auto;
+      width: 98%;
+      max-width: 542px;
+      border: 1px solid;
+      padding: 20px;
+
+      div.right {
+        margin-right: 3px;
+      }
+
+      &.new-account {
+        max-width: 400px;
+      }
+
+      div.account-control-buttons {
         display: flex;
-        flex-wrap: wrap;
         justify-content: space-between;
+        margin-top: 20px;
         width: 100%;
-        padding: 10px;
-        margin: 0 0 10px 0;
-        border-radius: @borderRadius;
+      }
 
-        &.active {
-            border: 1px solid;
+      div.new-account-buttons {
+        button {
+          width: 100%;
+          color: black;
+          text-align: left;
+          background: transparent;
+          padding: 15px 10px 10px 10px;
+
+          img,
+          i {
+            margin-right: 14px;
+            margin-top: -6px;
+            vertical-align: middle;
+            float: none;
+            font-size: 48px;
+            width: 48px;
+          }
         }
-
-        i {
-            float: right;
-        }
-
-        label {
-            display: block;
-            margin-top: 10px;
-
-            &.checkbox {
-                display: inline-block;
-            }
-        }
-
-        div.top-bar {
-            margin-bottom: 20px;
-        }
-
-        div.right {
-            float: right;
-            text-align: right;
-            margin-top: 10px;
-        }
-
-        div.error, div.tabs {
-            margin-top: 10px;
-        }
-
-        input#name {
-            width: 300px;
-        }
-
-        h3 {
-            margin-top: 8px;
-
-            img, i {
-                width: 48px;
-                vertical-align: middle;
-                margin-top: -10px;
-                margin-right: 14px;
-                float: none;
-                font-size: 48px;
-            }
-        }
-
-        .contact {
-            margin-bottom: 5px;
-
-            .contact-address {
-                flex-grow: 1;
-                margin-right: 5px;
-            }
-
-            button {
-                height: 24px;
-                margin-top: 36px;
-            }
-        }
-
-        .add-contact-button {
-            margin-top: 10px;
-        }
+      }
     }
-
-    div.account-form-overlay {
-        position: fixed;
-        z-index: 9;
-        top: @topHeight;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        overflow: auto;
-
-        form.account {
-            margin: 30px auto;
-            width: 98%;
-            max-width: 542px;
-            border: 1px solid;
-            padding: 20px;
-
-            div.right {
-                margin-right: 3px;
-            }
-
-            &.new-account {
-                max-width: 400px;
-            }
-
-            div.account-control-buttons {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 20px;
-                width: 100%;
-            }
-
-            div.new-account-buttons {
-                button {
-                    width: 100%;
-                    color: black;
-                    text-align: left;
-                    background: transparent;
-                    padding: 15px 10px 10px 10px;
-
-                    img, i {
-                        margin-right: 14px;
-                        margin-top: -6px;
-                        vertical-align: middle;
-                        float: none;
-                        font-size: 48px;
-                        width: 48px;
-                    }
-                }
-            }
-        }
-    }
+  }
 }

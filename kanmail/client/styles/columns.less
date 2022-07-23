@@ -2,324 +2,326 @@
     Columns/emails */
 
 section#columns {
-    display: flex;
-    flex-wrap: wrap;
-    top: 0px;
-    left: @sidebarWidth;
-    bottom: 0;
-    right: 0;
-    position: absolute;
+  display: flex;
+  flex-wrap: wrap;
+  top: 0px;
+  left: @sidebarWidth;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  overflow: hidden;
+
+  .no-select;
+
+  div#search {
+    height: 0;
+    width: 100%;
     overflow: hidden;
+    transition: height 500ms;
 
-    .no-select;
-
-    div#search {
-        height: 0;
-        width: 100%;
-        overflow: hidden;
-        transition: height 500ms;
-
-        &.open {
-            height: @topHeight;
-        }
-
-        input {
-            width: 100%;
-            border: none;
-            height: @topHeight;
-            padding-top: 6px;
-            padding-left: 20px;
-        }
+    &.open {
+      height: @topHeight;
     }
 
-    form#add-column {
-        height: @topHeight;
-        flex: 1;
+    input {
+      width: 100%;
+      border: none;
+      height: @topHeight;
+      padding-top: 6px;
+      padding-left: 20px;
+    }
+  }
 
-        div {
+  form#add-column {
+    height: @topHeight;
+    flex: 1;
+
+    div {
+      display: inline-block;
+      padding: 18px 20px 0 20px;
+
+      a {
+        margin-top: 4px;
+      }
+
+      &.form {
+        width: 220px;
+
+        a {
+          margin-top: 0;
+        }
+      }
+    }
+
+    input {
+      width: 160px;
+      margin-right: 3px;
+    }
+  }
+
+  div.column {
+    flex: 10;
+    max-width: 50%;
+    position: relative;
+    height: 100%;
+    border-right: 1px solid;
+    overflow: hidden;
+    transition: max-width 250ms;
+
+    &.hover {
+      opacity: 0.5;
+    }
+
+    &.hidden {
+      max-width: 0;
+      width: 0;
+      border-right: 1px solid transparent;
+    }
+
+    h3 {
+      margin: 0;
+      padding: 10px 20px;
+      border-bottom: 1px solid;
+      height: @topHeight;
+      padding-top: 17px;
+      line-height: 20px;
+      position: relative;
+      font-size: @titleTextSize;
+      z-index: 2;
+      font-weight: 600;
+
+      i.loading {
+        font-size: 12px;
+        margin-left: 5px;
+        margin-top: -2px;
+      }
+
+      span.meta {
+        float: right;
+        font-size: @smallTextSize;
+        margin-right: 8px;
+        margin-top: 1px;
+        font-weight: normal;
+
+        div.icons {
+          display: none;
+          margin-left: 3px;
+          float: right;
+          cursor: pointer;
+
+          i {
+            margin-left: 8px;
+            font-size: 16px;
+            float: left;
+
+            &.delete {
+              font-size: 19px;
+              margin-top: -2px;
+            }
+          }
+        }
+      }
+
+      &:hover {
+        span.meta {
+          div.icons {
             display: inline-block;
-            padding: 18px 20px 0 20px;
-
-            a {
-                margin-top: 4px;
-            }
-
-            &.form {
-                width: 220px;
-
-                a {
-                    margin-top: 0;
-                }
-            }
+          }
+          div.text {
+            display: none;
+          }
         }
-
-        input {
-            width: 160px;
-            margin-right: 3px;
-        }
+      }
     }
 
-    div.column {
-        flex: 10;
-        max-width: 50%;
+    &:last-child h3 {
+      border-bottom: none;
+    }
+  }
+
+  div.emails {
+    position: absolute;
+    width: 100%;
+    top: @topHeight;
+    padding-top: 10px;
+    bottom: 0;
+    overflow-x: hidden;
+
+    div.loader {
+      text-align: center;
+      padding: 20px 0;
+      position: relative;
+    }
+
+    .scrollbar;
+
+    &::before {
+      content: "This folder is empty.";
+      text-align: center;
+      margin-top: 20px;
+      position: absolute;
+      width: 100%;
+    }
+  }
+
+  div.email {
+    padding: 10px;
+    margin: 0 10px 10px 10px;
+    border-radius: @borderRadius;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    height: 132px;
+    transition: height 500ms, padding 500ms;
+
+    &.hover {
+      div.meta span.buttons {
+        display: block;
+      }
+
+      div.meta span.extra-meta {
+        display: none;
+      }
+    }
+
+    &.open {
+      z-index: 8;
+    }
+
+    &.archiving,
+    &.trashing {
+      height: 0;
+      padding: 0 10px;
+      margin: 0 10px;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    &.error {
+      background: rgba(255, 0, 0, 0.1);
+
+      &.hover {
+        background: rgba(255, 0, 0, 0.2);
+      }
+    }
+
+    &.incoming {
+      h4,
+      h5,
+      p {
+        opacity: 0.5;
+      }
+    }
+
+    h5 {
+      margin: 0 8px 0 30px;
+      height: 24px;
+      overflow: hidden;
+      font-size: @smallTextSize;
+
+      span {
+        margin-right: 4px;
+      }
+    }
+
+    h4 {
+      margin: 0;
+      font-weight: normal;
+      height: 24px;
+      font-size: @bigTextSize;
+
+      div.avatar {
+        float: left;
+        margin-right: 8px;
+        border-radius: 4px;
         position: relative;
-        height: 100%;
-        border-right: 1px solid;
+
+        img {
+          width: 22px;
+          height: 22px;
+          border-radius: 4px;
+        }
+
+        span {
+          position: absolute;
+          color: white;
+          text-shadow: 0 0 1px;
+          left: 0;
+          right: 0;
+          font-size: 12px;
+          text-align: center;
+          overflow: hidden;
+        }
+      }
+
+      span.subject {
         overflow: hidden;
-        transition: max-width 250ms;
-
-        &.hover {
-            opacity: 0.5;
-        }
-
-        &.hidden {
-            max-width: 0;
-            width: 0;
-            border-right: 1px solid transparent;
-        }
-
-        h3 {
-            margin: 0;
-            padding: 10px 20px;
-            border-bottom: 1px solid;
-            height: @topHeight;
-            padding-top: 17px;
-            line-height: 20px;
-            position: relative;
-            font-size: @titleTextSize;
-            z-index: 2;
-            font-weight: 600;
-
-            i.loading {
-                font-size: 12px;
-                margin-left: 5px;
-                margin-top: -2px;
-            }
-
-            span.meta {
-                float: right;
-                font-size: @smallTextSize;
-                margin-right: 8px;
-                margin-top: 1px;
-                font-weight: normal;
-
-                div.icons {
-                    display: none;
-                    margin-left: 3px;
-                    float: right;
-                    cursor: pointer;
-
-                    i {
-                        margin-left: 8px;
-                        font-size: 16px;
-                        float: left;
-
-                        &.delete {
-                            font-size: 19px;
-                            margin-top: -2px;
-                        }
-                    }
-                }
-            }
-
-            &:hover {
-                span.meta {
-                    div.icons {
-                        display: inline-block;
-                    }
-                    div.text {
-                        display: none;
-                    }
-                }
-            }
-        }
-
-        &:last-child h3 {
-            border-bottom: none;
-        }
+        height: 24px;
+        display: inline-block;
+        width: 80%;
+      }
     }
 
-    div.emails {
-        position: absolute;
-        width: 100%;
-        top: @topHeight;
-        padding-top: 10px;
-        bottom: 0;
-        overflow-x: hidden;
-
-        div.loader {
-            text-align: center;
-            padding: 20px 0;
-            position: relative;
-        }
-
-        .scrollbar;
-
-        &::before {
-            content: "This folder is empty.";
-            text-align: center;
-            margin-top: 20px;
-            position: absolute;
-            width: 100%;
-        }
+    &.unread h4 {
+      font-weight: 600;
     }
 
-    div.email {
-        padding: 10px;
-        margin: 0 10px 10px 10px;
-        border-radius: @borderRadius;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-        height: 132px;
-        transition: height 500ms, padding 500ms;
-
-        &.hover {
-            div.meta span.buttons {
-                display: block;
-            }
-
-            div.meta span.extra-meta {
-                display: none;
-            }
-        }
-
-        &.open {
-            z-index: 8;
-        }
-
-        &.archiving, &.trashing {
-            height: 0;
-            padding: 0 10px;
-            margin: 0 10px;
-            pointer-events: none;
-            overflow: hidden;
-        }
-
-        &.error {
-            background: rgba(255, 0, 0, 0.1);
-
-            &.hover {
-                background: rgba(255, 0, 0, 0.2);
-            }
-        }
-
-        &.incoming {
-            h4, h5, p {
-                opacity: 0.5;
-            }
-        }
-
-        h5 {
-            margin: 0 8px 0 30px;
-            height: 24px;
-            overflow: hidden;
-            font-size: @smallTextSize;
-
-            span {
-                margin-right: 4px;
-            }
-        }
-
-        h4 {
-            margin: 0;
-            font-weight: normal;
-            height: 24px;
-            font-size: @bigTextSize;
-
-            div.avatar {
-                float: left;
-                margin-right: 8px;
-                border-radius: 4px;
-                position: relative;
-
-                img {
-                    width: 22px;
-                    height: 22px;
-                    border-radius: 4px;
-                }
-
-                span {
-                    position: absolute;
-                    color: white;
-                    text-shadow: 0 0 1px;
-                    left: 0;
-                    right: 0;
-                    font-size: 12px;
-                    text-align: center;
-                    overflow: hidden;
-                }
-            }
-
-            span.subject {
-                overflow: hidden;
-                height: 24px;
-                display: inline-block;
-                width: 80%;
-            }
-        }
-
-        &.unread h4 {
-            font-weight: 600;
-        }
-
-        span.date {
-            float: right;
-            font-weight: normal;
-        }
-
-        p {
-            margin: 0 8px 0 30px;
-            line-height: 20px;
-            height: 40px;  // line-height * 2
-            overflow: hidden;
-        }
-
-        div.meta {
-            font-size: @smallTextSize;
-            margin: 4px 8px 0 30px;
-
-            span.tag {
-                margin-left: 5px;
-            }
-
-            span.extra-meta {
-                float: right;
-                i {
-                    margin-left: 5px;
-                }
-            }
-
-            span.buttons {
-                float: right;
-                font-size: 14px;
-                display: none;
-
-                a {
-                    padding: 5px;
-
-                    &:last-child {
-                        padding-right: 0;
-                    }
-                }
-            }
-        }
+    span.date {
+      float: right;
+      font-weight: normal;
     }
+
+    p {
+      margin: 0 8px 0 30px;
+      line-height: 20px;
+      height: 40px; // line-height * 2
+      overflow: hidden;
+    }
+
+    div.meta {
+      font-size: @smallTextSize;
+      margin: 4px 8px 0 30px;
+
+      span.tag {
+        margin-left: 5px;
+      }
+
+      span.extra-meta {
+        float: right;
+        i {
+          margin-left: 5px;
+        }
+      }
+
+      span.buttons {
+        float: right;
+        font-size: 14px;
+        display: none;
+
+        a {
+          padding: 5px;
+
+          &:last-child {
+            padding-right: 0;
+          }
+        }
+      }
+    }
+  }
 }
 
-
 section#columns.compact {
-    div.emails {
-        padding-top: 5px;
-    }
+  div.emails {
+    padding-top: 5px;
+  }
 
-    div.email {
-        padding: 5px 10px;
-        margin: 0 5px;
-        height: 86px;
+  div.email {
+    padding: 5px 10px;
+    margin: 0 5px;
+    height: 86px;
 
-        p {
-            display: none;
-        }
+    p {
+      display: none;
     }
+  }
 }

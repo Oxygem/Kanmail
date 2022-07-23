@@ -1,29 +1,28 @@
 /*
     Colours */
 
-@white: #FFFFFF;
+@white: #ffffff;
 @black: #000000;
 
 @darkestGrey: #232526;
 @darkGrey: #343637;
-@midGrey: #A6A8A9;
-@lightGrey: #E6E8E9;
-@lightestGrey: #F6F8F9;
+@midGrey: #a6a8a9;
+@lightGrey: #e6e8e9;
+@lightestGrey: #f6f8f9;
 
-@pink: #F2318D;
+@pink: #f2318d;
 @blue: #008dd5;
 @red: #fb6107;
 @green: #47d966;
 @yellow: #ecc30b;
 
 @formBorderGrey: @lightGrey;
-@formBorderGreyHover: #D6D8D0;
-@formBorderGreyActive: #A6A8A9;
+@formBorderGreyHover: #d6d8d0;
+@formBorderGreyActive: #a6a8a9;
 
 @textGrey: #333536;
 @lightTextGrey: #666869;
-@lightestTextGrey: #999B9C;
-
+@lightestTextGrey: #999b9c;
 
 /*
     Variables */
@@ -39,172 +38,172 @@
 @textSize: 13px;
 @smallTextSize: 11px;
 
-
 /*
     Custom scrollbar */
 
 .scrollbar {
-    overflow-y: scroll;
+  overflow-y: scroll;
 }
 
 .no-select {
-    cursor: default;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 .no-transition {
-    transition: none !important;
+  transition: none !important;
 }
-
 
 /*
     Basics */
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Open Sans';
-    font-size: @textSize;
-    line-height: 24px;
-    height: 100%;
-    width: 100%;
-    position: relative;
-    margin: 0;
+  font-family: "Open Sans";
+  font-size: @textSize;
+  line-height: 24px;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  margin: 0;
 }
 
 a {
-    text-decoration: none;
-    cursor: pointer;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-h1, h2, h3 {
-    font-weight: normal;
+h1,
+h2,
+h3 {
+  font-weight: normal;
 }
 
 input {
-    font-family: 'Open Sans';
+  font-family: "Open Sans";
 }
-
 
 /*
     Layout */
 
 .wide {
-    width: 100%;
+  width: 100%;
 }
 
 .third {
-    width: 33%;
+  width: 33%;
 }
 
 .two-third {
-    width: 66%;
+  width: 66%;
 }
 
 .three-quarter {
-    width: 74%;
+  width: 74%;
 }
 
 .quarter {
-    width: 24%;
+  width: 24%;
 }
 
 .half {
-    width: 49%;
+  width: 49%;
 }
 
 .flex {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 
-    &.justify-left {
-        justify-content: left;
-    }
+  &.justify-left {
+    justify-content: left;
+  }
 
-    &.flex-vertical {
-        flex-direction: column;
-    }
+  &.flex-vertical {
+    flex-direction: column;
+  }
 
-    &.flex-nowrap {
-        flex-wrap: nowrap;
-    }
+  &.flex-nowrap {
+    flex-wrap: nowrap;
+  }
 }
-
-
 
 /*
     Forms */
 
 button {
-    padding: 5px;
-    font-weight: 700;
-    font-size: @textSize;
-    border: none;
-    border-radius: @borderRadius;
-    color: white;
-    cursor: pointer;
+  padding: 5px;
+  font-weight: 700;
+  font-size: @textSize;
+  border: none;
+  border-radius: @borderRadius;
+  color: white;
+  cursor: pointer;
 
-    &.disabled, &.disabled:hover {
-        cursor: auto;
-    }
+  &.disabled,
+  &.disabled:hover {
+    cursor: auto;
+  }
 
-    &.main-button {
-        padding: 15px;
-        font-size: 16px;
-    }
+  &.main-button {
+    padding: 15px;
+    font-size: 16px;
+  }
 }
 
-input, textarea {
-    width: 100%;
-    // border-radius: @borderRadius;
-    padding: 5px;
-    border: 0px solid;
-    border-bottom-width: 1px;
-    font-size: @textSize;
+input,
+textarea {
+  width: 100%;
+  // border-radius: @borderRadius;
+  padding: 5px;
+  border: 0px solid;
+  border-bottom-width: 1px;
+  font-size: @textSize;
 
-    &:hover, &:focus {
-        outline: none;
-    }
+  &:hover,
+  &:focus {
+    outline: none;
+  }
 
-    &.inline, &[type=checkbox] {
-        width: auto;
-    }
+  &.inline,
+  &[type="checkbox"] {
+    width: auto;
+  }
 }
-
 
 /*
     Other bits ??? */
 
 span.multi-subject {
-    margin-right: 4px;
-    border-radius: 24px;
-    width: 24px;
-    height: 24px;
-    float: left;
-    text-align: center;
-    display: inline-block;
-    font-size: @smallTextSize;
+  margin-right: 4px;
+  border-radius: 24px;
+  width: 24px;
+  height: 24px;
+  float: left;
+  text-align: center;
+  display: inline-block;
+  font-size: @smallTextSize;
 }
 
 .tooltip-wrapper {
-    display: inline-block;
+  display: inline-block;
 }
 
 .tooltip {
-    z-index: 1100;
-    position: absolute;
-    font-size: @smallTextSize;
-    border-radius: @borderRadius;
-    padding: 3px 5px;
-    background: black;
-    color: white;
+  z-index: 1100;
+  position: absolute;
+  font-size: @smallTextSize;
+  border-radius: @borderRadius;
+  padding: 3px 5px;
+  background: black;
+  color: white;
 
-    i.fa-keyboard-o {
-        font-size: @bigTextSize;
-    }
+  i.fa-keyboard-o {
+    font-size: @bigTextSize;
+  }
 }

@@ -1,96 +1,97 @@
 header.contacts {
-    padding-right: 20px;
+  padding-right: 20px;
 
-    div.search {
-        flex-grow: 1;
-        margin: 11px 20px 0 20px;
-    }
+  div.search {
+    flex-grow: 1;
+    margin: 11px 20px 0 20px;
+  }
 }
 
 section#contacts {
-    button.add-contact {
-        float: right;
-        margin-right: 20px;
-        padding: 6.5px 5px;
-        margin-top: 20px;
+  button.add-contact {
+    float: right;
+    margin-right: 20px;
+    padding: 6.5px 5px;
+    margin-top: 20px;
+  }
+
+  form.add-contact {
+    margin: 65px 20px 0 20px;
+
+    div {
+      width: 30%;
+      display: inline-block;
+      margin-right: 20px;
+    }
+  }
+
+  div#contact-list {
+    overflow-y: auto;
+    position: absolute;
+    top: 52px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid;
+
+    &.form-open {
+      top: 72px;
+    }
+  }
+
+  div.contact {
+    padding: 5px 20px;
+    height: 40px;
+    overflow: hidden;
+    display: flex;
+
+    input {
+      width: 48%;
+      margin-right: 2%;
     }
 
-    form.add-contact {
-        margin: 65px 20px 0 20px;
-
-        div {
-            width: 30%;
-            display: inline-block;
-            margin-right: 20px;
-        }
+    div {
+      display: inline-block;
+      vertical-align: top;
     }
 
-    div#contact-list {
-        overflow-y: auto;
+    div.avatar {
+      position: relative;
+      border-radius: 4px;
+      margin-right: 10px;
+      margin-top: 2px;
+      overflow: hidden;
+      min-width: 28px;
+
+      img {
+        width: 22px;
+        border-radius: 4px;
+      }
+
+      span {
         position: absolute;
-        top: 52px;
-        bottom: 0;
         left: 0;
         right: 0;
-        border-top: 1px solid;
-
-        &.form-open {
-            top: 72px;
-        }
+        text-align: center;
+        color: white;
+        margin-top: 1px;
+      }
     }
 
-    div.contact {
-        padding: 5px 20px;
-        height: 40px;
-        overflow: hidden;
-        display: flex;
-
-        input {
-            width: 48%;
-            margin-right: 2%;
-        }
-
-        div {
-            display: inline-block;
-            vertical-align: top;
-        }
-
-        div.avatar {
-            position: relative;
-            border-radius: 4px;
-            margin-right: 10px;
-            margin-top: 2px;
-            overflow: hidden;
-            min-width: 28px;
-
-            img {
-                width: 22px;
-                border-radius: 4px;
-            }
-
-            span {
-                position: absolute;
-                left: 0;
-                right: 0;
-                text-align: center;
-                color: white;
-                margin-top: 1px;
-            }
-        }
-
-        div.form, div.text {
-            flex-grow: 1;
-        }
-
-        div.text {
-            margin-top: 3px;
-            word-break: break-all;
-        }
-
-        div.buttons {
-            width: 180px;
-            min-width: 170px;
-            text-align: right;
-        }
+    div.form,
+    div.text {
+      flex-grow: 1;
     }
+
+    div.text {
+      margin-top: 3px;
+      word-break: break-all;
+    }
+
+    div.buttons {
+      width: 180px;
+      min-width: 170px;
+      text-align: right;
+    }
+  }
 }

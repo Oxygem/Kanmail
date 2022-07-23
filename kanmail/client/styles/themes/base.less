@@ -2,709 +2,710 @@ color: @bodyTextColor;
 background: @bodyBackgroundColor;
 
 a {
-    color: @blue;
+  color: @blue;
 
-    &:hover {
-        color: darken(@blue, 10%);
-    }
+  &:hover {
+    color: darken(@blue, 10%);
+  }
 }
-
 
 /*
     Classes */
 
 .pink {
-    color: @pink;
+  color: @pink;
 }
 
 .white {
-    color: @white;
+  color: @white;
 }
 
 .yellow {
-    color: @yellow;
+  color: @yellow;
 }
 
 .green {
-    color: @green;
+  color: @green;
 }
 .green-hover:hover {
-    color: darken(@green, 25%);
+  color: darken(@green, 25%);
 }
 
 .red {
-    color: @red;
+  color: @red;
 }
 .red-hover:hover {
-    color: darken(@red, 25%);
+  color: darken(@red, 25%);
 }
 
 .blue {
-    color: @blue;
+  color: @blue;
 }
 .blue-hover:hover {
-    color: darken(@blue, 25%);
+  color: darken(@blue, 25%);
 }
 
 .yellow {
-    color: @yellow;
+  color: @yellow;
 }
 .yellow-hover:hover {
-    color: darken(@yellow, 25%);
+  color: darken(@yellow, 25%);
 }
-
 
 /*
     Forms */
 
 button {
-    background: @blue;
+  background: @blue;
+
+  &:hover {
+    background: darken(@blue, 10%);
+  }
+
+  &.cancel {
+    background: @red;
 
     &:hover {
-        background: darken(@blue, 10%);
+      background: darken(@red, 10%);
     }
+  }
 
-    &.cancel {
-        background: @red;
-
-        &:hover {
-            background: darken(@red, 10%);
-        }
-    }
-
-    &.submit {
-        background: @green;
-
-        &:hover {
-            background: darken(@green, 10%);
-        }
-    }
-
-    &.error {
-        background: @red;
-    }
-
-    &.inactive {
-        background: @midGrey;
-    }
-
-    &.disabled, &.disabled:hover {
-        background: @lightGrey;
-    }
-}
-
-input, textarea {
-    color: @inputColor;
-    background: @inputBackgroundColor;
-    border-color: @inputBorderColor;
+  &.submit {
+    background: @green;
 
     &:hover {
-        border-color: @inputBorderHoverColor;
+      background: darken(@green, 10%);
     }
+  }
 
-    &:focus {
-        border-color: @formBorderGreyActive;
-    }
+  &.error {
+    background: @red;
+  }
+
+  &.inactive {
+    background: @midGrey;
+  }
+
+  &.disabled,
+  &.disabled:hover {
+    background: @lightGrey;
+  }
 }
 
+input,
+textarea {
+  color: @inputColor;
+  background: @inputBackgroundColor;
+  border-color: @inputBorderColor;
+
+  &:hover {
+    border-color: @inputBorderHoverColor;
+  }
+
+  &:focus {
+    border-color: @formBorderGreyActive;
+  }
+}
 
 .draftail-editor {
+  background: transparent;
+
+  blockquote {
+    border-left: 2px solid @lightGrey;
+    padding-left: 10px;
+    margin: 0;
+  }
+
+  .drafteditor-root {
+    color: @bodyTextColor;
+  }
+
+  .draftail-toolbar {
     background: transparent;
+    border-color: @inputBorderColor;
+    color: @bodyTextColor;
+  }
 
-    blockquote {
-        border-left: 2px solid @lightGrey;
-        padding-left: 10px;
-        margin: 0;
-    }
-
-    .drafteditor-root {
-        color: @bodyTextColor;
-    }
-
-    .draftail-toolbar {
-        background: transparent;
-        border-color: @inputBorderColor;
-        color: @bodyTextColor;
-    }
-
-    .draftail-toolbarbutton {
-        background: transparent;
-        border: none;
-
-        &:hover {
-            background: transparent;
-        }
-    }
-
-    .draftail-toolbarbutton--active {
-        background: @headerButtonHoverColor;
-        border: none;
-
-        &:hover {
-            background: @headerButtonHoverColor;
-        }
-    }
-
-    .public-DraftEditorPlaceholder-inner {
-        color: @lightestTextGrey;
-    }
-
-    [data-draftail-balloon] {
-        &:hover {
-            &::before, &::after {
-                transition: all 0.1s ease-out !important;
-            }
-        }
-    }
+  .draftail-toolbarbutton {
+    background: transparent;
+    border: none;
 
     &:hover {
-        .draftail-toolbar {
-            border-color: @inputBorderHoverColor;
-        }
+      background: transparent;
     }
+  }
 
-    &.draftail-editor--focus {
-        .draftail-toolbar {
-            border-color: @formBorderGreyActive;
-        }
+  .draftail-toolbarbutton--active {
+    background: @headerButtonHoverColor;
+    border: none;
+
+    &:hover {
+      background: @headerButtonHoverColor;
     }
+  }
+
+  .public-DraftEditorPlaceholder-inner {
+    color: @lightestTextGrey;
+  }
+
+  [data-draftail-balloon] {
+    &:hover {
+      &::before,
+      &::after {
+        transition: all 0.1s ease-out !important;
+      }
+    }
+  }
+
+  &:hover {
+    .draftail-toolbar {
+      border-color: @inputBorderHoverColor;
+    }
+  }
+
+  &.draftail-editor--focus {
+    .draftail-toolbar {
+      border-color: @formBorderGreyActive;
+    }
+  }
 }
-
 
 /*
     ??? */
 
 span.multi-subject {
-    background: @lightGrey;
-    color: @lightTextGrey;
+  background: @lightGrey;
+  color: @lightTextGrey;
 }
 
 .tooltip {
-    background: @darkestGrey;
-    color: @lightestGrey;
+  background: @darkestGrey;
+  color: @lightestGrey;
 }
 
 /*
     Header */
 
 header {
+  div.header-errors {
+    i {
+      &.error {
+        color: @red !important;
+      }
+    }
+
+    div.icon-wrapper {
+      a {
+        color: white;
+      }
+    }
+
+    div.icon-contents {
+      border-color: @red;
+      background: white;
+      color: black;
+
+      p {
+        border-color: @lightGrey;
+
+        span.meta {
+          color: @darkGrey;
+        }
+
+        a {
+          color: @blue;
+        }
+      }
+    }
+  }
+
+  &.header-bar {
+    background: @headerBackgroundColor;
+    border-color: @headerBorderColor;
+
+    button {
+      background: transparent;
+      color: @lightTextGrey;
+
+      &:hover,
+      &.active {
+        background: @headerButtonHoverColor;
+      }
+
+      i {
+        color: @midGrey;
+      }
+    }
+
     div.header-errors {
-        i {
-            &.error {
-                color: @red !important;
-            }
-        }
-
-        div.icon-wrapper {
-            a {
-                color: white;
-            }
-        }
-
-        div.icon-contents {
-            border-color: @red;
-            background: white;
-            color: black;
-
-            p {
-                border-color: @lightGrey;
-
-                span.meta {
-                    color: @darkGrey;
-                }
-
-                a {
-                    color: @blue;
-                }
-            }
-        }
+      div.icon-wrapper a {
+        color: @bodyTextColor;
+      }
     }
-
-    &.header-bar {
-        background: @headerBackgroundColor;
-        border-color: @headerBorderColor;
-
-        button {
-            background: transparent;
-            color: @lightTextGrey;
-
-            &:hover, &.active {
-                background: @headerButtonHoverColor;
-            }
-
-            i {
-                color: @midGrey;
-            }
-        }
-
-        div.header-errors {
-            div.icon-wrapper a {
-                color: @bodyTextColor;
-            }
-        }
-    }
+  }
 }
-
 
 /*
     Sidebar */
 
 section#sidebar {
-    background: @sidebarBackgroundColor;
-    color: @sidebarTextColor;
+  background: @sidebarBackgroundColor;
+  color: @sidebarTextColor;
 
-    header {
-        a.compose {
-            color: @sidebarHeaderIconColor;
-        }
-
-        a.search {
-            color: @sidebarHeaderIconColor;
-        }
+  header {
+    a.compose {
+      color: @sidebarHeaderIconColor;
     }
 
-    ul {
-        li {
-            a, span {
-                color: @sidebarLinkTextColor;
-            }
-
-            span.update {
-                background: @green;
-                color: white;
-
-                &.error {
-                    background: @red;
-                }
-            }
-
-            a {
-                &:hover {
-                    background: @sidebarLinkHoverBackgroundColor;
-                    color: @sidebarLinkHoverTextColor;
-                }
-            }
-
-            &.active a, &.hover a {
-                background: @sidebarLinkHoverBackgroundColor;
-                color: @sidebarLinkHoverTextColor;
-            }
-
-            i.pin-button {
-                &.fa-bookmark:hover {
-                    color: @red;
-                }
-                &.fa-bookmark-o:hover {
-                    color: @green;
-                }
-            }
-
-            &.small {
-                a {
-                    background: transparent;
-                }
-            }
-        }
+    a.search {
+      color: @sidebarHeaderIconColor;
     }
+  }
 
-    footer {
-        color: #666;
+  ul {
+    li {
+      a,
+      span {
+        color: @sidebarLinkTextColor;
+      }
 
+      span.update {
+        background: @green;
+        color: white;
+
+        &.error {
+          background: @red;
+        }
+      }
+
+      a {
+        &:hover {
+          background: @sidebarLinkHoverBackgroundColor;
+          color: @sidebarLinkHoverTextColor;
+        }
+      }
+
+      &.active a,
+      &.hover a {
+        background: @sidebarLinkHoverBackgroundColor;
+        color: @sidebarLinkHoverTextColor;
+      }
+
+      i.pin-button {
+        &.fa-bookmark:hover {
+          color: @red;
+        }
+        &.fa-bookmark-o:hover {
+          color: @green;
+        }
+      }
+
+      &.small {
         a {
-            color: @lightTextGrey;
-
-            &:hover {
-                color: @lightestTextGrey;
-            }
+          background: transparent;
         }
-
-        section#status {
-            background: @lightGrey;
-            border-color: #D7D7D7;
-        }
+      }
     }
-}
+  }
 
+  footer {
+    color: #666;
+
+    a {
+      color: @lightTextGrey;
+
+      &:hover {
+        color: @lightestTextGrey;
+      }
+    }
+
+    section#status {
+      background: @lightGrey;
+      border-color: #d7d7d7;
+    }
+  }
+}
 
 /*
     Threads overlay */
 
 section#thread-background {
-    background: rgba(100, 100, 100, 0.6);
+  background: rgba(100, 100, 100, 0.6);
 }
 
 section#thread {
-    background: @threadBackgroundColor;
-    border-color: @threadBorderColor;
+  background: @threadBackgroundColor;
+  border-color: @threadBorderColor;
 
-    h1 {
-        background: @threadTitleBackgroundColor;
-        border-color: @threadTitleBorderColor;
-    }
+  h1 {
+    background: @threadTitleBackgroundColor;
+    border-color: @threadTitleBorderColor;
+  }
 
-    section#meta {
-        background: @threadMetaBackgroundColor;
-        border-color: @threadMetaBorderColor;
+  section#meta {
+    background: @threadMetaBackgroundColor;
+    border-color: @threadMetaBorderColor;
 
-        button#close {
-            &:hover {
-                color: @red;
-            }
-        }
-
-        button {
-            background: white;
-        }
-
-        div#other-buttons {
-            button {
-                &:hover {
-                    color: @blue;
-                }
-            }
-        }
-
-        div#respond-buttons {
-            button {
-                &:hover {
-                    color: @blue;
-                }
-
-                &.archive:hover {
-                    color: @green;
-                }
-
-                &.trash:hover {
-                    color: @red;
-                }
-            }
-        }
-    }
-
-    a.show-all-messages {
-        color: @lightTextGrey;
+    button#close {
+      &:hover {
+        color: @red;
+      }
     }
 
     button {
-        background: @lightestGrey;
+      background: white;
+    }
+
+    div#other-buttons {
+      button {
+        &:hover {
+          color: @blue;
+        }
+      }
+    }
+
+    div#respond-buttons {
+      button {
+        &:hover {
+          color: @blue;
+        }
+
+        &.archive:hover {
+          color: @green;
+        }
+
+        &.trash:hover {
+          color: @red;
+        }
+      }
+    }
+  }
+
+  a.show-all-messages {
+    color: @lightTextGrey;
+  }
+
+  button {
+    background: @lightestGrey;
+    color: @lightTextGrey;
+
+    &.active {
+      background: @formBorderGreyHover;
+    }
+  }
+
+  div.message {
+    border-color: @threadMessageBorderColor;
+
+    div.meta {
+      span.meta-text {
         color: @lightTextGrey;
+      }
 
-        &.active {
-            background: @formBorderGreyHover;
+      .fa-star {
+        color: @blue;
+      }
+
+      div.addresses {
+        div.avatar {
+          text-shadow: 0 0 1px @darkestGrey;
         }
+      }
     }
 
-    div.message {
-        border-color: @threadMessageBorderColor;
+    div.controls {
+      color: @lightTextGrey;
 
-        div.meta {
-            span.meta-text {
-                color: @lightTextGrey;
-            }
-
-            .fa-star {
-                color: @blue;
-            }
-
-            div.addresses {
-                div.avatar {
-                    text-shadow: 0 0 1px @darkestGrey;
-                }
-            }
+      span.right {
+        i {
+          color: @lightTextGrey;
         }
+      }
 
-        div.controls {
-            color: @lightTextGrey;
-
-            span.right {
-                i {
-                    color: @lightTextGrey;
-                }
-            }
-
-            span.tag {
-                background: @lightestGrey;
-            }
-        }
-
-        .attachment-link {
-            background: @lightestGrey;
-
-            .attachment-meta {
-                color: @lightTextGrey;
-            }
-        }
+      span.tag {
+        background: @lightestGrey;
+      }
     }
+
+    .attachment-link {
+      background: @lightestGrey;
+
+      .attachment-meta {
+        color: @lightTextGrey;
+      }
+    }
+  }
 }
-
 
 /*
     React select overrides */
 
 div.react-select__control {
-    background: transparent;
-    border-color: @formBorderGrey;
+  background: transparent;
+  border-color: @formBorderGrey;
 
-    &:hover {
-        border-color: @formBorderGreyHover;
-    }
+  &:hover {
+    border-color: @formBorderGreyHover;
+  }
 }
 
 div.react-select__control--is-focused {
-    border-color: @formBorderGreyActive !important;
+  border-color: @formBorderGreyActive !important;
 }
 
 span.react-select__indicator-separator {
-    background: @formBorderGrey;
+  background: @formBorderGrey;
 }
 
 div.react-select__menu {
-    border-color: @formBorderGreyHover;
+  border-color: @formBorderGreyHover;
 }
 
 div.react-select__option {
-    &.react-select__option--is-focused {
-        background: @lightGrey;
-    }
+  &.react-select__option--is-focused {
+    background: @lightGrey;
+  }
 }
-
 
 /*
     Meta/License App */
 
 section#meta-file {
-    pre, code {
-        background: @lightestGrey;
-    }
-    code {
-        padding: 1px;
-    }
+  pre,
+  code {
+    background: @lightestGrey;
+  }
+  code {
+    padding: 1px;
+  }
 }
-
 
 /*
     Columns */
 
 section#columns {
-    div#search {
-        input {
-            background: @searchFormBackgroundColor;
-        }
+  div#search {
+    input {
+      background: @searchFormBackgroundColor;
+    }
+  }
+
+  div.column {
+    border-color: @columnBorderColor;
+
+    h3 {
+      border-color: @columnTitleBorderColor;
+
+      i.loading {
+        color: @formBorderGreyActive;
+      }
+
+      span.meta {
+        color: @formBorderGreyActive;
+      }
     }
 
-    div.column {
-        border-color: @columnBorderColor;
+    div.emails {
+      div.loader {
+        color: @lightestTextGrey;
+        background: @columnEmailBackgroundColor;
+      }
 
-        h3 {
-            border-color: @columnTitleBorderColor;
-
-            i.loading {
-                color: @formBorderGreyActive;
-            }
-
-            span.meta {
-                color: @formBorderGreyActive;
-            }
-        }
-
-        div.emails {
-            div.loader {
-                color: @lightestTextGrey;
-                background: @columnEmailBackgroundColor;
-            }
-
-            &::before {
-                color: @lightestTextGrey;
-            }
-        }
-
-        div.email {
-            background: @columnEmailBackgroundColor;
-
-            &.hover {
-                background: @columnEmailHoverBackgroundColor;
-            }
-
-            &.archiving {
-                background: @green;
-            }
-
-            &.trashing {
-                background: @red;
-            }
-
-            h4 {
-                span {
-                    text-shadow-color: @darkestGrey;
-                }
-            }
-
-            span.date {
-                color: @lightTextGrey;
-            }
-
-            p {
-                color: @formBorderGreyActive;
-            }
-
-            div.meta {
-                color: @lightTextGrey;
-
-                span.buttons, span.extra-meta {
-                    a {
-                        color: @lightTextGrey;
-
-                        &.star {
-                            &.active, &:hover {
-                                color: @yellow;
-                            }
-                        }
-
-                        &.archive {
-                            &.active, &:hover {
-                                color: @green;
-                            }
-                        }
-
-                        &.move {
-                            &.active, &:hover {
-                                color: @blue;
-                            }
-                        }
-
-                        &.trash {
-                            &.active, &:hover {
-                                color: @red;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+      &::before {
+        color: @lightestTextGrey;
+      }
     }
+
+    div.email {
+      background: @columnEmailBackgroundColor;
+
+      &.hover {
+        background: @columnEmailHoverBackgroundColor;
+      }
+
+      &.archiving {
+        background: @green;
+      }
+
+      &.trashing {
+        background: @red;
+      }
+
+      h4 {
+        span {
+          text-shadow-color: @darkestGrey;
+        }
+      }
+
+      span.date {
+        color: @lightTextGrey;
+      }
+
+      p {
+        color: @formBorderGreyActive;
+      }
+
+      div.meta {
+        color: @lightTextGrey;
+
+        span.buttons,
+        span.extra-meta {
+          a {
+            color: @lightTextGrey;
+
+            &.star {
+              &.active,
+              &:hover {
+                color: @yellow;
+              }
+            }
+
+            &.archive {
+              &.active,
+              &:hover {
+                color: @green;
+              }
+            }
+
+            &.move {
+              &.active,
+              &:hover {
+                color: @blue;
+              }
+            }
+
+            &.trash {
+              &.active,
+              &:hover {
+                color: @red;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
-
 
 /*
     Send App */
 
 section#new-email {
-    form {
-        label {
-            color: @lightestTextGrey;
-        }
-
-        blockquote#reply-quote {
-            background: @lightestGrey;
-            border-color: @lightGrey;
-        }
-
-        div.buttons {
-            button.save {
-                background: @lightestGrey;
-                color: @lightTextGrey;
-
-                &:hover {
-                    background: @lightGrey;
-                }
-            }
-        }
-
-        div#textarea-body {
-            .ql-container {
-                &.ql-snow {
-                    border-color: @formBorderGrey;
-                }
-            }
-
-            .ql-toolbar.ql-snow {
-                border-color: @formBorderGrey;
-            }
-
-            &.active {
-                .ql-container.ql-snow, .ql-toolbar.ql-snow {
-                    border-color: @formBorderGreyHover;
-                }
-            }
-        }
+  form {
+    label {
+      color: @lightestTextGrey;
     }
-}
 
+    blockquote#reply-quote {
+      background: @lightestGrey;
+      border-color: @lightGrey;
+    }
+
+    div.buttons {
+      button.save {
+        background: @lightestGrey;
+        color: @lightTextGrey;
+
+        &:hover {
+          background: @lightGrey;
+        }
+      }
+    }
+
+    div#textarea-body {
+      .ql-container {
+        &.ql-snow {
+          border-color: @formBorderGrey;
+        }
+      }
+
+      .ql-toolbar.ql-snow {
+        border-color: @formBorderGrey;
+      }
+
+      &.active {
+        .ql-container.ql-snow,
+        .ql-toolbar.ql-snow {
+          border-color: @formBorderGreyHover;
+        }
+      }
+    }
+  }
+}
 
 /*
     Settings App */
 
 section#settings {
-    div.settings {
-        label {
-            small {
-                color: @lightTextGrey;
-            }
-        }
-
-        &.advanced {
-            background: @lightGrey;
-        }
-
-        &.licensed {
-            border: 5px solid @yellow;
-        }
+  div.settings {
+    label {
+      small {
+        color: @lightTextGrey;
+      }
     }
+
+    &.advanced {
+      background: @lightGrey;
+    }
+
+    &.licensed {
+      border: 5px solid @yellow;
+    }
+  }
 }
 
 div#accounts {
-    div.error {
-        color: @red;
+  div.error {
+    color: @red;
+  }
+
+  .account {
+    background: @settingsAccountBackgroundColor;
+
+    small.connected {
+      color: green;
     }
 
-    .account {
-        background: @settingsAccountBackgroundColor;
-
-        small.connected {
-            color: green;
-        }
-
-        small.not-connected {
-            color: red;
-        }
-
-        &.active {
-            background: @lightGrey;
-            border-color:  @midGrey;
-        }
-
-        &.new {
-            background: #D7D7D7;
-        }
+    small.not-connected {
+      color: red;
     }
 
-    div.account-form-overlay {
-        background: @settingsAccountFormOverlayBackgroundColor;
-
-        div.new-account-buttons {
-            button {
-                color: @bodyTextColor;
-
-                &:hover {
-                    background: @settingsNewAccountButtonHoverBackgroundColor;
-                }
-            }
-        }
+    &.active {
+      background: @lightGrey;
+      border-color: @midGrey;
     }
+
+    &.new {
+      background: #d7d7d7;
+    }
+  }
+
+  div.account-form-overlay {
+    background: @settingsAccountFormOverlayBackgroundColor;
+
+    div.new-account-buttons {
+      button {
+        color: @bodyTextColor;
+
+        &:hover {
+          background: @settingsNewAccountButtonHoverBackgroundColor;
+        }
+      }
+    }
+  }
 }
-
 
 /*
     Contacts App */
 
 section#contacts {
-    div#contact-list {
-        border-color: @contactListBorderColor;
-    }
+  div#contact-list {
+    border-color: @contactListBorderColor;
+  }
 
-    div.contact {
-        &:hover {
-            background: @contactHoverBackgroundColor;
-        }
+  div.contact {
+    &:hover {
+      background: @contactHoverBackgroundColor;
     }
+  }
 }

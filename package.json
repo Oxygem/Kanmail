@@ -53,5 +53,9 @@
     "dev": "webpack serve --mode=development",
     "lint": "eslint --cache --ext .js,.jsx kanmail/client/",
     "lint-fix": "eslint --cache --fix --ext .js,.jsx kanmail/client/"
+  },
+  "devDependencies": {
+    "eslint-plugin-prettier": "4.2.1",
+    "prettier": "2.7.1"
   }
 }

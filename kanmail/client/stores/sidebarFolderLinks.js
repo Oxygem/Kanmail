@@ -1,27 +1,25 @@
-import { BaseStore } from 'stores/base.jsx';
-
+import { BaseStore } from "stores/base.jsx";
 
 class SidebarFolderLinkStore extends BaseStore {
-    /*
+  /*
         Per-sidebar folder link store to show unread/highlight counts.
     */
 
-    static storeKey = 'sidebarFolderLinkStore';
+  static storeKey = "sidebarFolderLinkStore";
 
-    constructor() {
-        super();
+  constructor() {
+    super();
 
-        this.props = {
-            unreadCount: 0,
-        };
-    }
+    this.props = {
+      unreadCount: 0,
+    };
+  }
 
-    setUnreadCount(count) {
-        this.props.unreadCount = count;
-        this.triggerUpdate(['unreadCount']);
-    }
+  setUnreadCount(count) {
+    this.props.unreadCount = count;
+    this.triggerUpdate(["unreadCount"]);
+  }
 }
-
 
 // Export the sidebar folder link store factory/cache
 //
@@ -29,13 +27,11 @@ class SidebarFolderLinkStore extends BaseStore {
 const sidebarFolderLinkStores = {};
 
 export function getSidebarFolderLinkStore(name) {
-    if (!sidebarFolderLinkStores[name]) {
-        console.debug(
-            `Creating new sidebar folder link store: ${name}.`,
-        );
+  if (!sidebarFolderLinkStores[name]) {
+    console.debug(`Creating new sidebar folder link store: ${name}.`);
 
-        sidebarFolderLinkStores[name] = new SidebarFolderLinkStore(name);
-    }
+    sidebarFolderLinkStores[name] = new SidebarFolderLinkStore(name);
+  }
 
-    return sidebarFolderLinkStores[name];
+  return sidebarFolderLinkStores[name];
 }
