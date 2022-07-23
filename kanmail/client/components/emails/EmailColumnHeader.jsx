@@ -7,6 +7,7 @@ import { makeDragElement } from 'window.js';
 
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
+import searchStore from 'stores/search.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnMetaStore } from 'stores/columns.js';
 
@@ -22,6 +23,7 @@ export default class EmailColumnHeaderWrapper extends React.Component {
         const WrappedEmailColumnHeader = subscribe(
             getColumnMetaStore(this.props.id),
             [filterStore, ['accountName']],
+            [searchStore, ['isSearching']],
         )(EmailColumnHeader);
 
         return <WrappedEmailColumnHeader
@@ -63,10 +65,15 @@ class EmailColumnHeader extends React.Component {
         const column = this.props.id;
 
         // If we're an alias folder - capitalize it
-        return (
+        const name = (
             _.includes(ALIAS_FOLDERS, column) ?
             capitalizeFirstLetter(column) : column
         );
+
+        if (this.props.isSearching) {
+            return `${name} Search`;
+        }
+        return name;
     }
 
     renderLoadingIcon() {

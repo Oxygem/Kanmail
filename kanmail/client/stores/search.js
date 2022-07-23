@@ -1,9 +1,10 @@
 import { BaseStore } from 'stores/base.jsx';
+import emailStoreController from 'stores/emails/controller.js';
 
 
 function makeDefaults() {
     return {
-        open: false,
+        isSearching: false,
     };
 }
 
@@ -18,19 +19,21 @@ class SearchStore extends BaseStore {
     }
 
     open = () => {
-        this.props.open = true;
+        this.props.isSearching = true;
         this.triggerUpdate();
+        emailStoreController.startSearching();
     }
 
     close = () => {
-        if (this.props.open) {
+        if (this.props.isSearching) {
             this.props = makeDefaults();
             this.triggerUpdate();
+            emailStoreController.stopSearching();
         }
     }
 
     toggle = () => {
-        if (this.props.open) {
+        if (this.props.isSearching) {
             this.close();
         } else {
             this.open();

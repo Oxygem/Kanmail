@@ -3,7 +3,7 @@ import _ from 'lodash';
 import requestStore from 'stores/request.js';
 import settingsStore from 'stores/settings.js';
 import { getColumnStore } from 'stores/columns.js';
-import { getEmailStore } from 'stores/emailStoreProxy.js';
+import { getEmailStore } from 'stores/emails/controller.js';
 
 export function moveOrCopyThread(moveData, targetFolder, setIsMovingFunction=null) {
     setIsMovingFunction = setIsMovingFunction || moveData.sourceThreadComponent.setIsMoving;

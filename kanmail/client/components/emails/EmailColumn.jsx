@@ -8,7 +8,7 @@ import EmailColumnThread from 'components/emails/EmailColumnThread.jsx';
 
 import filterStore from 'stores/filters.js';
 import settingsStore from 'stores/settings.js';
-import { getEmailStore } from 'stores/emailStoreProxy.js';
+import { getEmailStore } from 'stores/emails/controller.js';
 import { subscribe } from 'stores/base.jsx';
 import { getColumnStore, getColumnMetaStore } from 'stores/columns.js';
 

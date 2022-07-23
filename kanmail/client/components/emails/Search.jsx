@@ -5,15 +5,15 @@ import PropTypes from 'prop-types';
 import keyboard from 'keyboard.js';
 import { makeNoDragElement } from 'window.js';
 
-import emailStoreProxy from 'stores/emailStoreProxy.js';
+import emailStoreController from 'stores/emails/controller.js';
 import searchStore from 'stores/search.js';
 import { subscribe } from 'stores/base.jsx';
 
 
-@subscribe([searchStore, ['open']])
+@subscribe([searchStore, ['isSearching']])
 export default class Search extends React.Component {
     static propTypes = {
-        open: PropTypes.bool.isRequired,
+        isSearching: PropTypes.bool.isRequired,
     }
 
     constructor(props) {
@@ -24,18 +24,18 @@ export default class Search extends React.Component {
         };
 
         this.executeSearch = _.debounce(
-            this.executeSearch,
+            this._executeSearch,
             500,
         );
     }
 
     componentDidUpdate(prevProps) {
-        if (!prevProps.open && this.props.open) {
+        if (!prevProps.isSearching && this.props.isSearching) {
             keyboard.disable();
             this.input.focus();
         }
 
-        if (prevProps.open && !this.props.open) {
+        if (prevProps.isSearching && !this.props.isSearching) {
             this.input.blur();
             keyboard.enable();
         }
@@ -43,11 +43,9 @@ export default class Search extends React.Component {
         this.executeSearch();
     }
 
-    executeSearch = () => {
+    _executeSearch = () => {
         if (this.state.searchValue) {
-            emailStoreProxy.search(this.state.searchValue);
-        } else {
-            emailStoreProxy.stopSearching();
+            emailStoreController.search(this.state.searchValue);
         }
     }
 
@@ -61,22 +59,17 @@ export default class Search extends React.Component {
 
     render() {
         return (
-            <div id="search" className={this.props.open ? 'open' : ''}>
+            <div id="search" className={this.props.isSearching ? 'open' : ''}>
                 <input
                     type="text"
                     value={this.searchValue}
                     onChange={this.handleInputChange}
-                    onBlur={(ev) => {
-                        if (ev.target.value.length === 0) {
-                            searchStore.close();
-                        }
-                    }}
                     placeholder="Search..."
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck="false"
-                    disabled={!this.props.open}
+                    disabled={!this.props.isSearching}
                     ref={(input) => {
                         this.input = input;
                         makeNoDragElement(input);

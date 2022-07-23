@@ -5,7 +5,7 @@ import mainEmailStore from 'stores/emails/main.js';
 import searchEmailStore from 'stores/emails/search.js';
 
 
-class EmailStoreProxy {
+class EmailStoreController {
     /*
         A hacky wrapper around the "main" (normal, date based) and search email
         stores. We keep them separate such that we essentially switch between
@@ -34,10 +34,6 @@ class EmailStoreProxy {
     search(searchValue) {
         searchEmailStore.setSearchValue(searchValue);
 
-        // Set the mode and (re)process everything
-        this.setActiveStore(searchEmailStore);
-        searchEmailStore.processEmailChanges({forceUpdate: true});
-
         // Kick off the search requests for columns first
         const requests = _.map(settingsStore.props.columns, folderName => (
             searchEmailStore.getFolderEmails(folderName, {query: {reset: true}})
@@ -47,6 +43,11 @@ class EmailStoreProxy {
         Promise.all(requests).then(_.each(['inbox', 'archive'], folderName =>(
             searchEmailStore.getFolderEmails(folderName, {query: {reset: true}})
         )));
+    }
+
+    startSearching() {
+        this.setActiveStore(searchEmailStore);
+        searchEmailStore.processEmailChanges({forceUpdate: true});
     }
 
     stopSearching() {
@@ -63,10 +64,10 @@ class EmailStoreProxy {
 }
 
 
-const emailStoreProxy = new EmailStoreProxy(mainEmailStore, searchEmailStore);
-export default emailStoreProxy;
+const emailStoreController = new EmailStoreController(mainEmailStore, searchEmailStore);
+export default emailStoreController;
 
 
 export function getEmailStore() {
-    return emailStoreProxy.getCurrentEmailStore();
+    return emailStoreController.getCurrentEmailStore();
 }

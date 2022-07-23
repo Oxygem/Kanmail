@@ -185,7 +185,7 @@ class Keyboard {
         console.debug('Handling key shortcut', key);
 
         if (this.disabled) {
-            if (searchStore.props.open && key === keys.ESCAPE) {
+            if (searchStore.props.isSearching && key === keys.ESCAPE) {
                 searchStore.close();
                 return;
             }

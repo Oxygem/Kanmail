@@ -15,7 +15,7 @@ import requestStore from 'stores/request.js';
 import threadStore from 'stores/thread.js';
 import settingsStore from 'stores/settings.js';
 import folderStore from 'stores/folders.js';
-import { getEmailStore } from 'stores/emailStoreProxy.js';
+import { getEmailStore } from 'stores/emails/controller.js';
 import { getColumnStore } from 'stores/columns.js';
 import mainEmailStore from 'stores/emails/main.js';
 
