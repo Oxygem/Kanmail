@@ -71,7 +71,7 @@ export default class Sidebar extends React.Component {
                 <footer>
                     <a onClick={openLicense}>
                         {window.KANMAIL_LICENSED ? 'Licensed': 'Unlicensed'}
-                    </a> &middot; Beta<br />
+                    </a><br />
 
                     <a onClick={openMeta}>
                         Kanmail v{window.KANMAIL_VERSION}
