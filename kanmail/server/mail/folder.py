@@ -57,13 +57,12 @@ class Folder(object):
         self.seen_email_uids = set()
 
         try:
-            if self.check_exists():
-                self.get_and_set_email_uids()
+            # This will use any cached UID values, so either the folder exists
+            # or used to exist at some point in the past.
+            self.get_and_set_email_uids()
+            self.exists = True
         except (ImapConnectionError, IMAPClientError):
-            cached_uids = self.get_cached_uids()
-            if cached_uids:
-                self.exists = True
-                self.email_uids = cached_uids
+            self.exists = False
 
     def __str__(self):
         return f"Folder({self.account.name}/{self.name})"
@@ -377,9 +376,8 @@ class Folder(object):
         """
 
         # If we don't exist, try again or we have nothing
-        if not self.exists:
-            if not self.check_exists():
-                return [], [], []
+        if not self.exists and not self.check_exists():
+            return [], [], []
 
         message_uids = self.get_email_uids(use_cache=False)
 
