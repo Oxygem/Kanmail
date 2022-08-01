@@ -1,3 +1,37 @@
+# v1.2208011017
+
+Thing release fixes a bunch of issues with search, which should now function
+as expected.
+
+Also included are unread counts on the sidebar, and on MacOS the an initial
+implementation of notifications for new emails and badge counts.
+
+Changes:
+- Fix JSON in HTML attributes
+- Display search match counts in sidebar folder links
+- Remove redundant assignment
+- Setup prettier with eslint
+- Git blame ignore prettier commit
+- Install & run prettier on all JS(X)
+- Use cache to indicate if a folder exists, or used to exist, on start
+- Style fixes for search mode & sidebar
+- Refactor handling of email store search mode/control
+- Remove beta text in sidebar
+- Use bundled certifi CA file for SSL IMAP & SMTP connections
+- Misc cleanup & logging improvements
+- Send notifications for newly synced inbox emails
+- Show unread badge & inbox sidebar link counts
+- Add notification API & implement MacOS notifications
+- Add debug log at the end of route handling
+- Use sentinel object to detect missing values
+- Cleanup old requirements code
+- Add `.git-blame-ignore-revs` file
+- Use poetry for Python dependency management
+- Run black & isort
+- Move window file into module
+- Use common prefix for window management endpoints
+- Update MacOS dev requirements
+
 # v1.2206171827
 
 Changes:
