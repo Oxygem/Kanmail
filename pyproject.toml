@@ -16,6 +16,8 @@ authors = ["Oxygem <hello@oxygem.com>"]
 license = "Kanmail EULA"
 
 [tool.poetry.dependencies]
+python = ">=3.8,<3.10"
+
 pywebview = "3.6.3"
 PyUpdater = "4.0.0"
 pyinstaller = "4.10"
