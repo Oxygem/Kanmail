@@ -1,11 +1,7 @@
 from os import path, unlink
 from shutil import rmtree
-from subprocess import CalledProcessError
-from time import sleep
 
-import click
-
-from .settings import CODESIGN_KEY_NAME, NOTARIZE_PASSWORD_KEYCHAIN_NAME, NOTARIZE_TEAM_ID
+from .settings import CODESIGN_KEY_NAME, NOTARIZE_PASSWORD_KEYCHAIN_NAME
 from .util import print_and_check_output, print_and_run
 
 
@@ -23,35 +19,9 @@ def codesign(app_dir):
             "--sign",
             CODESIGN_KEY_NAME,
             app_dir,
-        )
+        ),
     )
     print_and_run(("codesign", "--deep", "--verify", app_dir))
-
-
-def wait_for_notarization(notarize_request_id):
-    sleep(15)
-
-    while True:
-        try:
-            notarize_status = print_and_check_output(
-                (
-                    "xcrun",
-                    "altool",
-                    "--password",
-                    f"@keychain:{NOTARIZE_PASSWORD_KEYCHAIN_NAME}",
-                    "--notarization-info",
-                    notarize_request_id,
-                )
-            )
-
-            if "Status: in progress" not in notarize_status:
-                break
-        except CalledProcessError as e:
-            click.echo("Error running notarize info command:")
-            click.echo(click.style(e.output, "red"))
-
-        sleep(15)
-    return "Status: success" in notarize_status
 
 
 def notarize(version, app_dir, zip_filename):
@@ -61,26 +31,17 @@ def notarize(version, app_dir, zip_filename):
         notarize_response = print_and_check_output(
             (
                 "xcrun",
-                "altool",
-                "--notarize-app",
-                "--primary-bundle-id",
-                version,
-                "--password",
-                f"@keychain:{NOTARIZE_PASSWORD_KEYCHAIN_NAME}",
-                "--team-id",
-                NOTARIZE_TEAM_ID,
-                "--file",
+                "notarytool",
+                "submit",
                 zip_filename,
-            )
+                "--keychain-profile",
+                NOTARIZE_PASSWORD_KEYCHAIN_NAME,
+                "--wait",
+            ),
         )
 
-        for line in notarize_response.splitlines():
-            if line.startswith("RequestUUID"):
-                notarize_request_id = line.split("=")[1].strip()
-
-        did_succeed = wait_for_notarization(notarize_request_id)
-        if not did_succeed:
-            raise Exception(f"Failed to notarize app, requestID={notarize_request_id}")
+        if "status: Accepted" not in notarize_response:
+            raise Exception("Failed to notarize app")
 
         print_and_run(("xcrun", "stapler", "staple", app_dir))
         print_and_run(("xcrun", "stapler", "validate", app_dir))
