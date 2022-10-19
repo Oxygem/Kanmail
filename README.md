@@ -106,7 +106,7 @@ Version numbers are generated at build in the date-based format: `MAJOR.YYMMDDhh
 
 ## Building
 
-Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable/usage.html#platform-specific-notes), for maximum compatability Kanmail is ideally built on the _oldest_ systems available. MacOS + Linux builds are forward, but not backward, compatible.
+Per the [pyinstaller documentation](https://pyinstaller.readthedocs.io/en/stable/usage.html#platform-specific-notes), for maximum compatibility Kanmail is ideally built on the _oldest_ systems available. MacOS + Linux builds are forward, but not backward, compatible.
 
 Kanmail is currently built on:
 
