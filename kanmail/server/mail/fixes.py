@@ -27,7 +27,7 @@ def fix_missing_uids(expected_uid_count, uids):
         lowest_uid = min(uids)
 
         for i in range(diff):
-            uids.append(lowest_uid - (i + 1))
+            uids.add(lowest_uid - (i + 1))
 
         logger.warning(
             f"Corrected {uid_count} missing UIDs {expected_uid_count} -> {uids}",
