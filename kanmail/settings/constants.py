@@ -12,7 +12,10 @@ DEFAULT_WINDOW_HEIGHT = 800
 DEFAULT_WINDOW_LEFT = 0
 DEFAULT_WINDOW_TOP = 0
 
-SESSION_TOKEN = str(uuid4())
+if environ.get("KANMAIL_SESSION_TOKEN", "on") == "off":
+    SESSION_TOKEN = None
+else:
+    SESSION_TOKEN = str(uuid4())
 
 ALIAS_FOLDER_NAMES = ["inbox", "sent", "archive", "drafts", "trash", "spam"]
 

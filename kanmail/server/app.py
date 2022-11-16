@@ -94,13 +94,14 @@ server = ServerWithGetPort((SERVER_HOST, SERVER_PORT), app)
 def add_route(*route_args, **route_kwargs):
     def wrapper(func):
         def inner(*args, **kwargs):
-            # Accept as header (preferred) and query string (images)
-            session_token = request.headers.get(
-                "Kanmail-Session-Token",
-                request.args.get("Kanmail-Session-Token"),
-            )
-            if session_token != SESSION_TOKEN:
-                abort(401, "Invalid session token provided!")
+            if SESSION_TOKEN is not None:
+                # Accept as header (preferred) and query string (images)
+                session_token = request.headers.get(
+                    "Kanmail-Session-Token",
+                    request.args.get("Kanmail-Session-Token"),
+                )
+                if session_token != SESSION_TOKEN:
+                    abort(401, "Invalid session token provided!")
 
             response = func(*args, **kwargs)
             logger.debug("Completed route handler %s", func.__name__)
