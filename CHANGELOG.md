@@ -1,3 +1,20 @@
+# v1.2211160838
+
+Small batch of bugfixes.
+
+Changes:
+- Fetch whole body rather than just 1024 bytes for excerpt
+- Don't assume we have a part when parsing bodystructure
+- Don't fail when bodystructure missing from email response
+- Fix call to UID set during missing fix
+- Don't throw sentry errors for not found accounts
+- Don't fail when removing an already removed oauth req
+- Allow disabling session token via env var
+- Fix typo
+- Use new notarytool for MacOS codesigning
+- Docker fixes
+- Update poetry lock
+
 # v1.2208011017
 
 Thing release fixes a bunch of issues with search, which should now function
