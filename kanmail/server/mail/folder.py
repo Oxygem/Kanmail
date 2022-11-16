@@ -235,7 +235,10 @@ class Folder(object):
         contacts_to_save = set()
 
         for uid, data in email_headers.items():
-            parts = parse_bodystructure(data[b"BODYSTRUCTURE"])
+            parts = {}
+            bodystructure = data.get(b"BODYSTRUCTURE")
+            if bodystructure:
+                parts = parse_bodystructure(bodystructure)
             headers = make_email_headers(self.account, self, uid, data, parts)
             emails[uid] = headers
             uid_to_headers[uid] = headers
