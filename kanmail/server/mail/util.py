@@ -374,7 +374,7 @@ def parse_bodystructure(bodystructure):
         if number == "attachments":
             continue
 
-        if part["type"].upper() == "TEXT":
+        if part["type"] and part["type"].upper() == "TEXT":
             subtype = part["subtype"].upper()
 
             if "html" not in items and subtype == "HTML":
