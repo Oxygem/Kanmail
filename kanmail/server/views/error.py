@@ -5,6 +5,7 @@ from werkzeug.exceptions import HTTPException
 
 from kanmail.log import logger
 from kanmail.server.app import app
+from kanmail.server.mail import AccountNotFoundError
 from kanmail.server.mail.connection import ConnectionSettingsError, ImapConnectionError
 
 
@@ -36,6 +37,21 @@ def error_connection_exception(e) -> Response:
             error_message=message,
         ),
         400,
+    )
+
+
+@app.errorhandler(AccountNotFoundError)
+def error_account_not_found(e) -> Response:
+    error_name = e.__class__.__name__
+    message = f"{e}"
+    logger.warning(message)
+    return make_response(
+        jsonify(
+            status_code=404,
+            error_name=error_name,
+            error_message=message,
+        ),
+        404,
     )
 
 

@@ -13,6 +13,10 @@ ACCOUNTS = {}
 GET_ACCOUNTS_LOCK = Lock()
 
 
+class AccountNotFoundError(KeyError):
+    pass
+
+
 def connect_all():
     def make_account(key, settings):
         return key, Account(key, settings)
@@ -37,7 +41,10 @@ def get_accounts():
 
 def get_account(key):
     connect_all()
-    return ACCOUNTS[key]
+    try:
+        return ACCOUNTS[key]
+    except KeyError:
+        raise AccountNotFoundError(f"Account with key `{key}` not found")
 
 
 def reset_accounts():
