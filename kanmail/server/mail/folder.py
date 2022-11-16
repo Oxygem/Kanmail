@@ -222,7 +222,7 @@ class Folder(object):
                     "RFC822.SIZE",
                     "BODYSTRUCTURE",
                     # Best-effort excerpt
-                    "BODY.PEEK[1]<0.1024>",
+                    "BODY.PEEK[1]",
                     # References header for threading
                     # TODO: remove the peek from here?
                     "BODY.PEEK[HEADER.FIELDS (REFERENCES CONTENT-TRANSFER-ENCODING)]",
