@@ -3,6 +3,8 @@
     Kanmail
 </h1>
 
+> Hey there 👋, I'm Nick and I build & maintain Kanmail. Life is very busy these days with a (very) young family so Kanmail development tends to be inconsistent. I still use Kanmail every day and will continue to fix bugs, improve performance and build features. 
+
 An email client that functions like a kanban board, for Mac/Windows/Docker. [**Download the latest release here**](https://kanmail.io/download).
 
 ![](./screenshot.png)
@@ -14,6 +16,12 @@ An email client that functions like a kanban board, for Mac/Windows/Docker. [**D
 
 The rest of this readme focuses on the technical details of Kanmail. For user documentation [**see the Kanmail website**](https://kanmail.io/docs).
 
+## License
+
+Before continuing it is important to note that Kanmail is **source available but not free**. Kanmail is available for free download for evaluation; for continued use of Kanmail a [**license should be purchased**](https://kanmail.io/license).
+
+We welcome pull requests, but note you will be contributing to a non-free project. You will be required to sign [the Oxygem CLA](https://gist.github.com/Fizzadar/6093499cccdcac7a4d83698516f9cafa) before any contributions can be merged. We offer free license keys to contributors, please email [hello@oxygem.com](mailto:hello@oxygem.com) for more information.
+
 + [License](#license)
 + [Development](#development)
     * [Setup your system](#setup-your-system)
@@ -24,12 +32,6 @@ The rest of this readme focuses on the technical details of Kanmail. For user do
     * [Doing a build](#doing-a-build)
 + [Syncing](#syncing)
 + [User Interface](#user-interface)
-
-## License
-
-Before continuing it is important to note that Kanmail is **source available but not free**. Kanmail is available for free download for evaluation; for continued use of Kanmail a [**license should be purchased**](https://kanmail.io/license).
-
-We welcome pull requests, but note you will be contributing to a non-free project. You will be required to sign [the Oxygem CLA](https://gist.github.com/Fizzadar/6093499cccdcac7a4d83698516f9cafa) before any contributions can be merged. We offer free license keys to contributors, please email [hello@oxygem.com](mailto:hello@oxygem.com) for more information.
 
 ## Development
 
