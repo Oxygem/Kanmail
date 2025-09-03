@@ -177,19 +177,7 @@ export default requestStore;
 // Pass global JS errors to the requestStore
 window.onerror = (message, source, lineno, colno, e) => {
   requestStore.addError("JS error", e);
-  // const name = e ? e.name : "Unknown";
-  // const errorMessage = e ? e.message : message;
-  // const traceback = e ? e.stack : null;
-
-  // requestStore.addError({
-  //   errorName: `JS error: ${name}`,
-  //   errorMessage: errorMessage,
-  //   json: {
-  //     traceback: traceback,
-  //   },
-  // });
-
-  // return false;
+  return false;
 };
 
 window.onunhandledrejection = (ev) => {

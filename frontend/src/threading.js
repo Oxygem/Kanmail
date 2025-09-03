@@ -330,7 +330,7 @@ export function messageThreader() {
           // The matching container is not a reply but the working is
         } else if (
           !isReplyOrForward(c.message.subject) &&
-          isReplyOrForward(container.message.subject)
+          (container.message && isReplyOrForward(container.message.subject))
         ) {
           c.addChild(container);
 
