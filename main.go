@@ -51,11 +51,15 @@ func main() {
 		if len(ps) != 2 {
 			panic(fmt.Errorf("invalid version string"))
 		}
-		v, err := strconv.Atoi(ps[1])
-		if err != nil {
-			panic(fmt.Errorf("invalid version string: %w", err))
+		if ps[1] == "x" {
+			version = 0
+		} else {
+			v, err := strconv.Atoi(ps[1])
+			if err != nil {
+				panic(fmt.Errorf("invalid version string: %w", err))
+			}
+			version = v
 		}
-		version = v
 	}
 
 	kanmail := internal.NewKanmailApp(assets, log, version)

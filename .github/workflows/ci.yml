@@ -1,0 +1,130 @@
+name: Kanmail v2 CI
+
+on:
+  push:
+    tags: 2.*
+
+jobs:
+  test:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - run: go mod tidy
+      - run: go test -v ./internal/...
+
+  build-linux-windows-amd64:
+    runs-on: blacksmith-4vcpu-ubuntu-2204
+    needs:
+      - test
+    env:
+      PRODUCTION: "true"
+      KANMAIL_APP_VERSION: ${{ github.ref_name }}
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev mingw-w64
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
+      - name: Write secrets_production.go
+        run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
+      - name: Build linux/amd64
+        run: wails3 task linux:build
+      - name: Build windows/amd64
+        run: wails3 task windows:build
+        env:
+          CC: x86_64-w64-mingw32-gcc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kanmail-windows-amd64.exe
+          path: bin/Kanmail.exe
+          if-no-files-found: error
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kanmail-linux-amd64
+          path: bin/Kanmail
+          if-no-files-found: error
+          retention-days: 1
+
+  build-linux-arm:
+    runs-on: blacksmith-4vcpu-ubuntu-2204-arm
+    needs:
+      - test
+    env:
+      PRODUCTION: "true"
+      KANMAIL_APP_VERSION: ${{ github.ref_name }}
+    steps:
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
+      - name: Write secrets_production.go
+        run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
+      - name: Build linux/amd64
+        run: wails3 task linux:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kanmail-linux-arm64
+          path: bin/Kanmail
+          if-no-files-found: error
+          retention-days: 1
+
+  build-macos:
+    runs-on: macos-13
+    needs:
+      - test
+    env:
+      PRODUCTION: "true"
+      KANMAIL_APP_VERSION: ${{ github.ref_name }}
+    steps:
+      - name: macOS/Import Apple Developer Certificate
+        run: |
+          echo ${{ secrets.MACOS_SIGNING_CERTIFICATE_BASE64 }} | base64 --decode > signing-certificate.p12
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          security import signing-certificate.p12 -k build.keychain -P "" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - run: go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
+      - name: Write secrets_production.go
+        run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
+      - name: Build darwin/universal
+        run: |
+          echo ${{ secrets.MACOS_NOTARIZATION_KEY_BASE64 }} | base64 --decode > $MACOS_NOTARIZATION_KEY_PATH
+          wails3 task package
+        env:
+          MACOS_SIGNING_KEY_ID: ${{ secrets.MACOS_SIGNING_KEY_ID }}
+          MACOS_NOTARIZATION_KEY_PATH: notarization-certificate.p12
+          MACOS_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
+          MACOS_NOTARIZATION_ISSUER: ${{ secrets.MACOS_NOTARIZATION_ISSUER }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kanmail-macos-universal.app
+          path: bin/Kanmail.app
+          if-no-files-found: error
+          retention-days: 1
+
+  tests-done:
+    if: ${{ always() }}
+    needs:
+      - test
+      - build-linux-windows-amd64
+      - build-linux-arm
+      - build-macos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: matrix-org/done-action@v3
+        with:
+          needs: ${{ toJSON(needs) }}

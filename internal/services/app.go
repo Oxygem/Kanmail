@@ -452,7 +452,8 @@ func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
 
 	val, err := keyring.Get(appDirName, a.getKeyringLicenseUser())
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
-		panic(err)
+		zerolog.Ctx(ctx).Err(err).Msg("Get license from keyring failed")
+		return false
 	} else if val == "" {
 		return false
 	}
