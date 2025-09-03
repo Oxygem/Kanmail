@@ -1,0 +1,51 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build:dev": "vite build --minify false --mode development",
+    "build": "vite build --mode production",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "@babel/plugin-proposal-decorators": "^7.25.9",
+    "@sentry/react": "6.x",
+    "@tiptap/extension-document": "^3.0.5",
+    "@tiptap/extension-image": "^3.0.7",
+    "@tiptap/extension-paragraph": "^3.0.5",
+    "@tiptap/extension-table": "^3.0.7",
+    "@tiptap/extension-text": "3.x",
+    "@tiptap/react": "^3.0.6",
+    "@tiptap/starter-kit": "^3.0.6",
+    "@types/lodash": "^4.17.15",
+    "dompurify": "^3.2.6",
+    "immutability-helper": "2.x",
+    "immutable": "3.x",
+    "less": "3.x",
+    "lodash": "4.x",
+    "moment": "2.x",
+    "prettier": "2.7.1",
+    "prop-types": "15.x",
+    "randomcolor": "0.x",
+    "react": "^17.0.2",
+    "react-dnd": "2.x",
+    "react-dnd-html5-backend": "2.x",
+    "react-dom": "^17.0.2",
+    "react-select": "^5.10.2",
+    "squire-rte": "^2.3.3",
+    "terser-webpack-plugin": "4.x",
+    "urijs": "1.x",
+    "whatwg-fetch": "2.x"
+  },
+  "devDependencies": {
+    "@types/react": "^16.14.62",
+    "@types/react-dom": "^16.9.25",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.3",
+    "vite": "^5.0.0",
+    "vite-plugin-checker": "^0.8.0"
+  }
+}

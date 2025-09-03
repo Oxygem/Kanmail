@@ -1,0 +1,91 @@
+version: '3'
+
+includes:
+  common: ../Taskfile.yml
+
+tasks:
+  build:
+    summary: Creates a production build of the application
+    deps:
+      - task: common:generate:icons
+      - task: common:go:mod:tidy
+      - task: common:build:frontend
+        vars:
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"
+    vars:
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="-X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{end}}'
+      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
+      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+    env:
+      GOOS: darwin
+      CGO_ENABLED: 1
+      GOARCH: '{{.ARCH | default ARCH}}'
+      CGO_CFLAGS: "-mmacosx-version-min=10.15"
+      CGO_LDFLAGS: "-mmacosx-version-min=10.15"
+      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      PRODUCTION: '{{.PRODUCTION | default "false"}}'
+
+  build:universal:
+    summary: Builds darwin universal binary (arm64 + amd64)
+    deps:
+      - task: build
+        vars:
+          ARCH: amd64
+          OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-amd64"
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
+      - task: build
+        vars:
+          ARCH: arm64
+          OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
+    cmds:
+      - lipo -create -output "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+      - rm "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+
+  package:nosign:
+    summary: Packages a universal production build of the application into a `.app` bundle
+    deps:
+      - task: build:universal
+        vars:
+          PRODUCTION: "true"
+    cmds:
+      - task: create:app:bundle
+
+  package:
+    summary: Packages a universal production build of the application into a `.app` bundle
+    deps:
+      - task: build:universal
+        vars:
+          PRODUCTION: "true"
+    cmds:
+      - task: create:app:bundle
+      - task: create:app:codesign
+      - task: create:app:notarize
+
+  create:app:bundle:
+    summary: Creates an `.app` bundle
+    cmds:
+      - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/{MacOS,Resources}
+      - cp build/darwin/icons.icns {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources
+      - cp {{.BIN_DIR}}/{{.APP_NAME}} {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS
+      - cp build/darwin/Info.plist {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents
+
+  create:app:codesign:
+    summary: Codesigns the `.app` bundle
+    cmds:
+      -  codesign --deep --timestamp --options runtime --sign $MACOS_SIGNING_KEY_ID {{.BIN_DIR}}/{{.APP_NAME}}.app --keychain build.keychain
+      -  codesign --deep --verify {{.BIN_DIR}}/{{.APP_NAME}}.app
+
+  create:app:notarize:
+    summary: Notarizes the `.app` bundle
+    cmds:
+      - ditto -c -k --keepParent {{.BIN_DIR}}/{{.APP_NAME}}.app {{.BIN_DIR}}/{{.APP_NAME}}.app.zip
+      - xcrun notarytool submit {{.BIN_DIR}}/{{.APP_NAME}}.app.zip --wait --key-id $MACOS_NOTARIZATION_KEY_ID --key $MACOS_NOTARIZATION_KEY_PATH  --issuer $MACOS_NOTARIZATION_ISSUER
+      - xcrun stapler staple {{.BIN_DIR}}/{{.APP_NAME}}.app
+      - xcrun stapler validate {{.BIN_DIR}}/{{.APP_NAME}}.app
+
+  run:
+    cmds:
+      - "'{{.BIN_DIR}}/{{.APP_NAME}}'"

@@ -1,0 +1,19 @@
+{
+    "exclude": ["node_modules"],
+    "compilerOptions": {
+        "lib": [
+            "ES5",
+            "ES2015",
+            "ES2016",
+            "ES2021",
+            "DOM"
+        ],
+        "jsx": "preserve",
+        "allowImportingTsExtensions": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "strictNullChecks": true,
+        "module": "nodenext",
+        "moduleResolution": "nodenext"
+    }
+}

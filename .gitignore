@@ -1,12 +1,15 @@
-*.pyc
 *.log
-.python-version
+.envrc
 
-node_modules
+.task/
+bin/
 
-# Build stuff
-build/
-dist/
-pyu-data/
-.pyupdater/
-.mypy_cache/
+frontend/dist/
+frontend/wails/
+frontend/bindings/
+frontend/node_modules/
+
+build/darwin/icons.icns
+build/windows/icons.ico
+
+internal/constants/secrets_production.go

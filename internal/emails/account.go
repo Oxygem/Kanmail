@@ -1,0 +1,362 @@
+package emails
+
+import (
+	"context"
+	"fmt"
+	"sync"
+	"time"
+
+	"github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-smtp"
+	"github.com/rs/zerolog"
+
+	"github.com/oxygem/kanmail/internal/caches"
+	"github.com/oxygem/kanmail/internal/emails/imapinterface"
+	"github.com/oxygem/kanmail/internal/types"
+)
+
+type Account struct {
+	types.AccountSettings
+
+	caches *caches.Caches
+
+	imap *IMAPConnectionPool
+	smtp *SMTPConnectionPool
+
+	foldersLock sync.Mutex
+	folders     map[types.FolderName]*Folder
+}
+
+func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
+	imapOptions := ConnectionPoolOptions{
+		Connections:           2,
+		PriorityConnections:   2,
+		BackgroundConnections: 1,
+	}
+	smtpOptions := ConnectionPoolOptions{
+		Connections: 2,
+	}
+
+	return &Account{
+		AccountSettings: accountSettings,
+		caches:          caches,
+		imap:            NewIMAPConnectionPool(imapOptions, accountSettings.IMAPSettings),
+		smtp:            NewSMTPConnectionPool(smtpOptions, accountSettings.SMTPSettings),
+		folders:         make(map[types.FolderName]*Folder),
+	}
+}
+
+func (a *Account) CloseConnections(ctx context.Context) {
+	a.imap.CloseConnections(ctx)
+}
+
+func (a *Account) GetFolder(name types.FolderName) *Folder {
+	a.foldersLock.Lock()
+	defer a.foldersLock.Unlock()
+
+	if name == "" {
+		panic("folder must have a name")
+	}
+
+	aliasName := name
+
+	// Apply name mappings
+	// TODO: make this less rubbish, same as below
+	if name == "inbox" && a.Folders.Inbox != "" {
+		aliasName = name
+		name = a.Folders.Inbox
+	} else if name == "flagged" && a.Folders.Flagged != "" {
+		aliasName = name
+		name = a.Folders.Flagged
+	} else if name == "important" && a.Folders.Important != "" {
+		aliasName = name
+		name = a.Folders.Important
+	} else if name == "sent" && a.Folders.Sent != "" {
+		aliasName = name
+		name = a.Folders.Sent
+	} else if name == "drafts" && a.Folders.Drafts != "" {
+		aliasName = name
+		name = a.Folders.Drafts
+	} else if name == "archive" && a.Folders.Archive != "" {
+		aliasName = name
+		name = a.Folders.Archive
+	} else if name == "trash" && a.Folders.Trash != "" {
+		aliasName = name
+		name = a.Folders.Trash
+	} else if name == "junk" && a.Folders.Junk != "" {
+		aliasName = name
+		name = a.Folders.Junk
+	}
+
+	if f, ok := a.folders[name]; ok {
+		return f
+	} else {
+		a.folders[name] = NewFolder(a, name, aliasName)
+		return a.folders[name]
+	}
+}
+
+func (a *Account) TestSMTPConnection(ctx context.Context) error {
+	return a.smtp.WithConnection(ctx, func(conn *smtp.Client) error {
+		return conn.Noop()
+	})
+}
+
+func (a *Account) FetchCapabilities(ctx context.Context) (caps imap.CapSet, err error) {
+	err = a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+		caps = conn.Caps()
+		return nil
+	})
+	return
+}
+
+func (a *Account) FetchNamespace(ctx context.Context) (data *imap.NamespaceData, err error) {
+	err = a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+		data, err = conn.Namespace().Wait()
+		return err
+	})
+	return
+}
+
+func (a *Account) FetchMailboxList(ctx context.Context) (data []*imap.ListData, err error) {
+	err = a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+		data, err = conn.List("", "%", nil).Collect()
+		return err
+	})
+	return
+}
+
+func (a *Account) FetchFolderNames(ctx context.Context) ([]types.FolderName, error) {
+	list, err := a.FetchMailboxList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var folders []types.FolderName
+	for _, i := range list {
+		folders = append(folders, types.FolderName(i.Mailbox))
+	}
+	return folders, err
+}
+
+func (a *Account) FetchAndUpdateSettings(ctx context.Context) error {
+	return a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+		// Fetch any namespace information
+		caps := conn.Caps()
+		if caps.Has(imap.CapNamespace) {
+			namespace, err := conn.Namespace().Wait()
+			if err != nil {
+				return fmt.Errorf("failed to fetch IMAP namespace: %w", err)
+			} else if len(namespace.Personal) > 0 {
+				a.Settings.FolderPrefix = namespace.Personal[0].Prefix
+				a.Settings.FolderSeparator = string(namespace.Personal[0].Delim)
+			}
+		}
+		if a.Settings.FolderSeparator == "" {
+			a.Settings.FolderSeparator = "/"
+		}
+
+		// Now find the special folder mappings
+		// TODO: fallback to mailbox names
+		// TODO: handle duplicate attributes (use first?)
+		var getMailboxes func(string) error
+		getMailboxes = func(folder string) error {
+			if folder != "" {
+				folder = folder + "/"
+			}
+			mailboxes, err := conn.List(folder, "%", &imap.ListOptions{
+				ReturnChildren: true,
+			}).Collect()
+			if err != nil {
+				return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", folder, err)
+			}
+			zerolog.Ctx(ctx).Debug().
+				Str("folder", folder).
+				Any("mailboxes", mailboxes).
+				Msg("Listed mailboxes")
+
+			for _, mailbox := range mailboxes {
+				for _, attr := range mailbox.Attrs {
+					if attr == imap.MailboxAttrHasChildren && mailbox.Mailbox != folder {
+						if err := getMailboxes(mailbox.Mailbox); err != nil {
+							return err
+						}
+					}
+				}
+				setFolderForMailbox(ctx, &a.Folders, folder, mailbox)
+			}
+
+			return nil
+		}
+
+		getMailboxes(a.Settings.FolderPrefix)
+
+		// Gmail is the only provider (known at this time) that automatically saves emails sent via SMTP
+		// to the sent folder, so otherwise we append them via IMAP on send.
+		if a.IMAPSettings.Host != "imap.gmail.com" {
+			a.Settings.SaveSentCopies = true
+		}
+
+		return nil
+	})
+}
+
+func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*types.Email, error) {
+	emails := make([]*types.Email, 0, len(messageIDs))
+	missing := make([]string, 0, len(messageIDs))
+
+	// First lookup cached emails by messageID (id -> []Email)
+	cached, err := a.caches.FolderEmailCache.GetByMessageIDs(ctx, a.Name, messageIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: check cached ones still exist (grab flags?)
+	// FIXME NO not much point?
+
+	for _, msgid := range messageIDs {
+		if ems, ok := cached[msgid]; ok {
+			// Add all matched emails (same messageID might exist in multiple folders)
+			emails = append(emails, ems...)
+		} else {
+			// Is there EVER a benefit to looking up messageIDs again? (as we sync we'll populate the cached)
+			// FIXME TODO
+			lastLookupAt, err := a.caches.FolderEmailCache.GetLastMessageIDLookupAt(ctx, a.Name, msgid)
+			if err != nil {
+				return nil, err
+			}
+			// TODO: configurable timeout? Or never timeout, once not found it won't be unless it
+			// comes down on sync where it'll be processed. Might get lost later, can prob set to
+			// 24h -> 30d. OR MORE see above.
+			if time.Now().UTC().Sub(lastLookupAt) > time.Hour*24*90 {
+				missing = append(missing, msgid)
+			} else {
+				zerolog.Ctx(ctx).Debug().
+					Str("message_id", msgid).
+					Time("last_lookup_at", lastLookupAt).
+					Msg("Skip messageID search due to recent lookup")
+			}
+		}
+	}
+
+	// Failing that, lookup on the server in common folders
+	var fetched int
+	for _, folder := range []types.FolderName{"archive", "sent", "trash"} {
+		if len(missing) == 0 {
+			break
+		}
+		newMsg, missingNext, err := a.GetFolder(folder).SearchMessageIDs(ctx, missing)
+		if err != nil {
+			return nil, err
+		}
+		for _, v := range newMsg {
+			emails = append(emails, v)
+		}
+		fetched += len(newMsg)
+		missing = missingNext
+	}
+
+	for _, msgid := range missing {
+		if err := a.caches.FolderEmailCache.SetLastMessageIDLookupNow(ctx, a.Name, msgid); err != nil {
+			zerolog.Ctx(ctx).Err(err).Msg("Failed to set last message ID lookup")
+		}
+	}
+
+	zerolog.Ctx(ctx).Info().
+		Int("fetched", fetched).
+		Int("cached", len(cached)).
+		Int("missing", len(missing)).
+		Msg("Got emails from message IDs")
+
+	return emails, nil
+}
+
+func (a *Account) SearchReferences(ctx context.Context, references []EmailRef) ([]*types.Email, error) {
+	emails := make([]*types.Email, 0, len(references))
+
+	// First lookup cached emails by messageID (id -> []Email)
+	refStrs := make([]string, len(references))
+	for i, r := range references {
+		refStrs[i] = r.Reference
+	}
+	cached, err := a.caches.FolderEmailCache.SearchReferences(ctx, a.Name, refStrs)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ems := range cached {
+		emails = append(emails, ems...)
+	}
+
+	zerolog.Ctx(ctx).Info().
+		Int("references", len(references)).
+		Int("cached", len(cached)).
+		Msg("Got emails by reference to message IDs")
+
+	return emails, nil
+
+	// zerolog.Ctx(ctx).Debug().Any("CACHED", cached).Msg("WHAT IN THE")
+
+	// // TODO: check cached ones still exist (grab flags?)
+	// // FIXME NO not much point?
+
+	// for _, ref := range references {
+	// 	if ems, ok := cached[ref.Reference]; ok {
+	// 		emails = append(emails, ems...)
+	// 		zerolog.Ctx(ctx).Trace().
+	// 			Any("reference", ref).
+	// 			Int("emails", len(ems)).
+	// 			Msg("Got cached references")
+	// 	} else {
+	// 		// Is there EVER a benefit to looking up messageIDs again? (as we sync we'll populate the cached)
+	// 		// FIXME TODO
+	// 		lastLookupAt, err := a.caches.FolderEmailCache.GetLastReferenceLookupAt(ctx, a.Name, ref.Reference)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		// TODO: configurable timeout? Or never timeout, once not found it won't be unless it
+	// 		// comes down on sync where it'll be processed. Might get lost later, can prob set to
+	// 		// 24h -> 30d. OR MORE see above.
+	// 		if time.Now().UTC().Sub(lastLookupAt) > time.Hour*24*90 {
+	// 			missing = append(missing, ref)
+	// 		} else {
+	// 			zerolog.Ctx(ctx).Debug().
+	// 				Any("reference", ref).
+	// 				Time("last_lookup_at", lastLookupAt).
+	// 				Msg("Skip reference search due to recent lookup")
+	// 		}
+	// 	}
+	// }
+
+	// // Failing that, lookup on the server in common folders
+	// var fetched int
+	// for _, folder := range []types.FolderName{"inbox", "sent"} {
+	// 	if len(missing) == 0 {
+	// 		break
+	// 	}
+	// 	newMsg, missingNext, err := a.GetFolder(folder).SearchReferences(ctx, missing)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	for _, v := range newMsg {
+	// 		emails = append(emails, v)
+	// 	}
+	// 	fetched += len(newMsg)
+	// 	missing = missingNext
+	// }
+
+	// for _, ref := range missing {
+	// 	if err := a.caches.FolderEmailCache.SetLastReferenceLookupNow(ctx, a.Name, ref.Reference); err != nil {
+	// 		zerolog.Ctx(ctx).Err(err).Msg("Failed to set last reference lookup")
+	// 	}
+	// }
+
+	// zerolog.Ctx(ctx).Info().
+	// 	Int("references", len(references)).
+	// 	Int("cached", len(cached)).
+	// 	Int("fetched", fetched).
+	// 	Int("missing", len(missing)).
+	// 	Msg("Got emails by reference to message IDs")
+
+	// return emails, nil
+}

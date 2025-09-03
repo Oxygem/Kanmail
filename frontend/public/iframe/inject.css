@@ -1,0 +1,19 @@
+/*
+  Some very basic CSS we inject into iframes when rendering untrusted HTML. Idea is to blend into
+  the Kanmail style as close as possible.
+  Note darkreader is also injected so only need to worry about dark-on-light style.
+*/
+
+body {
+  overflow: hidden;
+  margin: 0;
+  font-size: 15px;
+  line-height: 24px;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+  color: #999B9C;
+  background: transparent;
+}
+
+p.MsoNormal {
+  margin: 0;
+}

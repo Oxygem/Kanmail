@@ -1,2 +1,0 @@
-server: python main.py
-client: yarn run dev

@@ -1,0 +1,188 @@
+/*
+    New email (send app) form */
+
+section#new-email {
+  padding-top: 40px;
+  height: 100%;
+}
+
+form#send-form {
+  padding: 10px 10px 0 10px;
+  position: absolute;
+  width: 100%;
+  top: 40px;
+  bottom: 0;
+  justify-content: flex-start;
+  margin: 0;
+
+  label {
+    // width: 55px;
+    padding-left: 10px;
+    text-align: right;
+    padding-right: 2px;
+    font-size: 14px;
+    margin-bottom: 5px;
+    margin-top: 4px;
+  }
+
+  div input {
+    padding: 2px 9px;
+    margin: 0 2px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+  }
+
+  input#subject {
+    height: 32px;
+    width: auto;
+    flex-grow: 1;
+  }
+
+  div#account,
+  div#to,
+  div#cc,
+  div#bcc {
+    flex-grow: 1;
+  }
+
+  label#message-label {
+    margin-top: 5px;
+  }
+
+  div.form-top {
+    // position: relative;
+    // z-index: 3;
+  }
+
+  div.form-content {
+    overflow: auto;
+    flex-grow: 1;
+    max-height: 100%;
+
+    div {
+      width: 100%;
+    }
+  }
+
+  div.form-attachments {
+    height: 60px;
+    overflow: hidden;
+    justify-content: flex-start;
+    padding-top: 8px;
+    &.empty {
+      height: 0;
+    }
+
+    .attachment {
+      padding: 5px;
+      margin-bottom: 10px;
+      margin-right: 10px;
+      border: 1px solid @darkestGrey;
+      border-radius: @borderRadius;
+      display: flex;
+
+      i {
+        font-size: 24px;
+        margin-right: 10px;
+        display: block;
+      }
+
+      span {
+        display: block;
+        font-size: 12px;
+        font-family: Courier;
+        line-height: 12px;
+      }
+    }
+  }
+
+  div.ProseMirror {
+    height: 100%;
+    margin-top: -10px;
+    outline: none;
+    padding: 0 10px;
+  }
+
+  blockquote#reply-quote {
+    margin: 0;
+    // max-height: 100px;
+    overflow-y: auto;
+    border: 1px solid @formBorderGrey;
+
+    * {
+      pointer-events: none;
+    }
+  }
+
+  #include-quote {
+    label {
+      width: auto;
+      padding-left: 1px;
+      position: relative;
+    }
+    input {
+      width: auto;
+    }
+  }
+
+  div.buttons {
+    left: 60px;
+    padding: 5px 10px;
+    font-size: 16px;
+    border: none;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+
+    button.send.submit {
+      border-radius: @borderRadius 0 0 @borderRadius;
+    }
+
+    button.save {
+      border-radius: 0 @borderRadius @borderRadius 0;
+    }
+
+    button.attach {
+      left: auto;
+      right: 20px;
+      bottom: 10px;
+      float: right;
+    }
+  }
+
+  div.signature,
+  div.quote {
+    margin: 13px 10px 0 10px;
+  }
+
+  div.signature {
+    margin-bottom: 10px;
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+
+.squire-editor-container {
+  .squire-editor {
+    height: 100%;
+    outline: none;
+    padding: 20px 10px 0 10px;
+  }
+
+  div.toolbar {
+    position: fixed;
+    margin-left: 10px;
+
+    button {
+      font-size: 16px;
+
+        &.active {
+          background: black;
+        }
+    }
+  }
+}
