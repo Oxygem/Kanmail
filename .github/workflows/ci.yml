@@ -109,10 +109,13 @@ jobs:
           MACOS_NOTARIZATION_KEY_PATH: notarization-certificate.p12
           MACOS_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
           MACOS_NOTARIZATION_ISSUER: ${{ secrets.MACOS_NOTARIZATION_ISSUER }}
+      - run: |
+          mkdir staging
+          mv bin/Kanmail.app staging/
       - uses: actions/upload-artifact@v4
         with:
           name: Kanmail-macos-universal.app
-          path: bin/Kanmail.app
+          path: staging/
           if-no-files-found: error
           retention-days: 1
 
