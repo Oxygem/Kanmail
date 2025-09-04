@@ -4,21 +4,6 @@
 !include "WinVer.nsh"
 !include "FileFunc.nsh"
 
-!ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "v2"
-!endif
-!ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "My Company"
-!endif
-!ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "My Product"
-!endif
-!ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.1.0"
-!endif
-!ifndef INFO_COPYRIGHT
-    !define INFO_COPYRIGHT "© now, My Company"
-!endif
 !ifndef PRODUCT_EXECUTABLE
     !define PRODUCT_EXECUTABLE "${INFO_PROJECTNAME}.exe"
 !endif
@@ -163,17 +148,17 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
             Goto ok
         ${EndIf}
      ${EndIf}
-    
+
 	SetDetailsPrint both
     DetailPrint "${WAILS_INSTALL_WEBVIEW_DETAILPRINT}"
     SetDetailsPrint listonly
-    
+
     InitPluginsDir
     CreateDirectory "$pluginsdir\webview2bootstrapper"
     SetOutPath "$pluginsdir\webview2bootstrapper"
     File "MicrosoftEdgeWebview2Setup.exe"
     ExecWait '"$pluginsdir\webview2bootstrapper\MicrosoftEdgeWebview2Setup.exe" /silent /install'
-    
+
     SetDetailsPrint both
     ok:
 !macroend
@@ -203,10 +188,10 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
 
 !macro wails.associateFiles
     ; Create file associations
-    
+
 !macroend
 
 !macro wails.unassociateFiles
     ; Delete app associations
-    
+
 !macroend

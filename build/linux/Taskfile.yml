@@ -13,7 +13,7 @@ tasks:
     cmds:
       - go build {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}"
     vars:
-      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -X main.Commit={{.GIT_COMMIT_HASH}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="-X main.Commit={{.GIT_COMMIT_HASH}}"{{end}}'
+      BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="-X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{end}}'
     env:
       GOOS: linux
       CGO_ENABLED: 1
