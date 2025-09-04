@@ -26,6 +26,7 @@ tasks:
     dir: frontend
     sources:
       - "**/*"
+      - exclude: dist/*
     generates:
       - dist/*
     deps:
@@ -66,8 +67,8 @@ tasks:
     sources:
       - "appicon.png"
     generates:
-      - "icons.icns"
-      - "icons.ico"
+      - "darwin/icons.icns"
+      - "windows/icons.ico"
     cmds:
       - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icons.ico
 
