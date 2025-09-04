@@ -67,6 +67,7 @@ tasks:
   create:app:bundle:
     summary: Creates an `.app` bundle
     cmds:
+      - sed -e s/KANMAIL_APP_VERSION/{{.KANMAIL_APP_VERSION}}/ build/darwin/Info.plist.tpl > build/darwin/Info.plist
       - mkdir -p {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/{MacOS,Resources}
       - cp build/darwin/icons.icns {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources
       - cp {{.BIN_DIR}}/{{.APP_NAME}} {{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS
