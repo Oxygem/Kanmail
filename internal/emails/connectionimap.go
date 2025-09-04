@@ -175,10 +175,17 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	}
 
 	if c.client == nil {
+		options := &imapclient.Options{}
+
+		dialFn := imapclient.DialInsecure
+		if c.conf.SSL {
+			dialFn = imapclient.DialTLS
+		} else if c.conf.StartTLS {
+			dialFn = imapclient.DialStartTLS
+		}
+
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
-		client, err := imapclient.DialTLS(addr, &imapclient.Options{
-			// DebugWriter: os.Stdout,
-		})
+		client, err := dialFn(addr, options)
 		if err != nil {
 			return nil, fmt.Errorf("failed imap dial: %w", err)
 		} else {
@@ -193,7 +200,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
 			if err := c.doOAuthLogin(ctx, client); err != nil {
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
-				client, err = imapclient.DialTLS(addr, nil)
+				client, err = dialFn(addr, options)
 				if err != nil {
 					return nil, fmt.Errorf("failed imap redial: %w", err)
 				} else {

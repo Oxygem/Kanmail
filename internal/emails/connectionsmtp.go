@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 
 	"github.com/emersion/go-sasl"
@@ -56,8 +57,18 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (*smtp.Client, error) {
 	log := zerolog.Ctx(ctx)
 
 	if c.client == nil {
+		dialFn := func(addr string, _ *tls.Config) (*smtp.Client, error) {
+			return smtp.Dial(addr)
+		}
+
+		if c.conf.SSL {
+			dialFn = smtp.DialTLS
+		} else if c.conf.StartTLS {
+			dialFn = smtp.DialStartTLS
+		}
+
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
-		client, err := smtp.DialTLS(addr, nil)
+		client, err := dialFn(addr, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed smtp dial: %w", err)
 		} else {

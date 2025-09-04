@@ -155,7 +155,7 @@ func parseAutoconf(data autoconfData) types.AccountSettings {
 		settings.SMTPSettings.Host = server.Hostname
 		settings.SMTPSettings.Port = server.Port
 		settings.SMTPSettings.SSL = server.SocketType == "SSL"
-		settings.SMTPSettings.TLS = server.SocketType == "STARTTLS"
+		settings.SMTPSettings.StartTLS = server.SocketType == "STARTTLS"
 	}
 
 	return settings

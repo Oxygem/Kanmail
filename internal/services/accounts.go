@@ -120,14 +120,12 @@ func (a *AccountsService) AutoconfigureNewAccount(
 	if err != nil {
 		return settings, err
 	}
-	a.log.Info().Any("settings", settings).Msg("Autoconfigured settings, testing login...")
-
-	// Always default these to true (user must explicitly unflag)
-	settings.IMAPSettings.SSLVerifyHostname = true
-	settings.SMTPSettings.SSLVerifyHostname = true
 
 	settings.IMAPSettings.Username = username
 	settings.SMTPSettings.Username = username
+
+	// Log settings before setting secrets
+	a.log.Info().Any("settings", settings).Msg("Autoconfigured settings, testing login...")
 
 	if options.Password != "" {
 		settings.IMAPSettings.Password = options.Password

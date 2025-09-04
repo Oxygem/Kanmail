@@ -42,9 +42,10 @@ type ConnectionSettings struct {
 	OAuthProvider     string `json:"oauthProvider,omitempty"`
 	OAuthRefreshToken string `json:"oauthRefreshToken,omitempty"`
 
-	SSL               bool `json:"ssl"`
-	SSLVerifyHostname bool `json:"sslVerifyHostname"`
-	TLS               bool `json:"tls"`
+	// SSL or implicit TLS
+	SSL bool `json:"ssl"`
+	// Start TLS
+	StartTLS bool `json:"startTls"`
 }
 
 type Signature struct {
