@@ -10,6 +10,7 @@ frontend/bindings/
 frontend/node_modules/
 
 build/darwin/icons.icns
-build/windows/icons.ico
+build/windows/icon.ico
+build/darwin/Info.plist
 
 internal/constants/secrets_production.go
