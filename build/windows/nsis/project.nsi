@@ -50,8 +50,8 @@ ManifestDPIAware true
 
 !include "MUI.nsh"
 
-!define MUI_ICON "..\icons.ico"
-!define MUI_UNICON "..\icons.ico"
+!define MUI_ICON "..\icon.ico"
+!define MUI_UNICON "..\icon.ico"
 # !define MUI_WELCOMEFINISHPAGE_BITMAP "resources\leftimage.bmp" #Include this to add a bitmap on the left side of the Welcome Page. Must be a size of 164x314
 !define MUI_FINISHPAGE_NOAUTOCLOSE # Wait on the INSTFILES page so the user can take a look into the details of the installation steps
 !define MUI_ABORTWARNING # This will warn the user if they exit from the installer.

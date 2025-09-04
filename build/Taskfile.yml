@@ -6,6 +6,8 @@ tasks:
     internal: true
     cmds:
       - go mod tidy
+    sources:
+      - go.mod
 
   install:frontend:deps:
     summary: Install frontend dependencies
@@ -68,9 +70,9 @@ tasks:
       - "appicon.png"
     generates:
       - "darwin/icons.icns"
-      - "windows/icons.ico"
+      - "windows/icon.ico"
     cmds:
-      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icons.ico
+      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename windows/icon.ico
 
   dev:frontend:
     summary: Runs the frontend in development mode
