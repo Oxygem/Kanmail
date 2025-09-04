@@ -24,7 +24,7 @@ jobs:
       PRODUCTION: "true"
       KANMAIL_APP_VERSION: ${{ github.ref_name }}
     steps:
-      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev mingw-w64
+      - run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev mingw-w64 nsis
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
@@ -32,22 +32,28 @@ jobs:
       - run: go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Write secrets_production.go
         run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
+
       - name: Build linux/amd64
         run: wails3 task linux:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Kanmail-linux-amd64
+          path: bin/Kanmail
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Build windows/amd64
         run: wails3 task windows:build
+        env:
+          CC: x86_64-w64-mingw32-gcc
+      - name: Build windows installer
+        run: wails3 task windows:create:nsis:installer
         env:
           CC: x86_64-w64-mingw32-gcc
       - uses: actions/upload-artifact@v4
         with:
           name: Kanmail-windows-amd64.exe
           path: bin/Kanmail.exe
-          if-no-files-found: error
-          retention-days: 1
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Kanmail-linux-amd64
-          path: bin/Kanmail
           if-no-files-found: error
           retention-days: 1
 

@@ -10,6 +10,8 @@ frontend/bindings/
 frontend/node_modules/
 
 build/darwin/icons.icns
-build/windows/icons.ico
+build/windows/icon.ico
+build/darwin/Info.plist
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 
 internal/constants/secrets_production.go
