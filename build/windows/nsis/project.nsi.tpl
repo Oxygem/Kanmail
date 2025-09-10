@@ -1,7 +1,7 @@
 Unicode true
 
 !define INFO_PROJECTNAME "Kanmail"
-!define INFO_COMPANYNAME "My Company"
+!define INFO_COMPANYNAME "Oxygem LLP"
 !define INFO_PRODUCTNAME "Kanmail v2"
 !define INFO_PRODUCTVERSION "2.0.0.KANMAIL_APP_VERSION"
 !define INFO_COPYRIGHT "© 2025, Oxygem LLP"
@@ -48,7 +48,7 @@ ManifestDPIAware true
 
 Name "${INFO_PRODUCTNAME}"
 OutFile "..\..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the installer's file.
-InstallDir "$PROGRAMFILES64\${INFO_COMPANYNAME}\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
+InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
 ShowInstDetails show # This will always show the installation details.
 
 Function .onInit

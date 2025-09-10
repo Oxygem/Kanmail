@@ -33,16 +33,18 @@ jobs:
       - run: go install -v github.com/wailsapp/wails/v3/cmd/wails3@latest
       - name: Write secrets_production.go
         run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
-
+      # Linux
       - name: Build linux/amd64
         run: wails3 task linux:build
+      - name: Build AppImage
+        run: wails3 task linux:create:appimage
       - uses: actions/upload-artifact@v4
         with:
-          name: Kanmail-linux-amd64
-          path: bin/Kanmail
+          name: Kanmail-amd64.AppImage
+          path: bin/kanmail-x86_64.AppImage
           if-no-files-found: error
           retention-days: 1
-
+      # Windows
       - name: Build windows/amd64
         run: wails3 task windows:build
         env:
@@ -53,13 +55,13 @@ jobs:
           CC: x86_64-w64-mingw32-gcc
       - uses: actions/upload-artifact@v4
         with:
-          name: Kanmail-windows-amd64.exe
+          name: Kanmail-amd64.exe
           path: bin/Kanmail.exe
           if-no-files-found: error
           retention-days: 1
       - uses: actions/upload-artifact@v4
         with:
-          name: Kanmail-amd64-installer.exe
+          name: Kanmail-installer-amd64.exe
           path: bin/Kanmail-amd64-installer.exe
           if-no-files-found: error
           retention-days: 1
@@ -82,10 +84,13 @@ jobs:
         run: echo ${{ secrets.GO_SECRETS_PRODUCTION_BASE64 }} | base64 --decode > internal/constants/secrets_production.go
       - name: Build linux/amd64
         run: wails3 task linux:build
+      - name: Build AppImage
+        run: wails3 task linux:create:appimage
+      - run: find bin/
       - uses: actions/upload-artifact@v4
         with:
-          name: Kanmail-linux-arm64
-          path: bin/Kanmail
+          name: Kanmail-arm64.AppImage
+          path: bin/kanmail-aarch64.AppImage
           if-no-files-found: error
           retention-days: 1
 
@@ -123,24 +128,32 @@ jobs:
           MACOS_NOTARIZATION_KEY_ID: ${{ secrets.MACOS_NOTARIZATION_KEY_ID }}
           MACOS_NOTARIZATION_ISSUER: ${{ secrets.MACOS_NOTARIZATION_ISSUER }}
       - run: |
-          mkdir staging
-          mv bin/Kanmail.app staging/
+          ditto -c -k --keepParent bin/Kanmail.app bin/Kanmail.app.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: Kanmail-macos-universal.app
-          path: staging/
+          name: Kanmail-macos.app
+          path: bin/Kanmail.app.zip
           if-no-files-found: error
           retention-days: 1
 
-  tests-done:
+  upload-artifacts:
     if: ${{ always() }}
     needs:
-      - test
       - build-linux-windows-amd64
       - build-linux-arm
       - build-macos
     runs-on: ubuntu-latest
     steps:
-      - uses: matrix-org/done-action@v3
-        with:
-          needs: ${{ toJSON(needs) }}
+    - uses: actions/download-artifact@v5
+      with:
+        path: artifacts
+        merge-multiple: true
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_KEY_SECRET }}
+        aws-region: eu-central-1
+    - name: Upload artifacts to S3
+      run: |
+        aws s3 sync ./artifacts/ s3://builds.kanmail.io/test/${{ github.ref_name }}/

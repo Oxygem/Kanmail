@@ -5,8 +5,7 @@
 
 An email client that functions like a kanban board, for Mac/Windows/Linux. [**Download the latest release here**](https://kanmail.io/download).
 
-![](https://dev.kanmail.io/kanmail-screenshot-dark.png)
-![](https://dev.kanmail.io/kanmail-screenshot-light.png)
+![](https://dev.kanmail.io/kanmail-screenshot-combined.webp)
 
 ## License
 

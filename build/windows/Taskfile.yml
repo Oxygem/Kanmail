@@ -42,6 +42,7 @@ tasks:
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
+      KANMAIL_APP_VERSION: '{{.KANMAIL_APP_VERSION | default 0}}'
 
   run:
     cmds:
