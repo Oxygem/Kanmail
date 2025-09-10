@@ -3,6 +3,7 @@ name: Kanmail v2 CI
 on:
   push:
     tags: 2.*
+  workflow_dispatch:
 
 jobs:
   test:
