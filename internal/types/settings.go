@@ -72,6 +72,9 @@ type SystemSettings struct {
 	// Experimental
 	GroupThreadsBySubject    bool `json:"groupThreadsBySubject"`
 	GroupSingleSenderThreads bool `json:"groupSingleSenderThreads"`
+
+	// Debugging / license holder specials
+	ShowHiddenAttachments bool `json:"showHiddenAttachments"`
 }
 
 type Settings struct {
@@ -88,14 +91,24 @@ type Settings struct {
 func NewDefaultSettings() Settings {
 	s := Settings{}
 	s.ApplyDefaults()
+
+	s.System.LoadContactIcons = true
+	s.System.ShareCrashAnalytics = true
+	s.System.ShowHelpButton = true
+
+	s.System.Theme.Light = "theme-default"
+	s.System.Theme.Dark = "theme-default-dark"
+
+	s.System.UndoMS = 10000
+
 	return s
 }
 
 func (s *Settings) ApplyDefaults() {
 	if s.System.BatchSize == 0 {
-		s.System.BatchSize = 10
+		s.System.BatchSize = 25
 	}
 	if s.System.SyncInterval == 0 {
-		s.System.SyncInterval = 60000
+		s.System.SyncInterval = 30000
 	}
 }
