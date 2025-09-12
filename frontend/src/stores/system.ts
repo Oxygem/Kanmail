@@ -1,10 +1,11 @@
 import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import { Events } from "../../wails/runtime.js";
+import { Events, System } from "../../wails/runtime.js";
 import { BaseStore } from "./base.tsx";
 
 export interface ISystem {
     version: string;
+    isDebug: boolean;
     isLicensed: boolean;
     hasUpdate: boolean;
 }
@@ -16,6 +17,7 @@ class SystemStore extends BaseStore {
         super();
         this.props = {
             version: "",
+            isDebug: false,
             isLicensed: false,
             hasUpdate: false,
         };
@@ -23,6 +25,10 @@ class SystemStore extends BaseStore {
 
     async checkCachedLicense(): Promise<void> {
         this.props.isLicensed = await AppService.CheckCachedLicense();
+    }
+
+    async checkDebug(): Promise<void> {
+        this.props.isDebug = (await System.Environment()).Debug;
     }
 
     async checkLicense(): Promise<void> {

@@ -39,10 +39,10 @@ var oauthCompleteTemplate = []byte(`
   </head>
   <body style="background: white; font-family: Sans-Serif">
     <div style="width: 600px; margin: 50px auto">
-      <h1><img src="/favicon.ico" width="32px" /> Kanmail</h1>
+      <h1>Kanmail</h1>
       <p>
         Authentication complete, please close this window &amp; return to the
-        Kanmail app!
+        Kanmail app.
       </p>
     </div>
   </body>

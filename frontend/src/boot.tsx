@@ -58,7 +58,9 @@ const bootApp = (
   // Load the settings *then* bootstrap the app into the DOM
   Promise.all([
     settingsStore.getSettings(),
-    systemStore.checkCachedLicense(), // don't need it here, but want it populated
+    // Don't need these here, but want it populated
+    systemStore.checkCachedLicense(),
+    systemStore.checkDebug(),
   ]).then(([settings]) => {
     setupThemes(settings);
 

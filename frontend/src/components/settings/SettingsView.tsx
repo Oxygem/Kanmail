@@ -1,13 +1,13 @@
 import _ from "lodash";
 import React from "react";
 
-import { SettingsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import Avatar from "../../components/Avatar.jsx";
 import keyboard from "../../keyboard.ts";
-import settingsStore, { ISettings } from "../../stores/settings.ts";
+import settingsStore from "../../stores/settings.ts";
+import systemStore from "../../stores/system.ts";
 import { arrayMove } from "../../util/array.ts";
-import { makeDragElement, openLink } from "../../window.ts";
+import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.jsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
 
@@ -268,43 +268,90 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
   renderAdvancedSettings() {
     return <div className="content advanced">
-      {this.renderPrivacyToggles()}
-      <div>
-        <input
-          id="group-threads-by-subject"
-          type="checkbox"
-          checked={this.props.system.groupThreadsBySubject}
-          onChange={() => (
-            this.props.updateFn({
+      <div className="group">
+        <h3>Privacy</h3>
+        {this.renderPrivacyToggles()}
+      </div>
+
+      <div className="group">
+        <h3>Sync</h3>
+        <div>
+          <label htmlFor="undo-ms">
+            Undo timeout (ms)
+          </label>
+          <input
+            id="undo-ms"
+            type="number"
+            value={this.props.system.undoMS}
+            onChange={(ev) => (this.props.updateFn({
               system: {
                 ...this.props.system,
-                groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
+                undoMS: parseInt(ev.target.value),
               }
-            })
-          )}
-        />
-        <label htmlFor="group-threads-by-subject">
-          Merge threads (per account) with similar subjects
-        </label>
-      </div>
-      <div>
-        <input
-          id="group-single-threads-by-sender"
-          type="checkbox"
-          checked={this.props.system.groupSingleSenderThreads}
-          onChange={() => (
-            this.props.updateFn({
+            }))}
+          />
+        </div>
+        <div>
+          <label htmlFor="sync-interval">
+            Sync interval (ms)
+          </label>
+          <input
+            id="sync-interval"
+            type="number"
+            value={this.props.system.syncInterval}
+            onChange={(ev) => (this.props.updateFn({
               system: {
                 ...this.props.system,
-                groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads,
+                syncInterval: parseInt(ev.target.value),
               }
-            })
-          )}
-        />
-        <label htmlFor="group-single-threads-by-sender">
-          Merge single emails from each sender
-        </label>
+            }))}
+          />
+        </div>
+        <div>
+          <label htmlFor="batch-size">
+            Pagination batch size
+          </label>
+          <input
+            id="batch-size"
+            type="number"
+            value={this.props.system.batchSize}
+            onChange={(ev) => (this.props.updateFn({
+              system: {
+                ...this.props.system,
+                batchSize: parseInt(ev.target.value),
+              }
+            }))}
+          />
+        </div>
       </div>
+
+      <div className="group">
+        <h3>Threading</h3>
+        <div>
+          <input
+            id="group-threads-by-subject"
+            type="checkbox"
+            checked={this.props.system.groupThreadsBySubject}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
+                }
+              })
+            )}
+          />
+          <label htmlFor="group-threads-by-subject">
+            Merge threads (per account) with similar subjects
+          </label>
+        </div>
+      </div>
+    </div>;
+  }
+
+  renderLicensedSettings() {
+    return <div className="content advanced">
+      <p>Thank you for purchasing a Kanmail license!</p>
       <div>
         <input
           id="show-help-button"
@@ -323,57 +370,45 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           Show help button in sidebar
         </label>
       </div>
+
       <div>
-        <label htmlFor="sync-interval">
-          Sync interval (ms)
-        </label>
         <input
-          id="sync-interval"
-          type="number"
-          value={this.props.system.syncInterval}
-          onChange={(ev) => (this.props.updateFn({
-            system: {
-              ...this.props.system,
-              syncInterval: parseInt(ev.target.value),
-            }
-          }))}
+          id="show-hidden-attachments"
+          type="checkbox"
+          checked={this.props.system.showHiddenAttachments}
+          onChange={() => (
+            this.props.updateFn({
+              system: {
+                ...this.props.system,
+                showHiddenAttachments: !this.props.system.showHiddenAttachments,
+              }
+            })
+          )}
         />
+        <label htmlFor="show-hidden-attachments">
+          Show hidden attachments (text/html)
+        </label>
       </div>
 
       <div>
-        <label htmlFor="undo-ms">
-          Undo time (ms)
-        </label>
         <input
-          id="undo-ms"
-          type="number"
-          value={this.props.system.undoMS}
-          onChange={(ev) => (this.props.updateFn({
-            system: {
-              ...this.props.system,
-              undoMS: parseInt(ev.target.value),
-            }
-          }))}
+          id="group-single-threads-by-sender"
+          type="checkbox"
+          checked={this.props.system.groupSingleSenderThreads}
+          onChange={() => (
+            this.props.updateFn({
+              system: {
+                ...this.props.system,
+                groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads,
+              }
+            })
+          )}
         />
-      </div>
-
-      <div>
-        <label htmlFor="batch-size">
-          Pagination batch size
+        <label htmlFor="group-single-threads-by-sender">
+          [EXPERIMENT] Merge single emails from each sender
         </label>
-        <input
-          id="batch-size"
-          type="number"
-          value={this.props.system.batchSize}
-          onChange={(ev) => (this.props.updateFn({
-            system: {
-              ...this.props.system,
-              batchSize: parseInt(ev.target.value),
-            }
-          }))}
-        />
       </div>
-    </div>;
+    </div>
   }
 
   renderTabMenu() {
@@ -394,6 +429,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         onClick={() => (this.setState({ tab: "system" }))}
         className={this.state.tab == "system" ? "active" : ""}
       >System</a>
+      {systemStore.props.isLicensed ? <a
+        onClick={() => (this.setState({ tab: "licensed" }))}
+        className={this.state.tab == "licensed" ? "active" : ""}
+      >🏆 Goodies</a> : null}
     </nav>;
   }
 
@@ -428,11 +467,13 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
   renderCurrentTab() {
     switch (this.state.tab) {
       case "accounts":
-        return this.renderAccounts();
+        return this.renderAccounts()
       case "appearance":
-        return this.renderAppearanceSettings();
+        return this.renderAppearanceSettings()
       case "system":
-        return this.renderAdvancedSettings();
+        return this.renderAdvancedSettings()
+      case "licensed":
+        return this.renderLicensedSettings()
       default: throw new Error("no such tab: " + this.state.tab);
     }
   }

@@ -7,6 +7,7 @@ import Avatar from "../../components/Avatar.tsx";
 import ThreadMessageAttachment from "../../components/emails/ThreadMessageAttachment.jsx";
 import contactsStore from "../../stores/contacts.ts";
 import requestStore from "../../stores/request.ts";
+import systemStore from "../../stores/system.ts";
 import { IThreadMessage } from "../../stores/thread.ts";
 import { ensureInView } from "../../util/element.ts";
 import { formatAddress, formatDate } from "../../util/string.ts";
@@ -124,12 +125,19 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
   }
 
   renderFolders() {
+    if (systemStore.props.isDebug) {
+      return _.map(this.props.message.folderUids, (uid, folderName) => (
+        <Tooltip text={`(debug) UID: ${uid}`}>
+          <span className="tag" key={folderName}>
+            {folderName}
+          </span>
+        </Tooltip >
+      ));
+    }
     return _.map(this.props.message.folderUids, (uid, folderName) => (
-      <Tooltip text={uid}>
-        <span className="tag" key={folderName}>
-          {folderName}
-        </span>
-      </Tooltip >
+      <span className="tag" key={folderName}>
+        {folderName}
+      </span>
     ));
   }
 

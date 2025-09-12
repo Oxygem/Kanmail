@@ -10,7 +10,6 @@ import { BaseStore } from "./base.tsx";
 import { getColumnStore } from "./columns.ts";
 import contactsStore from "./contacts.ts";
 import { IEmail, Thread, makeThread } from "./emails/base.ts";
-import filterStore from "./filters.ts";
 import requestStore from "./request.ts";
 import settingsStore from "./settings.ts";
 

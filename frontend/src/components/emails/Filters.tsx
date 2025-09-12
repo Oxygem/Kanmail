@@ -161,7 +161,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
     return _.map(folders, (folderName) => {
       const iconName = ALIAS_TO_ICON[folderName] || "folder";
       const iconClassName = ALIAS_TO_CLASS[folderName] || "white";
-      const isActive = this.props.columnGroups[this.props.currentColumnGroup][0] === folderName;
+      const isActive = settingsStore.getCurrentColumns()[0] === folderName;
       const handleClick = () => {
         if (!isActive) {
           settingsStore.setColumn(folderName, 0)

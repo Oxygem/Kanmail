@@ -1,14 +1,9 @@
 import _ from "lodash";
 import React from "react";
 
-import { SettingsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard from "../../keyboard.ts";
-import { ISettings } from "../../stores/settings.ts";
-import { arrayMove } from "../../util/array.ts";
-import { makeDragElement } from "../../window.ts";
-import AccountForm from "../settings/AccountForm.jsx";
-import NewAccountForm from "../settings/NewAccountForm.tsx";
+import settingsStore from "../../stores/settings.ts";
 import SettingsView from "../settings/SettingsView.tsx";
 
 interface IWelcomeSettingsState {
@@ -20,12 +15,8 @@ export default class WelcomeSettings extends React.Component<{}, IWelcomeSetting
     super(props);
     keyboard.disable();
 
-    const settings = new Settings();
-    settings.system.loadContactIcons = true;
-    settings.system.shareCrashAnalytics = true;
-
     this.state = {
-      settings,
+      settings: settingsStore.props,
     }
   }
 

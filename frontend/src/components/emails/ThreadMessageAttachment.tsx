@@ -3,9 +3,9 @@ import React from "react";
 import { AppService, EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { BodyPart } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import requestStore from "../../stores/request.ts";
+import settingsStore from "../../stores/settings.ts";
 import { IThreadMessage } from "../../stores/thread.ts";
-import { encodeFolderName, formatBytes } from "../../util/string.js";
-import { openFile } from "../../window.ts";
+import { formatBytes } from "../../util/string.js";
 
 interface IThreadMessageAttachmentProps {
   partId: string;
@@ -98,8 +98,7 @@ export default class ThreadMessageAttachment extends React.Component<
   }
 
   render() {
-    if (!this.props.part.description) {
-      // TODO: add setting to show these
+    if (!this.props.part.description && !settingsStore.props.system.showHiddenAttachments) {
       return null;
     }
 
