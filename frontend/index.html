@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <link rel="icon" type="image/svg+xml" href="/wails.png"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Kanmail</title>
+     <style type="text/css">
+      div#no-app {
+        width: 600px;
+        margin: 100px auto;
+        font-size: 30px;
+        text-align: center;
+        display: none;
+      }
+    </style>
+    <script type="text/javascript">
+      setTimeout(() => {
+        const doc = document.getElementById("no-app");
+        if (doc) {
+          doc.style.display = "block";
+        }
+      }, 1000);
+    </script>
+</head>
+<body>
+<div data-app-root></div>
+<script type="module" src="/main.ts"></script>
+<div id="no-app">
+  <p>Loading Kanmail...</p>
+  <p><small>If nothing happens, panic!</small></p>
+</div>
+</body>
+</html>
