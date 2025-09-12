@@ -5,12 +5,21 @@ interface IErrorInformationProps {
   componentStack: any;
 }
 
-class ErrorInformation extends React.Component<IErrorInformationProps> {
+interface IErrorInformationState {
+  showDebugInfo?: boolean;
+}
+
+class ErrorInformation extends React.Component<IErrorInformationProps, IErrorInformationState> {
+  constructor(props) {
+    super(props)
+    this.state = {}
+  }
+
   render() {
     return (
-      <div>
+      <div className="error-information">
         <h1>
-          <img src="/favicon.ico" /> Something broke!
+          <img src="/icon.png" width="24px" /> Something broke!
         </h1>
         <p>
           <a onClick={() => window.location.reload()}>Click here to reload!</a>
@@ -23,10 +32,8 @@ class ErrorInformation extends React.Component<IErrorInformationProps> {
           </a>
           .
         </p>
-        <pre>
-          <code>{this.props.componentStack}</code>
-          <code>{this.props.error}</code>
-        </pre>
+        <a onClick={() => this.setState({ showDebugInfo: !this.state.showDebugInfo })}>Show debug information {this.state.showDebugInfo ? <>&uarr;</> : <>&darr;</>}</a>
+        {this.state.showDebugInfo && <pre><code>{this.props.error}{"\n\n"}{this.props.componentStack}</code></pre>}
       </div>
     );
   }
