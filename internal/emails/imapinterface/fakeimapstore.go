@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -32,8 +33,9 @@ type fakeMessage struct {
 }
 
 type fakeIMAPStore struct {
-	folders     *exsync.Map[string, *fakeFolderData]
-	fakeThreads [][]fakeEmail
+	folders      *exsync.Map[string, *fakeFolderData]
+	fakeThreads  [][]fakeEmail
+	localAddress imap.Address
 }
 
 var fakeStore fakeIMAPStore
@@ -51,14 +53,15 @@ func init() {
 
 		// If we're going to use fake imap, initialize the global store
 		fakeStore = fakeIMAPStore{
-			folders:     exsync.NewMap[string, *fakeFolderData](),
-			fakeThreads: fThreads,
+			folders:      exsync.NewMap[string, *fakeFolderData](),
+			fakeThreads:  fThreads,
+			localAddress: makeIMAPAddress(),
 		}
 		fakeStore.createAllFoldersFromThreads()
 	}
 }
 
-func (c *fakeIMAPStore) createFolderData(folderName string) {
+func (s *fakeIMAPStore) createFolderData(folderName string) {
 	// Create new folder structure
 	folderData := &fakeFolderData{
 		name:        folderName,
@@ -70,27 +73,22 @@ func (c *fakeIMAPStore) createFolderData(folderName string) {
 	}
 
 	// Get all existing folders to choose from
-	existingFolders := c.folders.CopyData()
+	existingFolders := s.folders.CopyData()
 	if len(existingFolders) == 0 {
 		// No existing folders, create empty folder
-		c.folders.Set(folderName, folderData)
+		s.folders.Set(folderName, folderData)
 		return
 	}
 
 	// Pick a random existing folder
-	folderNames := make([]string, 0, len(existingFolders))
-	for name := range existingFolders {
-		folderNames = append(folderNames, name)
-	}
+	folderNames := []string{"inbox", "archive", "trash"}
 	randomFolderName := folderNames[rand.Intn(len(folderNames))]
 	sourceFolder := existingFolders[randomFolderName]
 
 	// Get all messages from the source folder
 	sourceMessages := sourceFolder.messages.CopyData()
 	if len(sourceMessages) == 0 {
-		// No messages to copy, create empty folder
-		c.folders.Set(folderName, folderData)
-		return
+		panic("inbox is empty")
 	}
 
 	// Pick a small percentage (10-20%) of random messages from source folder
@@ -120,14 +118,14 @@ func (c *fakeIMAPStore) createFolderData(folderName string) {
 	}
 
 	folderData.uidNext = newUID
-	c.folders.Set(folderName, folderData)
+	s.folders.Set(folderName, folderData)
 }
 
 // createAllFoldersFromThreads uses the realistic fake email threads to populate all folders
 // Each email in a thread is distributed across different folders to simulate conversation flow
-func (c *fakeIMAPStore) createAllFoldersFromThreads() {
+func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 	// Create standard folders
-	folders := []string{"inbox", "sent", "drafts", "spam", "archive", "trash"}
+	folders := []string{"inbox", "sent", "drafts", "archive", "trash"}
 	folderData := make(map[string]*fakeFolderData)
 
 	for _, folderName := range folders {
@@ -144,7 +142,7 @@ func (c *fakeIMAPStore) createAllFoldersFromThreads() {
 	var uidCounter imap.UID = 1
 
 	// Process each thread
-	for threadIdx, thread := range c.fakeThreads {
+	for threadIdx, thread := range s.fakeThreads {
 		// Pattern for distributing emails in thread across folders
 		// Most threads follow inbox -> Sent -> inbox pattern for conversations
 		folderPattern := []string{"inbox", "sent", "inbox", "sent", "inbox"}
@@ -162,8 +160,8 @@ func (c *fakeIMAPStore) createAllFoldersFromThreads() {
 				folderPattern = []string{"inbox", "drafts", "sent", "inbox"}
 			}
 		case 2:
-			// Spam thread: first email in spam, rest in inbox (user moved it)
-			folderPattern = []string{"spam", "inbox", "sent", "inbox"}
+			// Trashed thread w/later replies
+			folderPattern = []string{"trash", "inbox", "sent", "inbox"}
 		case 3:
 			// Archive scenario: older conversation
 			folderPattern = []string{"archive", "sent", "archive"}
@@ -188,35 +186,11 @@ func (c *fakeIMAPStore) createAllFoldersFromThreads() {
 
 			if targetFolder == "sent" || targetFolder == "drafts" {
 				// For sent items and drafts, we are the sender
-				from = []imap.Address{{
-					Name:    "Me",
-					Mailbox: "me",
-					Host:    "mycompany.com",
-				}}
-				to = []imap.Address{{
-					Name:    gofakeit.Name(),
-					Mailbox: gofakeit.Username(),
-					Host:    gofakeit.Company(),
-				}}
+				from = []imap.Address{s.localAddress}
+				to = []imap.Address{makeIMAPAddress()}
 			} else {
-				// For received items, others are senders
-				// senderNames := []string{"Sarah Johnson", "Mike Chen", "IT Operations", "John Smith", "Lisa Wang", "HR Department", "Alex Rodriguez", "David Brown", "Rachel Green", "Tom Wilson", "Emma Davis", "IT Manager"}
-				// senderEmails := []string{"sarah.johnson", "mike.chen", "it-ops", "john.smith", "lisa.wang", "hr", "alex.rodriguez", "david.brown", "rachel.green", "tom.wilson", "emma.davis", "it-manager"}
-
-				// senderIdx := threadIdx % len(senderNames)
-				from = []imap.Address{{
-					// Name:    senderNames[senderIdx],
-					// Mailbox: senderEmails[senderIdx],
-					// Host:    "company.com",
-					Name:    gofakeit.Name(),
-					Mailbox: gofakeit.Username(),
-					Host:    gofakeit.Company(),
-				}}
-				to = []imap.Address{{
-					Name:    "Me",
-					Mailbox: "me",
-					Host:    "mycompany.com",
-				}}
+				from = []imap.Address{makeIMAPAddress()}
+				to = []imap.Address{s.localAddress}
 			}
 
 			// Calculate message date (spread over last 30 days, with thread emails closer together)
@@ -279,6 +253,18 @@ func (c *fakeIMAPStore) createAllFoldersFromThreads() {
 	// Update uidNext for all folders and store them
 	for _, folder := range folderData {
 		folder.uidNext = uidCounter
-		c.folders.Set(folder.name, folder)
+		s.folders.Set(folder.name, folder)
+	}
+}
+
+func makeIMAPAddress() imap.Address {
+	name := gofakeit.Name()
+	nameParts := strings.SplitN(name, " ", 2)
+	username := strings.ToLower(nameParts[0]) + strings.ToLower(nameParts[1])
+	domain := companyDomains[rand.Intn(len(companyDomains))]
+	return imap.Address{
+		Name:    name,
+		Mailbox: username,
+		Host:    domain,
 	}
 }

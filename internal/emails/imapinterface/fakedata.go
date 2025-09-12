@@ -6,18 +6,32 @@ type fakeEmail struct {
 	content string
 }
 
+var companyDomains = []string{
+	// Tech Kanmail is based on
+	"react.dev",
+	"wails.io",
+	"gofakeit.com",
+	"sqlite.org",
+	"tiptap.dev",
+	"lodash.com",
+	"vite.dev",
+	"nsis.sourceforge.io",
+
+	// Shameless self plugging
+	"afterburst.com",
+	"oxygem.com",
+	"pyinfra.com",
+	"kanmail.io",
+	"pointlessramblings.com",
+
+	// The big ones
+	"apache.org",
+	"cncf.io",
+	"linuxfoundation.org",
+}
+
 var (
 	fakeThreads = [][]fakeEmail{
-		{
-			{
-				subject: "This is a subject",
-				content: "This is the content",
-			},
-			{
-				subject: "This is a reply",
-				content: "This is the reply content",
-			},
-		},
 		{
 			{
 				subject: "Team Meeting - Q3 Planning",

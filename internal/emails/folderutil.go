@@ -184,7 +184,7 @@ func (f *Folder) decodePart(ctx context.Context, in bodyPartResp) []byte {
 		if encoding == "" {
 			encoding = "unknown"
 		}
-		filename := path.Join(tempDirForFailedDecodes, timeStr+"."+in.Encoding)
+		filename := path.Join(tempDirForFailedDecodes, timeStr+"."+encoding)
 		if err := os.WriteFile(filename, in.Bytes, os.ModePerm); err != nil {
 			panic(err)
 		}

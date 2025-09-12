@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
 	"github.com/emersion/go-sasl"
@@ -316,29 +317,37 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 			continue
 			// panic("email does not exist")
 		}
+		parts := []imap.BodyStructure{
+			&imap.BodyStructureSinglePart{
+				Type:     "text",
+				Subtype:  "plain",
+				Encoding: "7BIT",
+				Size:     uint32(msg.size),
+			},
+			&imap.BodyStructureSinglePart{
+				Type:     "text",
+				Subtype:  "html",
+				Encoding: "7BIT",
+				Size:     uint32(msg.size),
+			},
+		}
+		if gofakeit.IntN(100)%10 == 0 {
+			// Add a fake attachment to 1/10 emails
+			parts = append(parts, &imap.BodyStructureSinglePart{
+				Type:        "image",
+				Subtype:     "png",
+				Description: "animage.png",
+				Size:        uint32(gofakeit.IntRange(16384, 16384000)),
+			})
+		}
+
 		fetchMsg := &imapclient.FetchMessageBuffer{
 			UID:        msg.uid,
 			Flags:      msg.flags,
 			RFC822Size: int64(msg.size),
 			Envelope:   msg.envelope,
 			BodyStructure: &imap.BodyStructureMultiPart{
-				Children: []imap.BodyStructure{
-					&imap.BodyStructureSinglePart{
-						Type:     "text",
-						Subtype:  "plain",
-						Encoding: "7BIT",
-					},
-					&imap.BodyStructureSinglePart{
-						Type:     "text",
-						Subtype:  "html",
-						Encoding: "7BIT",
-					},
-					&imap.BodyStructureSinglePart{
-						Type:        "image",
-						Subtype:     "png",
-						Description: "a file",
-					},
-				},
+				Children: parts,
 			},
 		}
 
