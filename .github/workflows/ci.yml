@@ -156,4 +156,4 @@ jobs:
         aws-region: eu-central-1
     - name: Upload artifacts to S3
       run: |
-        aws s3 sync ./artifacts/ s3://builds.kanmail.io/test/${{ github.ref_name }}/
+        aws s3 sync ./artifacts/ s3://builds.kanmail.io/${{ github.ref_name }}/
