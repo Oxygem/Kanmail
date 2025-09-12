@@ -7,7 +7,7 @@ import contactsStore from "../stores/contacts.ts";
 import settingsStore from "../stores/settings.ts";
 
 const emailToColorCache = {};
-const emailToIconBytesCache: { [_: string]: string } = {};
+const emailToIconBytesCache: { [_: string]: string | null } = {};
 
 function getColorForAddress(address) {
   if (!address) {
@@ -58,11 +58,13 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
     if (settingsStore.props.system.loadContactIcons) {
       const email = props.address ? props.address.email : "";
       if (emailToIconBytesCache[email] !== undefined) {
-        state.iconBytes = emailToIconBytesCache[email];
+        state.iconBytes = emailToIconBytesCache[email]!;
       } else {
         contactsStore.getAvatar(email).then((resp: AvatarResp) => {
-          if (!resp || !resp.data) {
-            return;
+          if (!resp) {
+            emailToIconBytesCache[email] = null
+            console.log("No avatar found", email)
+            return
           }
           this.setState({ iconBytes: resp.data! })
           emailToIconBytesCache[email] = resp.data!;
