@@ -29,7 +29,7 @@ func main() {
 	flag.Parse()
 
 	var logOut io.Writer = os.Stderr
-	if os.Getenv(constants.ENV_DEBUG_PRETTY_LOGS) != "" {
+	if constants.ENV_DEBUG_PRETTY_LOGS != "" {
 		logOut = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
 	}
 	log := zerolog.New(logOut).With().Timestamp().Logger()
@@ -70,9 +70,9 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	log.Info().Any("level", zerolog.GlobalLevel()).Msg("Log level set")
 	log.Info().
 		Str("commit", Commit).
+		Any("log_level", zerolog.GlobalLevel()).
 		Msg("Kanmail v2 app created")
 
 	if err := kanmail.Run(); err != nil {

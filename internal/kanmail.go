@@ -3,7 +3,6 @@ package internal
 import (
 	"io/fs"
 	"net/http"
-	"os"
 	"path"
 
 	"github.com/rs/zerolog"
@@ -93,7 +92,7 @@ func (k *Kanmail) Run() error {
 
 	// Quit the entire app if the main window is closed
 	emailsWindow.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
-		if os.Getenv(constants.ENV_DEBUG_NO_AUTOCLOSE) != "" {
+		if constants.ENV_DEBUG_NO_AUTOCLOSE != "" {
 			return
 		}
 		k.log.Warn().Msg("Emails window closed, quitting Kanmail!")

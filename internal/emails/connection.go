@@ -3,7 +3,6 @@ package emails
 import (
 	"context"
 	"errors"
-	"os"
 
 	"github.com/rs/zerolog"
 
@@ -57,7 +56,7 @@ func NewConnectionPool[T connection](
 		cpool.backgroundPool <- c
 	}
 
-	if os.Getenv(constants.ENV_DEBUG_OFFLINE) != "" {
+	if constants.ENV_DEBUG_OFFLINE != "" {
 		zerolog.Ctx(context.TODO()).Warn().Msg("Offline mode enabled")
 		cpool.disabled = true
 	}

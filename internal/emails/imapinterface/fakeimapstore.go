@@ -3,7 +3,6 @@ package imapinterface
 import (
 	"fmt"
 	"math/rand"
-	"os"
 	"strings"
 	"time"
 
@@ -41,7 +40,7 @@ type fakeIMAPStore struct {
 var fakeStore fakeIMAPStore
 
 func init() {
-	fakeIMAPEnv := os.Getenv(constants.ENV_DEBUG_FAKE_IMAP)
+	fakeIMAPEnv := constants.ENV_DEBUG_FAKE_IMAP
 
 	if fakeIMAPEnv != "" {
 		var fThreads [][]fakeEmail = fakeThreads

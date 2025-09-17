@@ -3,7 +3,6 @@ package emails
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
@@ -148,7 +147,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	log := zerolog.Ctx(ctx)
 
 	// Check if fake IMAP mode is enabled
-	if os.Getenv(constants.ENV_DEBUG_FAKE_IMAP) != "" {
+	if constants.ENV_DEBUG_FAKE_IMAP != "" {
 		if c.client == nil {
 			log.Info().Msg("Using fake IMAP client for debugging")
 			c.client = imapinterface.NewFakeIMAPClient()

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 
@@ -67,7 +66,7 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 		panic(err)
 	}
 
-	if os.Getenv(constants.ENV_DEBUG_CACHES_DISABLE) != "" {
+	if constants.ENV_DEBUG_CACHES_DISABLE != "" {
 		log.Warn().Msg("Folder cache disabled")
 		caches.disabled = true
 		caches.FolderUIDCache.disabled = true
