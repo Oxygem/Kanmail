@@ -32,7 +32,7 @@ class TrackerCount extends React.Component<{}, { count: number }> {
       return null;
     }
 
-    return <Tooltip text={`Blocked ${this.state.count} tracking pixels`}>
+    return <Tooltip text={`Blocked ${this.state.count} tracking pixels`} position="right">
       <i className="fa fa-binoculars" /> {this.state.count}
     </Tooltip>;
   }

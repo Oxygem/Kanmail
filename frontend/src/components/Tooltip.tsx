@@ -24,11 +24,21 @@ export class TheTooltip extends React.Component<Partial<ITooltipProps>> {
     }
 
     const onload = (ref: HTMLElement | null) => {
-      if (ref && this.props.position === "left") {
+      if (!ref || this.props.position === "default") {
+        return;
+      }
+      const pos = ref.getBoundingClientRect();
+
+      if (this.props.position === "left") {
         ref.style.visibility = "visible";
-        const pos = ref.getBoundingClientRect();
         ref.style.left = position.left - pos.width - 4 + "px";
         ref.style.top = position.top + (position.height / 2) - (pos.height / 2) + "px";
+      } else if (this.props.position === "right") {
+        ref.style.visibility = "visible";
+        ref.style.left = position.right + 4 + "px";
+        ref.style.top = position.top + (position.height / 2) - (pos.height / 2) + "px";
+      } else {
+        throw new Error("unknown position: " + this.props.position)
       }
     }
 
