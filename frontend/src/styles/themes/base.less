@@ -404,6 +404,10 @@ div.react-select__control {
   }
 }
 
+div.react-select__input-container {
+  color:@bodyTextColor;
+}
+
 div.react-select__control--is-focused {
   border-color: @formBorderGreyActive !important;
 }
@@ -413,17 +417,23 @@ span.react-select__indicator-separator {
 }
 
 div.react-select__menu {
-  border-color: @formBorderGreyHover;
+  // border-color: @formBorderGreyHover;
+  border: none;
+  background: @selectMenuBackgroundColor;
 }
 
 div.react-select__option {
   &.react-select__option--is-focused {
-    background: @lightGrey;
+    background: @selectMenuHoverBackgroundColor;
   }
 }
 
 div.react-select__single-value {
   color: @inputColor;
+}
+
+section#control {
+  background: @selectMenuBackgroundColor;
 }
 
 /*
