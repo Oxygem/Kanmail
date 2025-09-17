@@ -82,14 +82,12 @@ class ControlInput extends React.Component<IControlInputProps, IControlInputStat
     }
 
     return (
-      <div>
-        <section id="control-background">
-          <section id="control">
-            <p>{header}</p>
-            {input}
-          </section>
+      <section id="control-background">
+        <section id="control">
+          <p>{header}</p>
+          {input}
         </section>
-      </div>
+      </section>
     );
   }
 }

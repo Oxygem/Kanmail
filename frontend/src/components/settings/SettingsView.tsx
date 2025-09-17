@@ -324,28 +324,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           />
         </div>
       </div>
-
-      <div className="group">
-        <h3>Threading</h3>
-        <div>
-          <input
-            id="group-threads-by-subject"
-            type="checkbox"
-            checked={this.props.system.groupThreadsBySubject}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
-                }
-              })
-            )}
-          />
-          <label htmlFor="group-threads-by-subject">
-            Merge threads (per account) with similar subjects
-          </label>
-        </div>
-      </div>
     </div>;
   }
 
@@ -405,7 +383,26 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           )}
         />
         <label htmlFor="group-single-threads-by-sender">
-          [EXPERIMENT] Merge single emails from each sender
+          [EXPERIMENT, requires restart] Merge single emails from each sender
+        </label>
+      </div>
+
+      <div>
+        <input
+          id="group-threads-by-subject"
+          type="checkbox"
+          checked={this.props.system.groupThreadsBySubject}
+          onChange={() => (
+            this.props.updateFn({
+              system: {
+                ...this.props.system,
+                groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
+              }
+            })
+          )}
+        />
+        <label htmlFor="group-threads-by-subject">
+          [EXPERIMENT, requires restart] Merge threads (per account) with similar subjects
         </label>
       </div>
     </div>
