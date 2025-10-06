@@ -211,7 +211,7 @@ func (a *AppService) OpenOpenFilesDialog() []string {
 	}
 }
 
-func (a *AppService) OpenPurchaseLicenseDialog() {
+func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) {
 	dialog := application.QuestionDialog()
 	dialog.SetTitle("Kanmail license")
 	dialog.SetMessage("Kanmail may be evaluated for free, however a license must be purchased for continued use.")
@@ -221,9 +221,14 @@ func (a *AppService) OpenPurchaseLicenseDialog() {
 
 	// Open purchase page button
 	purchaseButton := dialog.AddButton("Open license purchase").OnClick(func() {
-		a.OpenLink(context.TODO(), "https://kanmail.io/license")
+		a.OpenLink(ctx, "https://kanmail.io/license")
 	})
 	dialog.SetDefaultButton(purchaseButton)
+
+	dialog.AddButton("Enter license key").OnClick(func() {
+		a.OpenLicenseWindow()
+	})
+
 	dialog.Show()
 }
 
@@ -393,6 +398,15 @@ func (a *AppService) getKeyringLicenseUser() string {
 	return a.DeviceID + "." + "licensekey"
 }
 
+func (a *AppService) RemoveLicense(ctx context.Context) error {
+	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
+	defer util.LogPanic(ctx)
+
+	err := keyring.Delete(appDirName, a.getKeyringLicenseUser())
+	a.app.EmitEvent(string(types.LicenseChangedEvent))
+	return err
+}
+
 func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bool, error) {
 	ctx = a.log.With().Str("method", "ValidateLicense").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
@@ -409,12 +423,13 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 		return false, err
 	}
 
-	// Cachek the key, ignore error here as will retry
+	// Cache the key, ignore error here as will retry
 	err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey))
 	a.app.EmitEvent(string(types.LicenseChangedEvent))
 	return true, err
 }
 
+// Checks license key, called by frontend on startup + LicenseChangedEvent events
 func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	ctx = a.log.With().Str("method", "CheckLicense").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
@@ -442,7 +457,6 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 		return true, a.caches.LicenseCache.Upsert(ctx, hashedKey)
 	}
 	err = a.caches.LicenseCache.Delete(ctx, hashedKey)
-	a.app.EmitEvent(string(types.LicenseChangedEvent))
 	return false, err
 }
 
@@ -469,13 +483,4 @@ func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
 	}
 
 	return false
-}
-
-func (a *AppService) RemoveLicense(ctx context.Context) error {
-	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
-
-	err := keyring.Delete(appDirName, a.getKeyringLicenseUser())
-	a.app.EmitEvent(string(types.LicenseChangedEvent))
-	return err
 }

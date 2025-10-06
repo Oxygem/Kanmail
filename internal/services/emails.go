@@ -87,7 +87,7 @@ func (e *EmailsService) SendEmail(
 	defer util.LogPanic(ctx)
 
 	if !e.app.CheckCachedLicense(ctx) {
-		e.app.OpenPurchaseLicenseDialog()
+		e.app.OpenPurchaseLicenseDialog(ctx)
 	}
 
 	account := e.accounts.GetOrCreateAccount(ctx, accountName)

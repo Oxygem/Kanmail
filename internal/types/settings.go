@@ -14,6 +14,29 @@ type FolderSettings struct {
 	Junk      FolderName `json:"junk"`
 }
 
+func (f FolderSettings) GetFromName(name FolderName) FolderName {
+	switch name {
+	case "inbox":
+		return f.Inbox
+	case "flagged":
+		return f.Flagged
+	case "important":
+		return f.Important
+	case "sent":
+		return f.Sent
+	case "drafts":
+		return f.Drafts
+	case "archive":
+		return f.Archive
+	case "trash":
+		return f.Trash
+	case "junk":
+		return f.Junk
+	default:
+		return ""
+	}
+}
+
 type AccountSettings struct {
 	Name AccountName `json:"name"`
 

@@ -60,32 +60,8 @@ func (a *Account) GetFolder(name types.FolderName) *Folder {
 
 	aliasName := name
 
-	// Apply name mappings
-	// TODO: make this less rubbish, same as below
-	if name == "inbox" && a.Folders.Inbox != "" {
-		aliasName = name
-		name = a.Folders.Inbox
-	} else if name == "flagged" && a.Folders.Flagged != "" {
-		aliasName = name
-		name = a.Folders.Flagged
-	} else if name == "important" && a.Folders.Important != "" {
-		aliasName = name
-		name = a.Folders.Important
-	} else if name == "sent" && a.Folders.Sent != "" {
-		aliasName = name
-		name = a.Folders.Sent
-	} else if name == "drafts" && a.Folders.Drafts != "" {
-		aliasName = name
-		name = a.Folders.Drafts
-	} else if name == "archive" && a.Folders.Archive != "" {
-		aliasName = name
-		name = a.Folders.Archive
-	} else if name == "trash" && a.Folders.Trash != "" {
-		aliasName = name
-		name = a.Folders.Trash
-	} else if name == "junk" && a.Folders.Junk != "" {
-		aliasName = name
-		name = a.Folders.Junk
+	if otherName := a.Folders.GetFromName(name); otherName != "" {
+		name = otherName
 	}
 
 	if f, ok := a.folders[name]; ok {

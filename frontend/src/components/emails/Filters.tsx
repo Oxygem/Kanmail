@@ -305,7 +305,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
           <ul>
             <li>
               <a onClick={() => {
-                AppService.OpenLink("https://kanmail.io/license");
+                AppService.OpenPurchaseLicenseDialog();
                 trackEvent("SidebarOpenLicense");
               }}>
                 <i className="fa fa-shopping-cart green"></i> Purchase Kanmail

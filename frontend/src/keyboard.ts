@@ -315,4 +315,7 @@ class Keyboard {
 }
 
 const keyboard = new Keyboard();
+
+// @ts-ignore
+window.keyboard = keyboard;
 export default keyboard;
