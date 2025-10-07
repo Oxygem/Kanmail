@@ -46,18 +46,15 @@ func main() {
 	}
 
 	var version int
-	if Version != "" {
-		ps := strings.Split(Version, ".")
-		if len(ps) != 2 {
-			panic(fmt.Errorf("invalid version string"))
-		}
-		if ps[1] == "x" {
-			version = 0
+	ps := strings.Split(Version, ".")
+	if len(ps) != 2 {
+		log.Err(fmt.Errorf("invalid version string: %s", Version)).
+			Msg("Ignoring invalid version (format incorrect)")
+	} else {
+		if v, err := strconv.Atoi(ps[1]); err != nil {
+			log.Err(fmt.Errorf("invalid version string: %s: %w", Version, err)).
+				Msg("Ignoring invalid version (timestamp is not number)")
 		} else {
-			v, err := strconv.Atoi(ps[1])
-			if err != nil {
-				panic(fmt.Errorf("invalid version string: %w", err))
-			}
 			version = v
 		}
 	}
@@ -72,6 +69,7 @@ func main() {
 
 	log.Info().
 		Str("commit", Commit).
+		Int("version", version).
 		Any("log_level", zerolog.GlobalLevel()).
 		Msg("Kanmail v2 app created")
 
