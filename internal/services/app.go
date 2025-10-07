@@ -110,7 +110,7 @@ func (a *AppService) OpenSendWindow(options OpenSendWindowOptions) {
 	}
 
 	u := url.URL{
-		Path:     "/app.html",
+		Path:     "/index.html",
 		RawQuery: v.Encode(),
 	}
 
@@ -136,7 +136,7 @@ func (a *AppService) OpenMetaWindow() {
 		}
 	}
 
-	a.metaWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/app.html?app=meta")
+	a.metaWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/index.html?app=meta")
 }
 
 func (a *AppService) OpenLicenseWindow() {
@@ -157,7 +157,7 @@ func (a *AppService) OpenLicenseWindow() {
 		}
 	}
 
-	a.licenseWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/app.html?app=license")
+	a.licenseWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/index.html?app=license")
 }
 
 func (a *AppService) OpenSettingsWindow() {
@@ -178,7 +178,7 @@ func (a *AppService) OpenSettingsWindow() {
 		}
 	}
 
-	a.settingsWindow = util.MakeWindow(a.app, "Kanmail v2 Settings", "/app.html?app=settings")
+	a.settingsWindow = util.MakeWindow(a.app, "Kanmail v2 Settings", "/index.html?app=settings")
 }
 
 func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings types.Settings) {
