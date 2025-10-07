@@ -83,7 +83,7 @@ tasks:
     summary: Notarizes the `.app` bundle
     cmds:
       - ditto -c -k --keepParent {{.BIN_DIR}}/{{.APP_NAME}}.app {{.BIN_DIR}}/{{.APP_NAME}}.app.zip
-      - xcrun notarytool submit {{.BIN_DIR}}/{{.APP_NAME}}.app.zip --wait --key-id $MACOS_NOTARIZATION_KEY_ID --key $MACOS_NOTARIZATION_KEY_PATH  --issuer $MACOS_NOTARIZATION_ISSUER
+      - xcrun notarytool submit {{.BIN_DIR}}/{{.APP_NAME}}.app.zip --wait --keychain-profile $MACOS_NOTARIZATION_KEYCHAIN_PROFILE
       - xcrun stapler staple {{.BIN_DIR}}/{{.APP_NAME}}.app
       - xcrun stapler validate {{.BIN_DIR}}/{{.APP_NAME}}.app
 
