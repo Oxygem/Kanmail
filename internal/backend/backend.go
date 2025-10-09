@@ -105,7 +105,7 @@ func GetVersions(ctx context.Context, deviceID string) ([]Version, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return nil, err
+		return nil, fmt.Errorf("invalid backend response status: %d", resp.StatusCode)
 	}
 
 	d, err := io.ReadAll(resp.Body)
