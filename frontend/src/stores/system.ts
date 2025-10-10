@@ -1,13 +1,15 @@
+import { Version } from "../../bindings/github.com/oxygem/kanmail/internal/backend/models.ts";
 import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events, System } from "../../wails/runtime.js";
 import { BaseStore } from "./base.tsx";
 
 export interface ISystem {
-    version: string;
+    currentVersion: string;
     isDebug: boolean;
     isLicensed: boolean;
     hasUpdate: boolean;
+    update?: Version;
 }
 
 class SystemStore extends BaseStore {
@@ -16,7 +18,7 @@ class SystemStore extends BaseStore {
     constructor() {
         super();
         this.props = {
-            version: "",
+            currentVersion: "",
             isDebug: false,
             isLicensed: false,
             hasUpdate: false,
@@ -41,13 +43,15 @@ class SystemStore extends BaseStore {
     }
 
     async checkUpdate(): Promise<void> {
-        const [hasUpdate, version] = await AppService.CheckUpdate();
-        if (hasUpdate === this.props.hasUpdate && version === this.props.version) {
+        const [update, currentVersion] = await AppService.CheckUpdate();
+        const hasUpdate = update !== null;
+        if (hasUpdate === this.props.hasUpdate && currentVersion === this.props.currentVersion) {
             return;
         }
+        this.props.update = update;
         this.props.hasUpdate = hasUpdate;
-        this.props.version = version;
-        this.triggerUpdate(["hasUpdate", "version"]);
+        this.props.currentVersion = currentVersion;
+        this.triggerUpdate(["update", "hasUpdate", "currentVersion"]);
     }
 }
 

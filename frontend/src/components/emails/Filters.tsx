@@ -271,31 +271,40 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
       return null;
     }
 
-    if (this.state.isUpdating) {
-      return <li className="small"><a className="disabled">
-        <i className="fa fa-refresh fa-spin green"></i> Updating
-      </a></li>
-    }
-
-    if (this.state.updateNeedsRestart) {
-      return <li className="small"><a onClick={AppService.RestartAfterUpdate}>
-        <i className="fa fa-refresh green"></i> Restart to update
-      </a></li>;
-    }
-
     return <li className="small">
       <a onClick={() => {
         this.setState({ isUpdating: true })
-        AppService.DoUpdate().then(() => {
-          this.setState({
-            isUpdating: false,
-            updateNeedsRestart: true,
-          })
-        });
+        AppService.OpenLink(systemStore.props.update!.link)
       }}>
-        <i className="fa fa-arrow-up green"></i> Update Kanmail
+        <i className="fa fa-arrow-up green"></i> Download update
       </a>
     </li>
+
+    // if (this.state.isUpdating) {
+    //   return <li className="small"><a className="disabled">
+    //     <i className="fa fa-refresh fa-spin green"></i> Updating
+    //   </a></li>
+    // }
+
+    // if (this.state.updateNeedsRestart) {
+    //   return <li className="small"><a onClick={AppService.RestartAfterUpdate}>
+    //     <i className="fa fa-refresh green"></i> Restart to update
+    //   </a></li>;
+    // }
+
+    // return <li className="small">
+    //   <a onClick={() => {
+    //     this.setState({ isUpdating: true })
+    //     AppService.DoUpdate().then(() => {
+    //       this.setState({
+    //         isUpdating: false,
+    //         updateNeedsRestart: true,
+    //       })
+    //     });
+    //   }}>
+    //     <i className="fa fa-arrow-up green"></i> Update Kanmail
+    //   </a>
+    // </li>
   }
 
   render() {
