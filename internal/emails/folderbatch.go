@@ -10,6 +10,38 @@ import (
 	"github.com/oxygem/kanmail/internal/types"
 )
 
+func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
+	// Translate any alias folder name -> real name, then initialize
+	otherFolder := f.account.GetFolder(otherFolderName)
+	otherFolderName = otherFolder.Name
+	otherFolder.EnsureInitialized(ctx)
+
+	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+		d, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolderName)).Wait()
+		if err != nil {
+			return err
+		}
+		zerolog.Ctx(ctx).Warn().Any("MOVER", d).Msg("Got move data")
+		return nil
+	})
+}
+
+func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
+	// Translate any alias folder name -> real name, then initialize
+	otherFolder := f.account.GetFolder(otherFolderName)
+	otherFolderName = otherFolder.Name
+	otherFolder.EnsureInitialized(ctx)
+
+	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+		d, err := conn.Copy(imap.UIDSetNum(uids...), string(otherFolderName)).Wait()
+		if err != nil {
+			return err
+		}
+		zerolog.Ctx(ctx).Warn().Any("COPYR", d).Msg("Got copy data")
+		return nil
+	})
+}
+
 func (f *Folder) DeleteEmails(ctx context.Context, uids []imap.UID) error {
 	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		storeFlags := imap.StoreFlags{
@@ -26,31 +58,6 @@ func (f *Folder) DeleteEmails(ctx context.Context, uids []imap.UID) error {
 			return err
 		}
 		zerolog.Ctx(ctx).Warn().Any("STORER", d).Any("deleteduids", deletedUids).Msg("Got delete data")
-		return nil
-	})
-}
-
-func (f *Folder) MoveEmails(ctx context.Context, otherFolder types.FolderName, uids []imap.UID) error {
-	// Translate any alias folder name -> real name
-	otherFolder = f.account.GetFolder(otherFolder).Name
-
-	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		d, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolder)).Wait()
-		if err != nil {
-			return err
-		}
-		zerolog.Ctx(ctx).Warn().Any("MOVER", d).Msg("Got move data")
-		return nil
-	})
-}
-
-func (f *Folder) CopyEmails(ctx context.Context, otherFolder types.FolderName, uids []imap.UID) error {
-	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		d, err := conn.Copy(imap.UIDSetNum(uids...), string(otherFolder)).Wait()
-		if err != nil {
-			return err
-		}
-		zerolog.Ctx(ctx).Warn().Any("COPYR", d).Msg("Got copy data")
 		return nil
 	})
 }

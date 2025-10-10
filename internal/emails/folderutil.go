@@ -110,8 +110,6 @@ func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMe
 					}
 				}
 			}
-
-			zerolog.Ctx(context.TODO()).Error().Any("UNSUDB", unsubHeaders).Any("POSTHEADERS", unsubPostHeaders).Msg("UNSUBZzZzzz")
 		}
 	}
 

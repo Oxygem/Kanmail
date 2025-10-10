@@ -557,6 +557,12 @@ func (f *Folder) storeUIDs(ctx context.Context) error {
 	return f.caches.FolderUIDCache.Store(ctx, f.AccountName, f.Name, f.uidValidity, f.uidsStartAt, f.uids.All())
 }
 
+func (f *Folder) EnsureInitialized(ctx context.Context) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	return f.ensureInitialized(ctx)
+}
+
 // Used to lazily initialize the folder by pulling the UID list from cache or fetching it from the
 // network if we have no cache. No lock, *not* gorotuine/thread safe.
 func (f *Folder) ensureInitialized(ctx context.Context) error {
@@ -584,6 +590,7 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 		// Select the folder, populate UIDNEXT + UIDVALIDITY
 		selectData, err := conn.Select(string(f.Name), nil).Wait()
 		if err != nil {
+			log.Debug().Str("folder", string(f.Name)).Msg("Creating folder before initialization")
 			// If select fails, try creating the folder before failing
 			// TODO: check the err
 			if createErr := conn.Create(string(f.Name), nil).Wait(); createErr != nil {
