@@ -245,7 +245,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
         (name) => !sidebarFolderNames.has(name)
       );
       sidebarFolders.push(
-        ...this.renderFolderLinks(otherFolderNames, { pinned: false })
+        ...this.renderFolderLinks(_.sortBy(otherFolderNames), { pinned: false })
       );
     }
 
