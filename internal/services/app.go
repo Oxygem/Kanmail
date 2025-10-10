@@ -249,8 +249,23 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 		return nil, fmt.Errorf("failed to get versions from backend: %w", err)
 	}
 
+	// Backend stores os/arch as arbitrary strings, mapping to GOOS and GOARCH on Linux, or
+	// hardcoded values on macOS/Windows.
+	os := runtime.GOOS
+	arch := runtime.GOARCH
+
+	switch os {
+	case "darwin":
+		// macOS app is a universal binary, both arm64 + amd64
+		arch = "universal"
+	case "windows":
+		// Send  Windows users to download the installer, amd64 only (works on arm via emulation)
+		os = "windows-installer"
+		arch = "amd64"
+	}
+
 	for _, v := range versions {
-		if v.OS == runtime.GOOS && v.Arch == runtime.GOARCH {
+		if v.OS == os && v.Arch == arch {
 			if v.Version == a.AppVersion {
 				a.log.Debug().Int("version", v.Version).Msg("Latest version is our version, no update needed")
 				return nil, nil
@@ -270,21 +285,22 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 	}
 
 	a.log.Error().
-		Str("go_os", runtime.GOOS).
-		Str("go_arch", runtime.GOARCH).
+		Str("go_os", os).
+		Str("go_arch", arch).
 		Msg("No app versions found!")
 	return nil, nil
 }
 
 // Returns bool if we have an update as well as the current version string (for UI)
-func (a *AppService) CheckUpdate(ctx context.Context) (bool, string, error) {
+func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, string, error) {
 	ctx = a.log.With().Str("method", "CheckUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
 	update, err := a.getUpdate(ctx)
-	return update != nil, fmt.Sprintf("2.%d", a.AppVersion), err
+	return update, fmt.Sprintf("2.%d", a.AppVersion), err
 }
 
+// UNUSED/WIP due to issues updating (ditto can't overwrite app), no win/linux implementation
 func (a *AppService) DoUpdate(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "DoUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
@@ -373,6 +389,7 @@ func (a *AppService) DoUpdate(ctx context.Context) error {
 	return nil
 }
 
+// Unused as above
 func (a *AppService) RestartAfterUpdate(ctx context.Context) error {
 	bin := os.Args[0]
 	if !filepath.IsAbs(bin) {
