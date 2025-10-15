@@ -200,11 +200,7 @@ func (u *uidList) All() []imap.UID {
 	u.lock.RLock()
 	defer u.lock.RUnlock()
 
-	ids := make([]imap.UID, len(u.uids))
-	for i, uid := range u.uids {
-		ids[i] = uid
-	}
-	return ids
+	return append([]imap.UID{}, u.uids...)
 }
 
 func (u *uidList) AllGreaterThan(greaterThanOrEqualTo imap.UID) []imap.UID {
