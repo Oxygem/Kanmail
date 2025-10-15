@@ -11,8 +11,10 @@ import (
 	"go.mau.fi/util/random"
 )
 
+const deviceIDLength = 16
+
 func generateDeviceID() string {
-	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(random.Bytes(16))
+	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(random.Bytes(deviceIDLength / 1.6))
 }
 
 func hashLicenseKey(key string) string {
