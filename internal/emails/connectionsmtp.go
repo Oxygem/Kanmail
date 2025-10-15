@@ -84,11 +84,12 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (*smtp.Client, error) {
 				return nil, fmt.Errorf("failed to get oauth access token: %w", err)
 			}
 			auth = oauth.MakeSASLClient(c.conf, accessToken)
-			if err := client.Auth(auth); err != nil {
-				return nil, fmt.Errorf("failed imap oauth login: %w", err)
-			}
 		} else {
 			return nil, fmt.Errorf("no authentication methods configured")
+		}
+
+		if err := client.Auth(auth); err != nil {
+			return nil, fmt.Errorf("failed imap oauth login: %w", err)
 		}
 
 		log.Debug().Msg("Authenticated")

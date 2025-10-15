@@ -24,9 +24,6 @@ import (
 const (
 	// Folders over this size will have their UIDs paginated rather than loaded all at once
 	uidSearchPaginateThreshold = 1000
-
-	// Amount of time to fetch each UID batch for when paginating the UID list
-	uidSearchBatchDays = time.Hour * 24 * 90
 )
 
 // Removes all HTML for excerpt generation
@@ -129,6 +126,9 @@ func (f *Folder) FetchEmailAndContent(ctx context.Context, uid imap.UID) (*types
 	}
 
 	resp, err := f.getOrFetchEmailParts(ctx, parts, f.imap.WithFolderPriorityConnection)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get email parts: %w", err)
+	}
 	return emails[0], f.makeBodyPartResp(ctx, resp[uid]), nil
 }
 
@@ -159,6 +159,9 @@ func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]
 				{Text: []string{search}},
 			}},
 		}, nil).Wait()
+		if err != nil {
+			return err
+		}
 
 		uids := res.AllUIDs()
 
@@ -508,6 +511,9 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 
 		// Now update flags for unchanged emails
 		flags, err := f.fetchEmailFlagsWithConnection(ctx, conn, unchanged)
+		if err != nil {
+			return fmt.Errorf("failed to fetch email flags: %w", err)
+		}
 		for uid, flags := range flags {
 			old := false
 			email, err := f.caches.FolderEmailCache.Get(ctx, f.AccountName, f.Name, uid)

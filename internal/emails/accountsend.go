@@ -123,7 +123,7 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) error {
 		h.SetFilename(filepath.Base(attachment.Path))
 		w, err := mw.CreateAttachment(h)
 		if err != nil {
-			return fmt.Errorf("Failed to create attachment: %w", err)
+			return fmt.Errorf("failed to create attachment: %w", err)
 		}
 		f, err := os.Open(attachment.Path)
 		if err != nil {
