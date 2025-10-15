@@ -48,7 +48,7 @@ class SystemStore extends BaseStore {
         if (hasUpdate === this.props.hasUpdate && currentVersion === this.props.currentVersion) {
             return;
         }
-        this.props.update = update;
+        this.props.update = update || undefined;
         this.props.hasUpdate = hasUpdate;
         this.props.currentVersion = currentVersion;
         this.triggerUpdate(["update", "hasUpdate", "currentVersion"]);

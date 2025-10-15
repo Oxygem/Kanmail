@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -308,45 +307,48 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 }
 
 // Returns bool if we have an update as well as the current version string (for UI)
-func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, string, error) {
+func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, string) {
 	ctx = a.log.With().Str("method", "CheckUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
 	update, err := a.getUpdate(ctx)
-	return update, fmt.Sprintf("2.%d", a.AppVersion), err
+	if err != nil {
+		// Log, but don't propagate to the frontend
+		zerolog.Ctx(ctx).Err(err).Msg("Failed to check backend for update")
+	}
+	return update, fmt.Sprintf("2.%d", a.AppVersion)
 }
 
-// UNUSED/WIP due to issues updating (ditto can't overwrite app), no win/linux implementation
-func (a *AppService) DoUpdate(ctx context.Context) error {
+func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 	ctx = a.log.With().Str("method", "DoUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
 	update, err := a.getUpdate(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	} else if update == nil {
-		return errors.New("no update found")
+		return nil, errors.New("no update found")
 	}
 
 	downloadPath := filepath.Join(a.cacheDir, "Kanmail.zip")
 
 	client := &http.Client{
-		Timeout: 300 * time.Minute, // Generous timeout for large downloads
+		Timeout: 5 * time.Minute,
 	}
 
 	resp, err := client.Get(update.Link)
 	if err != nil {
-		return fmt.Errorf("failed to download update: %w", err)
+		return nil, fmt.Errorf("failed to download update: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("download failed with status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("download failed with status: %d", resp.StatusCode)
 	}
 
 	file, err := os.Create(downloadPath)
 	if err != nil {
-		return fmt.Errorf("failed to create download file: %w", err)
+		return nil, fmt.Errorf("failed to create download file: %w", err)
 	}
 	defer file.Close()
 
@@ -359,14 +361,14 @@ func (a *AppService) DoUpdate(ctx context.Context) error {
 	_, err = io.Copy(writer, resp.Body)
 	if err != nil {
 		os.Remove(downloadPath) // Clean up on error
-		return fmt.Errorf("failed to write download data: %w", err)
+		return nil, fmt.Errorf("failed to write download data: %w", err)
 	}
 
 	// Calculate and verify SHA256
 	calculatedHash := hex.EncodeToString(hasher.Sum(nil))
 	if calculatedHash != update.SHA256Sum {
 		os.Remove(downloadPath) // Clean up invalid file
-		return fmt.Errorf("SHA256 verification failed: expected %s, got %s", update.SHA256Sum, calculatedHash)
+		return nil, fmt.Errorf("SHA256 verification failed: expected %s, got %s", update.SHA256Sum, calculatedHash)
 	}
 
 	a.log.Info().
@@ -374,54 +376,69 @@ func (a *AppService) DoUpdate(ctx context.Context) error {
 		Str("sha256", calculatedHash).
 		Msg("Update downloaded and verified successfully")
 
-	if a.app.Environment().Debug {
-		return errors.New("refusing to self update in debug mode")
+	currentPath, err := os.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("cannot find executable to update: %w", err)
 	}
+	newPath := downloadPath
 
 	switch runtime.GOOS {
 	case "darwin":
-		var appPath string
-		cmdPath, err := os.Executable()
-		appPath = strings.TrimSuffix(cmdPath, "Kanmail.app/Contents/MacOS/Kanmail")
-		if err != nil {
-			appPath = "/Applications/"
+		// Handle macOS .app folder structure
+		currentPath = strings.TrimSuffix(currentPath, "/Contents/MacOS/Kanmail")
+		// Swap downloaded zip out for .app folder
+		if err := exec.Command("ditto", "-xk", downloadPath, a.cacheDir).Run(); err != nil {
+			return nil, fmt.Errorf("ditto error: %w", err)
 		}
-		err = exec.Command("ditto", "-xk", downloadPath, appPath).Run()
-		if err != nil {
-			return fmt.Errorf("ditto error: %w", err)
-		}
-		err = exec.Command("rm", downloadPath).Run()
-		if err != nil {
-			log.Println("removing error:", err)
-		}
-
-	// TODO: Windows
-	// TODO: Linux
-	// https://github.com/inconshreveable/go-update/blob/master/apply.go#L22
-	default:
-		return fmt.Errorf("unknown GOOS: %s", runtime.GOOS)
+		newPath = path.Join(a.cacheDir, "Kanmail.app")
 	}
 
+	if a.app.Env.Info().Debug {
+		return nil, errors.New("refusing to self update in debug mode")
+	}
+
+	return nil, a.applyUpdate(currentPath, newPath)
+}
+
+// Apply the update by replacing $currentPath with $newPath. This works by:
+// 1. move $current -> $current.old
+// 2. move $new -> $current
+// 3. delete $current.old
+func (a *AppService) applyUpdate(currentPath, newPath string) error {
+	a.log.Info().
+		Str("current_path", currentPath).
+		Str("new_path", newPath).
+		Msg("Applying update")
+
+	oldPath := fmt.Sprintf("%s.old", currentPath)
+
+	if err := os.Rename(currentPath, oldPath); err != nil {
+		return fmt.Errorf("failed to move current path: %w", err)
+	} else if err := os.Rename(newPath, currentPath); err != nil {
+		return fmt.Errorf("failed to move new to current path: %w", err)
+	}
+
+	if err := os.RemoveAll(oldPath); err != nil {
+		a.log.Err(err).Msg("Failed to remove old app path")
+	}
 	return nil
 }
 
-// Unused as above
-func (a *AppService) RestartAfterUpdate(ctx context.Context) error {
+// Restarts the current process using the same executable, panics on any errors so we do nuke the
+// current process.
+func (a *AppService) RestartAfterUpdate(ctx context.Context) {
 	bin := os.Args[0]
 	if !filepath.IsAbs(bin) {
 		var err error
 		bin, err = os.Executable()
 		if err != nil {
-			return fmt.Errorf(
-				"cannot get path to binary %q (launch with absolute path): %w",
-				os.Args[0], err)
+			panic(fmt.Errorf("cannot get path to binary %q (launch with absolute path): %w", os.Args[0], err))
 		}
 	}
 
 	if err := syscall.Exec(bin, append([]string{bin}, os.Args[1:]...), os.Environ()); err != nil {
-		return fmt.Errorf("cannot restart: %w", err)
+		panic(fmt.Errorf("cannot restart: %w", err))
 	}
-	return nil
 }
 
 // License

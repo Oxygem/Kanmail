@@ -135,6 +135,7 @@ interface IFiltersState {
   showAllFolders: boolean;
   isUpdating: boolean;
   updateNeedsRestart: boolean;
+  updateError?: boolean;
 }
 
 @subscribe(filterStore, settingsStore)
@@ -271,40 +272,47 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
       return null;
     }
 
+    if (this.state.updateError) {
+      return <li className="small">
+        <a onClick={() => {
+          this.setState({ isUpdating: true })
+          AppService.OpenLink(systemStore.props.update!.link)
+        }}>
+          <i className="fa fa-arrow-up red"></i> Auto-update failed, click to download update
+        </a>
+      </li>
+    }
+
+    if (this.state.isUpdating) {
+      return <li className="small"><a className="disabled">
+        <i className="fa fa-refresh fa-spin green"></i> Updating
+      </a></li>
+    }
+
+    if (this.state.updateNeedsRestart) {
+      return <li className="small"><a onClick={AppService.RestartAfterUpdate}>
+        <i className="fa fa-refresh green"></i> Restart to update
+      </a></li>;
+    }
+
     return <li className="small">
       <a onClick={() => {
         this.setState({ isUpdating: true })
-        AppService.OpenLink(systemStore.props.update!.link)
+        AppService.DoUpdate().then(() => {
+          this.setState({
+            isUpdating: false,
+            updateNeedsRestart: true,
+          })
+        }).catch(e => {
+          this.setState({
+            updateError: true,
+          })
+          throw e;
+        });
       }}>
-        <i className="fa fa-arrow-up green"></i> Download update
+        <i className="fa fa-arrow-up green"></i> Update Kanmail
       </a>
     </li>
-
-    // if (this.state.isUpdating) {
-    //   return <li className="small"><a className="disabled">
-    //     <i className="fa fa-refresh fa-spin green"></i> Updating
-    //   </a></li>
-    // }
-
-    // if (this.state.updateNeedsRestart) {
-    //   return <li className="small"><a onClick={AppService.RestartAfterUpdate}>
-    //     <i className="fa fa-refresh green"></i> Restart to update
-    //   </a></li>;
-    // }
-
-    // return <li className="small">
-    //   <a onClick={() => {
-    //     this.setState({ isUpdating: true })
-    //     AppService.DoUpdate().then(() => {
-    //       this.setState({
-    //         isUpdating: false,
-    //         updateNeedsRestart: true,
-    //       })
-    //     });
-    //   }}>
-    //     <i className="fa fa-arrow-up green"></i> Update Kanmail
-    //   </a>
-    // </li>
   }
 
   render() {
