@@ -23,4 +23,3 @@ chmod +x linuxdeploy-x86_64.AppImage
 
 # Rename the generated AppImage
 mv "${APP_NAME}*.AppImage" "${APP_NAME}.AppImage"
-
