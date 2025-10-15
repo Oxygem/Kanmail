@@ -25,7 +25,7 @@ tasks:
     deps:
       - task: build
         vars:
-          PRODUCTION: "true"
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
       - task: create:appimage
       - task: create:deb
@@ -38,7 +38,7 @@ tasks:
     deps:
       - task: build
         vars:
-          PRODUCTION: "true"
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
       - task: generate:dotdesktop
     cmds:
       - cp {{.APP_BINARY}} {{.APP_NAME}}
@@ -56,7 +56,7 @@ tasks:
     deps:
       - task: build
         vars:
-          PRODUCTION: "true"
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
       - task: generate:dotdesktop
       - task: generate:deb
@@ -66,7 +66,7 @@ tasks:
     deps:
       - task: build
         vars:
-          PRODUCTION: "true"
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
       - task: generate:dotdesktop
       - task: generate:rpm
@@ -76,7 +76,7 @@ tasks:
     deps:
       - task: build
         vars:
-          PRODUCTION: "true"
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
       - task: generate:dotdesktop
       - task: generate:aur
