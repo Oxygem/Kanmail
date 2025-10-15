@@ -5,20 +5,41 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
-func MakeWindow(app *application.App, title, url string) *application.WebviewWindow {
-	window := app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
-		Title: title,
+var macTitleBarHiddenInsetCompact = application.MacTitleBar{
+	AppearsTransparent:   true,
+	Hide:                 false,
+	HideTitle:            true,
+	FullSizeContent:      true,
+	UseToolbar:           true,
+	HideToolbarSeparator: true,
+	ToolbarStyle:         application.MacToolbarStyleUnifiedCompact,
+}
+
+type WindowOptions struct {
+	Title   string
+	URL     string
+	Compact bool
+}
+
+func MakeWindow(app *application.App, options WindowOptions) *application.WebviewWindow {
+	titleBar := application.MacTitleBarHiddenInset
+	if options.Compact {
+		titleBar = macTitleBarHiddenInsetCompact
+	}
+
+	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: options.Title,
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
-			TitleBar:                application.MacTitleBarHiddenInset,
+			TitleBar:                titleBar,
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		BackgroundType:   application.BackgroundTypeTransparent,
-		URL:              url,
+		URL:              options.URL,
 	})
 
-	if app.Environment().Debug {
+	if app.Env.Info().Debug {
 		window.OnWindowEvent(
 			events.Common.WindowRuntimeReady,
 			func(event *application.WindowEvent) {

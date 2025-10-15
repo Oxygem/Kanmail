@@ -104,7 +104,7 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 	return outSettings
 }
 
-func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) {
+func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) types.Settings {
 	ctx = s.log.WithContext(ctx)
 	defer util.LogPanic(ctx)
 
@@ -141,6 +141,7 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	s.settings = &settings
 
 	s.appService.SendSettingsChangedEvent(ctx, settings)
+	return settings
 }
 
 func (s *SettingsService) getKeyringUser(subservice string, name types.AccountName) string {

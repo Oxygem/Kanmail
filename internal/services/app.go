@@ -114,7 +114,11 @@ func (a *AppService) OpenSendWindow(options OpenSendWindowOptions) {
 		RawQuery: v.Encode(),
 	}
 
-	window := util.MakeWindow(a.app, "Kanmail v2 Send", u.String())
+	window := util.MakeWindow(a.app, util.WindowOptions{
+		Title:   "Kanmail v2 Send",
+		URL:     u.String(),
+		Compact: true,
+	})
 	a.sendWindows = append(a.sendWindows, window)
 }
 
@@ -136,7 +140,10 @@ func (a *AppService) OpenMetaWindow() {
 		}
 	}
 
-	a.metaWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/index.html?app=meta")
+	a.metaWindow = util.MakeWindow(a.app, util.WindowOptions{
+		Title:   "Kanmail v2 License",
+		URL:     "/index.html?app=meta",
+		Compact: true})
 }
 
 func (a *AppService) OpenLicenseWindow() {
@@ -157,7 +164,11 @@ func (a *AppService) OpenLicenseWindow() {
 		}
 	}
 
-	a.licenseWindow = util.MakeWindow(a.app, "Kanmail v2 License", "/index.html?app=license")
+	a.licenseWindow = util.MakeWindow(a.app, util.WindowOptions{
+		Title:   "Kanmail v2 License",
+		URL:     "/index.html?app=license",
+		Compact: true,
+	})
 }
 
 func (a *AppService) OpenSettingsWindow() {
@@ -178,14 +189,18 @@ func (a *AppService) OpenSettingsWindow() {
 		}
 	}
 
-	a.settingsWindow = util.MakeWindow(a.app, "Kanmail v2 Settings", "/index.html?app=settings")
+	a.settingsWindow = util.MakeWindow(a.app, util.WindowOptions{
+		Title:   "Kanmail v2 Settings",
+		URL:     "/index.html?app=settings",
+		Compact: true,
+	})
 }
 
 func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings types.Settings) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	a.app.EmitEvent(string(types.SettingsChangedEvent), settings)
+	a.app.Event.Emit(string(types.SettingsChangedEvent), settings)
 }
 
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) string {
@@ -211,7 +226,7 @@ func (a *AppService) OpenOpenFilesDialog() []string {
 	}
 }
 
-func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) {
+func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
 	dialog := application.QuestionDialog()
 	dialog.SetTitle("Kanmail license")
 	dialog.SetMessage("Kanmail may be evaluated for free, however a license must be purchased for continued use.")
@@ -230,14 +245,15 @@ func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) {
 	})
 
 	dialog.Show()
+	return nil
 }
 
-func (a *AppService) TrackAnalytics(ctx context.Context, event string, properties map[string]any) error {
+func (a *AppService) TrackAnalytics(ctx context.Context, event string, properties map[string]any) (*struct{}, error) {
 	ctx = a.log.With().Str("method", "TrackAnalytics").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
 	// TODO: we should put this in a queue and batch
-	return backend.SendAnalytics(ctx, a.DeviceID, event, properties)
+	return nil, backend.SendAnalytics(ctx, a.DeviceID, event, properties)
 }
 
 // Updates
@@ -420,7 +436,7 @@ func (a *AppService) RemoveLicense(ctx context.Context) error {
 	defer util.LogPanic(ctx)
 
 	err := keyring.Delete(appDirName, a.getKeyringLicenseUser())
-	a.app.EmitEvent(string(types.LicenseChangedEvent))
+	a.app.Event.Emit(string(types.LicenseChangedEvent))
 	return err
 }
 
@@ -442,7 +458,7 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 
 	// Cache the key, ignore error here as will retry
 	err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey))
-	a.app.EmitEvent(string(types.LicenseChangedEvent))
+	a.app.Event.Emit(string(types.LicenseChangedEvent))
 	return true, err
 }
 

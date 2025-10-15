@@ -88,7 +88,10 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int) *Kanmail {
 }
 
 func (k *Kanmail) Run() error {
-	emailsWindow := util.MakeWindow(k.App, "Kanmail v2", "/index.html?app=emails")
+	emailsWindow := util.MakeWindow(k.App, util.WindowOptions{
+		Title: "Kanmail v2",
+		URL:   "/index.html?app=emails",
+	})
 
 	// Quit the entire app if the main window is closed
 	emailsWindow.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
