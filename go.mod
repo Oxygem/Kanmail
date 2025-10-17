@@ -72,5 +72,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace github.com/emersion/go-imap/v2 => github.com/oxygem/go-imap/v2 v2.0.0-20251016193044-1568d373c4d1
+
 // replace github.com/wailsapp/wails/v3 => ../wails/v3
 // replace github.com/emersion/go-imap/v2 => ../go-imap
