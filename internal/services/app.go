@@ -289,10 +289,6 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 					Int("version_current", a.AppVersion).
 					Msg("Backend has an older latest version")
 			} else {
-				if os == "windows" {
-					// Link to the installer in case of failed auto-update
-					v.Link = strings.Replace(v.Link, "Kanmail.exe", "Kanmail-installer.exe", 1)
-				}
 				a.log.Info().
 					Int("version", v.Version).
 					Int("version_current", a.AppVersion).

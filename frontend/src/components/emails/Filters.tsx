@@ -273,10 +273,12 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
     }
 
     if (this.state.updateError) {
+      let link = systemStore.props.update!.link;
+      link = link.replace("Kanmail.exe", "Kanmail-installer.exe")
       return <li className="small">
         <a onClick={() => {
           this.setState({ isUpdating: true })
-          AppService.OpenLink(systemStore.props.update!.link)
+          AppService.OpenLink(link)
         }}>
           <i className="fa fa-arrow-up red"></i> Auto-update failed, click to download update
         </a>
