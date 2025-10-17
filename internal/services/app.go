@@ -329,7 +329,7 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 		return nil, errors.New("no update found")
 	}
 
-	downloadPath := filepath.Join(a.cacheDir, "Kanmail.zip")
+	downloadPath := filepath.Join(a.cacheDir, path.Base(update.Link))
 
 	client := &http.Client{
 		Timeout: 5 * time.Minute,
