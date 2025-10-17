@@ -274,8 +274,7 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 		// macOS app is a universal binary, both arm64 + amd64
 		arch = "universal"
 	case "windows":
-		// Send  Windows users to download the installer, amd64 only (works on arm via emulation)
-		os = "windows-installer"
+		// Windows builds are amd64 only, but work on arm64 under emulation
 		arch = "amd64"
 	}
 
@@ -290,6 +289,10 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 					Int("version_current", a.AppVersion).
 					Msg("Backend has an older latest version")
 			} else {
+				if os == "windows" {
+					// Link to the installer in case of failed auto-update
+					v.Link = strings.Replace(v.Link, "Kanmail.exe", "Kanmail-installer.exe", 1)
+				}
 				a.log.Info().
 					Int("version", v.Version).
 					Int("version_current", a.AppVersion).

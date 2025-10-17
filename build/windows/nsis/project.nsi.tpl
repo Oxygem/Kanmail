@@ -51,10 +51,6 @@ OutFile "..\..\..\bin\${INFO_PROJECTNAME}-${ARCH}-installer.exe" # Name of the i
 InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
 ShowInstDetails show # This will always show the installation details.
 
-Function .onInit
-   !insertmacro wails.checkArchitecture
-FunctionEnd
-
 Section
     !insertmacro wails.setShellContext
 
