@@ -349,24 +349,25 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create download file: %w", err)
 	}
+	// Close + remove any lefover file
 	defer file.Close()
+	defer os.Remove(downloadPath)
 
 	hasher := sha256.New()
 
-	// Use MultiWriter to tee the data to both file and hasher simultaneously
+	// Write the file + hasher
 	writer := io.MultiWriter(file, hasher)
-
-	// Copy response body to both file and hasher
-	_, err = io.Copy(writer, resp.Body)
-	if err != nil {
-		os.Remove(downloadPath) // Clean up on error
+	if _, err = io.Copy(writer, resp.Body); err != nil {
 		return nil, fmt.Errorf("failed to write download data: %w", err)
+	}
+
+	if err := file.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close downloaded file: %w", err)
 	}
 
 	// Calculate and verify SHA256
 	calculatedHash := hex.EncodeToString(hasher.Sum(nil))
 	if calculatedHash != update.SHA256Sum {
-		os.Remove(downloadPath) // Clean up invalid file
 		return nil, fmt.Errorf("SHA256 verification failed: expected %s, got %s", update.SHA256Sum, calculatedHash)
 	}
 
@@ -396,7 +397,11 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 		return nil, errors.New("refusing to self update in debug mode")
 	}
 
-	return nil, a.applyUpdate(currentPath, newPath)
+	err = a.applyUpdate(currentPath, newPath)
+	if err != nil {
+		a.log.Err(err).Msg("Error applying update")
+	}
+	return nil, err
 }
 
 // Apply the update by replacing $currentPath with $newPath. This works by:
@@ -426,6 +431,8 @@ func (a *AppService) applyUpdate(currentPath, newPath string) error {
 // Restarts the current process using the same executable, panics on any errors so we do nuke the
 // current process.
 func (a *AppService) RestartAfterUpdate(ctx context.Context) {
+	a.log.Info().Msg("Restarting Kanmail after update...")
+
 	bin := os.Args[0]
 	if !filepath.IsAbs(bin) {
 		var err error
@@ -433,6 +440,20 @@ func (a *AppService) RestartAfterUpdate(ctx context.Context) {
 		if err != nil {
 			panic(fmt.Errorf("cannot get path to binary %q (launch with absolute path): %w", os.Args[0], err))
 		}
+	}
+
+	if runtime.GOOS == "windows" {
+		// Windows has no exec syscall to replace the process, so just start a new Kanmail exe and
+		// then exit this one.
+		cmd := exec.Command(os.Args[0], os.Args[1:]...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Start(); err != nil {
+			panic(err)
+		}
+		os.Exit(0)
+		panic("goodbye")
 	}
 
 	if err := syscall.Exec(bin, append([]string{bin}, os.Args[1:]...), os.Environ()); err != nil {
