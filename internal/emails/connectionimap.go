@@ -195,7 +195,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 			if err := client.Login(c.conf.Username, c.conf.Password).Wait(); err != nil {
 				return nil, fmt.Errorf("failed imap password login: %w %s@%s:%d", err, c.conf.Username, c.conf.Host, c.conf.Port)
 			}
-		} else if c.conf.OAuthProvider != "" {
+		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
 			if err := c.doOAuthLogin(ctx, client); err != nil {
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
