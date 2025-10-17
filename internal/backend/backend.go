@@ -80,11 +80,12 @@ func CheckLicense(ctx context.Context, deviceID, licenseKey string) (bool, error
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
+	switch resp.StatusCode {
+	case http.StatusOK:
 		return true, nil
-	} else if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+	case http.StatusUnauthorized, http.StatusForbidden:
 		return false, nil
-	} else {
+	default:
 		return false, fmt.Errorf("license check failed with status %d", resp.StatusCode)
 	}
 }
