@@ -2,8 +2,8 @@ Unicode true
 
 !define INFO_PROJECTNAME "Kanmail"
 !define INFO_COMPANYNAME "Oxygem LLP"
-!define INFO_PRODUCTNAME "Kanmail v2"
-!define INFO_PRODUCTVERSION "2.0.0.KANMAIL_APP_VERSION"
+!define INFO_PRODUCTNAME "Kanmail"
+!define INFO_PRODUCTVERSION "KANMAIL_APP_VERSION"
 !define INFO_COPYRIGHT "© 2025, Oxygem LLP"
 
 ## Include the wails tools
@@ -11,8 +11,8 @@ Unicode true
 !include "wails_tools.nsh"
 
 # The version information for this two must consist of 4 parts
-VIProductVersion "${INFO_PRODUCTVERSION}.0"
-VIFileVersion    "${INFO_PRODUCTVERSION}.0"
+VIProductVersion "${INFO_PRODUCTVERSION}.0.0"
+VIFileVersion    "${INFO_PRODUCTVERSION}.0.0"
 
 VIAddVersionKey "CompanyName"     "${INFO_COMPANYNAME}"
 VIAddVersionKey "FileDescription" "${INFO_PRODUCTNAME} Installer"

@@ -10,11 +10,11 @@
         <key>CFBundleIdentifier</key>
         <string>com.oxygem.kanmail</string>
         <key>CFBundleVersion</key>
-        <string>2.KANMAIL_APP_VERSION</string>
+        <string>KANMAIL_APP_VERSION</string>
         <key>CFBundleGetInfoString</key>
         <string>This is a comment</string>
         <key>CFBundleShortVersionString</key>
-        <string>2.KANMAIL_APP_VERSION</string>
+        <string>KANMAIL_APP_VERSION</string>
         <key>CFBundleIconFile</key>
         <string>icons</string>
         <key>LSMinimumSystemVersion</key>
