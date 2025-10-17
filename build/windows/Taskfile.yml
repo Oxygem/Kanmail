@@ -4,6 +4,14 @@ includes:
   common: ../Taskfile.yml
 
 tasks:
+  generate:syso:
+    summary: Generates Windows `.syso` file
+    dir: build
+    cmds:
+      - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails.exe.manifest -info windows/info.json -out ../wails_windows_{{.ARCH}}.syso
+    vars:
+      ARCH: '{{.ARCH | default ARCH}}'
+
   build:
     summary: Builds the application for Windows
     deps:
@@ -12,6 +20,7 @@ tasks:
         vars:
           PRODUCTION: '{{.PRODUCTION}}'
       - task: common:generate:icons
+      - task: generate:syso
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe
     vars:
