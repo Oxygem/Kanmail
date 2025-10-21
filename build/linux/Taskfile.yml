@@ -28,9 +28,6 @@ tasks:
           PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
       - task: create:appimage
-      - task: create:deb
-      - task: create:rpm
-      - task: create:aur
 
   create:appimage:
     summary: Creates an AppImage
@@ -50,51 +47,6 @@ tasks:
       ICON: '../../appicon.png'
       DESKTOP_FILE: '../{{.APP_NAME}}.desktop'
       OUTPUT_DIR: '../../../bin'
-
-  create:deb:
-    summary: Creates a deb package
-    deps:
-      - task: build
-        vars:
-          PRODUCTION: '{{.PRODUCTION | default "true"}}'
-    cmds:
-      - task: generate:dotdesktop
-      - task: generate:deb
-
-  create:rpm:
-    summary: Creates a rpm package
-    deps:
-      - task: build
-        vars:
-          PRODUCTION: '{{.PRODUCTION | default "true"}}'
-    cmds:
-      - task: generate:dotdesktop
-      - task: generate:rpm
-
-  create:aur:
-    summary: Creates a arch linux packager package
-    deps:
-      - task: build
-        vars:
-          PRODUCTION: '{{.PRODUCTION | default "true"}}'
-    cmds:
-      - task: generate:dotdesktop
-      - task: generate:aur
-
-  generate:deb:
-    summary: Creates a deb package
-    cmds:
-      - wails3 tool package -name {{.APP_NAME}} -format deb -config ./build/linux/nfpm/nfpm.yaml -out {{.ROOT_DIR}}/bin
-
-  generate:rpm:
-    summary: Creates a rpm package
-    cmds:
-      - wails3 tool package -name {{.APP_NAME}} -format rpm -config ./build/linux/nfpm/nfpm.yaml -out {{.ROOT_DIR}}/bin
-
-  generate:aur:
-    summary: Creates a arch linux packager package
-    cmds:
-      - wails3 tool package -name {{.APP_NAME}} -format archlinux -config ./build/linux/nfpm/nfpm.yaml -out {{.ROOT_DIR}}/bin
 
   generate:dotdesktop:
     summary: Generates a `.desktop` file
