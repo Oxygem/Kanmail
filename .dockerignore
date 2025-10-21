@@ -1,0 +1,16 @@
+*.log
+.envrc
+
+.task/
+bin/
+
+frontend/dist/
+frontend/wails/
+frontend/bindings/
+frontend/node_modules/
+
+build/darwin/icons.icns
+build/darwin/Info.plist
+build/windows/icon.ico
+build/windows/nsis/project.nsi
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
