@@ -391,6 +391,17 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 			return nil, fmt.Errorf("ditto error: %w", err)
 		}
 		newPath = path.Join(a.cacheDir, "Kanmail.app")
+	case "linux":
+		// Ensure the new AppImage is executable
+		if err := os.Chmod(downloadPath, 0755); err != nil {
+			return nil, fmt.Errorf("failed to set permissions on downloaded AppImage")
+		}
+		// Use APPIMAGE env on Linux (where set) since the exe is mounted in a tmpfs
+		appImagePath := os.Getenv("APPIMAGE")
+		if appImagePath == "" {
+			return nil, fmt.Errorf("unable to find AppImage path")
+		}
+		currentPath = appImagePath
 	}
 
 	if a.app.Env.Info().Debug {
@@ -442,7 +453,14 @@ func (a *AppService) RestartAfterUpdate(ctx context.Context) {
 		}
 	}
 
-	if runtime.GOOS == "windows" {
+	switch runtime.GOOS {
+	case "linux":
+		appImagePath := os.Getenv("APPIMAGE")
+		if appImagePath == "" {
+			panic(fmt.Errorf("unable to find AppImage path"))
+		}
+		bin = appImagePath
+	case "windows":
 		// Windows has no exec syscall to replace the process, so just start a new Kanmail exe and
 		// then exit this one.
 		cmd := exec.Command(os.Args[0], os.Args[1:]...)

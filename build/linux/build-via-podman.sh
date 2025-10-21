@@ -3,11 +3,14 @@
 set -exuo pipefail
 
 arch=${ARCH:-}
+appimageArch=
 
 case "$arch" in
     amd64)
+        appimageArch=x86_64
         ;;
     arm64)
+        appimageArch=aarch64
         ;;
     *)
         echo >2 "Invalid arch: ${arch}"
@@ -25,7 +28,7 @@ echo "Build AppImage..."
 podman exec -it $cid bash -c ". /usr/local/nvm/nvm.sh && wails3 task linux:package"
 
 echo "Copy AppImage..."
-podman cp $cid:/opt/kanmail/kanmail-$arch.AppImage $root_dir/bin/Kanmail-$arch.AppImage
+podman cp $cid:/opt/kanmail/kanmail-$appimageArch.AppImage $root_dir/bin/Kanmail-$arch.AppImage
 echo "Wrote: bin/Kanmail-$arch.AppImage"
 
 echo "Stop container..."
