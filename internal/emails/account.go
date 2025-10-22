@@ -48,6 +48,7 @@ func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *A
 
 func (a *Account) CloseConnections(ctx context.Context) {
 	a.imap.CloseConnections(ctx)
+	a.smtp.CloseConnections(ctx)
 }
 
 func (a *Account) GetFolder(name types.FolderName) *Folder {

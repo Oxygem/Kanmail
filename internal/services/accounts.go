@@ -24,12 +24,27 @@ type AccountsService struct {
 }
 
 func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *caches.Caches) *AccountsService {
-	return &AccountsService{
+	accountsService := &AccountsService{
 		log:      log.With().Str("component", "accounts").Logger(),
 		settings: settings,
 		caches:   caches,
 		accounts: make(map[types.AccountName]*emails.Account),
 	}
+
+	// Drop cached accounts on settings changes
+	settings.addOnPutSettingsCallbacks(accountsService.ResetAccountsCache)
+	return accountsService
+}
+
+func (a *AccountsService) ResetAccountsCache(ctx context.Context) error {
+	a.accountsLock.Lock()
+	defer a.accountsLock.Unlock()
+
+	for _, account := range a.accounts {
+		account.CloseConnections(ctx)
+	}
+	clear(a.accounts)
+	return nil
 }
 
 func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName types.AccountName) *emails.Account {
@@ -52,25 +67,8 @@ func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName ty
 	return nil
 }
 
-// Quick test for account settings as-is, used when updating existing accounts
-func (a *AccountsService) TestExistingAccount(
-	ctx context.Context,
-	settings types.AccountSettings,
-) (types.AccountSettings, error) {
-	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
-
-	tmpAccount := emails.NewAccount(settings, a.caches)
-	if err := tmpAccount.TestSMTPConnection(ctx); err != nil {
-		return settings, fmt.Errorf("failed to check SMTP connection: %w", err)
-	}
-
-	_, err := tmpAccount.FetchMailboxList(ctx)
-	return settings, fmt.Errorf("failed to fetch IMAP folders: %w", err)
-}
-
 // Test new account settings and populate folder mappings and other account settings
-func (a *AccountsService) TestNewAccount(
+func (a *AccountsService) TestAccountSettings(
 	ctx context.Context,
 	settings types.AccountSettings,
 ) (types.AccountSettings, error) {
@@ -83,15 +81,12 @@ func (a *AccountsService) TestNewAccount(
 		return settings, fmt.Errorf("failed to check SMTP connection: %w", err)
 	}
 
-	err := tmpAccount.FetchAndUpdateSettings(ctx)
-
-	if err != nil {
-		a.log.Err(err).Msg("Failed to configure account folders")
-	} else {
-		a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
+	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
+		return settings, fmt.Errorf("failed to check IMAP connection: %w", err)
 	}
 
-	return tmpAccount.AccountSettings, err
+	a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
+	return tmpAccount.AccountSettings, nil
 }
 
 // Autoconfigure account settings given a username (email) and password combination by attempting
@@ -140,7 +135,7 @@ func (a *AccountsService) AutoconfigureNewAccount(
 		settings.SMTPSettings.OAuthRefreshToken = options.OAuthRefreshToken
 	}
 
-	return a.TestNewAccount(ctx, settings)
+	return a.TestAccountSettings(ctx, settings)
 }
 
 func (a *AccountsService) StartOAuthRequest(

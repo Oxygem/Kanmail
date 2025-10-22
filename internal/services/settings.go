@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -19,11 +20,18 @@ import (
 	"github.com/oxygem/kanmail/internal/util"
 )
 
-const (
-	appDirName = "com.oxygem.kanmail"
+const settingsFilename = "settings.json"
 
-	settingsFilename = "settings.json"
-)
+// Figure out the app directory name - append KANMAIL_PROFILE if set
+var appDirName = "com.oxygem.kanmail"
+
+func init() {
+	profile := os.Getenv("KANMAIL_PROFILE")
+	if profile != "" {
+		appDirName = appDirName + "-" + profile
+	}
+
+}
 
 type SettingsService struct {
 	log          zerolog.Logger
@@ -37,16 +45,12 @@ type SettingsService struct {
 	AppDir   string
 	CacheDir string
 	LogsDir  string
+
+	onPutSettingsCallbacks []func(context.Context) error
 }
 
 func NewSettingsService(log zerolog.Logger, appService *AppService) *SettingsService {
-	dir := appDirName
-	profile := os.Getenv("KANMAIL_PROFILE")
-	if profile != "" {
-		dir = dir + "-" + profile
-	}
-
-	dirs := appdir.New(dir)
+	dirs := appdir.New(appDirName)
 
 	if err := os.MkdirAll(dirs.UserConfig(), os.ModePerm); err != nil {
 		panic(err)
@@ -104,7 +108,11 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 	return outSettings
 }
 
-func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) types.Settings {
+func (s *SettingsService) addOnPutSettingsCallbacks(f func(context.Context) error) {
+	s.onPutSettingsCallbacks = append(s.onPutSettingsCallbacks, f)
+}
+
+func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) {
 	ctx = s.log.WithContext(ctx)
 	defer util.LogPanic(ctx)
 
@@ -139,9 +147,13 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	}
 
 	s.settings = &settings
-
 	s.appService.SendSettingsChangedEvent(ctx, settings)
-	return settings
+
+	for _, f := range s.onPutSettingsCallbacks {
+		if err := f(ctx); err != nil {
+			panic(fmt.Errorf("put setting callback error: %w", err))
+		}
+	}
 }
 
 func (s *SettingsService) getKeyringUser(subservice string, name types.AccountName) string {
