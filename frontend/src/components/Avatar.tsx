@@ -52,28 +52,55 @@ interface IAvatarState {
 export default class Avatar extends React.Component<IAvatarProps, IAvatarState> {
   constructor(props: IAvatarProps) {
     super(props);
+    this.state = {
+      iconBytes: this.getCachedIcon(),
+    };
+  }
 
-    const state: IAvatarState = {};
+  getCachedIcon = (): string | undefined => {
+    const email = this.props.address ? this.props.address.email : "";
+    if (emailToIconBytesCache[email] !== undefined) {
+      return emailToIconBytesCache[email]!;
+    }
+  }
 
-    if (settingsStore.props.system.loadContactIcons) {
-      const email = props.address ? props.address.email : "";
-      if (emailToIconBytesCache[email] !== undefined) {
-        state.iconBytes = emailToIconBytesCache[email]!;
-      } else {
-        contactsStore.getAvatar(email).then((resp: AvatarResp) => {
-          if (!resp) {
-            emailToIconBytesCache[email] = null
-            console.log("No avatar found", email)
-            return
-          }
-          this.setState({ iconBytes: resp.data! })
-          emailToIconBytesCache[email] = resp.data!;
-          console.log("Loaded avatar", email);
-        })
-      }
+  getIcon = (): string | undefined => {
+    if (!settingsStore.props.system.loadContactIcons) {
+      return;
     }
 
-    this.state = state;
+    const icon = this.getCachedIcon();
+    if (icon) {
+      this.setState({ iconBytes: icon });
+      return;
+    }
+
+    const email = this.props.address ? this.props.address.email : "";
+    contactsStore.getAvatar(email).then((resp: AvatarResp) => {
+      if (!resp) {
+        emailToIconBytesCache[email] = null
+        console.log("No avatar found", email)
+        return
+      }
+      this.setState({ iconBytes: resp.data! })
+      emailToIconBytesCache[email] = resp.data!;
+      console.log("Loaded avatar", email);
+    })
+  }
+
+  componentDidMount() {
+    if (!this.state.iconBytes) {
+      this.getIcon();
+    }
+  }
+
+  componentDidUpdate(prevProps: IAvatarProps) {
+    if (
+      prevProps.address.email === this.props.address.email
+      && prevProps.address.name === this.props.address.name) {
+      return;
+    }
+    this.getIcon();
   }
 
   checkIcon = (ev) => {
