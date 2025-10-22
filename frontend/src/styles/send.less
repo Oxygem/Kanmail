@@ -7,7 +7,6 @@ section#new-email {
 }
 
 form#send-form {
-  padding: 10px 10px 0 10px;
   position: absolute;
   width: 100%;
   top: 40px;
@@ -16,18 +15,15 @@ form#send-form {
   margin: 0;
 
   label {
-    // width: 55px;
-    padding-left: 10px;
-    text-align: right;
-    padding-right: 2px;
+    text-align: center;
+    padding-right: 10px;
     font-size: 14px;
-    margin-bottom: 5px;
-    margin-top: 4px;
+    margin: 3px 0;
   }
 
   div input {
     padding: 2px 9px;
-    margin: 0 2px;
+    // margin: 0 2px;
     font-size: 14px;
     width: 100%;
     outline: none;
@@ -51,8 +47,7 @@ form#send-form {
   }
 
   div.form-top {
-    // position: relative;
-    // z-index: 3;
+    padding: 10px;
   }
 
   div.form-content {
@@ -170,12 +165,15 @@ form#send-form {
   .squire-editor {
     height: 100%;
     outline: none;
-    padding: 20px 10px 0 10px;
+    padding: 40px 10px 0 10px;
   }
 
   div.toolbar {
     position: fixed;
-    margin-left: 10px;
+    left: 0;
+    right: 0;
+    padding-left: 6px;
+    padding-bottom: 10px;
 
     button {
       font-size: 16px;

@@ -1,6 +1,4 @@
-import { Editor } from "@tiptap/core";
 import _ from "lodash";
-import PropTypes from "prop-types";
 import React from "react";
 import Select from "react-select";
 import AsyncCreatableSelect from "react-select/async-creatable";
@@ -22,8 +20,7 @@ import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import { stopEventPropagation } from "../../util/element.ts";
 import { formatAddress } from "../../util/string.js";
-import { closeWindow, makeDragElement } from "../../window.ts";
-// import EditorSimple from "../EditorSimple.jsx";
+import { makeDragElement } from "../../window.ts";
 import ControlInput from "../emails/ControlInput.tsx";
 import SquireEditor from "./SquireEditor.tsx";
 
@@ -208,6 +205,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       to: _.map(this.state.to, opt => opt.value),
       cc: _.map(this.state.cc, opt => opt.value),
       attachments: this.state.attachments,
+      replyingTo: this.props.message,
     };
 
     EmailsService.SendEmail(this.state.accountContact.value[0], sendOptions).then(() => {
@@ -331,17 +329,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         >
           <div className="flex form-top" onClick={stopEventPropagation}>
             <div className="wide flex flex-nowrap">
-              <label htmlFor="to">To</label>
+              <label htmlFor="to">To:</label>
               {this.renderContactsSelect("to")}
             </div>
 
             <div className="wide flex flex-nowrap">
-              <label htmlFor="cc">CC</label>
+              <label htmlFor="cc">CC:</label>
               {this.renderContactsSelect("cc")}
             </div>
 
             <div className="wide flex flex-nowrap">
-              <label htmlFor="subject">Subject</label>
+              <label htmlFor="subject">Subject:</label>
               <input
                 id="subject"
                 type="text"
@@ -351,7 +349,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             </div>
 
             <div className="wide flex">
-              <label htmlFor="account">From</label>
+              <label htmlFor="account">From:</label>
               <Select
                 id="account"
                 classNamePrefix="react-select"
@@ -363,13 +361,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           </div>
 
           <div className="flex form-content" onClick={stopEventPropagation}>
-            {/*<EditorSimple
-              initialContent={this.props.messageContent || ""}
-              onUpdate={(ev: { editor: Editor }) => this.setState({
-                html: ev.editor.getHTML(),
-                text: ev.editor.getText(),
-              })}
-            />*/}
             <SquireEditor
               initialContent={this.props.messageContent || ""}
               onUpdate={data => {
