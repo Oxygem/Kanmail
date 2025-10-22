@@ -95,7 +95,7 @@ func (e *EmailsService) SendEmail(
 		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
 	}
 
-	return account.SendEmail(ctx, options)
+	return types.WrapAccountError(accountName, account.SendEmail(ctx, options))
 }
 
 func (e *EmailsService) GetAccountFolderNames(

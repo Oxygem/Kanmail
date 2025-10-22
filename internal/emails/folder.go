@@ -1,6 +1,7 @@
 package emails
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"slices"
@@ -92,6 +93,21 @@ func (f *Folder) reset() {
 	f.uidsStartAt = 0
 	f.lastSentUID = imap.UID(0)
 	f.lastSentDate = time.Now().Add(24 * time.Hour)
+}
+
+func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) error {
+	return f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+		size := int64(b.Len())
+		appendCmd := conn.Append(string(f.Name), size, nil)
+		if _, err := appendCmd.Write(b.Bytes()); err != nil {
+			return fmt.Errorf("failed to write message: %w", err)
+		} else if err := appendCmd.Close(); err != nil {
+			return fmt.Errorf("failed to close message: %w", err)
+		} else if _, err := appendCmd.Wait(); err != nil {
+			return fmt.Errorf("APPEND command failed: %w", err)
+		}
+		return nil
+	})
 }
 
 // Fetch & search (does not alter folder state, no lock)

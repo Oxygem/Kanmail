@@ -9,6 +9,15 @@ import (
 // The imapinterface package exists entirely to enable swapping out the actual imap implementation
 // with a fake one for testing and generating screenshot data/etc.
 
+// Ensure commands match upstream - THESE DONT DO ANYTHING?
+var _ CopyCommand = (*imapclient.CopyCommand)(nil)
+var _ MoveCommand = (*imapclient.MoveCommand)(nil)
+var _ SearchCommand = (*imapclient.SearchCommand)(nil)
+var _ ExpungeCommand = (*imapclient.ExpungeCommand)(nil)
+var _ FetchCommand = (*imapclient.FetchCommand)(nil)
+var _ SelectCommand = (*imapclient.SelectCommand)(nil)
+var _ AppendCommand = (*imapclient.AppendCommand)(nil)
+
 // Command interfaces for operations that return commands
 type Command interface {
 	Wait() error
@@ -46,6 +55,12 @@ type CopyCommand interface {
 	Wait() (*imap.CopyData, error)
 }
 
+type AppendCommand interface {
+	Write([]byte) (int, error)
+	Wait() (*imap.AppendData, error)
+	Close() error
+}
+
 // IMAPClient interface defines all the IMAP methods used in the codebase
 // This allows for mocking/faking the imapclient.Client for testing purposes
 type IMAPClient interface {
@@ -67,6 +82,7 @@ type IMAPClient interface {
 	Unselect() Command
 	List(reference, pattern string, options *imap.ListOptions) ListCommand
 	Create(name string, options *imap.CreateOptions) Command
+	Append(name string, size int64, options *imap.AppendOptions) AppendCommand
 
 	// Message operations
 	UIDSearch(criteria *imap.SearchCriteria, options *imap.SearchOptions) SearchCommand

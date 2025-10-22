@@ -169,12 +169,18 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) error {
 		Int("attachments", len(options.Attachments)).
 		Logger()
 
+	if a.Settings.SaveSentCopies {
+		log.Debug().Msg("Saving email")
+		if err := a.GetFolder("sent").AppendEmail(ctx, b); err != nil {
+			return fmt.Errorf("failed to save email before sending: %w", err)
+		}
+	}
+
 	log.Debug().Msg("Sending email")
 
 	return a.smtp.WithConnection(ctx, func(conn *smtp.Client) error {
 		if err := conn.SendMail("", toAddrs, &b); err != nil {
-			log.Err(err).Msg("Failed to send email")
-			return err
+			return fmt.Errorf("failed to send email: %w", err)
 		}
 		log.Info().Msg("Sent email")
 		return nil

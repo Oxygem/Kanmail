@@ -39,6 +39,8 @@ func (c *FakeCommand) Close() error {
 }
 
 // FakeSearchCommand implements SearchCommand interface
+var _ SearchCommand = (*FakeSearchCommand)(nil)
+
 type FakeSearchCommand struct {
 	*FakeCommand
 	data *imap.SearchData
@@ -52,6 +54,8 @@ func (c *FakeSearchCommand) Wait() (*imap.SearchData, error) {
 }
 
 // FakeFetchCommand implements FetchCommand interface
+var _ FetchCommand = (*FakeFetchCommand)(nil)
+
 type FakeFetchCommand struct {
 	*FakeCommand
 	messages []*imapclient.FetchMessageBuffer
@@ -65,6 +69,8 @@ func (c *FakeFetchCommand) Collect() ([]*imapclient.FetchMessageBuffer, error) {
 }
 
 // FakeExpungeCommand implements ExpungeCommand interface
+var _ ExpungeCommand = (*FakeExpungeCommand)(nil)
+
 type FakeExpungeCommand struct {
 	*FakeCommand
 	uids []imap.UID
@@ -82,6 +88,8 @@ func (c *FakeExpungeCommand) Collect() ([]uint32, error) {
 }
 
 // FakeSelectCommand implements SelectCommand interface
+var _ SelectCommand = (*FakeSelectCommand)(nil)
+
 type FakeSelectCommand struct {
 	*FakeCommand
 	data *imap.SelectData
@@ -95,6 +103,8 @@ func (c *FakeSelectCommand) Wait() (*imap.SelectData, error) {
 }
 
 // FakeListCommand implements ListCommand interface
+var _ ListCommand = (*FakeListCommand)(nil)
+
 type FakeListCommand struct {
 	*FakeCommand
 	data []*imap.ListData
@@ -108,6 +118,8 @@ func (c *FakeListCommand) Collect() ([]*imap.ListData, error) {
 }
 
 // FakeNamespaceCommand implements NamespaceCommand interface
+var _ NamespaceCommand = (*FakeNamespaceCommand)(nil)
+
 type FakeNamespaceCommand struct {
 	*FakeCommand
 	data *imap.NamespaceData
@@ -121,6 +133,8 @@ func (c *FakeNamespaceCommand) Wait() (*imap.NamespaceData, error) {
 }
 
 // FakeMoveCommand implements MoveCommand interface
+var _ MoveCommand = (*FakeMoveCommand)(nil)
+
 type FakeMoveCommand struct {
 	*FakeCommand
 	data *imapclient.MoveData
@@ -134,6 +148,8 @@ func (c *FakeMoveCommand) Wait() (*imapclient.MoveData, error) {
 }
 
 // FakeCopyCommand implements CopyCommand interface
+var _ CopyCommand = (*FakeCopyCommand)(nil)
+
 type FakeCopyCommand struct {
 	*FakeCommand
 	data *imap.CopyData
@@ -144,6 +160,29 @@ func (c *FakeCopyCommand) Wait() (*imap.CopyData, error) {
 		return nil, c.FakeCommand.err
 	}
 	return c.data, nil
+}
+
+// FakeCopyCommand implements AppendCommand interface
+var _ AppendCommand = (*FakeAppendCommand)(nil)
+
+type FakeAppendCommand struct {
+	*FakeCommand
+	data *imap.AppendData
+}
+
+func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
+	if c.FakeCommand.err != nil {
+		return nil, c.FakeCommand.err
+	}
+	return c.data, nil
+}
+
+func (c *FakeAppendCommand) Close() error {
+	return nil
+}
+
+func (c *FakeAppendCommand) Write(b []byte) (int, error) {
+	return 0, nil
 }
 
 // NewFakeIMAPClient creates a new fake IMAP client with sample data
@@ -454,6 +493,14 @@ func (c *FakeIMAPClient) Copy(numSet imap.NumSet, dest string) CopyCommand {
 	cmd := &FakeCopyCommand{
 		FakeCommand: &FakeCommand{err: nil},
 		data:        &imap.CopyData{},
+	}
+	return cmd
+}
+
+func (c *FakeIMAPClient) Append(name string, size int64, options *imap.AppendOptions) AppendCommand {
+	cmd := &FakeAppendCommand{
+		FakeCommand: &FakeCommand{err: nil},
+		data:        &imap.AppendData{},
 	}
 	return cmd
 }

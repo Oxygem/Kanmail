@@ -5,16 +5,7 @@ import (
 	"github.com/emersion/go-imap/v2/imapclient"
 )
 
-// Upstream imapclient implements IMAPClient
-var _ CopyCommand = (*imapclient.CopyCommand)(nil)
-var _ MoveCommand = (*imapclient.MoveCommand)(nil)
-var _ SearchCommand = (*imapclient.SearchCommand)(nil)
-var _ ExpungeCommand = (*imapclient.ExpungeCommand)(nil)
-var _ FetchCommand = (*imapclient.FetchCommand)(nil)
-var _ SelectCommand = (*imapclient.SelectCommand)(nil)
-
-// Doesn't work due to nested interfaces
-// var _ IMAPClient = (*imapclient.Client)(nil)
+var _ IMAPClient = (*IMAPClientWrapper)(nil)
 
 // IMAPClientWrapper wraps imapclient.Client to implement our interface
 type IMAPClientWrapper struct {
@@ -71,4 +62,8 @@ func (w *IMAPClientWrapper) Move(numSet imap.NumSet, dest string) MoveCommand {
 
 func (w *IMAPClientWrapper) Copy(numSet imap.NumSet, dest string) CopyCommand {
 	return w.Client.Copy(numSet, dest)
+}
+
+func (w *IMAPClientWrapper) Append(name string, size int64, options *imap.AppendOptions) AppendCommand {
+	return w.Client.Append(name, size, options)
 }
