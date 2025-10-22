@@ -167,7 +167,7 @@ export default class OverlayItemList extends React.Component<IOverlayItemListPro
 
   render() {
     return (
-      <div id="accounts">
+      <div className="accounts">
         {this.renderItems()}
         <button className="submit" onClick={this.handleClickAddItem}>
           Add new {this.props.newItemName}

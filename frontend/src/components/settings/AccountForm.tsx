@@ -6,60 +6,25 @@ import { ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
 import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AccountSettings, Address, ConnectionSettings, FolderSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 
-const getInitialState = (props) => {
-  // TODO: use types.AccountSettings for this
-  const state = {
-    editingTab: props.isAddingNewAccount ? "imap" : "address",
-    deleteConfirm: false,
 
-    error: props.error,
-    errorType: props.errorType,
+interface IAccountAddressProps {
+  address: Address;
+  updateName: (ev: any) => void;
+  updateEmail: (ev: any) => void;
+  deleteAddress: (ev: any) => void;
+}
 
-    isSaving: false,
-
-    accountId: props.accountId,
-
-    name: "",
-    imapSettings: {},
-    smtpSettings: {},
-    folders: {},
-    contacts: [],
-    settings: {},
-
-    connected: props.connected,
-  };
-
-  if (props.itemData) {
-    (state.name = props.itemData.name),
-      (state.imapSettings = _.clone(props.itemData.imapSettings));
-    state.smtpSettings = _.clone(props.itemData.smtpSettings);
-    state.folders = _.clone(props.itemData.folders) || {};
-    state.settings = _.clone(props.itemData.settings) || {};
-    state.contacts = _.clone(props.itemData.contacts) || [];
-  }
-
-  return state;
-};
-
-class AccountAddress extends React.Component {
-  static propTypes = {
-    updateName: PropTypes.func.isRequired,
-    updateEmail: PropTypes.func.isRequired,
-    deleteAddress: PropTypes.func.isRequired,
-    contactTuple: PropTypes.array.isRequired,
-  };
-
+class AccountAddress extends React.Component<IAccountAddressProps> {
   render() {
-    const { contactTuple } = this.props;
-
     return (
       <div className="wide flex contact">
         <div className="contact-address">
           <label>Name</label>
           <input
             type="text"
-            value={contactTuple[0]}
+            value={this.props.address.name}
             onChange={this.props.updateName}
           />
         </div>
@@ -67,7 +32,7 @@ class AccountAddress extends React.Component {
           <label>Email</label>
           <input
             type="text"
-            value={contactTuple[1]}
+            value={this.props.address.email}
             onChange={this.props.updateEmail}
           />
         </div>
@@ -83,16 +48,70 @@ class AccountAddress extends React.Component {
   }
 }
 
-export default class AccountForm extends React.Component {
-  static propTypes = {
-    itemData: PropTypes.object.isRequired,
-    itemIndex: PropTypes.number,
-    updateItem: PropTypes.func,
-    isAddingNewAccount: PropTypes.bool,
-    closeForm: PropTypes.func,
+interface IAccountFormProps {
+  accountSettings: AccountSettings;
+
+  isAddingNewAccount?: boolean;
+  error?: any;
+  errorType?: any;
+  accountId?: any;
+
+  itemIndex: number;
+  updateItem: (n: number, s: AccountSettings) => void;
+  deleteItem?: (n: number) => void
+  closeForm: () => void;
+}
+
+interface IAccountFormState {
+  editingTab: string;
+
+  error: any;
+  errorType: any;
+
+  isSaving: boolean;
+
+  accountId: number;
+
+  name: string;
+  imapSettings?: ConnectionSettings;
+  smtpSettings?: ConnectionSettings;
+  folders: FolderSettings;
+  contacts: Address[];
+  settings: any;
+}
+
+const getInitialState = (props: IAccountFormProps): IAccountFormState => {
+  const state: IAccountFormState = {
+    editingTab: props.isAddingNewAccount ? "imap" : "address",
+
+    error: props.error,
+    errorType: props.errorType,
+
+    isSaving: false,
+
+    accountId: props.accountId,
+
+    name: "",
+    folders: new FolderSettings(),
+    contacts: [],
+    settings: {},
   };
 
-  constructor(props) {
+  if (props.accountSettings) {
+    state.name = props.accountSettings.name;
+    state.imapSettings = _.clone(props.accountSettings.imapSettings);
+    state.smtpSettings = _.clone(props.accountSettings.smtpSettings);
+    state.folders = _.clone(props.accountSettings.folders) || {};
+    state.settings = _.clone(props.accountSettings.settings) || {};
+    state.contacts = _.clone(props.accountSettings.contacts) || [];
+  }
+
+  return state;
+};
+
+
+export default class AccountForm extends React.Component<IAccountFormProps, IAccountFormState> {
+  constructor(props: IAccountFormProps) {
     super(props);
     this.state = getInitialState(props);
   }
@@ -117,6 +136,7 @@ export default class AccountForm extends React.Component {
     const target = this.state[settingsKey];
     target[key] = value;
 
+    // @ts-ignore
     this.setState({
       [settingsKey]: target,
     });
@@ -126,6 +146,7 @@ export default class AccountForm extends React.Component {
     const target = this.state[settingsKey];
     target[key] = ev.target.checked;
 
+    // @ts-ignore
     this.setState({
       [settingsKey]: target,
     });
@@ -141,16 +162,16 @@ export default class AccountForm extends React.Component {
 
     this.setState({ isSaving: true });
 
-    AccountsService.TestNewAccount({
+    AccountsService.TestAccountSettings({
       name: this.state.name,
-      imapSettings: this.state.imapSettings,
-      smtpSettings: this.state.smtpSettings,
+      imapSettings: this.state.imapSettings!,
+      smtpSettings: this.state.smtpSettings!,
       folders: this.state.folders,
       contacts: this.state.contacts,
+      settings: this.state.settings,
     }).then(updatedSettings => {
       this.props.updateItem(this.props.itemIndex, updatedSettings);
       this.setState({
-        connected: true,
         isSaving: false
       });
       if (!this.props.isAddingNewAccount) {
@@ -159,9 +180,8 @@ export default class AccountForm extends React.Component {
 
     }).catch(error => {
       this.setState({
-        error: error,
+        error: error.message,
         isSaving: false,
-        connected: false,
       });
     })
   };
@@ -169,19 +189,19 @@ export default class AccountForm extends React.Component {
   handleAddAddress = (ev) => {
     ev.preventDefault();
 
-    const { contactSettings } = this.state;
-    contactSettings.push(["", ""]);
-    this.setState({ contactSettings });
+    const { contacts } = this.state;
+    contacts.push(new Address({ name: "", email: "" }));
+    this.setState({ contacts });
   };
 
-  renderInput(settingsKey, key, options = {}) {
+  renderInput(settingsKey, key, options: any = {}) {
     const type = options.type || "text";
     const placeholder = options.placeholder || null;
 
     let value = "";
     value = this.state[settingsKey][key];
 
-    const attributes = {};
+    const attributes: any = {};
     let handler = _.partial(this.handleUpdate, settingsKey, key);
 
     if (type === "checkbox") {
@@ -213,40 +233,40 @@ export default class AccountForm extends React.Component {
   }
 
   renderAddresses() {
-    if (!this.state.contactSettings || !this.state.contactSettings.length) {
+    if (!this.state.contacts || !this.state.contacts.length) {
       return "No addresses!";
     }
 
-    return _.map(this.state.contactSettings, (contactTuple, i) => {
+    return _.map(this.state.contacts, (contactTuple, i) => {
       const updateName = (ev) => {
-        const { contactSettings } = this.state;
-        contactSettings[i][0] = ev.target.value;
+        const { contacts } = this.state;
+        contacts[i].name = ev.target.value;
         this.setState({
-          contactSettings,
+          contacts,
         });
       };
 
       const updateEmail = (ev) => {
-        const { contactSettings } = this.state;
-        contactSettings[i][1] = ev.target.value;
+        const { contacts } = this.state;
+        contacts[i].email = ev.target.value;
         this.setState({
-          contactSettings,
+          contacts,
         });
       };
 
       const deleteAddress = (ev) => {
         ev.preventDefault();
 
-        const { contactSettings } = this.state;
-        contactSettings.splice(i, 1);
+        const { contacts } = this.state;
+        contacts.splice(i, 1);
         this.setState({
-          contactSettings,
+          contacts,
         });
       };
 
       return (
         <AccountAddress
-          contactTuple={contactTuple}
+          address={contactTuple}
           updateName={updateName}
           updateEmail={updateEmail}
           deleteAddress={deleteAddress}
@@ -254,14 +274,6 @@ export default class AccountForm extends React.Component {
         />
       );
     });
-  }
-
-  renderConnectedText() {
-    if (this.state.connected) {
-      return <small className="connected">connected</small>;
-    } else {
-      return <small className="not-connected">no connection</small>;
-    }
   }
 
   renderUsernamePassword(settingKey) {
@@ -292,7 +304,7 @@ export default class AccountForm extends React.Component {
 
   render() {
     const formClasses = ["account"];
-    if (this.state.editing) formClasses.push("active");
+    // if (this.state.editing) formClasses.push("active");
     if (this.props.isAddingNewAccount) formClasses.push("new");
 
     const getTabButtonClass = (tabName) =>
@@ -317,6 +329,7 @@ export default class AccountForm extends React.Component {
               className={saveButtonClasses.join(" ")}
               onClick={this.handleTestConnection}
             >
+              {this.state.isSaving && <i className="fa fa-spin fa-refresh"></i>}
               {this.props.isAddingNewAccount ? "Add account" : "Update"}
             </button>
             &nbsp;
@@ -331,8 +344,6 @@ export default class AccountForm extends React.Component {
             placeholder="Account name"
             onChange={(ev) => this.setState({ name: ev.target.value })}
           />
-          &nbsp;
-          {this.renderConnectedText()}
           <div className="error">{this.state.error}</div>
           <div className="wide button-set tabs">
             {this.props.isAddingNewAccount || (

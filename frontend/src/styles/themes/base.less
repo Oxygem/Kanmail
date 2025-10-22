@@ -69,16 +69,20 @@ button {
   }
 
   &.cancel {
+    background: transparent;
+
     &:hover {
-      background: @buttonCancelHoverBackgroundColor;
+      color: @buttonCancelHoverColor;
+      background: transparent;
     }
   }
 
   &.submit {
     background: @buttonSubmitBackgroundColor;
+    color: @buttonSubmitTextColor;
 
     &:hover {
-      background: darken(@green, 45%);
+      background: @buttonSubmitHoverBackgroundColor
     }
   }
 
@@ -396,7 +400,7 @@ section#thread {
     React select overrides */
 
 div.react-select__control {
-  background: transparent;
+  background: @inputBackgroundColor;
   border-color: @formBorderGrey;
 
   &:hover {
@@ -430,6 +434,13 @@ div.react-select__option {
 
 div.react-select__single-value {
   color: @inputColor;
+}
+
+div.react-select__multi-value {
+  background: @buttonHoverBackgroundColor;
+}
+div.react-select__multi-value__label {
+  color: @buttonTextColor;
 }
 
 section#control {
@@ -655,7 +666,7 @@ section#settings {
   }
 }
 
-div#accounts {
+div.accounts {
   div.error {
     color: @red;
   }
@@ -675,10 +686,6 @@ div#accounts {
       background: @lightGrey;
       border-color: @midGrey;
     }
-
-    &.new {
-      background: #d7d7d7;
-    }
   }
 
   div.account-form-overlay {
@@ -696,6 +703,10 @@ div#accounts {
   }
 }
 
+.account-overlay {
+  background: @bodyBackgroundColor;
+}
+
 
 /*
     Contacts App */
@@ -708,6 +719,26 @@ section#contacts {
   div.contact {
     &:hover {
       background: @contactHoverBackgroundColor;
+    }
+  }
+}
+
+
+/*
+    Send app */
+
+form#send-form {
+  .form-top {
+    background: @inputBackgroundColor;
+  }
+
+  .squire-editor-container {
+    .toolbar {
+      background: @inputBackgroundColor;
+
+      button.active {
+        background: @buttonHoverBackgroundColor;
+      }
     }
   }
 }

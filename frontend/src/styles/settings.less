@@ -180,7 +180,7 @@ section#welcome-settings {
 /*
   Accounts */
 
-div#accounts {
+div.accounts {
   margin-top: 30px;
   margin-bottom: 30px;
 
@@ -321,7 +321,6 @@ form.account {
 
     input {
       border: none;
-      background: @darkestGrey;
       font-size: 18px;
       padding: 20px;
     }
@@ -363,19 +362,19 @@ form.account {
     }
   }
 
-  .account-overlay {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: @darkGrey;
-    overflow: auto;
+}
 
-    .account-overlay-content {
-      margin: 100px auto 0 auto;
-      width: 90%;
-      max-width: 800px;
-    }
+.account-overlay {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: auto;
+
+  .account-overlay-content {
+    margin: 100px auto 0 auto;
+    width: 90%;
+    max-width: 800px;
   }
 }

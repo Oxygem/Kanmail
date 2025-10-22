@@ -157,7 +157,7 @@ button {
 
   &.disabled,
   &.disabled:hover {
-    cursor: auto;
+    pointer-events: none;
   }
 
   &.main-button {
@@ -193,6 +193,7 @@ textarea {
   font-weight: 700;
   text-align: center;
   color: @white;
+  border-radius: @borderRadius;
 
   &.error {
     background: @red;

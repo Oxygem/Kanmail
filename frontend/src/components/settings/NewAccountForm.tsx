@@ -13,7 +13,7 @@ import {
 	AccountSettings,
 	Address,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import AccountForm from "./AccountForm.jsx";
+import AccountForm from "./AccountForm.tsx";
 
 interface GenericAccountFormProps {
 	closeForm: (any) => void;
@@ -89,8 +89,6 @@ class GenericAccountForm extends React.Component<
 		};
 
 		const handleSettings = (data: AccountSettings) => {
-			console.log("HANDLE", data);
-
 			if (data.folders.inbox == "") {
 				this.setState({
 					newAccountError: (
@@ -121,16 +119,8 @@ class GenericAccountForm extends React.Component<
 			return;
 		};
 
-		const handleError = function (error: string) {
-			console.log('ERROR', arguments);
-			this.props.handleAddAccountError(error);
-			// this.setState({
-			// 	isLoadingNewAccount: false,
-			// 	manuallyConfiguringAccount: true,
-			// 	newAccountSettings,
-			// 	newAccountError: data.errorMessage,
-			// 	newAccountErrorType: data.errorName,
-			// });
+		const handleError = (error: any) => {
+			this.props.handleAddAccountError(error.message);
 		}
 		this.setState({ isLoadingNewAccount: true });
 
@@ -143,15 +133,6 @@ class GenericAccountForm extends React.Component<
 		)
 			.then(handleSettings)
 			.catch(handleError);
-
-		// Post to new endpoint - hopefully it will autoconfigure and connect itself
-		// post("/api/account/new", data, { ignoreStatus: [400] })
-		//   .then(handleSettings)
-		//   .catch((err) => handleSettings(err.data));
-
-		// AccountsService.TestAccount(undefined)
-		// 	.then(handleSettings)
-		// 	.catch((err) => handleSettings(err.data));
 	};
 
 	handleCompleteAddAccount = (ev) => {
@@ -201,6 +182,7 @@ class GenericAccountForm extends React.Component<
 			&nbsp;<button
 				className="manual"
 				onClick={this.props.handleClickManualAddAccount}
+				type="button"
 			>Set IMAP/SMTP settings manually
 			</button>
 		</p>;
@@ -297,7 +279,7 @@ class GenericAccountForm extends React.Component<
 						className="submit main-button"
 						onClick={this.handleCompleteAddAccount}
 					>Complete adding account</button>
-					<button className="cance" onClick={this.props.closeForm}>Cancel</button>
+					<button className="cancel" onClick={this.props.closeForm}>Cancel</button>
 				</div>
 			</div>
 		);
@@ -305,16 +287,28 @@ class GenericAccountForm extends React.Component<
 
 	render() {
 		return (
-			<div className="account-overlay">
-				<div className="account-overlay-content">
-					{this.renderTitle()}
-					{/* @ts-ignore */}
-					<div className="notice error">{this.state.newAccountError}</div>
-					{this.state.newAccountSettings
-						? this.renderCompleteNewAccountForm()
-						: this.renderNewAccountForm()}
+			<form
+				className="account new-account zz"
+				onSubmit={(ev) => {
+					ev.preventDefault();
+					if (this.state.newAccountSettings) {
+						this.handleCompleteAddAccount(ev);
+					} else {
+						this.handleAddAccount(ev);
+					}
+				}}
+			>
+				<div className="account-overlay">
+					<div className="account-overlay-content">
+						{this.renderTitle()}
+						{/* @ts-ignore */}
+						<div className="notice error">{this.state.newAccountError}</div>
+						{this.state.newAccountSettings
+							? this.renderCompleteNewAccountForm()
+							: this.renderNewAccountForm()}
+					</div>
 				</div>
-			</div>
+			</form>
 		);
 	}
 }
@@ -534,7 +528,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		});
 	};
 
-	handleClickManualAddAccount = () => {
+	handleClickManualAddAccount = (ev) => {
 		this.setState({
 			isLoadingNewAccount: false,
 			manuallyConfiguringAccount: true,
@@ -557,31 +551,35 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			newAccountSettings!.name = this.state.newAccountName;
 
 			return (
-				<AccountForm
-					key={this.state.newAccountName}
-					connected={false}
-					isAddingNewAccount={true}
-					accountSettings={newAccountSettings}
-					error={this.state.newAccountError}
-					errorType={this.state.newAccountErrorType}
-					deleteItem={this.resetState}
-					updateItem={this.completeAddNewAccount}
-					closeForm={this.resetState}
-				/>
+				<div className="account-overlay">
+					<div className="account-overlay-content">
+						<div className="accounts">
+							<AccountForm
+								key={this.state.newAccountName}
+								isAddingNewAccount={true}
+								itemIndex={0}
+								accountSettings={newAccountSettings || new AccountSettings()}
+								error={this.state.newAccountError}
+								errorType={this.state.newAccountErrorType}
+								deleteItem={this.resetState}
+								updateItem={this.completeAddNewAccount}
+								closeForm={this.resetState}
+							/>
+						</div>
+					</div>
+				</div>
 			);
 		}
 
 		if (this.state.accountType) {
 			const Component = ACCOUNT_TYPE_TO_COMPONENT[this.state.accountType];
 			return (
-				<form className="account new-account">
-					<Component
-						closeForm={this.resetState}
-						handleAddAccountError={this.handleAddAccountError}
-						completeAddNewAccount={this.completeAddNewAccount}
-						handleClickManualAddAccount={this.handleClickManualAddAccount}
-					/>
-				</form>
+				<Component
+					closeForm={this.resetState}
+					handleAddAccountError={this.handleAddAccountError}
+					completeAddNewAccount={this.completeAddNewAccount}
+					handleClickManualAddAccount={this.handleClickManualAddAccount}
+				/>
 			);
 		}
 

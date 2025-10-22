@@ -8,17 +8,19 @@ import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { arrayMove } from "../../util/array.ts";
 import { openLink } from "../../window.ts";
-import AccountForm from "../settings/AccountForm.jsx";
+import AccountForm from "../settings/AccountForm.tsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
 
 interface IAccountProps extends AccountSettings {
   accountIndex: number;
   updateAccount: (n: number, a: AccountSettings) => void;
   deleteAccount: (n: number) => void;
+  moveAccount: (i: number, p: number) => void;
 }
 
 interface IAccountState {
   isEditing: boolean;
+  isDeleting: boolean;
 }
 
 class Account extends React.Component<IAccountProps, IAccountState> {
@@ -27,17 +29,35 @@ class Account extends React.Component<IAccountProps, IAccountState> {
 
     this.state = {
       isEditing: false,
+      isDeleting: false,
     }
   }
 
   render() {
     if (this.state.isEditing) {
       return <AccountForm
-        itemData={this.props}
+        accountSettings={this.props}
         itemIndex={this.props.accountIndex}
         updateItem={this.props.updateAccount}
         closeForm={() => (this.setState({ isEditing: false }))}
       />;
+    }
+
+    const hasValidCredentials =
+      (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken)
+      && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken);
+
+    let deleteButton: React.ReactElement;
+    if (this.state.isDeleting) {
+      deleteButton = <button
+        className="cancel"
+        onClick={() => (this.props.deleteAccount(this.props.accountIndex))}
+      >Confirm remove</button>;
+    } else {
+      deleteButton = <button
+        className="cancel"
+        onClick={() => (this.setState({ isDeleting: true }))}
+      >Remove</button>;
     }
 
     return (
@@ -46,16 +66,22 @@ class Account extends React.Component<IAccountProps, IAccountState> {
         <div className="name">
           <strong>{this.props.name}</strong>
           <br />
-          {this.props.imapSettings.username}
+          {hasValidCredentials ?
+            this.props.imapSettings.username
+            : <span className="red">Credentials invalid, please deleted and re-setup</span>
+          }
         </div>
         <div className="buttons">
-          <button
-            onClick={() => (this.setState({ isEditing: true }))}
-          >Edit</button>
-          <button
-            className="cancel"
-            onClick={() => (this.props.deleteAccount(this.props.accountIndex))}
-          >Remove</button>
+          {hasValidCredentials && <button
+            onClick={() => this.props.moveAccount(this.props.accountIndex, -1)}
+          ><i className="fa fa-arrow-up" /></button>}
+          {hasValidCredentials && <button
+            onClick={() => this.props.moveAccount(this.props.accountIndex, 1)}
+          ><i className="fa fa-arrow-down" /></button>}
+          {hasValidCredentials && <button
+            onClick={() => (this.setState({ isEditing: true, isDeleting: false }))}
+          >Edit</button>}
+          {deleteButton}
         </div>
       </div>)
   }
@@ -449,11 +475,12 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     }
 
     return <div className="content">
-      <div id="accounts">
+      <div className="accounts">
         {this.props.accounts.map((account, i) => <Account
           accountIndex={i}
           deleteAccount={this.deleteAccount}
           updateAccount={this.updateAccount}
+          moveAccount={this.moveAccount}
           {...account}
         />)}
       </div>
