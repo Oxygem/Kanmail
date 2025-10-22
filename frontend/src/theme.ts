@@ -7,11 +7,14 @@ export function setupThemes(settings: ISettings) {
     const darkTheme = settings.system.theme.dark || "theme-default-dark";
     const lightTheme = settings.system.theme.light || "theme-default";
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const osClassName = "os-" + (urlParams.get("os") || "unknown")
+
     // Is dark mode?
     if (ev.matches) {
-      document.body.className = darkTheme;
+      document.body.className = `${darkTheme} ${osClassName}`;
     } else {
-      document.body.className = lightTheme;
+      document.body.className = `${lightTheme} ${osClassName}`;
     }
   };
 

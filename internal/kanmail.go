@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"io/fs"
 	"net/http"
 	"path"
@@ -72,7 +73,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int) *Kanmail {
 		log.Info().Msg("Closed caches")
 	})
 
-	// Bootstrap the appService (ie satisfy circular dependencies)
+	// Bootstrap (ie satisfy circular dependencies)
 	appService.Bootstrap(app, caches, settingsService.CacheDir)
 
 	return &Kanmail{
@@ -88,9 +89,9 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int) *Kanmail {
 }
 
 func (k *Kanmail) Run() error {
-	emailsWindow := util.MakeWindow(k.App, util.WindowOptions{
-		Title: "Kanmail v2",
-		URL:   "/index.html?app=emails",
+	emailsWindow := util.MakeWindow(context.TODO(), k.App, util.WindowOptions{
+		Title:   "Kanmail v2",
+		AppName: "emails",
 	})
 
 	// Quit the entire app if the main window is closed

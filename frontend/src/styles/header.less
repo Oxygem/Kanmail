@@ -88,7 +88,7 @@ header {
   &.header-bar {
     font-size: 15px;
     width: 100%;
-    padding: 8px 0 8px 80px;
+    padding: 8px;
     position: fixed;
     top: 0;
     height: 41px;
@@ -150,7 +150,6 @@ header {
   }
 }
 
-/* Make the logo float right on MacOS, as the control buttons live on the left */
-section.Darwin header h1#logo {
-  float: right;
+body.os-darwin .header-bar {
+  padding-left: 88px;
 }

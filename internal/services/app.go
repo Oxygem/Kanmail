@@ -87,13 +87,14 @@ type OpenSendWindowOptions struct {
 	UID         imap.UID          `json:"uid,omitempty"`
 }
 
-func (a *AppService) OpenSendWindow(options OpenSendWindowOptions) {
+func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowOptions) {
+	ctx = a.log.WithContext(ctx)
+	defer util.LogPanic(ctx)
+
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	v := url.Values{
-		"app": []string{"send"},
-	}
+	v := make(url.Values, 5)
 
 	if options.Mode != "" {
 		v["mode"] = []string{options.Mode}
@@ -108,20 +109,19 @@ func (a *AppService) OpenSendWindow(options OpenSendWindowOptions) {
 		v["uid"] = []string{strconv.Itoa(int(options.UID))}
 	}
 
-	u := url.URL{
-		Path:     "/index.html",
-		RawQuery: v.Encode(),
-	}
-
-	window := util.MakeWindow(a.app, util.WindowOptions{
+	window := util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Send",
-		URL:     u.String(),
+		AppName: "send",
 		Compact: true,
+		Values:  v,
 	})
 	a.sendWindows = append(a.sendWindows, window)
 }
 
-func (a *AppService) OpenMetaWindow() {
+func (a *AppService) OpenMetaWindow(ctx context.Context) {
+	ctx = a.log.WithContext(ctx)
+	defer util.LogPanic(ctx)
+
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -139,13 +139,16 @@ func (a *AppService) OpenMetaWindow() {
 		}
 	}
 
-	a.metaWindow = util.MakeWindow(a.app, util.WindowOptions{
+	a.metaWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 License",
-		URL:     "/index.html?app=meta",
+		AppName: "meta",
 		Compact: true})
 }
 
-func (a *AppService) OpenLicenseWindow() {
+func (a *AppService) OpenLicenseWindow(ctx context.Context) {
+	ctx = a.log.WithContext(ctx)
+	defer util.LogPanic(ctx)
+
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -163,14 +166,17 @@ func (a *AppService) OpenLicenseWindow() {
 		}
 	}
 
-	a.licenseWindow = util.MakeWindow(a.app, util.WindowOptions{
+	a.licenseWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 License",
-		URL:     "/index.html?app=license",
+		AppName: "license",
 		Compact: true,
 	})
 }
 
-func (a *AppService) OpenSettingsWindow() {
+func (a *AppService) OpenSettingsWindow(ctx context.Context) {
+	ctx = a.log.WithContext(ctx)
+	defer util.LogPanic(ctx)
+
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
@@ -188,9 +194,9 @@ func (a *AppService) OpenSettingsWindow() {
 		}
 	}
 
-	a.settingsWindow = util.MakeWindow(a.app, util.WindowOptions{
+	a.settingsWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Settings",
-		URL:     "/index.html?app=settings",
+		AppName: "settings",
 		Compact: true,
 	})
 }
@@ -240,7 +246,7 @@ func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
 	dialog.SetDefaultButton(purchaseButton)
 
 	dialog.AddButton("Enter license key").OnClick(func() {
-		a.OpenLicenseWindow()
+		a.OpenLicenseWindow(ctx)
 	})
 
 	dialog.Show()

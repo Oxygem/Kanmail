@@ -1,6 +1,11 @@
 package util
 
 import (
+	"context"
+	"net/url"
+	"runtime"
+
+	"github.com/rs/zerolog"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
@@ -17,15 +22,37 @@ var macTitleBarHiddenInsetCompact = application.MacTitleBar{
 
 type WindowOptions struct {
 	Title   string
-	URL     string
+	AppName string
 	Compact bool
+	Values  url.Values
 }
 
-func MakeWindow(app *application.App, options WindowOptions) *application.WebviewWindow {
+func MakeWindow(ctx context.Context, app *application.App, options WindowOptions) *application.WebviewWindow {
 	titleBar := application.MacTitleBarHiddenInset
 	if options.Compact {
 		titleBar = macTitleBarHiddenInsetCompact
 	}
+
+	qs := url.Values{}
+	qs.Set("app", options.AppName)
+	qs.Set("os", runtime.GOOS)
+	qs.Set("arch", runtime.GOARCH)
+
+	// Apply any input values over the top
+	for k, vs := range options.Values {
+		for _, v := range vs {
+			qs.Add(k, v)
+		}
+	}
+
+	url := "/index.html?" + qs.Encode()
+
+	isDebug := app.Env.Info().Debug
+
+	zerolog.Ctx(ctx).Debug().
+		Str("url", url).
+		Bool("debug", isDebug).
+		Msg("Making new window")
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title: options.Title,
@@ -36,10 +63,10 @@ func MakeWindow(app *application.App, options WindowOptions) *application.Webvie
 		},
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		BackgroundType:   application.BackgroundTypeTransparent,
-		URL:              options.URL,
+		URL:              url,
 	})
 
-	if app.Env.Info().Debug {
+	if isDebug {
 		window.OnWindowEvent(
 			events.Common.WindowRuntimeReady,
 			func(event *application.WindowEvent) {
