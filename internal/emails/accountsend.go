@@ -35,6 +35,8 @@ type SendOptions struct {
 	From types.Address   `json:"from,omitempty"`
 
 	Attachments []SendAttachment `json:"attachments,omitempty"`
+
+	ReplyingTo *types.Email `json:"replyingTo,omitempty"`
 }
 
 func (a *Account) SendEmail(ctx context.Context, options SendOptions) error {
@@ -52,6 +54,14 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) error {
 	header.SetAddressList("To", options.To.MailAddresses())
 	header.SetAddressList("Cc", options.Cc.MailAddresses())
 	header.SetAddressList("From", []*mail.Address{options.From.MailAddress()})
+
+	// https://datatracker.ietf.org/doc/html/rfc5322#section-3.6.4
+	if options.ReplyingTo != nil {
+		// "The "In-Reply-To:" field will contain the contents of the "Message-ID:" field of the message to which this one is a reply (the "parent message")."
+		header.SetMsgIDList("In-Reply-To", []string{options.ReplyingTo.MessageID})
+		// "The "References:" field will contain the contents of the parent's "References:" field (if any) followed by the contents of the parent's "Message-ID:" field (if any).""
+		header.SetMsgIDList("References", append(options.ReplyingTo.References, options.ReplyingTo.MessageID))
+	}
 
 	var b bytes.Buffer
 

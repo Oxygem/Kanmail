@@ -113,11 +113,16 @@ func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMe
 		}
 	}
 
-	// For each in reply to value prepend to the references list if it doesn't already exist, this
-	// handles various clients using one or both fields in different ways.
+	// For each in-reply-to value append to the references list if it doesn't already exist. This
+	// assumes that the in-reply-to values are "later" in the thread. Ultimately the order should
+	// not make a significant difference when calculating the thread.
 	for _, msgid := range slices.Backward(msg.Envelope.InReplyTo) {
 		if !slices.Contains(email.References, msgid) {
-			email.References = append([]string{msgid}, email.References...)
+			zerolog.Ctx(ctx).Warn().
+				Strs("in_reply_to", msg.Envelope.InReplyTo).
+				Strs("references", email.References).
+				Msg("Found in-reply-to msgid that is not in references")
+			email.References = append(email.References, msgid)
 		}
 	}
 
