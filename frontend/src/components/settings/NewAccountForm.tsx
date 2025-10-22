@@ -221,6 +221,7 @@ class GenericAccountForm extends React.Component<
 						onClick={this.handleAddAccount}
 						disabled={this.state.isLoadingNewAccount}
 					>
+						{this.state.isLoadingNewAccount && <i className="fa fa-spin fa-refresh"></i>}
 						Add account
 					</button>
 					<button
