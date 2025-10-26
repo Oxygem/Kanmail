@@ -142,16 +142,16 @@ func (a *AppService) OpenMetaWindow(ctx context.Context) {
 	a.metaWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Meta",
 		AppName: "meta",
-		Compact: true},
-	)
+		Compact: true,
+	})
 }
 
 func (a *AppService) OpenDebugWindow(ctx context.Context) {
 	util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Debugger",
 		AppName: "debug",
-		Compact: true},
-	)
+		Compact: true,
+	})
 }
 
 func (a *AppService) OpenLicenseWindow(ctx context.Context) {

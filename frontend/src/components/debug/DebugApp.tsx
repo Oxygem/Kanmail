@@ -79,7 +79,9 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
     return (
       <section className="no-select">
         <section id="debug">
-          <h2>Debug Email Fetcher</h2>
+          <header className="new-email flex header-bar">
+            Kanmail Debugger
+          </header>
 
           <form onSubmit={this.handleSubmit} style={{ marginBottom: "20px" }}>
             <div style={{ marginBottom: "10px" }}>
