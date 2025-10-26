@@ -138,7 +138,7 @@ interface IFiltersState {
   updateError?: boolean;
 }
 
-@subscribe(filterStore, settingsStore)
+@subscribe(filterStore, settingsStore, systemStore)
 export default class Filters extends React.Component<IFiltersProps, IFiltersState> {
   constructor(props) {
     super(props);

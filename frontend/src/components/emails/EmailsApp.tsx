@@ -51,13 +51,13 @@ export default class EmailsApp extends React.Component<ISettings> {
     // Kick off license + update checks
     systemStore.checkLicense();
     systemStore.checkUpdate();
-    // Recheck every 24h
+    // Recheck every 1h
     setInterval(
       () => {
-        systemStore.checkUpdate();
+        systemStore.checkLicense();
         systemStore.checkUpdate();
       },
-      1000 * 3600 * 24,
+      1000 * 3600,
     );
 
     this.newAliasEmailCheck = setInterval(
