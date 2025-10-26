@@ -89,9 +89,14 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int) *Kanmail {
 }
 
 func (k *Kanmail) Run() error {
+	startApp := constants.ENV_DEBUG_START_APP
+	if startApp == "" {
+		startApp = "emails"
+	}
+
 	emailsWindow := util.MakeWindow(context.TODO(), k.App, util.WindowOptions{
 		Title:   "Kanmail v2",
-		AppName: "emails",
+		AppName: startApp,
 	})
 
 	// Quit the entire app if the main window is closed
