@@ -1,11 +1,9 @@
 package types
 
 import (
-	"context"
 	"errors"
 	"net"
 
-	"github.com/rs/zerolog"
 	"go.mau.fi/util/exhttp"
 )
 
@@ -35,7 +33,6 @@ func makeInternalError(err error) InternalError {
 
 	errStack := err
 	for errStack != nil {
-		zerolog.Ctx(context.TODO()).Error().Str("ERR", errStack.Error()).Type("TYPE", errStack).Msg("GOTERR")
 		errStack = errors.Unwrap(errStack)
 	}
 
