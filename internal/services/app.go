@@ -130,7 +130,7 @@ func (a *AppService) OpenMetaWindow(ctx context.Context) {
 		if err != nil {
 			panic(fmt.Errorf("failed to get window screeen: %w", err))
 		} else if screen == nil {
-			a.log.Warn().Msg("License window has been destroted, re-creating")
+			a.log.Warn().Msg("Meta window has been destroted, re-creating")
 			a.metaWindow = nil
 		} else {
 			a.metaWindow.Show()
@@ -140,9 +140,18 @@ func (a *AppService) OpenMetaWindow(ctx context.Context) {
 	}
 
 	a.metaWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
-		Title:   "Kanmail v2 License",
+		Title:   "Kanmail v2 Meta",
 		AppName: "meta",
-		Compact: true})
+		Compact: true},
+	)
+}
+
+func (a *AppService) OpenDebugWindow(ctx context.Context) {
+	util.MakeWindow(ctx, a.app, util.WindowOptions{
+		Title:   "Kanmail v2 Debugger",
+		AppName: "debug",
+		Compact: true},
+	)
 }
 
 func (a *AppService) OpenLicenseWindow(ctx context.Context) {
@@ -311,17 +320,16 @@ func (a *AppService) getUpdate(ctx context.Context) (*backend.Version, error) {
 	return nil, nil
 }
 
+func (a *AppService) GetCurrentVersion(ctx context.Context) string {
+	return fmt.Sprintf("2.%d", a.AppVersion)
+}
+
 // Returns bool if we have an update as well as the current version string (for UI)
-func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, string) {
+func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, error) {
 	ctx = a.log.With().Str("method", "CheckUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
-	update, err := a.getUpdate(ctx)
-	if err != nil {
-		// Log, but don't propagate to the frontend
-		zerolog.Ctx(ctx).Err(err).Msg("Failed to check backend for update")
-	}
-	return update, fmt.Sprintf("2.%d", a.AppVersion)
+	return a.getUpdate(ctx)
 }
 
 func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {

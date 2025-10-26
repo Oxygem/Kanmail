@@ -13,6 +13,7 @@ import "./src/style.less";
 import { setupThemes } from "./src/theme.js";
 
 import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import DebugApp from "./src/components/debug/DebugApp.tsx";
 import EmailsApp from "./src/components/emails/EmailsApp.tsx";
 import LicenseApp from "./src/components/license/LicenseApp.tsx";
 import MetaApp from "./src/components/meta/MetaApp.tsx";
@@ -40,6 +41,7 @@ const bootApp = (
     Promise.all([
         settingsStore.getSettings(),
         // Don't need these here, but want it populated
+        systemStore.checkCurrentVersion(),
         systemStore.checkCachedLicense(),
         systemStore.checkDebug(),
     ]).then(([settings]) => {
@@ -81,6 +83,9 @@ const main = () => {
             break;
         case "meta":
             bootApp(MetaApp, appContainer);
+            break;
+        case "debug":
+            bootApp(DebugApp, appContainer);
             break;
         case "send":
             if (urlParams.get("mode")) {

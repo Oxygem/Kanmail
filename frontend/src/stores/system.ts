@@ -29,6 +29,10 @@ class SystemStore extends BaseStore {
         this.props.isLicensed = await AppService.CheckCachedLicense();
     }
 
+    async checkCurrentVersion(): Promise<void> {
+        this.props.currentVersion = await AppService.GetCurrentVersion();
+    }
+
     async checkDebug(): Promise<void> {
         this.props.isDebug = (await System.Environment()).Debug;
     }
@@ -43,15 +47,14 @@ class SystemStore extends BaseStore {
     }
 
     async checkUpdate(): Promise<void> {
-        const [update, currentVersion] = await AppService.CheckUpdate();
+        const update = await AppService.CheckUpdate();
         const hasUpdate = update !== null;
-        if (hasUpdate === this.props.hasUpdate && currentVersion === this.props.currentVersion) {
+        if (hasUpdate === this.props.hasUpdate) {
             return;
         }
         this.props.update = update || undefined;
         this.props.hasUpdate = hasUpdate;
-        this.props.currentVersion = currentVersion;
-        this.triggerUpdate(["update", "hasUpdate", "currentVersion"]);
+        this.triggerUpdate(["update", "hasUpdate"]);
     }
 }
 

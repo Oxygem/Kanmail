@@ -76,8 +76,10 @@ export default class Sidebar extends React.Component {
             {systemStore.props.isLicensed ? "Licensed" : "Unlicensed"}
           </a>
           <br />
-          <span>Kanmail {systemStore.props.currentVersion || "2.unknown"}</span>{" "}
-          {systemStore.props.isDebug && "(debug)"}
+          <span onClick={() => AppService.OpenMetaWindow()}>
+            Kanmail {systemStore.props.currentVersion || "2.unknown"}
+          </span>{" "}
+          {systemStore.props.isDebug && <span onClick={() => AppService.OpenDebugWindow()}>(debug)</span>}
           {/* @ts-ignore */}
           <FooterStatus />
         </footer>
