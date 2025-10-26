@@ -237,8 +237,8 @@ func (f *Folder) makeBodyPartResp(ctx context.Context, in bodyPartResp) *BodyPar
 			log.Warn().Err(err).Msg("Failed to convert text as mardown -> HTML")
 		}
 	default:
-		// Pass as-is, but not trusted
-		out.Data = string(decoded)
+		// Pass as base64, but not trusted
+		out.Data = base64.RawStdEncoding.EncodeToString(decoded)
 		log.Warn().Msg("Unknown type for frontend content, passing as-is")
 	}
 

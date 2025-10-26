@@ -37,6 +37,7 @@ type BodyPart struct {
 	Type        string `json:"type"`
 	Encoding    string `json:"encoding"`
 	Size        uint32 `json:"size"`
+	ContentID   string `json:"contentID"`
 	Description string `json:"description"`
 }
 
@@ -59,6 +60,7 @@ func NewBodyPartFromStructure(id []int, bs *imap.BodyStructureSinglePart) BodyPa
 		Type:        bs.MediaType(),
 		Encoding:    bs.Encoding,
 		Size:        bs.Size,
+		ContentID:   bs.ID,
 		Description: description,
 	}
 }

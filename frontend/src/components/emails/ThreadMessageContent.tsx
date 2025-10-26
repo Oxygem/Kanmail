@@ -1,12 +1,18 @@
 import _ from "lodash";
 import React from "react";
 
+import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { BodyPart } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard from "../../keyboard.ts";
 import { documentFromHtml } from "../../util/html.js";
 import { openLink } from "../../window.ts";
 
 interface IThreadMessageContentProps {
   body: string;
+  parts: BodyPart[];
+  folderName: string;
+  accountName: string;
+  uid: number;
   trusted: boolean;
   sender: string;
   showImages: boolean;
@@ -57,8 +63,12 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
   }
 
   checkDocForImages(): boolean {
-    const img = this.doc.querySelector("img");
-    return img ? true : false;
+    const img = _.filter(
+      this.doc.querySelectorAll("img"),
+      // Exclude external images
+      img => img.getAttribute("original-src")!.indexOf("cid:") == -1,
+    );
+    return img.length > 0 ? true : false;
   }
 
   setFrameHeight() {
@@ -84,10 +94,6 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
 
     // Remove image src attributes to stop them loading immediately
     _.each(tempDocument.body.querySelectorAll("img,image"), (img: HTMLImageElement) => {
-      // Attached images are OK!
-      if (_.startsWith(img.src, "cid:")) {
-        return;
-      }
       // Swap src for original-src, remove any srcset
       img.setAttribute("original-src", img.src);
       img.setAttribute("src", "about:blank");
@@ -165,7 +171,21 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     _.each(doc.querySelectorAll("img"), (img) => {
       const imageURL = img.getAttribute("original-src");
       if (!imageURL) {
-        // ignore attached images (don't have original-src)
+        console.error("got image without src element!", img)
+        return
+      }
+
+      if (_.startsWith(imageURL, "cid:")) {
+        const contentID = "<" + imageURL.substring(4) + ">";
+        const matchingPart = _.filter(this.props.parts, p => p.contentID == contentID)[0]
+        if (matchingPart) {
+          EmailsService.GetAccountFolderEmailsContentParts(this.props.accountName, this.props.folderName, {
+            [this.props.uid]: matchingPart,
+          }).then(r => {
+            img.setAttribute("src", `data:${matchingPart.type};base64,${r[this.props.uid].data}`);
+            console.log(`data:${matchingPart.type};base64,BLAH`, img)
+          })
+        }
         return;
       }
 
@@ -289,7 +309,7 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     if (this.state.hasImages && !this.state.showImages) {
       const showImages = <a onClick={this.props.clickShowImages}>show images</a>;
       const alwaysShowImages = <a onClick={this.props.clickAlwaysShowImages}>always show images from {this.props.sender}</a>;
-      return <p className="data-notice">Images are not displayed by default: {showImages} or {alwaysShowImages}.</p>;
+      return <p className="data-notice">Remote images are not displayed by default: {showImages} or {alwaysShowImages}.</p>;
     }
   }
 

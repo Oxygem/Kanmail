@@ -257,6 +257,10 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
     const { message } = this.props;
     return <ThreadMessageContent
       body={message.body}
+      parts={message.parts}
+      folderName={message.folderName}
+      accountName={message.accountName}
+      uid={message.uid}
       trusted={message.trusted}
       showImages={this.state.showImages}
       showTrackers={this.state.showTrackers}

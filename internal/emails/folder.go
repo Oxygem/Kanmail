@@ -31,8 +31,9 @@ const (
 var htmlStripper = bluemonday.StrictPolicy()
 
 // Cleans partial-HTML content for display
+// disable URL parsing so cid:xyz img.src attributes work
 // https://www.getresponse.com/blog/supported-html-tags-in-email-clients
-var htmlCleaner = bluemonday.UGCPolicy()
+var htmlCleaner = bluemonday.UGCPolicy().RequireParseableURLs(false)
 
 // Convert text/plain -> safe markdown HTML
 var markdownConverter = goldmark.New(
