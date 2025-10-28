@@ -3,7 +3,9 @@ package imapinterface
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"slices"
+	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/emersion/go-imap/v2"
@@ -31,6 +33,8 @@ type FakeCommand struct {
 }
 
 func (c *FakeCommand) Wait() error {
+	// Sleep anywhere between 0-10s
+	time.Sleep(time.Millisecond * time.Duration(rand.Intn(10000)))
 	return c.err
 }
 
@@ -47,8 +51,8 @@ type FakeSearchCommand struct {
 }
 
 func (c *FakeSearchCommand) Wait() (*imap.SearchData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -62,8 +66,8 @@ type FakeFetchCommand struct {
 }
 
 func (c *FakeFetchCommand) Collect() ([]*imapclient.FetchMessageBuffer, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.Wait(); err != nil {
+		return nil, c.err
 	}
 	return c.messages, nil
 }
@@ -77,8 +81,8 @@ type FakeExpungeCommand struct {
 }
 
 func (c *FakeExpungeCommand) Collect() ([]uint32, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.Wait(); err != nil {
+		return nil, err
 	}
 	uids := make([]uint32, len(c.uids))
 	for i, id := range c.uids {
@@ -96,8 +100,8 @@ type FakeSelectCommand struct {
 }
 
 func (c *FakeSelectCommand) Wait() (*imap.SelectData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -111,8 +115,8 @@ type FakeListCommand struct {
 }
 
 func (c *FakeListCommand) Collect() ([]*imap.ListData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -126,8 +130,8 @@ type FakeNamespaceCommand struct {
 }
 
 func (c *FakeNamespaceCommand) Wait() (*imap.NamespaceData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -141,8 +145,8 @@ type FakeMoveCommand struct {
 }
 
 func (c *FakeMoveCommand) Wait() (*imapclient.MoveData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -156,8 +160,8 @@ type FakeCopyCommand struct {
 }
 
 func (c *FakeCopyCommand) Wait() (*imap.CopyData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
@@ -171,8 +175,8 @@ type FakeAppendCommand struct {
 }
 
 func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
-	if c.FakeCommand.err != nil {
-		return nil, c.FakeCommand.err
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
 	}
 	return c.data, nil
 }
