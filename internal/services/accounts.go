@@ -48,6 +48,10 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context) error {
 }
 
 func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName types.AccountName) *emails.Account {
+	// Get settings *before* locking, so we don't deadlock sync/paginate reqs against settings changes,
+	// which can both happen rapidly while clicking through the folders in the sidebar.
+	settings := a.settings.GetSettings(ctx)
+
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
 
@@ -55,7 +59,6 @@ func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName ty
 		return account
 	}
 
-	settings := a.settings.GetSettings(ctx)
 	for _, accountSettings := range settings.Accounts {
 		if accountSettings.Name == accountName {
 			account := emails.NewAccount(accountSettings, a.caches)
