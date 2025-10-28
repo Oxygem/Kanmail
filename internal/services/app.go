@@ -329,7 +329,8 @@ func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, error) 
 	ctx = a.log.With().Str("method", "CheckUpdate").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
-	return a.getUpdate(ctx)
+	u, err := a.getUpdate(ctx)
+	return u, types.WrapError(err)
 }
 
 func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
@@ -351,7 +352,7 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 
 	resp, err := client.Get(update.Link)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download update: %w", err)
+		return nil, types.WrapError(fmt.Errorf("failed to download update: %w", err))
 	}
 	defer resp.Body.Close()
 

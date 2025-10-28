@@ -104,9 +104,8 @@ func (c *ConnectionPool[T]) GetConnection(ctx context.Context, fn func(conn T) e
 	}
 
 	conn := <-c.pool
-	zerolog.Ctx(ctx).Trace().Msg("Acquired connection from regular pool")
-
 	zerolog.Ctx(ctx).Trace().Str("pool", "regular").Msg("Acquired connection from pool")
+
 	defer func() {
 		c.pool <- conn
 		zerolog.Ctx(ctx).Trace().Str("pool", "regular").Msg("Returned connection to pool")
@@ -122,9 +121,8 @@ func (c *ConnectionPool[T]) GetBackgroundConnection(ctx context.Context, fn func
 	}
 
 	conn := <-c.backgroundPool
-	zerolog.Ctx(ctx).Trace().Msg("Acquired connection from background pool")
-
 	zerolog.Ctx(ctx).Trace().Str("pool", "background").Msg("Acquired connection from pool")
+
 	defer func() {
 		c.backgroundPool <- conn
 		zerolog.Ctx(ctx).Trace().Str("pool", "background").Msg("Returned connection to pool")

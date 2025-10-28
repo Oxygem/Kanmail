@@ -1,9 +1,11 @@
 package types
 
 import (
+	"context"
 	"errors"
-	"net"
+	"io"
 
+	"github.com/rs/zerolog"
 	"go.mau.fi/util/exhttp"
 )
 
@@ -18,21 +20,14 @@ func (e InternalError) Error() string {
 
 func makeInternalError(err error) InternalError {
 	isNetwork := false
-	var operr *net.OpError
-	if errors.As(err, &operr) {
-		isNetwork = true
-	}
-	var neterr net.Error
-	if errors.As(err, &neterr) {
-		isNetwork = true
-	}
 
-	if exhttp.IsNetworkError(err) {
+	if exhttp.IsNetworkError(err) || errors.Is(err, io.ErrUnexpectedEOF) {
 		isNetwork = true
 	}
 
 	errStack := err
 	for errStack != nil {
+		zerolog.Ctx(context.TODO()).Trace().Err(errStack).Msg("Unwrapped error stack")
 		errStack = errors.Unwrap(errStack)
 	}
 
