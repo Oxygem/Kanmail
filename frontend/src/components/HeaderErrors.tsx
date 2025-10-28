@@ -5,6 +5,7 @@ import React, { Component } from "react";
 import { SUPPORT_DOC_LINK } from "../constants.ts";
 import { openLink } from "../window.ts";
 
+import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { subscribe } from "../stores/base.tsx";
 import requestStore, { IRequestStoreProps, RuntimeError } from "../stores/request.ts";
 
@@ -46,7 +47,7 @@ class RequestError extends Component<RuntimeError, {
           {this.props.accountName && ": " + this.props.accountName}
           {this.props.folderName && "/" + this.props.folderName}
         </span>
-        <button onClick={this.copyDebugInformation}>{copyText}</button>
+        {/*<button onClick={this.copyDebugInformation}>{copyText}</button>*/}
         <textarea
           disabled={true}
           value={debugInfo}
@@ -72,15 +73,15 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
         <div className="icon-contents">
           <strong>Kanmail encountered a serious sync or UI error.</strong>
           <p>
-            Click the icon to reload Kanmail or use the information below to
-            submit a bug report.{" "}
+            Click the icon to restart Kanmail. Please consider submitting a bug
+            report with the information below.{" "}
             <a onClick={() => openLink(SUPPORT_DOC_LINK)}>More information</a>.
           </p>
           {_.map(this.props.requestErrors, (error, key) => (
             <RequestError {...error} key={key} />
           ))}
         </div>
-        <a onClick={() => window.location.reload()}>
+        <a onClick={() => AppService.RestartAfterUpdate()}>
           <i className="error fa fa-exclamation-triangle"></i>{" "}
           {this.props.requestErrors.length}
         </a>
