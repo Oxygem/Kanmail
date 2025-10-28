@@ -72,11 +72,14 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
   }
 
   setFrameHeight() {
-    // this.frameElement!.style.height = "auto";
-    // let height = this.frameElement!.contentWindow!.document.documentElement.scrollHeight;
     let height = this.frameElement!.contentWindow!.document.body.scrollHeight;
-    // console.log("SETHEIGHT", height, this.frameElement!.contentWindow!.document.body.scrollHeight)
-    // Now that we've modified, set the height
+
+    if (height === 0) {
+      console.warn("Could not get height of HTML iframe")
+      height = 500;
+      this.frameElement!.contentWindow!.document.body.style.overflow = "auto";
+    }
+
     this.frameElement!.style.height = (height) + 'px';
   }
 
@@ -182,7 +185,7 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
           EmailsService.GetAccountFolderEmailsContentParts(this.props.accountName, this.props.folderName, {
             [this.props.uid]: matchingPart,
           }).then(r => {
-            img.setAttribute("src", `data:${matchingPart.type};base64,${r[this.props.uid].data}`);
+            img.setAttribute("src", `data:${matchingPart.type};base64,${r[this.props.uid]!.data}`);
             console.log(`data:${matchingPart.type};base64,BLAH`, img)
           })
         }
