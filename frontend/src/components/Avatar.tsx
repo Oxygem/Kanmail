@@ -70,7 +70,7 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
     }
 
     const icon = this.getCachedIcon();
-    if (icon) {
+    if (icon !== undefined) {
       this.setState({ iconBytes: icon });
       return;
     }
