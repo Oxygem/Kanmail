@@ -1,5 +1,4 @@
 import _ from "lodash";
-import PropTypes from "prop-types";
 import React, { Component } from "react";
 
 import { SUPPORT_DOC_LINK } from "../constants.ts";

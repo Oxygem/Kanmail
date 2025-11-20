@@ -1,5 +1,7 @@
 import React from "react";
 
+import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+
 interface IErrorInformationProps {
   error: any;
   componentStack: any;
@@ -22,7 +24,7 @@ class ErrorInformation extends React.Component<IErrorInformationProps, IErrorInf
           <img src="/icon.png" width="24px" /> Something broke!
         </h1>
         <p>
-          <a onClick={() => window.location.reload()}>Click here to reload!</a>
+          <a onClick={() => AppService.RestartAfterUpdate()}>Click here to reload!</a>
         </p>
         <p>
           So this is embarrassing - something broke! If this error persists,
