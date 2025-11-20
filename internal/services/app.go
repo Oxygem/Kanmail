@@ -555,7 +555,7 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 
 	isValid, err := backend.CheckLicense(ctx, a.DeviceID, val)
 	if err != nil {
-		return false, err
+		return false, types.WrapError(err)
 	} else if isValid {
 		return true, a.caches.LicenseCache.Upsert(ctx, hashedKey)
 	}
