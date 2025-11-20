@@ -9,7 +9,9 @@ import (
 	"github.com/emersion/go-smtp"
 	"github.com/rs/zerolog"
 
+	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/emails/oauth"
+	"github.com/oxygem/kanmail/internal/emails/smtpinterface"
 	"github.com/oxygem/kanmail/internal/types"
 )
 
@@ -29,7 +31,7 @@ func NewSMTPConnectionPool(options ConnectionPoolOptions, conf types.ConnectionS
 
 func (c *SMTPConnectionPool) WithConnection(
 	ctx context.Context,
-	fn func(conn *smtp.Client) error,
+	fn func(conn smtpinterface.SMTPClient) error,
 ) error {
 	return c.GetConnection(ctx, func(wrapper *SMTPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
@@ -42,7 +44,7 @@ func (c *SMTPConnectionPool) WithConnection(
 
 // Lazily loaded smtp.Client - not safe for use by concurrent goroutines, use the pool!
 type SMTPConnectionWrapper struct {
-	client *smtp.Client
+	client smtpinterface.SMTPClient
 	conf   types.ConnectionSettings
 }
 
@@ -53,8 +55,17 @@ func (c *SMTPConnectionWrapper) Close() error {
 	return c.client.Close()
 }
 
-func (c *SMTPConnectionWrapper) Get(ctx context.Context) (*smtp.Client, error) {
+func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClient, error) {
 	log := zerolog.Ctx(ctx)
+
+	// Check if fake IMAP??? mode is enabled
+	if constants.ENV_DEBUG_FAKE_IMAP != "" {
+		if c.client == nil {
+			log.Info().Msg("Using fake SMTP client for debugging")
+			c.client = smtpinterface.NewFakeSMTPClient()
+		}
+		return c.client, nil
+	}
 
 	if c.client == nil {
 		dialFn := func(addr string, _ *tls.Config) (*smtp.Client, error) {

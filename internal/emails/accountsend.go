@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/emersion/go-message/mail"
-	"github.com/emersion/go-smtp"
 	"github.com/rs/zerolog"
 
+	"github.com/oxygem/kanmail/internal/emails/smtpinterface"
 	"github.com/oxygem/kanmail/internal/types"
 )
 
@@ -178,7 +178,7 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) error {
 
 	log.Debug().Msg("Sending email")
 
-	return a.smtp.WithConnection(ctx, func(conn *smtp.Client) error {
+	return a.smtp.WithConnection(ctx, func(conn smtpinterface.SMTPClient) error {
 		if err := conn.SendMail("", toAddrs, &b); err != nil {
 			return fmt.Errorf("failed to send email: %w", err)
 		}

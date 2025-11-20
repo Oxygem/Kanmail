@@ -43,10 +43,11 @@ func init() {
 	fakeIMAPEnv := constants.ENV_DEBUG_FAKE_IMAP
 
 	if fakeIMAPEnv != "" {
-		var fThreads [][]fakeEmail = fakeThreads
-		if fakeIMAPEnv == "support" {
+		fThreads := fakeThreads
+		switch fakeIMAPEnv {
+		case "support":
 			fThreads = fakeSupportTicketThreads
-		} else if fakeIMAPEnv == "sales" {
+		case "sales":
 			fThreads = fakeSalesExecutiveThreads
 		}
 

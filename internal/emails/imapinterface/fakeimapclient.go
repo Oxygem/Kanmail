@@ -33,8 +33,8 @@ type FakeCommand struct {
 }
 
 func (c *FakeCommand) Wait() error {
-	// Sleep anywhere between 0-10s
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(10000)))
+	// Sleep anywhere between 0-1s
+	time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
 	return c.err
 }
 

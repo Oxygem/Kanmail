@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/emersion/go-imap/v2"
-	"github.com/emersion/go-smtp"
 	"github.com/rs/zerolog"
 
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/emails/imapinterface"
+	"github.com/oxygem/kanmail/internal/emails/smtpinterface"
 	"github.com/oxygem/kanmail/internal/types"
 )
 
@@ -74,7 +74,7 @@ func (a *Account) GetFolder(name types.FolderName) *Folder {
 }
 
 func (a *Account) TestSMTPConnection(ctx context.Context) error {
-	return a.smtp.WithConnection(ctx, func(conn *smtp.Client) error {
+	return a.smtp.WithConnection(ctx, func(conn smtpinterface.SMTPClient) error {
 		return conn.Noop()
 	})
 }
