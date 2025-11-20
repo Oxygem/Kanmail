@@ -17,6 +17,9 @@ class SettingsStore extends BaseStore {
 	props: ISettings;
 	prevProps: ISettings;
 
+	// Flag to indicate first set of settings - ie false means we set props + prevProps
+	hasFirstSet: boolean = false;
+
 	constructor() {
 		super();
 		this.props = new Settings();
@@ -156,6 +159,10 @@ class SettingsStore extends BaseStore {
 		}
 
 		this.props = settings;
+		if (!this.hasFirstSet) {
+			this.savePrevProps();
+			this.hasFirstSet = true;
+		}
 		this.triggerUpdate();
 
 		// Apply any theme changes (gross?)

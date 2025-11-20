@@ -47,7 +47,7 @@ class MainEmails extends BaseEmails {
   // in each account.
   onShowFolder = async (folderName: string) => {
     // If we've never seen this folder before, do a blocking reset paginate call first to initialize
-    // it or reset if already initialized (devloop).
+    // it or reset if already initialized (devloop), then kick of a sync and exit.
     if (!this.initializedFolderNames.has(folderName)) {
       await this.getFolderEmails(folderName, {
         reset: true,
@@ -55,6 +55,8 @@ class MainEmails extends BaseEmails {
         accountNames: this.getAccountKeys(),
       });
       this.initializedFolderNames.add(folderName);
+      this.syncFolderEmails(folderName);
+      return;
     }
 
     // If the previous settings included (displayed) this column, no need to update

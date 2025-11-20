@@ -23,7 +23,7 @@ import WelcomeSettings from "./WelcomeSettings.jsx";
 @subscribe(settingsStore)
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component<ISettings> {
-  newAliasEmailCheck: NodeJS.Timeout;
+  getNewEmailsInterval: NodeJS.Timeout;
 
   getFoldersToSync() {
     return _.concat(
@@ -60,7 +60,7 @@ export default class EmailsApp extends React.Component<ISettings> {
       1000 * 3600,
     );
 
-    this.newAliasEmailCheck = setInterval(
+    this.getNewEmailsInterval = setInterval(
       this.getNewEmails,
       settingsStore.props.system.syncInterval,
     );
@@ -69,20 +69,22 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   componentWillUnmount() {
-    clearInterval(this.newAliasEmailCheck);
+    clearInterval(this.getNewEmailsInterval);
   }
 
   getNewEmails = () => {
-    const folderNames = settingsStore.getCurrentColumns();
+    const folderNames = this.getFoldersToSync();
     console.info(`Resyncing current folders: ${folderNames}`);
 
-    _.map(folderNames, (folder) => {
+    _.map(folderNames, async (folder, i) => {
+      // Stagger each folder sync by 100ms
+      await new Promise(r => setTimeout(r, 100 * i));
       const columnMetaStore = getColumnMetaStore(folder);
       if (columnMetaStore.props.isSyncing) {
         console.debug(`Not syncing ${folder} as we are already syncing!`);
         return;
       }
-      mainEmailStore.syncFolderEmails(folder, {});
+      await mainEmailStore.syncFolderEmails(folder, {});
     });
   };
 
