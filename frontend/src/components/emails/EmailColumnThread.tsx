@@ -218,11 +218,12 @@ export default class EmailColumnThread extends React.Component<
   };
 
   isDeleteOnTrash() {
+    if (this.props.columnId === "trash") {
+      return true;
+    }
     const { accountName } = this.props.thread[0];
     const accountSettings = settingsStore.getAccountSettings(accountName);
-    return (
-      this.props.columnId === "trash" || accountSettings!.settings.deleteOnTrash
-    );
+    return accountSettings!.settings.deleteOnTrash;
   }
 
   /*
@@ -727,13 +728,17 @@ export default class EmailColumnThread extends React.Component<
       classNames.push("fa-trash");
     }
 
-    // const text = this.isDeleteOnTrash() ? "Delete permanently" : "Trash";
+    let text = "Trash";
+    if (this.isDeleteOnTrash()) {
+      text = "Delete permanently";
+      classNames.push("red");
+    }
 
     return (
       <Tooltip
         text={
           <span>
-            Trash (<i className="fa fa-keyboard-o" /> backspace)
+            {text} (<i className="fa fa-keyboard-o" /> backspace)
           </span>
         }
       >
@@ -879,6 +884,13 @@ export default class EmailColumnThread extends React.Component<
           <i className={`fa fa-${getAccountIconName(latestEmail.from)}`} />
           &nbsp;{latestEmail.accountName}
           {this.renderLabels()}
+          <span className="buttons">
+            {this.renderStarButton()}
+            {this.renderMoveButton()}
+            {this.renderArchiveButton()}
+            {this.renderRestoreButton()}
+            {this.renderTrashButton()}
+          </span>
           <span className="extra-meta">
             {this.state.starred && (
               <a className="star active">
@@ -896,13 +908,6 @@ export default class EmailColumnThread extends React.Component<
               </span>
             )}
             {this.renderAttachmentCount()}
-          </span>
-          <span className="buttons">
-            {this.renderStarButton()}
-            {this.renderMoveButton()}
-            {this.renderArchiveButton()}
-            {this.renderRestoreButton()}
-            {this.renderTrashButton()}
           </span>
         </div>
       </div>
