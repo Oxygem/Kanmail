@@ -52,6 +52,10 @@ CREATE TABLE folder_email_parts (
     part_id      TEXT NOT NULL,
     data         BLOB,
 
+    FOREIGN KEY (account_name, folder_name, uid)
+    REFERENCES folder_emails(account_name, folder_name, uid)
+    ON DELETE CASCADE,
+
     PRIMARY KEY (account_name, folder_name, uid, part_id)
 ) WITHOUT ROWID;
 
