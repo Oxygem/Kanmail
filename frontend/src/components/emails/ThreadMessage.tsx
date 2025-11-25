@@ -128,7 +128,11 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
     if (systemStore.props.isDebug) {
       return _.map(this.props.message.folderUids, (uid, folderName) => (
         <Tooltip text={`(debug) UID: ${uid}`}>
-          <span className="tag" key={folderName}>
+          <span className="tag" key={folderName} onClick={() => AppService.OpenDebugWindow({
+            accountName: this.props.message.accountName,
+            folderName: folderName,
+            uid: uid,
+          })}>
             {folderName}
           </span>
         </Tooltip >

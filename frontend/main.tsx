@@ -85,7 +85,12 @@ const main = () => {
             bootApp(MetaApp, appContainer);
             break;
         case "debug":
-            bootApp(DebugApp, appContainer);
+            const props = {
+                accountName: urlParams.get("accountName")!,
+                folderName: urlParams.get("folderName")!,
+                uid: urlParams.get("uid")!,
+            };
+            bootApp(DebugApp, appContainer, props);
             break;
         case "send":
             if (urlParams.get("mode")) {

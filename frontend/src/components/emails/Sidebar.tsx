@@ -79,7 +79,7 @@ export default class Sidebar extends React.Component {
           <span onClick={() => AppService.OpenMetaWindow()}>
             Kanmail {systemStore.props.currentVersion || "2.unknown"}
           </span>{" "}
-          {systemStore.props.isDebug && <span onClick={() => AppService.OpenDebugWindow()}>(debug)</span>}
+          {systemStore.props.isDebug && <span onClick={() => AppService.OpenDebugWindow({})}>(debug)</span>}
           {/* @ts-ignore */}
           <FooterStatus />
         </footer>

@@ -146,11 +146,30 @@ func (a *AppService) OpenMetaWindow(ctx context.Context) {
 	})
 }
 
-func (a *AppService) OpenDebugWindow(ctx context.Context) {
+type OpenDebugWindowOptions struct {
+	AccountName types.AccountName `json:"accountName,omitempty"`
+	FolderName  types.FolderName  `json:"folderName,omitempty"`
+	UID         imap.UID          `json:"uid,omitempty"`
+}
+
+func (a *AppService) OpenDebugWindow(ctx context.Context, options OpenDebugWindowOptions) {
+	v := make(url.Values, 5)
+
+	if options.AccountName != "" {
+		v["accountName"] = []string{string(options.AccountName)}
+	}
+	if options.FolderName != "" {
+		v["folderName"] = []string{string(options.FolderName)}
+	}
+	if options.UID > 0 {
+		v["uid"] = []string{strconv.Itoa(int(options.UID))}
+	}
+
 	util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Debugger",
 		AppName: "debug",
 		Compact: true,
+		Values:  v,
 	})
 }
 

@@ -14,19 +14,28 @@ interface DebugAppState {
 }
 
 export default class DebugApp extends React.Component<{}, DebugAppState> {
-  constructor(props: {}) {
+  constructor(props: {
+    accountName?: string,
+    folderName?: string,
+    uid?: string,
+  }) {
     super(props);
     keyboard.disable();
 
     this.state = {
-      accountName: "",
-      folderName: "",
-      uid: "",
+      accountName: props.accountName || "",
+      folderName: props.folderName || "",
+      uid: props.uid || "",
+
       loading: false,
       error: null,
       emailData: null,
       contentData: null,
     };
+
+    if (props.accountName !== "" && props.folderName !== "" && props.uid !== "") {
+      this.loadData();
+    }
   }
 
   handleInputChange = (field: keyof Pick<DebugAppState, "accountName" | "folderName" | "uid">) => (
@@ -35,9 +44,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
     this.setState({ [field]: e.target.value } as any);
   };
 
-  handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  loadData = async () => {
     const { accountName, folderName, uid } = this.state;
 
     if (!accountName || !folderName || !uid) {
@@ -71,6 +78,11 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
         error: err?.message || "Failed to fetch email",
       });
     }
+  }
+
+  handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await this.loadData();
   };
 
   render() {
