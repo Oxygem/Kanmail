@@ -565,12 +565,14 @@ export default class BaseEmails {
 
   _processEmailChanges(opts: Partial<ISyncOptions>[][] = []) {
     /*
-            Turn our single global list of emails into threads and assign to
-            folders/columns, pushing updates to the relevant `ColumnStores` on
-            changes.
-        */
+      Turn our single global list of emails into threads and assign to
+      folders/columns, pushing updates to the relevant `ColumnStores` on
+      changes.
+    */
 
-    console.debug("Debounced process email changes", opts);
+    if (opts.length > 0) {
+      console.debug("Debounced process email changes", opts);
+    }
 
     const options: Partial<ISyncOptions> = {};
 
@@ -662,7 +664,7 @@ export default class BaseEmails {
 
           // We want the first thread object to be the "base" of this thread as this
           // contains all the special values we assigned above (unread, etc).
-          let newThread;
+          let newThread: Thread;
           _.each(singleThreads, (singleThread) => {
             if (!newThread) {
               newThread = makeThread(_.clone(singleThread));
@@ -672,10 +674,9 @@ export default class BaseEmails {
           });
 
           if (singleThreads.length > 1) {
-            console.log("MERGED THREADS", newThread);
-            newThread.mergedThreads = singleThreads.length;
+            newThread!.mergedThreads = singleThreads.length;
           }
-          otherThreads.push(newThread);
+          otherThreads.push(newThread!);
         });
 
         newFolderEmails.set(folderName, otherThreads);

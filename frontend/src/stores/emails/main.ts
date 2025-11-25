@@ -55,7 +55,7 @@ class MainEmails extends BaseEmails {
         accountNames: this.getAccountKeys(),
       });
       this.initializedFolderNames.add(folderName);
-      this.syncFolderEmails(folderName);
+      await this.syncFolderEmails(folderName);
       return;
     }
 
@@ -67,7 +67,7 @@ class MainEmails extends BaseEmails {
     }
 
     // Sync the folder every time?
-    this.syncFolderEmails(folderName);
+    await this.syncFolderEmails(folderName);
 
     // Now check if we need to paginate, and which accounts. Paginate any accounts that have less
     // than the batch side emails shown.
@@ -79,8 +79,9 @@ class MainEmails extends BaseEmails {
         accountsToPaginate.push(a.name);
       }
     });
-
-    await this.getFolderEmails(folderName, { accountNames: accountsToPaginate })
+    if (accountsToPaginate.length > 0) {
+      await this.getFolderEmails(folderName, { accountNames: accountsToPaginate })
+    }
   }
 
   // Called debounced as we scroll a column, aim is to ensure we keep loading more emails. Crucially

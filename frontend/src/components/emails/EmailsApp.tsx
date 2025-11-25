@@ -5,7 +5,7 @@ import HTML5Backend from "react-dnd-html5-backend";
 import { ALWAYS_SYNC_FOLDERS, INBOX } from "../../constants.ts";
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
-import { getColumnMetaStore } from "../../stores/columns.ts";
+import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
 import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
@@ -45,47 +45,66 @@ export default class EmailsApp extends React.Component<ISettings> {
     // Create resize/move window position saver handlers
     createWindowPositionHandlers();
 
-    // Kick off a folders load for each account
-    this.props.accounts.forEach(a => filterStore.getAccountFolderNames(a.name))
-
     // Kick off license + update checks
     systemStore.checkLicense();
     systemStore.checkUpdate();
-    // Recheck every 1h
+    // Recheck every 24h
     setInterval(
       () => {
         systemStore.checkLicense();
         systemStore.checkUpdate();
       },
-      1000 * 3600,
+      1000 * 3600 * 24,
     );
 
-    this.getNewEmailsInterval = setInterval(
-      this.getNewEmails,
-      settingsStore.props.system.syncInterval,
+    // Bootstrap (init + sync) the folders we optimistically sync that aren't currently shown
+    const hiddenFolders = _.without(
+      this.getFoldersToSync(),
+      ...settingsStore.getCurrentColumns(),
     );
+    setTimeout(async () => {
+      for (let i = 0; i < hiddenFolders.length; i++) {
+        getColumnStore(hiddenFolders[i]);
+        await mainEmailStore.onShowFolder(hiddenFolders[i]);
+      }
+    }, 1000);
 
-    trackEvent("EmailsAppMounted")
+
+    // Kick off a folders load for each account
+    setTimeout(() => {
+      this.props.accounts.forEach(a => filterStore.getAccountFolderNames(a.name))
+    }, 2000);
+
+    // Kick off new emails loop
+    setTimeout(this.getNewEmailsLoop, settingsStore.props.system.syncInterval);
+
+    trackEvent("EmailsAppMounted");
   }
 
   componentWillUnmount() {
     clearInterval(this.getNewEmailsInterval);
   }
 
-  getNewEmails = () => {
+  getNewEmailsLoop = async () => {
     const folderNames = this.getFoldersToSync();
-    console.info(`Resyncing current folders: ${folderNames}`);
+    console.info(`[EmailsApp] New emails sync for current folders: ${folderNames}`);
+    const start = performance.now();
 
-    _.map(folderNames, async (folder, i) => {
-      // Stagger each folder sync by 100ms
-      await new Promise(r => setTimeout(r, 100 * i));
+    for (let i = 0; i < folderNames.length; i++) {
+      const folder = folderNames[i];
       const columnMetaStore = getColumnMetaStore(folder);
       if (columnMetaStore.props.isSyncing) {
-        console.debug(`Not syncing ${folder} as we are already syncing!`);
+        console.debug(`[EmailsApp] Not syncing ${folder} as we are already syncing!`);
         return;
       }
       await mainEmailStore.syncFolderEmails(folder, {});
-    });
+    }
+
+    // Reschedule the next loop call
+    const duration = performance.now() - start;
+    const nextSyncTime = settingsStore.props.system.syncInterval - Math.round(duration);
+    console.info(`[EmailsApp] Scheduled next new emails sync for ${nextSyncTime}ms`);
+    setTimeout(this.getNewEmailsLoop, nextSyncTime);
   };
 
   renderColumns() {
