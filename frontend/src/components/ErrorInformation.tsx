@@ -24,7 +24,7 @@ class ErrorInformation extends React.Component<IErrorInformationProps, IErrorInf
           <img src="/icon.png" width="24px" /> Something broke!
         </h1>
         <p>
-          <a onClick={() => AppService.RestartAfterUpdate()}>Click here to reload!</a>
+          <a onClick={() => AppService.RestartApp()}>Click here to restart!</a>
         </p>
         <p>
           So this is embarrassing - something broke! If this error persists,

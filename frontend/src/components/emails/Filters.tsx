@@ -292,7 +292,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
     }
 
     if (this.state.updateNeedsRestart) {
-      return <li className="small"><a onClick={AppService.RestartAfterUpdate}>
+      return <li className="small"><a onClick={AppService.RestartApp}>
         <i className="fa fa-refresh green"></i> Restart to update
       </a></li>;
     }

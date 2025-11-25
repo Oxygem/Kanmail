@@ -80,7 +80,7 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
             <RequestError {...error} key={key} />
           ))}
         </div>
-        <a onClick={() => AppService.RestartAfterUpdate()}>
+        <a onClick={() => AppService.RestartApp()}>
           <i className="error fa fa-exclamation-triangle"></i>{" "}
           {this.props.requestErrors.length}
         </a>
