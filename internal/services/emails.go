@@ -267,6 +267,10 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 		return fmt.Errorf("email does not support one click unsubscribe")
 	}
 
+	zerolog.Ctx(ctx).Info().
+		Str("list_unsubscribe_url", email.ListUnsubscribeURL).
+		Msg("Senting unsubscribe POST")
+
 	resp, err := http.Post(email.ListUnsubscribeURL, "", nil)
 	if err != nil {
 		return fmt.Errorf("failed to make unsubscribe POST: %w", err)
