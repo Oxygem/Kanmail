@@ -80,6 +80,17 @@ func (a *AppService) OpenLink(ctx context.Context, url string) error {
 	return util.OpenInBrowser(url)
 }
 
+func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error) {
+	return a.caches.GetStats(ctx)
+}
+
+func (a *AppService) ClearCacheAndRestart(ctx context.Context) {
+	if err := a.caches.CloseAndDelete(); err != nil {
+		zerolog.Ctx(ctx).Err(err).Msg("Failed to close and delete caches database")
+	}
+	a.RestartApp()
+}
+
 type OpenSendWindowOptions struct {
 	Mode        string            `json:"mode,omitempty"`
 	AccountName types.AccountName `json:"accountName,omitempty"`
@@ -100,7 +111,7 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 		v["mode"] = []string{options.Mode}
 	}
 	if options.AccountName != "" {
-		v["accountName"] = []string{(string(options.AccountName))}
+		v["accountName"] = []string{string(options.AccountName)}
 	}
 	if options.FolderName != "" {
 		v["folderName"] = []string{string(options.FolderName)}
@@ -475,8 +486,8 @@ func (a *AppService) applyUpdate(currentPath, newPath string) error {
 
 // Restarts the current process using the same executable, panics on any errors so we do nuke the
 // current process.
-func (a *AppService) RestartAfterUpdate(ctx context.Context) {
-	a.log.Info().Msg("Restarting Kanmail after update...")
+func (a *AppService) RestartApp() {
+	a.log.Info().Msg("Restarting Kanmail...")
 
 	bin := os.Args[0]
 	if !filepath.IsAbs(bin) {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"embed"
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -22,6 +23,7 @@ type Caches struct {
 	log      zerolog.Logger
 	db       *sql.DB
 	disabled bool
+	path     string
 
 	FolderUIDCache       *FolderUIDCache
 	FolderEmailCache     *FolderEmailCache
@@ -39,8 +41,9 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 	}
 
 	caches := &Caches{
-		log: log,
-		db:  db,
+		log:  log,
+		db:   db,
+		path: path,
 	}
 
 	if err := caches.runMigrations(); err != nil {
@@ -79,6 +82,15 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 
 func (c *Caches) Close() error {
 	return c.db.Close()
+}
+
+func (c *Caches) CloseAndDelete() error {
+	if err := c.Close(); err != nil {
+		return fmt.Errorf("failed to close database: %w", err)
+	} else if err := os.Remove(c.path); err != nil {
+		return fmt.Errorf("failed to delete database file: %s: %w", c.path, err)
+	}
+	return nil
 }
 
 func (c *Caches) IsDisabled() bool {

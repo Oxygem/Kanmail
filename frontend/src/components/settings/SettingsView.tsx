@@ -1,7 +1,8 @@
 import _ from "lodash";
 import React from "react";
 
-import { AccountSettings, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AccountSettings, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import Avatar from "../../components/Avatar.jsx";
 import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
@@ -93,11 +94,9 @@ interface ISettingsViewProps extends Settings {
 }
 
 interface ISettingsViewState {
-  isSaving: boolean;
-  isSaved: boolean;
-  saveError: any;
   tab: string;
   showAccountForm: boolean;
+  cacheStats?: CacheStats;
 }
 
 export default class SettingsView extends React.Component<ISettingsViewProps, ISettingsViewState> {
@@ -107,12 +106,16 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     keyboard.disable();
 
     this.state = {
-      isSaving: false,
-      isSaved: false,
-      saveError: null,
       showAccountForm: false,
       tab: "accounts",
     };
+
+    setTimeout(async () => {
+      const stats: CacheStats = await AppService.GetCacheStats();
+      this.setState({
+        cacheStats: stats,
+      });
+    })
   }
 
   setAccounts = (items: AccountSettings[]) => {
@@ -147,26 +150,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     arrayMove(items, index, index + position);
     this.setAccounts(items);
   };
-
-  // handleSaveSettings = (ev) => {
-  //   ev.preventDefault();
-
-  //   if (this.state.isSaving) {
-  //     if (this.state.saveError) {
-  //       this.setState({ isSaving: false, saveError: null });
-  //     }
-  //     return;
-  //   }
-
-  //   this.setState({ isSaving: true });
-
-  //   SettingsService.PutSettings(this.state.settings)
-  //     .then(() => {
-  //       this.setState({ isSaved: true });
-  //       this.props.onSave();
-  //     })
-  //     .catch((err) => this.setState({ saveError: err }));
-  // };
 
   renderPrivacyToggles() {
     return <div>
@@ -348,6 +331,28 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
               }
             }))}
           />
+        </div>
+      </div>
+
+      <div className="group">
+        <h3>Cache</h3>
+        {this.state.cacheStats && <ul>
+          <li>Database size: {this.state.cacheStats.DatabaseSizeFormatted}</li>
+          <li>Database path: {this.state.cacheStats.DatabaseFilename}</li>
+          {systemStore.props.isDebug && <li>(debug)
+            <ul>
+              <li>Page size: {this.state.cacheStats.PageSize}</li>
+              <li>Page count: {this.state.cacheStats.PageCount}</li>
+              <li>Free pages: {this.state.cacheStats.FreelistPages}</li>
+              <li>Schema version: {this.state.cacheStats.SchemaVersion}</li>
+            </ul>
+          </li>}
+        </ul>}
+        <div>
+          <button
+            className="red"
+            onClick={AppService.ClearCacheAndRestart}
+          >Clear cache &amp; restart</button>
         </div>
       </div>
     </div>;

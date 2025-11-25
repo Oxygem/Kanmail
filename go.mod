@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.3.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/emersion/go-appdir v1.1.2
 	github.com/emersion/go-imap/v2 v2.0.0-beta.5
 	github.com/emersion/go-message v0.18.2
