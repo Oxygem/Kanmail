@@ -1,7 +1,7 @@
 package services
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base32"
 	"encoding/hex"
 	"io/fs"
@@ -18,7 +18,7 @@ func generateDeviceID() string {
 }
 
 func hashLicenseKey(key string) string {
-	hasher := sha1.New()
+	hasher := sha256.New()
 	hasher.Write([]byte(key))
 	return hex.EncodeToString(hasher.Sum(nil))
 }
