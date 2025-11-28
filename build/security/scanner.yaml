@@ -1,0 +1,13 @@
+namespace: Kanmail v2
+language: EN
+working_dir: /opt/kanmail
+strict: true
+sast:
+  include:
+    - .
+  exclude:
+    - frontend/public/iframe/darkreader.min.js
+    - build/security/scan.sh
+sca:
+  include:
+    - .

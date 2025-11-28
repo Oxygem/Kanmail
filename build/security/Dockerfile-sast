@@ -1,0 +1,4 @@
+FROM fluidattacks/sast:latest
+
+WORKDIR /opt/kanmail
+COPY . /opt/kanmail

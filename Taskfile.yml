@@ -1,10 +1,10 @@
 version: '3'
 
 includes:
-  common: ./build/Taskfile.yml
-  windows: ./build/windows/Taskfile.yml
-  darwin: ./build/darwin/Taskfile.yml
-  linux: ./build/linux/Taskfile.yml
+  common: ./build/Taskfile.yaml
+  windows: ./build/windows/Taskfile.yaml
+  darwin: ./build/darwin/Taskfile.yaml
+  linux: ./build/linux/Taskfile.yaml
 
 vars:
   APP_NAME: "Kanmail"
@@ -30,4 +30,4 @@ tasks:
   dev:
     summary: Runs the application in development mode
     cmds:
-      - wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
+      - wails3 dev -config ./build/config.yaml -port {{.VITE_PORT}}
