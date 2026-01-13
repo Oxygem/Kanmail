@@ -11,7 +11,6 @@ import {
   ContactsService,
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { trackEvent } from "../../util/analytics.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import {
   AccountSettings,
@@ -19,6 +18,8 @@ import {
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
+import systemStore, { ISystem } from "../../stores/system.ts";
+import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
 import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
@@ -70,7 +71,7 @@ function getFilename(path) {
   return bits[bits.length - 1];
 }
 
-interface ISendAppProps extends ISettings {
+interface ISendAppProps extends ISettings, ISystem {
   // Message we're replying to, if any
   message?: Email;
   messageContent?: string;
@@ -94,7 +95,7 @@ interface ISendAppState {
   isSentOrSaved?: boolean;
 }
 
-@subscribe(settingsStore)
+@subscribe(settingsStore, systemStore)
 export default class SendApp extends React.Component<ISendAppProps, ISendAppState> {
   constructor(props: ISendAppProps) {
     super(props);
@@ -226,6 +227,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         attachments: _.concat(this.state.attachments, attachments),
       })
     })
+  };
+
+  getInitialEditorContent = (): string => {
+    let content = this.props.messageContent || "";
+
+    if (!this.props.isLicensed) {
+      const signature = '<div><br></div><div>--</div><div>Sent via <a href="https://kanmail.io">Kanmail</a></div>';
+      content = content + signature;
+    }
+
+    return content;
   };
 
   renderContactsSelect(dataKey) {
@@ -364,7 +376,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
           <div className="flex form-content" onClick={stopEventPropagation}>
             <SquireEditor
-              initialContent={this.props.messageContent || ""}
+              initialContent={this.getInitialEditorContent()}
               onUpdate={data => {
                 console.log("SET", data);
                 this.setState({
