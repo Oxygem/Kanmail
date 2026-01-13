@@ -11,6 +11,7 @@ import {
   ContactsService,
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { trackEvent } from "../../util/analytics.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import {
   AccountSettings,
@@ -210,6 +211,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
     EmailsService.SendEmail(this.state.accountContact.value[0], sendOptions).then(() => {
       this.setState({ isSentOrSaved: true })
+      trackEvent("SendEmail");
       // @ts-ignore
       setTimeout(() => wails.Window.Close(), 1000);
     }).catch(e => {

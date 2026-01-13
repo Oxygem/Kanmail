@@ -7,6 +7,7 @@ import Avatar from "../../components/Avatar.jsx";
 import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
+import { trackEvent } from "../../util/analytics.ts";
 import { arrayMove } from "../../util/array.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
@@ -143,6 +144,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     const items = this.props.accounts;
     items.push(newSettings);
     this.setAccounts(items);
+    trackEvent("AddAccount");
   };
 
   moveAccount = (index: number, position: number) => {
@@ -528,7 +530,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           type="submit"
           className={classes.join(" ")}
           // Apply the settings we have (held by WelcomeSettings) to the main store
-          onClick={() => (settingsStore.updateSettings(this.props))}
+          onClick={() => {
+            trackEvent("CompleteOnboarding");
+            settingsStore.updateSettings(this.props);
+          }}
         >
           {text}
         </button>
