@@ -80,12 +80,12 @@ func (a *AccountsService) TestAccountSettings(
 
 	tmpAccount := emails.NewAccount(settings, a.caches)
 
-	if err := tmpAccount.TestSMTPConnection(ctx); err != nil {
-		return settings, fmt.Errorf("failed to check SMTP connection: %w", err)
+	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
+		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check IMAP connection: %w", err))
 	}
 
-	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
-		return settings, fmt.Errorf("failed to check IMAP connection: %w", err)
+	if err := tmpAccount.TestSMTPConnection(ctx); err != nil {
+		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check SMTP connection: %w", err))
 	}
 
 	a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
@@ -116,7 +116,7 @@ func (a *AccountsService) AutoconfigureNewAccount(
 
 	settings, err := emails.GetAutoconfigSettingsForDomain(ctx, username, options.Domain)
 	if err != nil {
-		return settings, err
+		return settings, types.WrapAccountSettingsError(settings, err)
 	}
 
 	settings.IMAPSettings.Username = username
@@ -127,13 +127,12 @@ func (a *AccountsService) AutoconfigureNewAccount(
 
 	if options.Password != "" {
 		settings.IMAPSettings.Password = options.Password
-
 		settings.SMTPSettings.Password = options.Password
 	}
+
 	if options.OAuthProvider != "" {
 		settings.IMAPSettings.OAuthProvider = options.OAuthProvider
 		settings.IMAPSettings.OAuthRefreshToken = options.OAuthRefreshToken
-
 		settings.SMTPSettings.OAuthProvider = options.OAuthProvider
 		settings.SMTPSettings.OAuthRefreshToken = options.OAuthRefreshToken
 	}

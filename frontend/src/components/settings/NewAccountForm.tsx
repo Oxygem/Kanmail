@@ -1,25 +1,20 @@
 import _ from "lodash";
-import PropTypes from "prop-types";
 import React from "react";
 
-import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
-import { openLink } from "../../window.ts";
-// import gmailLogo from "images/providers/gmail.png";
-// import icloudLogo from "images/providers/icloud.png";
-// import outlookLogo from "images/providers/outlook.png";
-// import yahooLogo from "images/providers/yahoo.png";
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import {
 	AccountSettings,
 	Address,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
+import { openLink } from "../../window.ts";
 import AccountForm from "./AccountForm.tsx";
 
 interface GenericAccountFormProps {
-	closeForm: (any) => void;
-	handleAddAccountError: (any) => void;
-	completeAddNewAccount: (any) => void;
-	handleClickManualAddAccount: (any) => void;
+	closeForm: () => void;
+	handleAddAccountError: (s: AccountSettings, e: Error) => void;
+	completeAddNewAccount: (s: AccountSettings) => void;
+	handleClickManualAddAccount: () => void;
 }
 
 interface GenericAccountFormState {
@@ -38,10 +33,7 @@ interface GenericAccountFormState {
 	oauthRequestId: string | null;
 }
 
-class GenericAccountForm extends React.Component<
-	GenericAccountFormProps,
-	GenericAccountFormState
-> {
+class GenericAccountForm extends React.Component<GenericAccountFormProps, GenericAccountFormState> {
 	constructor(props) {
 		super(props);
 		this.state = {
@@ -120,7 +112,11 @@ class GenericAccountForm extends React.Component<
 		};
 
 		const handleError = (error: any) => {
-			this.props.handleAddAccountError(error.message);
+			let settings = getEmptyAccountSettings();
+			if (error.cause && error.cause.settings) {
+				settings = error.cause.settings as AccountSettings;
+			}
+			this.props.handleAddAccountError(settings, error.message);
 		}
 		this.setState({ isLoadingNewAccount: true });
 
@@ -355,17 +351,17 @@ class OauthAccountFormMixin extends GenericAccountForm {
 					newAccountSettings: settings,
 				});
 			}).catch(e => {
-				// TODO
-
-				console.log(e);
-
-				// if did autoconf:
 				this.setState({
 					newAccountError: "Authentication failed!",
 					isLoadingNewAccount: false,
 				});
 
-				this.props.handleAddAccountError(e)
+				let settings = getEmptyAccountSettings();
+				if (e.cause && e.cause.settings) {
+					settings = e.cause.settings as AccountSettings;
+				}
+
+				this.props.handleAddAccountError(settings, e)
 			})
 
 			this.setState({ isLoadingNewAccount: true });
@@ -480,7 +476,6 @@ const getInitialState = (): NewAccountFormState => ({
 	// Add account phase 1 - name/username/password autoconfig form
 	newAccountName: "",
 	newAccountError: null,
-	newAccountErrorType: null,
 
 	// Add account phase 2 - manual config if auto fails
 	isLoadingNewAccount: false,
@@ -498,7 +493,6 @@ interface NewAccountFormProps {
 interface NewAccountFormState {
 	newAccountName: string;
 	newAccountError: null | React.ReactNode | string;
-	newAccountErrorType: null | string;
 
 	accountType: string;
 
@@ -518,14 +512,13 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		this.setState(getInitialState());
 	};
 
-	handleAddAccountError = (error: string) => {
-		let newAccountSettings = getEmptyAccountSettings();
+	handleAddAccountError = (settings: AccountSettings, error: string) => {
+		error = `Email account setup failed, please update the settings manually below: ${error}`;
 		this.setState({
 			isLoadingNewAccount: false,
 			manuallyConfiguringAccount: true,
-			newAccountSettings,
+			newAccountSettings: settings,
 			newAccountError: error,
-			// newAccountErrorType: data.errorName,
 		});
 	};
 
@@ -561,7 +554,6 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 								itemIndex={0}
 								accountSettings={newAccountSettings || new AccountSettings()}
 								error={this.state.newAccountError}
-								errorType={this.state.newAccountErrorType}
 								deleteItem={this.resetState}
 								updateItem={this.completeAddNewAccount}
 								closeForm={this.resetState}

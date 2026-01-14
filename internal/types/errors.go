@@ -78,3 +78,19 @@ func WrapFolderError(accountName AccountName, folderName FolderName, err error) 
 		FolderName: folderName,
 	}
 }
+
+type AccountSettingsError struct {
+	Err      error           `json:"error"`
+	Settings AccountSettings `json:"settings"`
+}
+
+func (e AccountSettingsError) Error() string {
+	return e.Err.Error()
+}
+
+func WrapAccountSettingsError(settings AccountSettings, err error) error {
+	return AccountSettingsError{
+		Settings: settings,
+		Err:      err,
+	}
+}

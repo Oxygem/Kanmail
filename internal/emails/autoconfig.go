@@ -30,6 +30,23 @@ func InitTLDCache(path string) {
 }
 
 func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string) (types.AccountSettings, error) {
+	// Make some sensible defaults, the client will fallback to these if we fail to autoconf
+	defaultSettings := types.AccountSettings{
+		Name: types.AccountName(username),
+		IMAPSettings: types.ConnectionSettings{
+			Username: username,
+			Host:     domain,
+			Port:     993,
+			SSL:      true,
+		},
+		SMTPSettings: types.ConnectionSettings{
+			Username: username,
+			Host:     domain,
+			Port:     465,
+			SSL:      true,
+		},
+	}
+
 	// First try the domain directly
 	if settings := getAutconfigForDomain(ctx, username, domain); settings != nil {
 		return *settings, nil
@@ -39,7 +56,7 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 	// TODO: order records by preference
 	mx, err := net.DefaultResolver.LookupMX(ctx, domain)
 	if err != nil {
-		return types.AccountSettings{}, err
+		return defaultSettings, fmt.Errorf("failed to lookup MX record: %w", err)
 	} else {
 		for _, d := range mx {
 			host := d.Host[:len(d.Host)-1]
@@ -49,7 +66,7 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 		}
 	}
 
-	return types.AccountSettings{}, fmt.Errorf(
+	return defaultSettings, fmt.Errorf(
 		"failed to autoconfigure username/domain: %s/%s",
 		username, domain,
 	)

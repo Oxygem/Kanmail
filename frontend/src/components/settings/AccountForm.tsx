@@ -53,7 +53,6 @@ interface IAccountFormProps {
 
   isAddingNewAccount?: boolean;
   error?: any;
-  errorType?: any;
   accountId?: any;
 
   itemIndex: number;
@@ -65,8 +64,7 @@ interface IAccountFormProps {
 interface IAccountFormState {
   editingTab: string;
 
-  error: any;
-  errorType: any;
+  error: string;
 
   isSaving: boolean;
 
@@ -85,7 +83,6 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
     editingTab: props.isAddingNewAccount ? "imap" : "address",
 
     error: props.error,
-    errorType: props.errorType,
 
     isSaving: false,
 
@@ -164,8 +161,8 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
 
     AccountsService.TestAccountSettings({
       name: this.state.name,
-      imapSettings: this.state.imapSettings!,
-      smtpSettings: this.state.smtpSettings!,
+      imapSettings: this.state.imapSettings || new ConnectionSettings(),
+      smtpSettings: this.state.smtpSettings || new ConnectionSettings(),
       folders: this.state.folders,
       contacts: this.state.contacts,
       settings: this.state.settings,
@@ -183,6 +180,9 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
         error: error.message,
         isSaving: false,
       });
+      if (error.cause && error.cause.settings) {
+        this.props.updateItem(this.props.itemIndex, error.cause.settings);
+      }
     })
   };
 
@@ -452,9 +452,6 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
         </div>
 
         <div className={this.state.editingTab == "imap" ? "wide" : "hidden"}>
-          <div className="error">
-            {this.state.errorType === "imap" && this.state.error}
-          </div>
           <div className="flex wide">
             {this.renderUsernamePassword("imapSettings")}
             <div className="three-quarter">
@@ -475,36 +472,11 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 type: "checkbox",
               })}
             </div>
-            <div className="half">
-              <label
-                className="checkbox"
-                htmlFor="imapSettings-sslVerifyHostname"
-              >
-                <span className="red">Advanced</span>&nbsp; (
-                <a
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
-                  }}
-                >
-                  more info
-                </a>
-                ):
-                <br />
-                Verify SSL hostname?
-              </label>
-              {this.renderInput("imapSettings", "sslVerifyHostname", {
-                type: "checkbox",
-              })}
-            </div>
             <div className="quarter"></div>
           </div>
         </div>
 
         <div className={this.state.editingTab == "smtp" ? "wide" : "hidden"}>
-          <div className="error">
-            {this.state.errorType === "smtp" && this.state.error}
-          </div>
           <div className="flex wide">
             {this.renderUsernamePassword("smtpSettings")}
             <div className="three-quarter">
@@ -530,28 +502,6 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 Use TLS?
               </label>
               {this.renderInput("smtpSettings", "tls", {
-                type: "checkbox",
-              })}
-            </div>
-            <div className="half">
-              <label
-                className="checkbox"
-                htmlFor="smtpSettings-sslVerifyHostname"
-              >
-                <span className="red">Advanced</span> (
-                <a
-                  onClick={(ev) => {
-                    ev.preventDefault();
-                    openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
-                  }}
-                >
-                  more info
-                </a>
-                ):
-                <br />
-                Verify SSL hostname?
-              </label>
-              {this.renderInput("smtpSettings", "sslVerifyHostname", {
                 type: "checkbox",
               })}
             </div>

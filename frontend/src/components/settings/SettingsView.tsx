@@ -46,8 +46,8 @@ class Account extends React.Component<IAccountProps, IAccountState> {
     }
 
     const hasValidCredentials =
-      (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken)
-      && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken);
+      (this.props.imapSettings && (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken))
+      && (this.props.smtpSettings && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken));
 
     let deleteButton: React.ReactElement;
     if (this.state.isDeleting) {
