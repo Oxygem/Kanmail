@@ -3,6 +3,7 @@ package emails
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
@@ -175,6 +176,9 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 
 	if c.client == nil {
 		options := &imapclient.Options{}
+		if constants.ENV_DEBUG_IMAP_IO != "" {
+			options.DebugWriter = os.Stdout
+		}
 
 		dialFn := imapclient.DialInsecure
 		if c.conf.SSL {

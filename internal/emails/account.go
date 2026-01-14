@@ -141,9 +141,7 @@ func (a *Account) FetchAndUpdateSettings(ctx context.Context) error {
 			if folder != "" {
 				folder = folder + "/"
 			}
-			mailboxes, err := conn.List(folder, "%", &imap.ListOptions{
-				ReturnChildren: true,
-			}).Collect()
+			mailboxes, err := conn.List(folder, "%", &imap.ListOptions{}).Collect()
 			if err != nil {
 				return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", folder, err)
 			}
@@ -166,7 +164,9 @@ func (a *Account) FetchAndUpdateSettings(ctx context.Context) error {
 			return nil
 		}
 
-		getMailboxes(a.Settings.FolderPrefix)
+		if err := getMailboxes(a.Settings.FolderPrefix); err != nil {
+			return err
+		}
 
 		// Gmail is the only provider (known at this time) that automatically saves emails sent via SMTP
 		// to the sent folder, so otherwise we append them via IMAP on send.
