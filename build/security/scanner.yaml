@@ -6,8 +6,13 @@ sast:
   include:
     - .
   exclude:
+    # External/minified
     - frontend/public/iframe/darkreader.min.js
+    # Uses unpinned docker images (builds them, CI only)
     - build/security/scan.sh
+    # Starts localhost:0 server w/o TLS for oauth callback, as local only there's no need to use
+    # TLS and this historically has not been flagged.
+    - internal/emails/oauth/oauth.go
 sca:
   include:
     - .
