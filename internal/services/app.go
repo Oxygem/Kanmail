@@ -248,7 +248,7 @@ func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings type
 }
 
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) string {
-	dialog := application.SaveFileDialog()
+	dialog := application.Get().Dialog.SaveFile()
 	dialog.SetFilename(part.Description)
 	dialog.SetDirectory("Downloads")
 
@@ -261,7 +261,7 @@ func (a *AppService) OpenSaveFileDialog(part types.BodyPart) string {
 }
 
 func (a *AppService) OpenOpenFilesDialog() []string {
-	dialog := application.OpenFileDialog()
+	dialog := application.Get().Dialog.OpenFile()
 
 	if paths, err := dialog.PromptForMultipleSelection(); err == nil {
 		return paths
@@ -271,7 +271,7 @@ func (a *AppService) OpenOpenFilesDialog() []string {
 }
 
 func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
-	dialog := application.QuestionDialog()
+	dialog := application.Get().Dialog.Question()
 	dialog.SetTitle("Kanmail license")
 	dialog.SetMessage("Kanmail may be evaluated for free, however a license must be purchased for continued use.")
 

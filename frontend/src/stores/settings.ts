@@ -209,5 +209,5 @@ export default settingsStore;
 
 Events.On(EventName.SettingsChangedEvent, (ev) => {
 	console.debug("[settingsStore] Received settings changed event", ev);
-	settingsStore.setSettings(ev.data[0]);
+	settingsStore.setSettings(ev.data);
 });
