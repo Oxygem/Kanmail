@@ -8,8 +8,8 @@ An email client that functions like a kanban board, for Mac/Windows/Linux. [**Do
 > [!IMPORTANT]
 > Please note that Kanmail is **source available but not free**. Kanmail may be downloaded and evaluated for free; for continued use of Kanmail a [**license must be purchased**](https://kanmail.io/license).
 
-![](https://dev.kanmail.io/img/kanmail-screenshot-light.webp)
-![](https://dev.kanmail.io/img/kanmail-screenshot-dark.webp)
+![](https://kanmail.io/img/kanmail-screenshot-light.webp)
+![](https://kanmail.io/img/kanmail-screenshot-dark.webp)
 
 ## Contributions
 
