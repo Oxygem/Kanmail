@@ -25,13 +25,16 @@ function getInitialsFromAddress(address) {
     return "";
   }
   const text = address.name || address.email;
+  if (text.length === 0) {
+    return "";
+  }
   const textBits = text.split(" ");
   if (textBits.length > 1) {
     return `${textBits[0][0]}${textBits[1][0]}`;
   }
 
   const capitalOnlyText = text.replace(/[^A-Z]/g, "");
-  if (capitalOnlyText.length == 1) {
+  if (capitalOnlyText.length === 1) {
     return capitalOnlyText;
   } else if (capitalOnlyText.length > 1) {
     return `${capitalOnlyText[0]}`;

@@ -2,7 +2,7 @@ import _ from "lodash";
 import React from "react";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, Address, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import Avatar from "../../components/Avatar.jsx";
 import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
@@ -64,7 +64,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
 
     return (
       <div className="account">
-        <Avatar address={this.props.contacts[0]} />
+        <Avatar address={this.props.contacts.length > 0 ? this.props.contacts[0] : new Address()} />
         <div className="name">
           <strong>{this.props.name}</strong>
           <br />
