@@ -64,13 +64,16 @@ class Account extends React.Component<IAccountProps, IAccountState> {
 
     return (
       <div className="account">
-        <Avatar address={this.props.contacts.length > 0 ? this.props.contacts[0] : new Address()} />
+        <Avatar address={(this.props.contacts && this.props.contacts.length > 0)
+          ? this.props.contacts[0]
+          : new Address()
+        } />
         <div className="name">
           <strong>{this.props.name}</strong>
           <br />
           {hasValidCredentials ?
             this.props.imapSettings.username
-            : <span className="red">Credentials invalid, please deleted and re-setup</span>
+            : <span className="red">Credentials invalid, please remove and re-setup.</span>
           }
         </div>
         <div className="buttons">

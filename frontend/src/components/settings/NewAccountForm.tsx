@@ -530,12 +530,12 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		});
 	};
 
-	completeAddNewAccount = (accountSettings) => {
+	completeAddNewAccount = (accountSettings: AccountSettings) => {
 		this.props.addItem(accountSettings);
 		this.resetState();
 	};
 
-	setAccountType = (accountType) => {
+	setAccountType = (accountType: string) => {
 		this.setState({ accountType });
 	};
 
@@ -555,7 +555,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 								accountSettings={newAccountSettings || new AccountSettings()}
 								error={this.state.newAccountError}
 								deleteItem={this.resetState}
-								updateItem={this.completeAddNewAccount}
+								updateItem={(_, s) => this.completeAddNewAccount(s)}
 								closeForm={this.resetState}
 							/>
 						</div>
