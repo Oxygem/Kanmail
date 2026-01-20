@@ -207,6 +207,10 @@ func (f *Folder) SearchMessageIDs(ctx context.Context, messageIDs []string) (map
 		// Because imap we have to search each message ID one by one
 		uidToMsgID := make(map[imap.UID]string, len(messageIDs))
 		for _, msgid := range messageIDs {
+			if msgid == "" {
+				log.Warn().Msg("Skip search for empty messageID")
+				continue
+			}
 			log.Trace().Str("message_id", msgid).Msg("Search by messageID")
 			res, err := conn.UIDSearch(&imap.SearchCriteria{
 				Header: []imap.SearchCriteriaHeaderField{{
