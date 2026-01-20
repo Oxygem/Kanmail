@@ -147,7 +147,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     const items = this.props.accounts;
     items.push(newSettings);
     this.setAccounts(items);
-    trackEvent("AddAccount");
   };
 
   moveAccount = (index: number, position: number) => {

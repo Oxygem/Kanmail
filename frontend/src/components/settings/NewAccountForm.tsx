@@ -7,6 +7,7 @@ import {
 	Address,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
+import { trackEvent } from "../../util/analytics.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "./AccountForm.tsx";
 
@@ -520,6 +521,9 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			newAccountSettings: settings,
 			newAccountError: error,
 		});
+		trackEvent("AddAccountError", {
+			accountType: this.state.accountType,
+		});
 	};
 
 	handleClickManualAddAccount = (ev) => {
@@ -528,15 +532,22 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			manuallyConfiguringAccount: true,
 			newAccountSettings: getEmptyAccountSettings(),
 		});
+		trackEvent("AddAccountManual");
 	};
 
 	completeAddNewAccount = (accountSettings: AccountSettings) => {
 		this.props.addItem(accountSettings);
 		this.resetState();
+		trackEvent("AddAccountComplete", {
+			accountType: this.state.accountType,
+		});
 	};
 
 	setAccountType = (accountType: string) => {
 		this.setState({ accountType });
+		trackEvent("AddAccountStart", {
+			accountType: accountType,
+		});
 	};
 
 	render() {
