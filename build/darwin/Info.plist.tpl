@@ -19,6 +19,8 @@
         <string>icons</string>
         <key>LSMinimumSystemVersion</key>
         <string>10.13.0</string>
+        <key>LSFileQuarantineEnabled</key>
+        <true/>
         <key>NSHighResolutionCapable</key>
         <string>true</string>
         <key>NSHumanReadableCopyright</key>
