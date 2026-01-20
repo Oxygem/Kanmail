@@ -35,9 +35,9 @@ type Kanmail struct {
 	ContactsService *services.ContactsService
 }
 
-func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int) *Kanmail {
+func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename string) *Kanmail {
 	appService := services.NewAppService(log, version)
-	settingsService := services.NewSettingsService(log, appService)
+	settingsService := services.NewSettingsService(log, logFilename, appService)
 
 	caches := caches.NewCaches(log, path.Join(settingsService.CacheDir, "caches.db"))
 

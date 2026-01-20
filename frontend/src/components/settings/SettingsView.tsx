@@ -359,6 +359,11 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           >Clear cache &amp; restart</button>
         </div>
       </div>
+
+      <div className="group">
+        <h3>Debug</h3>
+        <p>Log file: {systemStore.props.logFilename}</p>
+      </div>
     </div>;
   }
 

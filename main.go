@@ -28,11 +28,25 @@ func main() {
 	debugger := flag.Bool("debugger", false, "")
 	flag.Parse()
 
-	var logOut io.Writer = os.Stderr
-	if constants.ENV_DEBUG_PRETTY_LOGS != "" {
-		logOut = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	writers := []io.Writer{}
+	f, createTempErr := os.CreateTemp("", "kanmail")
+	if createTempErr != nil {
+		writers = append(writers, os.Stderr)
+	} else {
+		writers = append(writers, f)
 	}
-	log := zerolog.New(logOut).With().Timestamp().Logger()
+	if constants.ENV_DEBUG_PRETTY_LOGS != "" {
+		writers = append(writers, zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
+	}
+	log := zerolog.New(io.MultiWriter(writers...)).With().Timestamp().Logger()
+
+	var logFilename string
+	if createTempErr != nil {
+		log.Err(createTempErr).Msg("Failed to open temporary log file")
+	} else {
+		logFilename = f.Name()
+		log.Debug().Str("file", f.Name()).Msg("Using temporary log file")
+	}
 
 	// Catch any incorrectly assigned logs
 	deflog.Logger = log.With().Str("component", "default_logger").Logger()
@@ -59,7 +73,7 @@ func main() {
 		}
 	}
 
-	kanmail := internal.NewKanmailApp(assets, log, version)
+	kanmail := internal.NewKanmailApp(assets, log, version, logFilename)
 
 	if kanmail.App.Env.Info().Debug {
 		zerolog.SetGlobalLevel(zerolog.TraceLevel)

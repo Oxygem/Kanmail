@@ -17,7 +17,7 @@ import (
 )
 
 func RunDebugger(log zerolog.Logger) {
-	kanmail := NewKanmailApp(nil, log, 0)
+	kanmail := NewKanmailApp(nil, log, 0, "")
 	defer kanmail.Caches.Close()
 
 	ctx := log.WithContext(context.Background())

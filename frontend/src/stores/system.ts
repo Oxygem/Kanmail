@@ -1,10 +1,11 @@
 import { Version } from "../../bindings/github.com/oxygem/kanmail/internal/backend/models.ts";
-import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AppService, SettingsService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events, System } from "../../wails/runtime.js";
 import { BaseStore } from "./base.tsx";
 
 export interface ISystem {
+    logFilename: string;
     currentVersion: string;
     isDebug: boolean;
     isLicensed: boolean;
@@ -18,11 +19,16 @@ class SystemStore extends BaseStore {
     constructor() {
         super();
         this.props = {
+            logFilename: "",
             currentVersion: "",
             isDebug: false,
             isLicensed: false,
             hasUpdate: false,
         };
+    }
+
+    async getLogFilename(): Promise<void> {
+        this.props.logFilename = await SettingsService.GetLogFilename();
     }
 
     async checkCachedLicense(): Promise<void> {

@@ -36,6 +36,7 @@ func init() {
 type SettingsService struct {
 	log          zerolog.Logger
 	settingsFile string
+	logFile      string
 
 	settings     *types.Settings
 	settingsLock sync.RWMutex
@@ -49,7 +50,7 @@ type SettingsService struct {
 	onPutSettingsCallbacks []func(context.Context) error
 }
 
-func NewSettingsService(log zerolog.Logger, appService *AppService) *SettingsService {
+func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService) *SettingsService {
 	dirs := appdir.New(appDirName)
 
 	if err := os.MkdirAll(dirs.UserConfig(), os.ModePerm); err != nil {
@@ -66,7 +67,9 @@ func NewSettingsService(log zerolog.Logger, appService *AppService) *SettingsSer
 	appService.SetDeviceID(dirs.UserConfig())
 
 	return &SettingsService{
-		log:          log.With().Str("component", "settings").Logger(),
+		log:     log.With().Str("component", "settings").Logger(),
+		logFile: logFilename,
+
 		settingsFile: path.Join(dirs.UserConfig(), settingsFilename),
 		appService:   appService,
 
@@ -74,6 +77,10 @@ func NewSettingsService(log zerolog.Logger, appService *AppService) *SettingsSer
 		CacheDir: dirs.UserCache(),
 		LogsDir:  dirs.UserLogs(),
 	}
+}
+
+func (s *SettingsService) GetLogFilename() string {
+	return s.logFile
 }
 
 func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
