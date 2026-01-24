@@ -38,7 +38,7 @@ export default class EmailsApp extends React.Component<ISettings> {
 
   componentDidMount() {
     // Enable keyboard controls
-    if (!_.isEmpty(this.props.accounts)) {
+    if (this.props.accounts.length > 0) {
       keyboard.enable();
     }
 
@@ -79,6 +79,9 @@ export default class EmailsApp extends React.Component<ISettings> {
     setTimeout(this.getNewEmailsLoop, settingsStore.props.system.syncInterval);
 
     trackEvent("EmailsAppMounted");
+    if (this.props.accounts.length === 0) {
+      trackEvent("OnboardingStart");
+    }
   }
 
   componentWillUnmount() {
@@ -162,7 +165,7 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   render() {
-    if (_.isEmpty(this.props.accounts)) {
+    if (this.props.accounts.length === 0) {
       return <WelcomeSettings />;
     }
 

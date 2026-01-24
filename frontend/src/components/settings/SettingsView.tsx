@@ -362,7 +362,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
       <div className="group">
         <h3>Debug</h3>
-        <p>Log file: {systemStore.props.logFilename}</p>
+        <ul>
+          <li>Log file: {systemStore.props.logFilename}</li>
+          <li>Executable: {systemStore.props.executableFilename}</li>
+        </ul>
       </div>
     </div>;
   }
@@ -538,7 +541,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
           className={classes.join(" ")}
           // Apply the settings we have (held by WelcomeSettings) to the main store
           onClick={() => {
-            trackEvent("CompleteOnboarding");
+            trackEvent("OnboardingComplete");
             settingsStore.updateSettings(this.props);
           }}
         >

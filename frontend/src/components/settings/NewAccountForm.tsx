@@ -175,7 +175,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 
 	renderUnderTitle(): React.ReactNode | null {
 		return <p>
-			Automatically setup an account using username and email.
+			Automatically setup an account using email and password.
 			&nbsp;<button
 				className="manual"
 				onClick={this.props.handleClickManualAddAccount}
@@ -187,7 +187,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 
 	renderNewAccountForm() {
 		return (
-			<div>
+			<div className="new-account">
 				{this.renderUnderTitle()}
 				<div className="flex">
 					<div className="input half">
@@ -456,8 +456,7 @@ class ICloudAccountForm extends GenericAccountForm {
 				iCloud accounts must use an{" "}
 				<a onClick={() => openLink(APPLE_APP_PASSWORD_LINK)}>
 					app specific password
-				</a>{" "}
-				for any non-Apple email access.
+				</a>.
 			</p>
 		);
 	}

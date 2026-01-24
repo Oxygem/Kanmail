@@ -126,7 +126,7 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
         className="avatar"
         style={{ background: getColorForAddress(address) }}
       >
-        {<span>{getInitialsFromAddress(address)}</span>}
+        {<span>{getInitialsFromAddress(address).toUpperCase()}</span>}
       </div>
     );
   }

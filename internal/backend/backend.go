@@ -10,11 +10,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+
 	"github.com/oxygem/kanmail/internal/constants"
 )
 
 var BACKEND_API_URL = "https://backend.kanmail.io"
 var httpClient *http.Client
+var sessionID string
 
 func init() {
 	url := os.Getenv("KANMAIL_BACKEND_API_URL")
@@ -46,6 +50,17 @@ func doBackendRequest(ctx context.Context, method, endpoint string, payload any)
 }
 
 func SendAnalytics(ctx context.Context, deviceID, event string, properties map[string]any) error {
+	if sessionID == "" {
+		if uuid, err := uuid.NewRandom(); err != nil {
+			zerolog.Ctx(ctx).Err(err).Msg("Failed to generate new session ID")
+		} else {
+			sessionID = uuid.String()
+		}
+	}
+	if sessionID != "" {
+		properties["$session_id"] = sessionID
+	}
+
 	payload := map[string]any{
 		"events": []map[string]any{
 			{

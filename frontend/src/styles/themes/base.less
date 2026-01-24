@@ -59,7 +59,7 @@ button {
   color: @buttonTextColor;
   background: @buttonBackgroundColor;
 
-  &:hover {
+  &:hover, &.active {
     background: @buttonHoverBackgroundColor;
   }
 
@@ -644,24 +644,6 @@ section#settings-app {
       &.active {
         color: @settingsNavActiveTextColor;
       }
-    }
-  }
-}
-
-section#settings {
-  div.settings {
-    label {
-      small {
-        color: @lightTextGrey;
-      }
-    }
-
-    &.advanced {
-      background: @lightGrey;
-    }
-
-    &.licensed {
-      border: 5px solid @yellow;
     }
   }
 }

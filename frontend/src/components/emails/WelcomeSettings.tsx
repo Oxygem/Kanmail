@@ -1,6 +1,7 @@
 import _ from "lodash";
 import React from "react";
 
+import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
@@ -29,6 +30,11 @@ export default class WelcomeSettings extends React.Component<{}, IWelcomeSetting
             Welcome to Kanmail. Setup one or more accounts below to start
             managing your emails.
           </p>
+          <small>
+            <i className="fa fa-lock"></i> Your data and credentials are stored securely on your device. <a
+              onClick={() => AppService.OpenLink("https://kanmail.io/docs/security")}
+            >Learn more...</a>
+          </small>
           <SettingsView
             isWelcomeSettings={true}
             updateFn={(settings: Partial<Settings>) => {

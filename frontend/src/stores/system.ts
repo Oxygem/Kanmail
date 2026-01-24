@@ -6,6 +6,7 @@ import { BaseStore } from "./base.tsx";
 
 export interface ISystem {
     logFilename: string;
+    executableFilename: string;
     currentVersion: string;
     isDebug: boolean;
     isLicensed: boolean;
@@ -20,6 +21,7 @@ class SystemStore extends BaseStore {
         super();
         this.props = {
             logFilename: "",
+            executableFilename: "",
             currentVersion: "",
             isDebug: false,
             isLicensed: false,
@@ -29,6 +31,10 @@ class SystemStore extends BaseStore {
 
     async getLogFilename(): Promise<void> {
         this.props.logFilename = await SettingsService.GetLogFilename();
+    }
+
+    async getExecutableFilename(): Promise<void> {
+        this.props.executableFilename = await AppService.GetExecutable();
     }
 
     async checkCachedLicense(): Promise<void> {

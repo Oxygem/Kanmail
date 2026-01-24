@@ -84,6 +84,10 @@ func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error
 	return a.caches.GetStats(ctx)
 }
 
+func (a *AppService) GetExecutable() (string, error) {
+	return os.Executable()
+}
+
 func (a *AppService) ClearCacheAndRestart(ctx context.Context) {
 	if err := a.caches.CloseAndDelete(); err != nil {
 		zerolog.Ctx(ctx).Err(err).Msg("Failed to close and delete caches database")

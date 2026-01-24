@@ -45,6 +45,7 @@ const bootApp = (
         systemStore.checkCachedLicense(),
         systemStore.checkDebug(),
         systemStore.getLogFilename(),
+        systemStore.getExecutableFilename(),
     ]).then(([settings]) => {
         setupThemes(settings);
 
