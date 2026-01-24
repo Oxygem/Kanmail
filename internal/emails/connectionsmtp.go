@@ -33,7 +33,7 @@ func (c *SMTPConnectionPool) WithConnection(
 	ctx context.Context,
 	fn func(conn smtpinterface.SMTPClient) error,
 ) error {
-	return c.GetConnection(ctx, func(wrapper *SMTPConnectionWrapper) error {
+	return c.withConnection(ctx, func(wrapper *SMTPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {

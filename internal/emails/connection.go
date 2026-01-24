@@ -3,8 +3,11 @@ package emails
 import (
 	"context"
 	"errors"
+	"io"
+	"time"
 
 	"github.com/rs/zerolog"
+	"go.mau.fi/util/exhttp"
 
 	"github.com/oxygem/kanmail/internal/constants"
 )
@@ -21,12 +24,14 @@ type ConnectionPool[T connection] struct {
 	priorityPool   chan T
 	backgroundPool chan T
 	connections    []T
+	retryLimit     int
 }
 
 type ConnectionPoolOptions struct {
 	Connections,
 	PriorityConnections,
-	BackgroundConnections int
+	BackgroundConnections,
+	NetworkErrRetries int
 }
 
 func NewConnectionPool[T connection](
@@ -38,6 +43,7 @@ func NewConnectionPool[T connection](
 		priorityPool:   make(chan T, options.PriorityConnections),
 		backgroundPool: make(chan T, options.BackgroundConnections),
 		connections:    make([]T, 0, options.Connections+options.PriorityConnections+options.BackgroundConnections),
+		retryLimit:     options.NetworkErrRetries,
 	}
 
 	for range options.Connections {
@@ -72,7 +78,35 @@ func (c *ConnectionPool[T]) CloseConnections(ctx context.Context) {
 	}
 }
 
-func (c *ConnectionPool[T]) GetPriorityConnection(ctx context.Context, fn func(conn T) error) (err error) {
+func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn T) error) error {
+	var attempt int
+	var err error
+	for attempt < c.retryLimit {
+		attempt++
+		err = fn(conn)
+		if err == nil {
+			return nil
+		}
+		if exhttp.IsNetworkError(err) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+			delay := time.Duration(attempt) * time.Second
+			zerolog.Ctx(ctx).Warn().Err(err).
+				Int("attempt", attempt).
+				Dur("delay", delay).
+				Msg("Retrying network error")
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+			continue
+		}
+		zerolog.Ctx(ctx).Err(err).Msg("NOTNETWORKERR")
+		return err
+	}
+	return err
+}
+
+func (c *ConnectionPool[T]) withPriorityConnection(ctx context.Context, fn func(conn T) error) error {
 	if c.disabled {
 		return errors.New("connection unavailable")
 	}
@@ -95,10 +129,10 @@ func (c *ConnectionPool[T]) GetPriorityConnection(ctx context.Context, fn func(c
 		zerolog.Ctx(ctx).Trace().Str("pool", pool).Msg("Returned connection to pool")
 	}()
 
-	return fn(conn)
+	return c.retryLoop(ctx, conn, fn)
 }
 
-func (c *ConnectionPool[T]) GetConnection(ctx context.Context, fn func(conn T) error) error {
+func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) error) error {
 	if c.disabled {
 		return errors.New("connection unavailable")
 	}
@@ -111,11 +145,10 @@ func (c *ConnectionPool[T]) GetConnection(ctx context.Context, fn func(conn T) e
 		zerolog.Ctx(ctx).Trace().Str("pool", "regular").Msg("Returned connection to pool")
 	}()
 
-	err := fn(conn)
-	return err
+	return c.retryLoop(ctx, conn, fn)
 }
 
-func (c *ConnectionPool[T]) GetBackgroundConnection(ctx context.Context, fn func(conn T) error) error {
+func (c *ConnectionPool[T]) withBackgroundConnection(ctx context.Context, fn func(conn T) error) error {
 	if c.disabled {
 		return errors.New("connection unavailable")
 	}
@@ -128,6 +161,5 @@ func (c *ConnectionPool[T]) GetBackgroundConnection(ctx context.Context, fn func
 		zerolog.Ctx(ctx).Trace().Str("pool", "background").Msg("Returned connection to pool")
 	}()
 
-	err := fn(conn)
-	return err
+	return c.retryLoop(ctx, conn, fn)
 }

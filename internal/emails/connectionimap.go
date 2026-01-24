@@ -33,7 +33,7 @@ func (c *IMAPConnectionPool) WithConnection(
 	ctx context.Context,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -47,7 +47,7 @@ func (c *IMAPConnectionPool) WithFolderConnection(
 	folderName types.FolderName,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -67,7 +67,7 @@ func (c *IMAPConnectionPool) WithPriorityConnection(
 	ctx context.Context,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetPriorityConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withPriorityConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -81,7 +81,7 @@ func (c *IMAPConnectionPool) WithFolderPriorityConnection(
 	folderName types.FolderName,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetPriorityConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withPriorityConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -101,7 +101,7 @@ func (c *IMAPConnectionPool) WithBackgroundConnection(
 	ctx context.Context,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetBackgroundConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withBackgroundConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -115,7 +115,7 @@ func (c *IMAPConnectionPool) WithFolderBackgroundConnection(
 	folderName types.FolderName,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
-	return c.GetBackgroundConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+	return c.withBackgroundConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -159,7 +159,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	if c.client != nil {
 		cClose := func() {
 			if err := c.client.Close(); err != nil {
-				log.Err(err).Msg("Client close failed")
+				log.Warn().Err(err).Msg("Client close failed")
 			}
 			c.client = nil
 		}
@@ -188,6 +188,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 		}
 
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
+		log.Trace().Str("address", addr).Msg("Connecting")
 		client, err := dialFn(addr, options)
 		if err != nil {
 			return nil, fmt.Errorf("failed imap dial: %w", err)

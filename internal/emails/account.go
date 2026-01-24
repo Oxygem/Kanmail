@@ -32,9 +32,11 @@ func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *A
 		Connections:           2,
 		PriorityConnections:   2,
 		BackgroundConnections: 1,
+		NetworkErrRetries:     5,
 	}
 	smtpOptions := ConnectionPoolOptions{
-		Connections: 2,
+		Connections:       2,
+		NetworkErrRetries: 5,
 	}
 
 	return &Account{
