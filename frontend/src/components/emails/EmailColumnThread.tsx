@@ -22,6 +22,7 @@ import {
   capitalizeFirstLetter,
   formatAddress,
   formatDate,
+  hexToRgb,
 } from "../../util/string.js";
 import {
   getMoveDataFromThreadComponent,
@@ -223,7 +224,42 @@ export default class EmailColumnThread extends React.Component<
     }
     const { accountName } = this.props.thread[0];
     const accountSettings = settingsStore.getAccountSettings(accountName);
-    return accountSettings!.settings.deleteOnTrash;
+    return accountSettings ? accountSettings.settings.deleteOnTrash : false;
+  }
+
+  getThreadBackgroundColorHex(): string | undefined {
+    const { thread } = this.props;
+    const latestEmail = thread[0];
+
+    // Priority 1: Global sender-specific color
+    const senderEmail = latestEmail.from[0]?.email?.toLowerCase();
+    const senderColors = settingsStore.props.system.senderColors;
+    if (senderEmail && senderColors?.[senderEmail]) {
+      return senderColors[senderEmail];
+    }
+
+    // Priority 2: Account-level color
+    return settingsStore.getAccountAccentColor(latestEmail.accountName);
+  }
+
+  getThreadBackgroundColor(isHover: boolean): string | undefined {
+    if (!settingsStore.props.system.theme.perSenderThreadBackgrounds) {
+      return undefined;
+    }
+
+    const c = this.getThreadBackgroundColorHex();
+    if (!c) {
+      return undefined;
+    }
+
+    const rgb = hexToRgb(c);
+    const desiredOpacity = window.matchMedia("(prefers-color-scheme: dark)").matches ? 0.2 : 0.05;
+    let opacity = isHover ? desiredOpacity : 0.0;
+    if (!isHover && settingsStore.props.system.theme.alwaysShowThreadBackgrounds) {
+      opacity = desiredOpacity;
+    }
+
+    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
   }
 
   /*
@@ -852,9 +888,16 @@ export default class EmailColumnThread extends React.Component<
       classNames.push("incoming");
     }
 
+    // Apply custom background color (but not during animations)
+    const backgroundColor = this.getThreadBackgroundColor(this.state.hover || false);
+    const style = backgroundColor && !this.state.archiving && !this.state.trashing
+      ? { backgroundColor }
+      : undefined;
+
     return connectDragSource(
       <div
         className={classNames.join(" ")}
+        style={style}
         onClick={this.handleClick}
         onMouseMove={this.handleMouseMove}
         onMouseLeave={this.handleMouseLeave}
@@ -874,14 +917,15 @@ export default class EmailColumnThread extends React.Component<
             </Tooltip>
           )}
           <span className="subject">
-            {/*
-            // @ts-ignore */}
+            {/*// @ts-ignore */}
             {this.state.deleted ? <strike>{subject}</strike> : subject}
           </span>
         </h4>
         <p dangerouslySetInnerHTML={{ __html: latestEmail.excerpt }}></p>
         <div className="meta">
-          <i className={`fa fa-${getAccountIconName(latestEmail.from)}`} />
+          <i className={`fa fa-${getAccountIconName(
+            settingsStore.getAccountSettings(latestEmail.accountName)!,
+          )}`} />
           &nbsp;{latestEmail.accountName}
           {this.renderLabels()}
           <span className="buttons">

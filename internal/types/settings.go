@@ -49,6 +49,7 @@ type AccountSettings struct {
 		SaveSentCopies  bool   `json:"saveSentCopies"`
 		DeleteOnTrash   bool   `json:"deleteOnTrash"`
 		CopyFromInbox   bool   `json:"copyFromInbox"`
+		AccentColor     string `json:"accentColor"`
 	} `json:"settings"`
 
 	Folders FolderSettings `json:"folders"`
@@ -88,6 +89,10 @@ type SystemSettings struct {
 	Theme struct {
 		Dark  string `json:"dark"`
 		Light string `json:"light"`
+
+		// Both used by frontend only
+		PerSenderThreadBackgrounds  bool `json:"perSenderThreadBackgrounds,omitzero"`
+		AlwaysShowThreadBackgrounds bool `json:"alwaysShowThreadBackgrounds,omitzero"`
 	} `json:"theme"`
 
 	ShowHelpButton bool `json:"showHelpButton"`
@@ -98,6 +103,9 @@ type SystemSettings struct {
 
 	// Debugging / license holder specials
 	ShowHiddenAttachments bool `json:"showHiddenAttachments"`
+
+	// Thread colors (global, applies across all accounts)
+	SenderColors map[string]string `json:"senderColors"`
 }
 
 type Settings struct {
@@ -121,6 +129,9 @@ func NewDefaultSettings() Settings {
 
 	s.System.Theme.Light = "theme-default"
 	s.System.Theme.Dark = "theme-default-dark"
+
+	// Default enable per-sender thread backgrounds (on hover only)
+	s.System.Theme.PerSenderThreadBackgrounds = true
 
 	s.System.UndoMS = 10000
 

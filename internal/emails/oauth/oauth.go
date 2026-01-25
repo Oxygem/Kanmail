@@ -143,6 +143,9 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oauthRequestLock.Lock()
+	defer oauthRequestLock.Unlock()
+
 	if currentOAuthRequest == nil {
 		http.Error(w, "No such request", http.StatusNotFound)
 		return
@@ -152,9 +155,6 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Response handled already", http.StatusConflict)
 		return
 	}
-
-	oauthRequestLock.Lock()
-	defer oauthRequestLock.Unlock()
 
 	log := zerolog.Ctx(r.Context()).With().
 		Str("provider", currentOAuthRequest.provider).

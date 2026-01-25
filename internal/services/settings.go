@@ -30,7 +30,6 @@ func init() {
 	if profile != "" {
 		appDirName = appDirName + "-" + profile
 	}
-
 }
 
 type SettingsService struct {

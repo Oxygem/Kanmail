@@ -45,6 +45,7 @@ function getInitialsFromAddress(address) {
 
 interface IAvatarProps {
   address: Address;
+  border?: string;
 }
 
 interface IAvatarState {
@@ -91,6 +92,13 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
     })
   }
 
+  getBorder = (): string | undefined => {
+    if (!this.props.border) {
+      return;
+    }
+    return `2px solid ${this.props.border}`;
+  }
+
   componentDidMount() {
     if (!this.state.iconBytes) {
       this.getIcon();
@@ -117,14 +125,18 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
 
     if (this.state.iconBytes) {
       return <div className="avatar">
-        <img src={`data:${this.state.iconContentType};base64,${this.state.iconBytes}`} onLoad={this.checkIcon} />
+        <img
+          src={`data:${this.state.iconContentType};base64,${this.state.iconBytes}`}
+          onLoad={this.checkIcon}
+          style={{ border: this.getBorder() }}
+        />
       </div>;
     }
 
     return (
       <div
         className="avatar"
-        style={{ background: getColorForAddress(address) }}
+        style={{ background: getColorForAddress(address), border: this.getBorder() }}
       >
         {<span>{getInitialsFromAddress(address).toUpperCase()}</span>}
       </div>

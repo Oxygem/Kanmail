@@ -6,6 +6,7 @@ import {
 	AccountSettings,
 	Address,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import ColorPicker from "../../components/ColorPicker.tsx";
 import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { openLink } from "../../window.ts";
@@ -27,11 +28,14 @@ interface GenericAccountFormState {
 	newAccountName: string;
 	newAccountAddressEmail: string;
 	newAccountAddressName: string;
+	newAccountAccentColor: string;
 
 	isLoadingNewAccount: boolean;
 
 	oauthError: string | null;
 	oauthRequestId: string | null;
+
+	showColorPicker?: boolean;
 }
 
 class GenericAccountForm extends React.Component<GenericAccountFormProps, GenericAccountFormState> {
@@ -51,6 +55,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			newAccountName: "",
 			newAccountAddressEmail: "",
 			newAccountAddressName: "",
+			newAccountAccentColor: "transparent",
 
 			oauthError: null,
 			oauthRequestId: null,
@@ -242,14 +247,34 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 					account below:
 				</p>
 				<div className="input">
-					<label htmlFor="account-name">
-						Account display name (eg Work, Personal)
-					</label>
-					<input
-						id="account-name"
-						value={this.state.newAccountName}
-						onChange={_.partial(this.handleUpdate, "newAccountName")}
-					/>
+					<div className="flex">
+						<div className="two-third">
+							<label htmlFor="account-name">
+								Account display name (eg Work, Personal)
+							</label>
+							<input
+								id="account-name"
+								value={this.state.newAccountName}
+								onChange={_.partial(this.handleUpdate, "newAccountName")}
+							/>
+						</div>
+						<div className="third">
+							<div>
+								<label>
+									Accent Color
+								</label>
+							</div>
+							<ColorPicker
+								color={this.state.newAccountAccentColor}
+								onChange={(newAccountAccentColor) => this.setState({ newAccountAccentColor })}
+								isOpen={this.state.showColorPicker || false}
+								onToggle={() => this.setState({ showColorPicker: !this.state.showColorPicker })}
+								onClose={() => this.setState({ showColorPicker: false })}
+								onClear={() => this.setState({ newAccountAccentColor: "transparent" })}
+								showClear={this.state.newAccountAccentColor !== "transparent"}
+							/>
+						</div>
+					</div>
 				</div>
 
 				<div className="input">

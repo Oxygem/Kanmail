@@ -260,7 +260,10 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
         className={this.props.currentAccount === account.name ? "active" : ""}
       >
         <a onClick={_.partial(this.setAccountFilter, account.name)}>
-          <i className={`fa fa-${getAccountIconName(account)} white`}></i>{" "}
+          <i
+            className={`fa fa-${getAccountIconName(account)} white`}
+            style={{ color: settingsStore.getAccountAccentColor(account.name) }}
+          ></i>{" "}
           {account.name}
         </a>
       </li>

@@ -67,6 +67,10 @@ section#welcome-settings {
       margin-top: 10px;
     }
   }
+
+  small {
+    font-size: 14px;
+  }
 }
 
 
@@ -94,20 +98,20 @@ section#welcome-settings {
     width: 90%;
     margin: 0 auto;
 
+    div.group {
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
     &.advanced {
       margin-top: 20px;
       display: flex;
       flex-wrap: wrap;
-
-      div.group {
-        width: 100%;
-        margin-bottom: 30px;
-      }
     }
 
     &.appearance{
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex-wrap: wrap;
 
       label {
@@ -116,14 +120,24 @@ section#welcome-settings {
         margin: 40px 0 20px 0;
       }
 
+      h3 {
+        width: 100%;
+      }
+
+      div.group {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
       div.appear-button {
-        width: 30%;
+        width: auto;
         display: flex;
         justify-content: center;
-        padding: 20px;
+        padding: 10px;
         border-radius: @borderRadius;
         cursor: pointer;
         flex-wrap: wrap;
+        margin-right: 20px;
 
         &.active, &:hover {
           background: @darkestGrey;
@@ -220,7 +234,14 @@ div.accounts {
     div.avatar {
       width: 32px;
       height: 32px;
+      border-radius: 32px;
       margin-right: 10px;
+      text-align: center;
+      line-height: 32px;
+      color: white;
+      text-shadow: 0px 0px 1px black;
+      font-size: 16px;
+      font-weight: bold;
       img {
         width: 32px;
         border-radius: 32px;
@@ -245,7 +266,7 @@ div.accounts {
     }
 
     div.top-bar {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     div.buttons {
@@ -313,8 +334,10 @@ form.account {
     }
   }
 
-  label {
-    font-size: 18px;
+  &.new-account {
+    label {
+      font-size: 18px;
+    }
   }
 
   p {
@@ -383,4 +406,74 @@ form.account {
     width: 90%;
     max-width: 800px;
   }
+}
+
+/*
+  Color Picker */
+
+.color-picker-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.color-picker-swatch {
+  border-radius: @borderRadius;
+  // box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid black;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.color-picker-swatch-color {
+  width: 36px;
+  height: 24px;
+  border-radius: 2px;
+  margin-top: 7px;
+}
+
+.color-picker-popover {
+  position: absolute;
+  z-index: 2;
+  top: 39px;
+  left: -66px;
+}
+
+.color-picker-cover {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.sender-colors-empty {
+  color: @lightestTextGrey;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+.sender-colors-list {
+  margin-bottom: 10px;
+
+  .sender-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+
+    input[type="text"] {
+      flex-grow: 1;
+      max-width: 300px;
+    }
+
+    button.cancel.small {
+      padding: 4px 8px;
+      height: auto;
+    }
+  }
+}
+
+button.small {
+  padding: 6px 12px;
+  font-size: 13px;
 }

@@ -4,6 +4,7 @@ import React from "react";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Address, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import Avatar from "../../components/Avatar.jsx";
+import ColorPicker from "../../components/ColorPicker.tsx";
 import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
@@ -12,6 +13,81 @@ import { arrayMove } from "../../util/array.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
+
+interface ISenderColorFormProps {
+  existingEmails: string[];
+  onSave: (email: string, color: string) => void;
+  onCancel: () => void;
+}
+
+interface ISenderColorFormState {
+  email: string;
+  color: string;
+  showColorPicker: boolean;
+  error: string;
+}
+
+class SenderColorForm extends React.Component<ISenderColorFormProps, ISenderColorFormState> {
+  constructor(props: ISenderColorFormProps) {
+    super(props);
+    this.state = {
+      email: "",
+      color: "transparent",
+      showColorPicker: false,
+      error: "",
+    };
+  }
+
+  handleSubmit = (ev: React.FormEvent) => {
+    ev.preventDefault();
+    const email = this.state.email.toLowerCase().trim();
+
+    if (!email) {
+      this.setState({ error: "Please enter an email address" });
+      return;
+    }
+
+    if (this.props.existingEmails.includes(email)) {
+      this.setState({ error: "This email already has a color" });
+      return;
+    }
+
+    this.props.onSave(email, this.state.color);
+  };
+
+  render() {
+    return (
+      <form className="sender-color-form" onSubmit={this.handleSubmit}>
+        <div className="sender-color-row">
+          <input
+            type="text"
+            placeholder="sender@example.com"
+            value={this.state.email}
+            onChange={(ev) => this.setState({ email: ev.target.value, error: "" })}
+          />
+          <ColorPicker
+            color={this.state.color}
+            onChange={(color) => this.setState({ color })}
+            isOpen={this.state.showColorPicker}
+            onToggle={() => this.setState({ showColorPicker: !this.state.showColorPicker })}
+            onClose={() => this.setState({ showColorPicker: false })}
+          />
+          <button type="submit" className="submit small">
+            Add
+          </button>
+          <button
+            type="button"
+            className="cancel small"
+            onClick={this.props.onCancel}
+          >
+            Cancel
+          </button>
+        </div>
+        {this.state.error && <div className="error">{this.state.error}</div>}
+      </form>
+    );
+  }
+}
 
 interface IAccountProps extends AccountSettings {
   accountIndex: number;
@@ -36,15 +112,6 @@ class Account extends React.Component<IAccountProps, IAccountState> {
   }
 
   render() {
-    if (this.state.isEditing) {
-      return <AccountForm
-        accountSettings={this.props}
-        itemIndex={this.props.accountIndex}
-        updateItem={this.props.updateAccount}
-        closeForm={() => (this.setState({ isEditing: false }))}
-      />;
-    }
-
     const hasValidCredentials =
       (this.props.imapSettings && (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken))
       && (this.props.smtpSettings && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken));
@@ -64,10 +131,13 @@ class Account extends React.Component<IAccountProps, IAccountState> {
 
     return (
       <div className="account">
-        <Avatar address={(this.props.contacts && this.props.contacts.length > 0)
-          ? this.props.contacts[0]
-          : new Address()
-        } />
+        <Avatar
+          border={settingsStore.getAccountAccentColor(this.props.name)}
+          address={(this.props.contacts && this.props.contacts.length > 0)
+            ? this.props.contacts[0]
+            : new Address({ email: hasValidCredentials ? this.props.imapSettings.username : "" })
+          }
+        />
         <div className="name">
           <strong>{this.props.name}</strong>
           <br />
@@ -84,11 +154,21 @@ class Account extends React.Component<IAccountProps, IAccountState> {
             onClick={() => this.props.moveAccount(this.props.accountIndex, 1)}
           ><i className="fa fa-arrow-down" /></button>}
           {hasValidCredentials && <button
-            onClick={() => (this.setState({ isEditing: true, isDeleting: false }))}
+            className={this.state.isEditing ? "active" : ""}
+            onClick={() => (this.setState({ isEditing: !this.state.isEditing, isDeleting: false }))}
           >Edit</button>}
           {deleteButton}
         </div>
-      </div>)
+        {
+          this.state.isEditing && <AccountForm
+            accountSettings={this.props}
+            itemIndex={this.props.accountIndex}
+            updateItem={this.props.updateAccount}
+            closeForm={() => (this.setState({ isEditing: false }))}
+          />
+        }
+      </div >
+    );
   }
 }
 
@@ -101,6 +181,8 @@ interface ISettingsViewState {
   tab: string;
   showAccountForm: boolean;
   cacheStats?: CacheStats;
+  openColorPicker: string | null;
+  showSenderColorForm: boolean;
 }
 
 export default class SettingsView extends React.Component<ISettingsViewProps, ISettingsViewState> {
@@ -112,6 +194,8 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     this.state = {
       showAccountForm: false,
       tab: "accounts",
+      openColorPicker: null,
+      showSenderColorForm: false,
     };
 
     setTimeout(async () => {
@@ -120,6 +204,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         cacheStats: stats,
       });
     })
+  }
+
+  getAccountNames = (): string[] => {
+    return _.map(this.props.accounts, account => account.name);
   }
 
   setAccounts = (items: AccountSettings[]) => {
@@ -133,19 +221,22 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     this.setAccounts(items);
   };
 
+  addAccount = (newSettings: AccountSettings) => {
+    while (_.includes(this.getAccountNames(), newSettings.name)) {
+      newSettings.name = `${newSettings.name}-duplicate`;
+    }
+    const items = this.props.accounts;
+    items.push(newSettings);
+    this.setAccounts(items);
+  };
+
   updateAccount = (itemIndex: number, newSettings: AccountSettings) => {
     if (!this.props.accounts[itemIndex]) {
-      throw Error("nope");
+      throw Error("no such account");
     }
 
     const items = this.props.accounts;
     items[itemIndex] = newSettings;
-    this.setAccounts(items);
-  };
-
-  addAccount = (newSettings: AccountSettings) => {
-    const items = this.props.accounts;
-    items.push(newSettings);
     this.setAccounts(items);
   };
 
@@ -199,6 +290,103 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     </div>;
   }
 
+  renderSenderColorRow = (email: string, color: string) => {
+    const senderColors = this.props.system.senderColors || {};
+    const isOpen = this.state.openColorPicker === email;
+
+    const updateEmail = (newEmail: string) => {
+      const newSenderColors = { ...senderColors };
+      delete newSenderColors[email];
+      newSenderColors[newEmail.toLowerCase()] = color;
+      this.props.updateFn({
+        system: {
+          ...this.props.system,
+          senderColors: newSenderColors,
+        }
+      });
+      if (isOpen) {
+        this.setState({ openColorPicker: newEmail.toLowerCase() });
+      }
+    };
+
+    const updateColor = (newColor: string) => {
+      const newSenderColors = { ...senderColors };
+      newSenderColors[email] = newColor;
+      this.props.updateFn({
+        system: {
+          ...this.props.system,
+          senderColors: newSenderColors,
+        }
+      });
+    };
+
+    const removeEntry = () => {
+      const newSenderColors = { ...senderColors };
+      delete newSenderColors[email];
+      this.props.updateFn({
+        system: {
+          ...this.props.system,
+          senderColors: newSenderColors,
+        }
+      });
+      this.setState({ openColorPicker: null });
+    };
+
+    return (
+      <div className="sender-color-row" key={email}>
+        <input
+          type="text"
+          placeholder="sender@example.com"
+          value={email}
+          onChange={(ev) => updateEmail(ev.target.value)}
+        />
+        <ColorPicker
+          color={color}
+          onChange={updateColor}
+          isOpen={isOpen}
+          onToggle={() => this.setState({ openColorPicker: isOpen ? null : email })}
+          onClose={() => this.setState({ openColorPicker: null })}
+        />
+        <button
+          type="button"
+          className="cancel small"
+          onClick={removeEntry}
+        >
+          <i className="fa fa-times"></i>
+        </button>
+      </div>
+    );
+  };
+
+  renderSenderColors() {
+    const senderColors = this.props.system.senderColors || {};
+    const entries = Object.entries(senderColors);
+
+    if (entries.length === 0) {
+      return <div className="sender-colors-empty">No sender colors configured</div>;
+    }
+
+    return (
+      <div className="sender-colors-list">
+        {entries.map(([email, color]) => this.renderSenderColorRow(email, color))}
+      </div>
+    );
+  }
+
+  saveSenderColor = (email: string, color: string) => {
+    const senderColors = this.props.system.senderColors || {};
+    this.props.updateFn({
+      system: {
+        ...this.props.system,
+        senderColors: {
+          ...senderColors,
+          [email]: color,
+        },
+      }
+    });
+    this.setState({ showSenderColorForm: false });
+  };
+
   renderAppearanceSettings() {
     const setLightTheme = (theme: string) => {
       this.props.updateFn({
@@ -225,56 +413,127 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     }
 
     return <div className="content appearance">
-      <label>Theme to use when the system theme is <strong>light</strong></label>
-      <div
-        className={`appear-button default ${this.props.system.theme.light == "theme-default" && "active"}`}
-        onClick={() => setLightTheme("theme-default")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>default (contrast)</span>
-      </div>
-      <div
-        className={`appear-button light ${this.props.system.theme.light == "theme-default-light" && "active"}`}
-        onClick={() => setLightTheme("theme-default-light")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>light</span>
-      </div>
-      <div
-        className={`appear-button dark ${this.props.system.theme.light == "theme-default-dark" && "active"}`}
-        onClick={() => setLightTheme("theme-default-dark")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>dark</span>
+      <div className="group">
+        <h3>Theme to use when the system theme is <strong>light</strong></h3>
+        <div
+          className={`appear-button default ${this.props.system.theme.light == "theme-default" && "active"}`}
+          onClick={() => setLightTheme("theme-default")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>default (contrast)</span>
+        </div>
+        <div
+          className={`appear-button light ${this.props.system.theme.light == "theme-default-light" && "active"}`}
+          onClick={() => setLightTheme("theme-default-light")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>light</span>
+        </div>
+        <div
+          className={`appear-button dark ${this.props.system.theme.light == "theme-default-dark" && "active"}`}
+          onClick={() => setLightTheme("theme-default-dark")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>dark</span>
+        </div>
+
+        <h3>Theme to use when the system theme is <strong>dark</strong></h3>
+        <div
+          className={`appear-button default ${this.props.system.theme.dark == "theme-default" && "active"}`}
+          onClick={() => setDarkTheme("theme-default")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>default (contrast)</span>
+        </div>
+        <div
+          className={`appear-button light ${this.props.system.theme.dark == "theme-default-light" && "active"}`}
+          onClick={() => setDarkTheme("theme-default-light")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>light</span>
+        </div>
+        <div
+          className={`appear-button dark ${this.props.system.theme.dark == "theme-default-dark" && "active"}`}
+          onClick={() => setDarkTheme("theme-default-dark")}
+        >
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>dark</span>
+        </div>
       </div>
 
-      <label>Theme to use when the system theme is <strong>dark</strong></label>
-      <div
-        className={`appear-button default ${this.props.system.theme.dark == "theme-default" && "active"}`}
-        onClick={() => setDarkTheme("theme-default")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>default (contrast)</span>
+      <div className="group">
+        <h3>Thread Background Colors</h3>
+        <div className="wide">
+          <input
+            id="per-sender-thread-backgrounds"
+            type="checkbox"
+            checked={this.props.system.theme.perSenderThreadBackgrounds}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  theme: {
+                    ...this.props.system.theme,
+                    perSenderThreadBackgrounds: !this.props.system.theme.perSenderThreadBackgrounds,
+                  },
+                },
+              })
+            )}
+          />
+          <label htmlFor="per-sender-thread-backgrounds">
+            Use different backgrounds for email thread accounts?
+          </label>
+        </div>
+        <div className="wide">
+          <input
+            id="always-show-thread-backgrounds"
+            type="checkbox"
+            checked={this.props.system.theme.alwaysShowThreadBackgrounds}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  theme: {
+                    ...this.props.system.theme,
+                    alwaysShowThreadBackgrounds: !this.props.system.theme.alwaysShowThreadBackgrounds,
+                  },
+                },
+              })
+            )}
+          />
+          <label htmlFor="always-show-thread-backgrounds">
+            Always show email thread backgrounds?
+          </label>
+        </div>
       </div>
-      <div
-        className={`appear-button light ${this.props.system.theme.dark == "theme-default-light" && "active"}`}
-        onClick={() => setDarkTheme("theme-default-light")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>light</span>
-      </div>
-      <div
-        className={`appear-button dark ${this.props.system.theme.dark == "theme-default-dark" && "active"}`}
-        onClick={() => setDarkTheme("theme-default-dark")}
-      >
-        <div className="sidebar"></div>
-        <div className="main"></div>
-        <span>dark</span>
+
+      <div className="group">
+        <h3>Sender-specific thread colors</h3>
+        <p className="help-text">
+          Highlight email threads from specific senders with custom background colors.
+        </p>
+        {this.renderSenderColors()}
+        {this.state.showSenderColorForm ? (
+          <SenderColorForm
+            existingEmails={Object.keys(this.props.system.senderColors || {})}
+            onSave={this.saveSenderColor}
+            onCancel={() => this.setState({ showSenderColorForm: false })}
+          />
+        ) : (
+          <button
+            type="button"
+            className="submit small"
+            onClick={() => this.setState({ showSenderColorForm: true })}
+          >
+            Add sender color
+          </button>
+        )}
       </div>
     </div>;
   }
@@ -342,7 +601,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         <h3>Cache</h3>
         {this.state.cacheStats && <ul>
           <li>Database size: {this.state.cacheStats.DatabaseSizeFormatted}</li>
-          <li>Database path: {this.state.cacheStats.DatabaseFilename}</li>
+          <li>Database path: <code>{this.state.cacheStats.DatabaseFilename}</code></li>
           {systemStore.props.isDebug && <li>(debug)
             <ul>
               <li>Page size: {this.state.cacheStats.PageSize}</li>
@@ -363,9 +622,15 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       <div className="group">
         <h3>Debug</h3>
         <ul>
-          <li>Log file: {systemStore.props.logFilename}</li>
-          <li>Executable: {systemStore.props.executableFilename}</li>
+          <li>Log file: <code>{systemStore.props.logFilename}</code></li>
+          <li>Executable: <code>{systemStore.props.executableFilename}</code></li>
         </ul>
+        <div>
+          <button
+            className="green"
+            onClick={AppService.RestartApp}
+          >Restart Kanmail</button>
+        </div>
       </div>
     </div>;
   }

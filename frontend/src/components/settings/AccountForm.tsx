@@ -1,8 +1,8 @@
 import _ from "lodash";
-import PropTypes from "prop-types";
 import React from "react";
 
 import { ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
+import ColorPicker from "../../components/ColorPicker.tsx";
 import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
@@ -68,6 +68,8 @@ interface IAccountFormState {
 
   isSaving: boolean;
 
+  hasConnectionChange: boolean;
+
   accountId: number;
 
   name: string;
@@ -76,15 +78,19 @@ interface IAccountFormState {
   folders: FolderSettings;
   contacts: Address[];
   settings: any;
+
+  showColorPicker: boolean;
 }
 
 const getInitialState = (props: IAccountFormProps): IAccountFormState => {
   const state: IAccountFormState = {
-    editingTab: props.isAddingNewAccount ? "imap" : "address",
+    editingTab: props.isAddingNewAccount ? "imap" : "appearance",
 
     error: props.error,
 
     isSaving: false,
+
+    hasConnectionChange: false,
 
     accountId: props.accountId,
 
@@ -92,6 +98,8 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
     folders: new FolderSettings(),
     contacts: [],
     settings: {},
+
+    showColorPicker: false,
   };
 
   if (props.accountSettings) {
@@ -124,7 +132,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     this.resetState();
   };
 
-  handleUpdate = (settingsKey, key, ev) => {
+  handleUpdate = (settingsKey: string, key: string, ev) => {
     let value = ev.target.value;
     if (value && ev.target.type === "number") {
       value = parseInt(value);
@@ -133,9 +141,15 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     const target = this.state[settingsKey];
     target[key] = value;
 
+    let hasConnectionChange = this.state.hasConnectionChange;
+    if (settingsKey === "imapSettings" || settingsKey === "smtpSettings") {
+      hasConnectionChange = true;
+    }
+
     // @ts-ignore
     this.setState({
       [settingsKey]: target,
+      hasConnectionChange: hasConnectionChange,
     });
   };
 
@@ -157,16 +171,24 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       return;
     }
 
-    this.setState({ isSaving: true });
-
-    AccountsService.TestAccountSettings({
+    const accountSettings: AccountSettings = {
       name: this.state.name,
       imapSettings: this.state.imapSettings || new ConnectionSettings(),
       smtpSettings: this.state.smtpSettings || new ConnectionSettings(),
       folders: this.state.folders,
       contacts: this.state.contacts,
       settings: this.state.settings,
-    }).then(updatedSettings => {
+    };
+
+    if (!this.state.hasConnectionChange) {
+      this.props.updateItem(this.props.itemIndex, accountSettings);
+      this.props.closeForm();
+      return;
+    }
+
+    this.setState({ isSaving: true });
+
+    AccountsService.TestAccountSettings(accountSettings).then(updatedSettings => {
       this.props.updateItem(this.props.itemIndex, updatedSettings);
       this.setState({
         isSaving: false
@@ -337,21 +359,14 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
               Cancel
             </button>
           </div>
-          <input
-            className="inline"
-            type="text"
-            value={this.state.name}
-            placeholder="Account name"
-            onChange={(ev) => this.setState({ name: ev.target.value })}
-          />
           <div className="error">{this.state.error}</div>
           <div className="wide button-set tabs">
             {this.props.isAddingNewAccount || (
               <button
-                className={getTabButtonClass("address")}
-                onClick={_.partial(setTab, "address")}
+                className={getTabButtonClass("appearance")}
+                onClick={_.partial(setTab, "appearance")}
               >
-                Addresses
+                Appearance
               </button>
             )}
             &nbsp;
@@ -380,7 +395,42 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
           </div>
         </div>
 
-        <div className={this.state.editingTab == "address" ? "wide" : "hidden"}>
+        <div className={this.state.editingTab == "appearance" ? "wide" : "hidden"}>
+          <div className="flex wide">
+            <div className="half">
+              <label htmlFor="account-name">Display Name</label>
+              <input
+                id="account-name"
+                className="inline"
+                type="text"
+                value={this.state.name}
+                placeholder="Account name"
+                onChange={(ev) => this.setState({ name: ev.target.value })}
+              />
+            </div>
+            <div className="half">
+              <label htmlFor="settings-accentColor">
+                Accent Color
+              </label>
+              <ColorPicker
+                color={this.state.settings.accentColor || ""}
+                onChange={(color) => {
+                  const settings = { ...this.state.settings, accentColor: color };
+                  this.setState({ settings });
+                }}
+                isOpen={this.state.showColorPicker}
+                onToggle={() => this.setState({ showColorPicker: !this.state.showColorPicker })}
+                onClose={() => this.setState({ showColorPicker: false })}
+                colors={["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722", "#795548", "#607d8b"]}
+                showClear
+                onClear={() => {
+                  const settings = { ...this.state.settings, accentColor: "" };
+                  this.setState({ settings, showColorPicker: false });
+                }}
+              />
+            </div>
+          </div>
+
           <div className="flex wide">{this.renderAddresses()}</div>
           <button
             className="submit add-contact-button"

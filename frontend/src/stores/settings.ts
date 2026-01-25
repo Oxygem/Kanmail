@@ -192,6 +192,10 @@ class SettingsStore extends BaseStore {
 		);
 	}
 
+	getAccountAccentColor(accountName: string): string | undefined {
+		return this.getAccountSettings(accountName)?.settings.accentColor;
+	}
+
 	async clearOAuthAccessTokens() {
 		await EmailsService.ClearOAuthAccessTokens();
 	}
