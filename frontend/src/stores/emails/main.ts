@@ -133,6 +133,15 @@ class MainEmails extends BaseEmails {
     }
   }
 
+  onAddAccount = (accountName: string) => {
+    console.debug(`[mainEmailStore] onAddAccount: ${accountName}, getting all initialized folders`);
+    this.initializedFolderNames.forEach(folderName => {
+      this.getFolderEmails(folderName, {
+        accountNames: [accountName],
+      });
+    });
+  }
+
   // Get new emails for a folder and trigger any updates.
   syncFolderEmails = (folderName, options: Partial<ISyncOptions> = {}) => {
     const columnMetaStore = getColumnMetaStore(folderName);

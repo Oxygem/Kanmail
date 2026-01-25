@@ -341,7 +341,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 
 	constructor(props) {
 		super(props);
-		this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 1000);
+		this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 100);
 	}
 
 	componentDidMount() {
@@ -365,6 +365,8 @@ class OauthAccountFormMixin extends GenericAccountForm {
 			}
 			clearInterval(this.oauthRequestCheck);
 
+			this.setState({ isLoadingNewAccount: true });
+
 			const data = {
 				domain: this.getAutoconfDomain(),
 				oauthRefreshToken: resp.refreshToken,
@@ -375,6 +377,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 				this.setState({
 					newAccountAddressEmail: resp.email,
 					newAccountSettings: settings,
+					isLoadingNewAccount: false,
 				});
 			}).catch(e => {
 				this.setState({
@@ -389,8 +392,6 @@ class OauthAccountFormMixin extends GenericAccountForm {
 
 				this.props.handleAddAccountError(settings, e)
 			})
-
-			this.setState({ isLoadingNewAccount: true });
 		});
 	};
 
@@ -411,9 +412,13 @@ class OauthAccountFormMixin extends GenericAccountForm {
 	}
 
 	renderNewAccountForm() {
+		let text = <span>Waiting for confirmation!</span>;
+		if (this.state.isLoadingNewAccount) {
+			text = <span><i className="fa fa-refresh fa-spin" /> Setting up account...</span>
+		}
 		return (
 			<div className="account-control-buttons">
-				<span>Waiting for confirmation!</span>
+				{text}
 				<button className="cancel" onClick={this.props.closeForm}>
 					Cancel
 				</button>

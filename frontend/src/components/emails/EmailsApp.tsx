@@ -88,6 +88,19 @@ export default class EmailsApp extends React.Component<ISettings> {
     clearInterval(this.getNewEmailsInterval);
   }
 
+  componentDidUpdate(prevProps: ISettings) {
+    const prevNames = _.map(prevProps.accounts, a => a.name);
+    const names = _.map(this.props.accounts, a => a.name);
+
+    const added = _.without(names, ...prevNames);
+    added.forEach(name => {
+      mainEmailStore.onAddAccount(name);
+    });
+
+    const removed = _.without(prevNames, ...names);
+    // TODO
+  }
+
   getNewEmailsLoop = async () => {
     const folderNames = this.getFoldersToSync();
     console.info(`[EmailsApp] New emails sync for current folders: ${folderNames}`);
