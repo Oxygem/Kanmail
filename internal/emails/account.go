@@ -99,7 +99,7 @@ func (a *Account) FetchNamespace(ctx context.Context) (data *imap.NamespaceData,
 
 func (a *Account) FetchMailboxList(ctx context.Context) (data []*imap.ListData, err error) {
 	err = a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
-		data, err = conn.List("", "%", nil).Collect()
+		data, err = listMailboxesRecursive(ctx, conn, a.Settings.FolderPrefix, a.Settings.FolderSeparator)
 		return err
 	})
 	return
@@ -138,36 +138,13 @@ func (a *Account) FetchAndUpdateSettings(ctx context.Context) error {
 		// Now find the special folder mappings
 		// TODO: fallback to mailbox names
 		// TODO: handle duplicate attributes (use first?)
-		var getMailboxes func(string) error
-		getMailboxes = func(folder string) error {
-			if folder != "" {
-				folder = folder + "/"
-			}
-			mailboxes, err := conn.List(folder, "%", &imap.ListOptions{}).Collect()
-			if err != nil {
-				return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", folder, err)
-			}
-			zerolog.Ctx(ctx).Debug().
-				Str("folder", folder).
-				Any("mailboxes", mailboxes).
-				Msg("Listed mailboxes")
-
-			for _, mailbox := range mailboxes {
-				for _, attr := range mailbox.Attrs {
-					if attr == imap.MailboxAttrHasChildren && mailbox.Mailbox != folder {
-						if err := getMailboxes(mailbox.Mailbox); err != nil {
-							return err
-						}
-					}
-				}
-				setFolderForMailbox(ctx, &a.Folders, folder, mailbox)
-			}
-
-			return nil
+		mailboxes, err := listMailboxesRecursive(ctx, conn, a.Settings.FolderPrefix, a.Settings.FolderSeparator)
+		if err != nil {
+			return err
 		}
 
-		if err := getMailboxes(a.Settings.FolderPrefix); err != nil {
-			return err
+		for _, mailbox := range mailboxes {
+			setFolderForMailbox(ctx, &a.Folders, a.Settings.FolderPrefix, mailbox)
 		}
 
 		// Gmail is the only provider (known at this time) that automatically saves emails sent via SMTP

@@ -2,13 +2,68 @@ package emails
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/rs/zerolog"
 
+	"github.com/oxygem/kanmail/internal/emails/imapinterface"
 	"github.com/oxygem/kanmail/internal/types"
 )
+
+// listMailboxesRecursive recursively lists all mailboxes starting from the given prefix.
+// It descends into subfolders unless the mailbox has the HasNoChildren attribute.
+func listMailboxesRecursive(
+	ctx context.Context,
+	conn imapinterface.IMAPClient,
+	prefix string,
+	separator string,
+) ([]*imap.ListData, error) {
+	var allMailboxes []*imap.ListData
+
+	var getMailboxes func(folder string) error
+	getMailboxes = func(folder string) error {
+		pattern := folder
+		if pattern != "" {
+			pattern = pattern + separator
+		}
+		mailboxes, err := conn.List(pattern, "%", &imap.ListOptions{}).Collect()
+		if err != nil {
+			return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", folder, err)
+		}
+		zerolog.Ctx(ctx).Debug().
+			Str("folder", folder).
+			Any("mailboxes", mailboxes).
+			Msg("Listed mailboxes")
+
+		for _, mailbox := range mailboxes {
+			allMailboxes = append(allMailboxes, mailbox)
+
+			// Unless explicitly flagged w/no children attribute we search for nested folders
+			var noChildren bool
+			for _, attr := range mailbox.Attrs {
+				if attr == imap.MailboxAttrHasNoChildren {
+					noChildren = true
+					break
+				}
+			}
+			if !noChildren && mailbox.Mailbox != folder {
+				if err := getMailboxes(mailbox.Mailbox); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
+
+	if err := getMailboxes(prefix); err != nil {
+		return nil, err
+	}
+
+	return allMailboxes, nil
+}
 
 var popularSpecialFolders = struct {
 	Inbox, Flagged, Important, Sent, Drafts, Archive, Trash, Junk []types.FolderName
@@ -29,18 +84,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 	fullName := types.FolderName(mailbox.Mailbox)
 	mboxName := types.FolderName(strings.TrimPrefix(mailbox.Mailbox, folder))
 
-	log.Info().
-		Any("folders", folders).
-		Any("mailbox", mailbox).
-		Str("mailbox", string(mboxName)).
-		Msg("Check mailbox settings")
-
-	defer func() {
-		log.Info().
-			Any("folders", folders).
-			Str("mailbox", string(mboxName)).
-			Msg("Updated folder settings")
-	}()
+	var changed bool
 
 	// First try searching attrs (imap SPECIAL-USE extension)
 	for _, attr := range mailbox.Attrs {
@@ -53,18 +97,25 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 					Msg("Different all/archive folder")
 			}
 			folders.Archive = fullName
+			changed = true
 		case imap.MailboxAttrFlagged:
 			folders.Flagged = fullName
+			changed = true
 		case imap.MailboxAttrImportant:
 			folders.Important = fullName
+			changed = true
 		case imap.MailboxAttrSent:
 			folders.Sent = fullName
+			changed = true
 		case imap.MailboxAttrDrafts:
 			folders.Drafts = fullName
+			changed = true
 		case imap.MailboxAttrTrash:
 			folders.Trash = fullName
+			changed = true
 		case imap.MailboxAttrJunk:
 			folders.Junk = fullName
+			changed = true
 		}
 	}
 
@@ -72,6 +123,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 	for _, name := range popularSpecialFolders.Inbox {
 		if mboxName == name {
 			folders.Inbox = fullName
+			changed = true
 		}
 	}
 
@@ -80,6 +132,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Flagged {
 			if mboxName == name {
 				folders.Flagged = fullName
+				changed = true
 			}
 		}
 	}
@@ -87,6 +140,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Important {
 			if mboxName == name {
 				folders.Important = fullName
+				changed = true
 			}
 		}
 	}
@@ -94,6 +148,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Sent {
 			if mboxName == name {
 				folders.Sent = fullName
+				changed = true
 			}
 		}
 	}
@@ -101,6 +156,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Drafts {
 			if mboxName == name {
 				folders.Drafts = fullName
+				changed = true
 			}
 		}
 	}
@@ -108,6 +164,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Archive {
 			if mboxName == name {
 				folders.Archive = fullName
+				changed = true
 			}
 		}
 	}
@@ -115,6 +172,7 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Trash {
 			if mboxName == name {
 				folders.Trash = fullName
+				changed = true
 			}
 		}
 	}
@@ -122,7 +180,12 @@ func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, fol
 		for _, name := range popularSpecialFolders.Junk {
 			if mboxName == name {
 				folders.Junk = fullName
+				changed = true
 			}
 		}
+	}
+
+	if changed {
+		log.Info().Any("settings", folders).Msg("Updated folder settings")
 	}
 }
