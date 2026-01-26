@@ -38,7 +38,6 @@
     "react-dom": "^17.0.2",
     "react-select": "^5.10.2",
     "squire-rte": "^2.3.3",
-    "terser-webpack-plugin": "4.x",
     "urijs": "1.x",
     "whatwg-fetch": "2.x"
   },
