@@ -3,7 +3,7 @@
     Kanmail
 </h1>
 
-An email client that functions like a kanban board, for Mac/Windows/Linux. [**Download the latest release here**](https://kanmail.io/download).
+An email client that turns your inbox into a kanban board, for Mac/Windows/Linux. [**Download the latest release here**](https://kanmail.io/download).
 
 > [!IMPORTANT]
 > Please note that Kanmail is **source available but not free**. Kanmail may be downloaded and evaluated for free; for continued use of Kanmail a [**license must be purchased**](https://kanmail.io/license).
