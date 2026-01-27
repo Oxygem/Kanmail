@@ -291,18 +291,18 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         <input
           id="share-crash-analytics"
           type="checkbox"
-          checked={this.props.system.shareCrashAnalytics}
+          checked={this.props.system.shareAnalytics}
           onChange={() => (
             this.props.updateFn({
               system: {
                 ...this.props.system,
-                shareCrashAnalytics: !this.props.system.shareCrashAnalytics,
+                shareAnalytics: !this.props.system.shareAnalytics,
               }
             })
           )}
         />
         <label htmlFor="share-crash-analytics">
-          Share crash reports &amp; analytics to help us improve Kanmail. <a onClick={(ev) => {
+          Share anonymous analytics to help us improve Kanmail. <a onClick={(ev) => {
             ev.preventDefault();
             openLink("https://kanmail.io/privacy")
           }}>Privacy policy</a>.

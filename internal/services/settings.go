@@ -111,6 +111,9 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 	outSettings := *s.settings
 	outSettings.Accounts = unhiddenAccounts
 
+	// Ensure analytics setting on AppService
+	s.appService.SetAnalyticsEnabled(s.settings.System.ShareAnalytics)
+
 	return outSettings
 }
 

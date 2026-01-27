@@ -83,8 +83,8 @@ type SystemSettings struct {
 	SyncInterval int `json:"syncInterval"`
 	UndoMS       int `json:"undoMS"`
 
-	LoadContactIcons    bool `json:"loadContactIcons"`
-	ShareCrashAnalytics bool `json:"shareCrashAnalytics"`
+	LoadContactIcons bool `json:"loadContactIcons"`
+	ShareAnalytics   bool `json:"shareAnalytics"`
 
 	Theme struct {
 		Dark  string `json:"dark"`
@@ -124,7 +124,7 @@ func NewDefaultSettings() Settings {
 	s.ApplyDefaults()
 
 	s.System.LoadContactIcons = true
-	s.System.ShareCrashAnalytics = true
+	s.System.ShareAnalytics = true
 	s.System.ShowHelpButton = true
 
 	s.System.Theme.Light = "theme-default"

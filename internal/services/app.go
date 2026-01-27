@@ -38,11 +38,12 @@ const licenseCheckTimeout = 24 * time.Hour
 const licenseCheckCachedTimeout = 7 * 24 * time.Hour
 
 type AppService struct {
-	log      zerolog.Logger
-	lock     sync.Mutex
-	app      *application.App
-	caches   *caches.Caches
-	cacheDir string
+	log              zerolog.Logger
+	lock             sync.Mutex
+	app              *application.App
+	caches           *caches.Caches
+	cacheDir         string
+	analyticsEnabled bool
 
 	settingsWindow *application.WebviewWindow
 	licenseWindow  *application.WebviewWindow
@@ -65,6 +66,10 @@ func (a *AppService) Bootstrap(app *application.App, caches *caches.Caches, cach
 	a.app = app
 	a.caches = caches
 	a.cacheDir = cacheDir
+}
+
+func (a *AppService) SetAnalyticsEnabled(enabled bool) {
+	a.analyticsEnabled = enabled
 }
 
 func (a *AppService) SetDeviceID(dirname string) {
@@ -296,12 +301,16 @@ func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
 	return nil
 }
 
-func (a *AppService) TrackAnalytics(ctx context.Context, event string, properties map[string]any) (*struct{}, error) {
+func (a *AppService) TrackAnalytics(ctx context.Context, event string, properties map[string]any) error {
+	if !a.analyticsEnabled {
+		return nil
+	}
+
 	ctx = a.log.With().Str("method", "TrackAnalytics").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
 	// TODO: we should put this in a queue and batch
-	return nil, backend.SendAnalytics(ctx, a.DeviceID, event, properties)
+	return backend.SendAnalytics(ctx, a.DeviceID, event, properties)
 }
 
 // Updates
