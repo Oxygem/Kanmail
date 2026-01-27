@@ -25,6 +25,11 @@ type WindowOptions struct {
 	AppName string
 	Compact bool
 	Values  url.Values
+
+	Width,
+	Height,
+	X,
+	Y int
 }
 
 func MakeWindow(ctx context.Context, app *application.App, options WindowOptions) *application.WebviewWindow {
@@ -64,6 +69,10 @@ func MakeWindow(ctx context.Context, app *application.App, options WindowOptions
 		BackgroundColour: application.NewRGB(27, 38, 54),
 		BackgroundType:   application.BackgroundTypeTransparent,
 		URL:              url,
+		Width:            options.Width,
+		Height:           options.Height,
+		X:                options.X,
+		Y:                options.Y,
 	})
 
 	if isDebug {

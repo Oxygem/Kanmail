@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -88,16 +89,66 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	}
 }
 
+const mainWindowName = "main"
+
 func (k *Kanmail) Run() error {
+	ctx := context.Background()
+
 	startApp := constants.ENV_DEBUG_START_APP
 	if startApp == "" {
 		startApp = "emails"
 	}
 
-	emailsWindow := util.MakeWindow(context.TODO(), k.App, util.WindowOptions{
+	options := util.WindowOptions{
 		Title:   "Kanmail v2",
 		AppName: startApp,
+	}
+	// Restore saved window position and size
+	if state, err := k.Caches.WindowStateCache.Get(ctx, mainWindowName); err != nil {
+		k.log.Warn().Err(err).Msg("Failed to get saved window state")
+	} else if state != nil {
+		k.log.Debug().
+			Int("x", state.X).
+			Int("y", state.Y).
+			Int("width", state.Width).
+			Int("height", state.Height).
+			Msg("Restoring window state")
+		options.X = state.X
+		options.Y = state.Y
+		if state.Width > 100 && state.Height > 100 {
+			options.Width = state.Width
+			options.Height = state.Height
+		}
+	}
+
+	emailsWindow := util.MakeWindow(ctx, k.App, options)
+
+	k.App.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+		// Initial position doesn't seem to work (macOS)?
+		emailsWindow.SetPosition(options.X, options.Y)
 	})
+
+	var saveLock sync.Mutex
+	saveWindowState := func(*application.WindowEvent) {
+		saveLock.Lock()
+		defer saveLock.Unlock()
+
+		x, y := emailsWindow.Position()
+		width, height := emailsWindow.Size()
+		state := caches.WindowState{X: x, Y: y, Width: width, Height: height}
+		if err := k.Caches.WindowStateCache.Store(ctx, mainWindowName, state); err != nil {
+			k.log.Warn().Err(err).Msg("Failed to save window state")
+		} else {
+			k.log.Debug().
+				Int("x", x).
+				Int("y", y).
+				Int("width", width).
+				Int("height", height).
+				Msg("Saved window state")
+		}
+	}
+	emailsWindow.OnWindowEvent(events.Common.WindowDidMove, saveWindowState)
+	emailsWindow.OnWindowEvent(events.Common.WindowDidResize, saveWindowState)
 
 	// Quit the entire app if the main window is closed
 	emailsWindow.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {

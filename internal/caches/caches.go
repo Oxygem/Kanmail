@@ -29,9 +29,10 @@ type Caches struct {
 	FolderEmailCache     *FolderEmailCache
 	FolderEmailPartCache *FolderEmailPartCache
 
-	ContactsCache *ContactsCache
-	AvatarCache   *AvatarCache
-	LicenseCache  *LicenseCache
+	ContactsCache    *ContactsCache
+	AvatarCache      *AvatarCache
+	LicenseCache     *LicenseCache
+	WindowStateCache *WindowStateCache
 }
 
 func NewCaches(log zerolog.Logger, path string) *Caches {
@@ -53,6 +54,7 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 	caches.ContactsCache = NewContactsCache(db)
 	caches.AvatarCache = NewAvatarCache(db)
 	caches.LicenseCache = NewLicenseCache(db)
+	caches.WindowStateCache = NewWindowStateCache(db)
 
 	caches.FolderUIDCache, err = NewFolderUIDCache(db)
 	if err != nil {
