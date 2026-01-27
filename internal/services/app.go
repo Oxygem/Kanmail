@@ -436,13 +436,13 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 		// Handle macOS .app folder structure
 		currentPath = strings.TrimSuffix(currentPath, "/Contents/MacOS/Kanmail")
 		newPath = path.Join(a.cacheDir, "Kanmail.app")
-		// Swap downloaded zip out for .app folder
-		if err := exec.Command("xattr", "-d", "com.apple.quarantine", downloadPath).Run(); err != nil {
-			// If this fails we can still continue, macOS will ask user to confirm running the app
-			// which is not ideal, but xattr fails sometimes for mysterious reasons.
-			a.log.Err(err).Msg("Failed to remove quarantine attribute from downloaded app")
-		} else if err := exec.Command("ditto", "-xk", downloadPath, a.cacheDir).Run(); err != nil {
+
+		// Extract .zip -> .app and then un-quarantine
+		if err := exec.Command("ditto", "-xk", downloadPath, a.cacheDir).Run(); err != nil {
 			return nil, fmt.Errorf("ditto error: %w", err)
+		} else if err := exec.Command("xattr", "-d", "com.apple.quarantine", newPath).Run(); err != nil {
+			// Only log this, the app will still work user may need to re-allow it
+			a.log.Err(err).Msg("Removing quarantine xattr failed")
 		}
 	case "linux":
 		// Ensure the new AppImage is executable
