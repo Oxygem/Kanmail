@@ -23,10 +23,12 @@ type FolderEmailCache struct {
 	stmtGet,
 	stmtDelete,
 	stmtDeleteByFolder,
-	stmtDeleteAcct,
+	stmtDeleteAccount,
 	stmtGetAccountLookup,
 	stmtSetAccountLookup,
-	stmtSetAccountReference *sql.Stmt
+	stmtSetAccountReference,
+	stmtDeleteAccountLookups,
+	stmtDeleteAccountReferences *sql.Stmt
 }
 
 func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
@@ -66,7 +68,7 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare deleteByFolder statement: %w", err)
 	}
 
-	stmtDeleteAcct, err := db.Prepare(`
+	stmtDeleteAccount, err := db.Prepare(`
 		DELETE FROM folder_emails
 		WHERE account_name = ?`)
 	if err != nil {
@@ -88,6 +90,13 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare getMessage statement: %w", err)
 	}
 
+	stmtDeleteAccountLookups, err := db.Prepare(`
+		DELETE FROM account_lookups
+		WHERE account_name = ?`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare deleteAccountLookups statement: %w", err)
+	}
+
 	stmtSetAccountReference, err := db.Prepare(`
 		INSERT OR REPLACE INTO account_references (account_name, to_message_id, from_message_id)
 		VALUES (?, ?, ?)`)
@@ -95,17 +104,26 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare setAccountReference statement: %w", err)
 	}
 
+	stmtDeleteAccountReferences, err := db.Prepare(`
+		DELETE FROM account_references
+		WHERE account_name = ?`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare deleteAccountReferences statement: %w", err)
+	}
+
 	return &FolderEmailCache{
-		db:                      db,
-		stmtStore:               stmtStore,
-		stmtReplace:             stmtReplace,
-		stmtGet:                 stmtGet,
-		stmtDelete:              stmtDelete,
-		stmtDeleteByFolder:      stmtDeleteByFolder,
-		stmtDeleteAcct:          stmtDeleteAcct,
-		stmtGetAccountLookup:    stmtGetAccountLookup,
-		stmtSetAccountLookup:    stmtSetAccountLookup,
-		stmtSetAccountReference: stmtSetAccountReference,
+		db:                          db,
+		stmtStore:                   stmtStore,
+		stmtReplace:                 stmtReplace,
+		stmtGet:                     stmtGet,
+		stmtDelete:                  stmtDelete,
+		stmtDeleteByFolder:          stmtDeleteByFolder,
+		stmtDeleteAccount:           stmtDeleteAccount,
+		stmtGetAccountLookup:        stmtGetAccountLookup,
+		stmtSetAccountLookup:        stmtSetAccountLookup,
+		stmtSetAccountReference:     stmtSetAccountReference,
+		stmtDeleteAccountLookups:    stmtDeleteAccountLookups,
+		stmtDeleteAccountReferences: stmtDeleteAccountReferences,
 	}, nil
 }
 

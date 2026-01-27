@@ -151,19 +151,21 @@ func (c *Caches) DeleteByAccount(ctx context.Context, accountName types.AccountN
 	defer tx.Rollback()
 
 	// Create transaction-specific statements
-	txStmtDeleteAcct := tx.Stmt(c.FolderEmailCache.stmtDeleteAcct)
-	txStmtDeleteAcctUIDs := tx.Stmt(c.FolderUIDCache.stmtDeleteAcctUIDs)
-	defer txStmtDeleteAcct.Close()
-	defer txStmtDeleteAcctUIDs.Close()
-
-	// Delete from folder_cache
-	if _, err := txStmtDeleteAcct.ExecContext(ctx, accountName); err != nil {
-		return fmt.Errorf("failed to delete account emails: %w", err)
+	stmts := []*sql.Stmt{
+		tx.Stmt(c.FolderUIDCache.stmtDeleteAccountUIDs),
+		tx.Stmt(c.FolderEmailCache.stmtDeleteAccount),
+		tx.Stmt(c.FolderEmailCache.stmtDeleteAccountLookups),
+		tx.Stmt(c.FolderEmailCache.stmtDeleteAccountReferences),
 	}
 
-	// Delete from folder_uids
-	if _, err := txStmtDeleteAcctUIDs.ExecContext(ctx, accountName); err != nil {
-		return fmt.Errorf("failed to delete account UIDs: %w", err)
+	for _, stmt := range stmts {
+		defer stmt.Close()
+	}
+
+	for i, stmt := range stmts {
+		if _, err := stmt.ExecContext(ctx, accountName); err != nil {
+			return fmt.Errorf("failed to delete account stmt: %d", i)
+		}
 	}
 
 	return tx.Commit()

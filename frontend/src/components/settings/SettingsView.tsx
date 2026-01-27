@@ -1,7 +1,7 @@
 import _ from "lodash";
 import React from "react";
 
-import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AccountsService, AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Address, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
@@ -111,6 +111,11 @@ class Account extends React.Component<IAccountProps, IAccountState> {
     }
   }
 
+  deleteAccount = () => {
+    AccountsService.AfterDeleteAccount(this.props.name);
+    this.props.deleteAccount(this.props.accountIndex);
+  }
+
   render() {
     const hasValidCredentials =
       (this.props.imapSettings && (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken))
@@ -120,7 +125,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
     if (this.state.isDeleting) {
       deleteButton = <button
         className="cancel"
-        onClick={() => (this.props.deleteAccount(this.props.accountIndex))}
+        onClick={this.deleteAccount}
       >Confirm remove</button>;
     } else {
       deleteButton = <button
@@ -206,8 +211,14 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     })
   }
 
-  getAccountNames = (): string[] => {
-    return _.map(this.props.accounts, account => account.name);
+  getAccountNames = (idx: number = -1): string[] => {
+    const names: string[] = [];
+    _.each(this.props.accounts, (account, i) => {
+      if (idx === -1 || i !== idx) {
+        names.push(account.name);
+      }
+    });
+    return names;
   }
 
   setAccounts = (items: AccountSettings[]) => {
@@ -222,6 +233,9 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
   };
 
   addAccount = (newSettings: AccountSettings) => {
+    if (!newSettings.name) {
+      newSettings.name = newSettings.imapSettings.username || "new account";
+    }
     while (_.includes(this.getAccountNames(), newSettings.name)) {
       newSettings.name = `${newSettings.name}-duplicate`;
     }
@@ -233,6 +247,13 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
   updateAccount = (itemIndex: number, newSettings: AccountSettings) => {
     if (!this.props.accounts[itemIndex]) {
       throw Error("no such account");
+    }
+
+    if (!newSettings.name) {
+      newSettings.name = newSettings.imapSettings.username;
+    }
+    while (_.includes(this.getAccountNames(itemIndex), newSettings.name)) {
+      newSettings.name = `${newSettings.name}-duplicate`;
     }
 
     const items = this.props.accounts;
@@ -538,7 +559,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     </div>;
   }
 
-  renderAdvancedSettings() {
+  renderSystemSettings() {
     return <div className="content advanced">
       <div className="group">
         <h3>Privacy</h3>
@@ -637,81 +658,83 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
   renderLicensedSettings() {
     return <div className="content advanced">
-      <p>Thank you for purchasing a Kanmail license!</p>
-      <div>
-        <input
-          id="show-help-button"
-          type="checkbox"
-          checked={this.props.system.showHelpButton}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                showHelpButton: !this.props.system.showHelpButton,
-              }
-            })
-          )}
-        />
-        <label htmlFor="show-help-button">
-          Show help button in sidebar
-        </label>
-      </div>
+      <div className="group">
+        <p>Thank you for purchasing a Kanmail license!</p>
+        <div>
+          <input
+            id="show-help-button"
+            type="checkbox"
+            checked={this.props.system.showHelpButton}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  showHelpButton: !this.props.system.showHelpButton,
+                }
+              })
+            )}
+          />
+          <label htmlFor="show-help-button">
+            Show help button in sidebar
+          </label>
+        </div>
 
-      <div>
-        <input
-          id="show-hidden-attachments"
-          type="checkbox"
-          checked={this.props.system.showHiddenAttachments}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                showHiddenAttachments: !this.props.system.showHiddenAttachments,
-              }
-            })
-          )}
-        />
-        <label htmlFor="show-hidden-attachments">
-          Show hidden attachments (text/html)
-        </label>
-      </div>
+        <div>
+          <input
+            id="show-hidden-attachments"
+            type="checkbox"
+            checked={this.props.system.showHiddenAttachments}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  showHiddenAttachments: !this.props.system.showHiddenAttachments,
+                }
+              })
+            )}
+          />
+          <label htmlFor="show-hidden-attachments">
+            Show hidden attachments (text/html)
+          </label>
+        </div>
 
-      <div>
-        <input
-          id="group-single-threads-by-sender"
-          type="checkbox"
-          checked={this.props.system.groupSingleSenderThreads}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads,
-              }
-            })
-          )}
-        />
-        <label htmlFor="group-single-threads-by-sender">
-          [EXPERIMENT, requires restart] Merge single emails from each sender
-        </label>
-      </div>
+        <div>
+          <input
+            id="group-single-threads-by-sender"
+            type="checkbox"
+            checked={this.props.system.groupSingleSenderThreads}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads,
+                }
+              })
+            )}
+          />
+          <label htmlFor="group-single-threads-by-sender">
+            [EXPERIMENT, requires restart] Merge single emails from each sender
+          </label>
+        </div>
 
-      <div>
-        <input
-          id="group-threads-by-subject"
-          type="checkbox"
-          checked={this.props.system.groupThreadsBySubject}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
-              }
-            })
-          )}
-        />
-        <label htmlFor="group-threads-by-subject">
-          [EXPERIMENT, requires restart] Merge threads (per account) with similar subjects
-        </label>
+        <div>
+          <input
+            id="group-threads-by-subject"
+            type="checkbox"
+            checked={this.props.system.groupThreadsBySubject}
+            onChange={() => (
+              this.props.updateFn({
+                system: {
+                  ...this.props.system,
+                  groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
+                }
+              })
+            )}
+          />
+          <label htmlFor="group-threads-by-subject">
+            [EXPERIMENT, requires restart] Merge threads (per account) with similar subjects
+          </label>
+        </div>
       </div>
     </div>
   }
@@ -777,7 +800,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       case "appearance":
         return this.renderAppearanceSettings()
       case "system":
-        return this.renderAdvancedSettings()
+        return this.renderSystemSettings()
       case "licensed":
         return this.renderLicensedSettings()
       default: throw new Error("no such tab: " + this.state.tab);

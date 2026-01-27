@@ -1,8 +1,8 @@
 import _ from "lodash";
 import React from "react";
 
-import { ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
 import ColorPicker from "../../components/ColorPicker.tsx";
+import { ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
 import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
@@ -165,11 +165,6 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
 
   handleTestConnection = (ev) => {
     ev.preventDefault();
-
-    if (!this.state.name) {
-      this.setState({ error: "Please input a name for this account." });
-      return;
-    }
 
     const accountSettings: AccountSettings = {
       name: this.state.name,

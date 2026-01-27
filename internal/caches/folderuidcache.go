@@ -19,10 +19,10 @@ type FolderUIDCache struct {
 	db       *sql.DB
 	disabled bool
 
-	stmtStoreUIDs      *sql.Stmt
-	stmtGetUIDs        *sql.Stmt
-	stmtDeleteUIDs     *sql.Stmt
-	stmtDeleteAcctUIDs *sql.Stmt
+	stmtStoreUIDs         *sql.Stmt
+	stmtGetUIDs           *sql.Stmt
+	stmtDeleteUIDs        *sql.Stmt
+	stmtDeleteAccountUIDs *sql.Stmt
 }
 
 func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
@@ -47,7 +47,7 @@ func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 		return nil, fmt.Errorf("failed to prepare deleteUIDs statement: %w", err)
 	}
 
-	stmtDeleteAcctUIDs, err := db.Prepare(`
+	stmtDeleteAccountUIDs, err := db.Prepare(`
 		DELETE FROM folder_uids
 		WHERE account_name = ?`)
 	if err != nil {
@@ -55,11 +55,11 @@ func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 	}
 
 	cache := FolderUIDCache{
-		db:                 db,
-		stmtStoreUIDs:      stmtStoreUIDs,
-		stmtGetUIDs:        stmtGetUIDs,
-		stmtDeleteUIDs:     stmtDeleteUIDs,
-		stmtDeleteAcctUIDs: stmtDeleteAcctUIDs,
+		db:                    db,
+		stmtStoreUIDs:         stmtStoreUIDs,
+		stmtGetUIDs:           stmtGetUIDs,
+		stmtDeleteUIDs:        stmtDeleteUIDs,
+		stmtDeleteAccountUIDs: stmtDeleteAccountUIDs,
 	}
 
 	if os.Getenv("KANMAIL_FOLDER_CACHE_DISABLE") != "" {

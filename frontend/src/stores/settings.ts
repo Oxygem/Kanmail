@@ -193,7 +193,11 @@ class SettingsStore extends BaseStore {
 	}
 
 	getAccountAccentColor(accountName: string): string | undefined {
-		return this.getAccountSettings(accountName)?.settings.accentColor;
+		const c = this.getAccountSettings(accountName)?.settings.accentColor;
+		if (c === "transparent") {
+			return undefined;
+		}
+		return c;
 	}
 
 	async clearOAuthAccessTokens() {

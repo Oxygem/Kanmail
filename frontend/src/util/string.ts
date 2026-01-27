@@ -71,7 +71,7 @@ export function hexToRgb(hex: string): {
 } {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
-    throw new Error("Invalid hex");
+    throw new Error(`Invalid hex: ${hex}`);
   }
   return {
     r: parseInt(result[1], 16),

@@ -111,6 +111,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			this.setState({
 				newAccountError: null,
 				newAccountAddressEmail: this.state.newAccountUsername,
+				newAccountName: data.imapSettings.username,
 				newAccountSettings: data,
 			});
 
@@ -153,6 +154,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 
 		const settings = this.state.newAccountSettings;
 		settings.name = this.state.newAccountName;
+		settings.settings.accentColor = this.state.newAccountAccentColor;
 		settings.contacts = [
 			new Address({
 				name: this.state.newAccountAddressName,

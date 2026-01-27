@@ -47,6 +47,20 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context) error {
 	return nil
 }
 
+func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountName types.AccountName) error {
+	a.accountsLock.Lock()
+	defer a.accountsLock.Lock()
+
+	// Remove any cached account
+	if account, ok := a.accounts[accountName]; ok {
+		account.CloseConnections(ctx)
+		delete(a.accounts, accountName)
+	}
+
+	// Delete the folder from the cache
+	return a.caches.DeleteByAccount(ctx, accountName)
+}
+
 func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName types.AccountName) *emails.Account {
 	// Get settings *before* locking, so we don't deadlock sync/paginate reqs against settings changes,
 	// which can both happen rapidly while clicking through the folders in the sidebar.
