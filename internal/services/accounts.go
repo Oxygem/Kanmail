@@ -154,18 +154,23 @@ func (a *AccountsService) AutoconfigureNewAccount(
 	return a.TestAccountSettings(ctx, settings)
 }
 
+type OAuthRequest struct {
+	UID string `json:"uid"`
+	URL string `json:"url"`
+}
+
 func (a *AccountsService) StartOAuthRequest(
 	ctx context.Context,
 	provider string,
-) (string, error) {
+) (*OAuthRequest, error) {
 	uid, url, err := oauth.GetOAuthRequestURL(ctx, provider)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := util.OpenInBrowser(url); err != nil {
-		return "", err
+		return nil, err
 	}
-	return uid, nil
+	return &OAuthRequest{uid, url}, nil
 }
 
 func (a *AccountsService) GetOAuthResponse(

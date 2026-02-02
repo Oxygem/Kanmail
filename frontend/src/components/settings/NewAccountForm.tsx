@@ -2,10 +2,8 @@ import _ from "lodash";
 import React from "react";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import {
-	AccountSettings,
-	Address,
-} from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { OAuthRequest } from "../../../bindings/github.com/oxygem/kanmail/internal/services/models.ts";
+import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
 import { trackEvent } from "../../util/analytics.ts";
@@ -34,6 +32,7 @@ interface GenericAccountFormState {
 
 	oauthError: string | null;
 	oauthRequestId: string | null;
+	oauthRequestUrl: string | null;
 
 	showColorPicker?: boolean;
 }
@@ -59,6 +58,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 
 			oauthError: null,
 			oauthRequestId: null,
+			oauthRequestUrl: null,
 		};
 	}
 
@@ -347,8 +347,11 @@ class OauthAccountFormMixin extends GenericAccountForm {
 	}
 
 	componentDidMount() {
-		AccountsService.StartOAuthRequest(this.getOauthProvider()).then(v => {
-			this.setState({ oauthRequestId: v });
+		AccountsService.StartOAuthRequest(this.getOauthProvider()).then((v: OAuthRequest) => {
+			this.setState({
+				oauthRequestId: v.uid,
+				oauthRequestUrl: v.url,
+			});
 		})
 	}
 
@@ -414,13 +417,20 @@ class OauthAccountFormMixin extends GenericAccountForm {
 	}
 
 	renderNewAccountForm() {
-		let text = <span>Waiting for confirmation!</span>;
+		let text = <p>Waiting for confirmation!</p>;
 		if (this.state.isLoadingNewAccount) {
-			text = <span><i className="fa fa-refresh fa-spin" /> Setting up account...</span>
+			text = <p><i className="fa fa-refresh fa-spin" /> Setting up account...</p>
 		}
 		return (
 			<div className="account-control-buttons">
-				{text}
+				{this.state.isLoadingNewAccount ?
+					<p><i className="fa fa-refresh fa-spin" /> Setting up account...</p>
+					: <>
+						<p>Waiting for confirmation!</p>
+						<p>Nothing happening or not working? Try opening this URL in your web browser:</p>
+						<pre className="wrap">{this.state.oauthRequestUrl}</pre>
+					</>
+				}
 				<button className="cancel" onClick={this.props.closeForm}>
 					Cancel
 				</button>
