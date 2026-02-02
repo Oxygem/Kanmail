@@ -651,6 +651,9 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
             className="green"
             onClick={AppService.RestartApp}
           >Restart Kanmail</button>
+          <button
+            onClick={() => AppService.OpenLink(systemStore.props.logFilename)}
+          >Open Log File</button>
         </div>
       </div>
     </div>;
