@@ -2,10 +2,13 @@ import _ from "lodash";
 
 import EmailColumn from "../components/emails/EmailColumn.tsx";
 import EmailColumnThread from "../components/emails/EmailColumnThread.tsx";
+import { ALIAS_FOLDERS } from "../constants.ts";
 import { getColumnStore } from "../stores/columns.ts";
 import { getEmailStore } from "../stores/emails/controller.ts";
+import filterStore from "../stores/filters.ts";
 import requestStore from "../stores/request.ts";
 import settingsStore from "../stores/settings.ts";
+import { capitalizeFirstLetter } from "./string.js";
 
 export function moveOrCopyThread(
   moveData,
@@ -26,11 +29,15 @@ export function moveOrCopyThread(
       ? emailStore.copyEmails
       : emailStore.moveEmails;
 
+  const sourceColumnStore = getColumnStore(oldColumn);
+  sourceColumnStore.hideThread(thread);
+
   const targetColumnStore = getColumnStore(targetFolder);
   targetColumnStore.addIncomingThread(thread);
 
   const undoMove = () => {
     moveData.sourceThreadComponent.undoSetIsMoving();
+    sourceColumnStore.showThread(thread);
     targetColumnStore.removeIncomingThread(thread);
   };
 
@@ -161,3 +168,82 @@ export const getNextColumnThreadComponent = (thread) =>
   getColumnThreadComponent(thread, "getNextColumn");
 export const getPreviousColumnThreadComponent = (thread) =>
   getColumnThreadComponent(thread, "getPreviousColumn");
+
+// Context-aware suggested folders based on where the email currently is
+const SUGGESTED_TARGETS: Record<string, string[]> = {
+  inbox: ["archive", "trash", "junk"],
+  archive: ["inbox", "trash"],
+  trash: ["inbox", "archive"],
+  junk: ["inbox", "trash"],
+  sent: ["archive", "trash"],
+  drafts: ["inbox", "trash"],
+};
+
+function makeFolderOption(folderName: string) {
+  const isAlias = ALIAS_FOLDERS.includes(folderName);
+  return {
+    value: folderName,
+    label: isAlias ? capitalizeFirstLetter(folderName) : folderName,
+  };
+}
+
+/*
+    Build a smart-ordered list of folder options for move/copy, grouped by relevance:
+    1. Suggested — context-aware picks based on the source folder
+    2. Columns — folders in the user's current column layout
+    3. Other — everything else, alphabetically sorted
+    The current folder is excluded from all groups.
+*/
+export function buildMoveFolderOptions(currentFolder: string) {
+  const allFolders = _.uniq([
+    ...ALIAS_FOLDERS,
+    ...filterStore.props.folderNames,
+  ]);
+
+  // Remove the folder the thread is already in
+  const available = allFolders.filter((f) => f !== currentFolder);
+
+  const suggested = (SUGGESTED_TARGETS[currentFolder] || []).filter((f) =>
+    available.includes(f)
+  );
+
+  const columns = settingsStore.getCurrentColumns().filter(
+    (f) => available.includes(f) && !suggested.includes(f)
+  );
+
+  const sidebarFolders = (settingsStore.props.sidebarFolders || []).filter(
+    (f) => available.includes(f) && !suggested.includes(f) && !columns.includes(f)
+  );
+
+  const placed = new Set([...suggested, ...columns, ...sidebarFolders]);
+  const other = available.filter((f) => !placed.has(f)).sort();
+
+  const groups: { label: string; options: { value: string; label: string }[] }[] = [];
+
+  if (suggested.length > 0) {
+    groups.push({
+      label: "Suggested",
+      options: suggested.map(makeFolderOption),
+    });
+  }
+  if (columns.length > 0) {
+    groups.push({
+      label: "Columns",
+      options: columns.map(makeFolderOption),
+    });
+  }
+  if (sidebarFolders.length > 0) {
+    groups.push({
+      label: "Sidebar",
+      options: sidebarFolders.map(makeFolderOption),
+    });
+  }
+  if (other.length > 0) {
+    groups.push({
+      label: "Other",
+      options: other.map(makeFolderOption),
+    });
+  }
+
+  return groups;
+}

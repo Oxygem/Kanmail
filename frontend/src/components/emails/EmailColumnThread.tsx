@@ -13,18 +13,17 @@ import controlStore from "../../stores/control.js";
 import { Thread } from "../../stores/emails/base.ts";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
-import filterStore from "../../stores/filters.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
 import { getAccountIconName } from "../../util/accounts.js";
 import {
-  capitalizeFirstLetter,
   formatAddress,
   formatDate,
   hexToRgb,
 } from "../../util/string.js";
 import {
+  buildMoveFolderOptions,
   getMoveDataFromThreadComponent,
   getThreadColumnMessageIds,
   moveOrCopyThread,
@@ -404,19 +403,8 @@ export default class EmailColumnThread extends React.Component<
       moveOrCopyThread(moveData, value.value, keyboard.setMovingCurrentThread);
     };
 
-    const folderOptions = Array.prototype.concat(
-      _.map(filterStore.props.folderNames, (folderName) => ({
-        value: folderName,
-        label: folderName,
-      })),
-      _.map(ALIAS_FOLDERS, (folderName) => ({
-        value: folderName,
-        label: capitalizeFirstLetter(folderName),
-      }))
-    );
-
     controlStore.open(controlInputHandler, {
-      selectOptions: folderOptions,
+      selectOptions: buildMoveFolderOptions(this.props.columnId),
       header: (
         <span>
           Move <strong>{subject}</strong>...
