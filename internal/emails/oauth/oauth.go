@@ -62,8 +62,8 @@ var oauthServices = map[string]oauthService{
 		includeClientSecret: true,
 	},
 	"outlook": {
-		authEndpoint:     "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize",
-		tokenEndpoint:    "https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+		authEndpoint:     "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+		tokenEndpoint:    "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 		profileEndpoint:  "https://graph.microsoft.com/v1.0/me",
 		scope:            "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/IMAP.AccessAsUser.All https://graph.microsoft.com/SMTP.Send",
 		emailTokenScope:  "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send",
