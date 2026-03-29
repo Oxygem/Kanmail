@@ -51,12 +51,13 @@ func doBackendRequest(ctx context.Context, method, endpoint string, payload any)
 
 func SendAnalytics(ctx context.Context, deviceID, event string, properties map[string]any) error {
 	if sessionID == "" {
-		if uuid, err := uuid.NewRandom(); err != nil {
+		if uuid, err := uuid.NewV7(); err != nil {
 			zerolog.Ctx(ctx).Err(err).Msg("Failed to generate new session ID")
 		} else {
 			sessionID = uuid.String()
 		}
 	}
+	properties["$device_id"] = deviceID
 	if sessionID != "" {
 		properties["$session_id"] = sessionID
 	}
