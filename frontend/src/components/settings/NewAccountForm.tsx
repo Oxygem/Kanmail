@@ -7,10 +7,21 @@ import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/ka
 import ColorPicker from "../../components/ColorPicker.tsx";
 import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import { normalizeError } from "../../util/error.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "./AccountForm.tsx";
 
+function deriveNameFromEmail(email: string): string {
+	const local = email.split("@")[0];
+	return local
+		.split(/[._\-+]/)
+		.filter(Boolean)
+		.map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+		.join(" ");
+}
+
 interface GenericAccountFormProps {
+	accountType: string;
 	closeForm: () => void;
 	handleAddAccountError: (s: AccountSettings, e: Error) => void;
 	completeAddNewAccount: (s: AccountSettings) => void;
@@ -111,14 +122,17 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			this.setState({
 				newAccountError: null,
 				newAccountAddressEmail: this.state.newAccountUsername,
+				newAccountAddressName: deriveNameFromEmail(this.state.newAccountUsername),
 				newAccountName: data.imapSettings.username,
 				newAccountSettings: data,
 			});
+			trackEvent("AddAccountAutoconfigSuccess", { accountType: this.props.accountType });
 
 			return;
 		};
 
 		const handleError = (error: any) => {
+			error = normalizeError(error);
 			let settings = getEmptyAccountSettings();
 			if (error.cause && error.cause.settings) {
 				settings = error.cause.settings as AccountSettings;
@@ -126,6 +140,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			this.props.handleAddAccountError(settings, error.message);
 		}
 		this.setState({ isLoadingNewAccount: true });
+		trackEvent("AddAccountAutoconfigAttempt", { accountType: this.props.accountType });
 
 		AccountsService.AutoconfigureNewAccount(
 			this.state.newAccountUsername,
@@ -326,8 +341,14 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 				<div className="account-overlay">
 					<div className="account-overlay-content">
 						{this.renderTitle()}
-						{/* @ts-ignore */}
-						<div className="notice error">{this.state.newAccountError}</div>
+						<div className="setup-steps">
+							<span className={this.state.newAccountSettings ? "" : "active"}>1. Sign in</span>
+							<span className="separator">&rarr;</span>
+							<span className={this.state.newAccountSettings ? "active" : ""}>2. Customize</span>
+						</div>
+						{this.state.newAccountError && (
+							<div className="error">{this.state.newAccountError}</div>
+						)}
 						{this.state.newAccountSettings
 							? this.renderCompleteNewAccountForm()
 							: this.renderNewAccountForm()}
@@ -352,6 +373,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 				oauthRequestId: v.uid,
 				oauthRequestUrl: v.url,
 			});
+			trackEvent("AddAccountOAuthStarted", { accountType: this.props.accountType });
 		})
 	}
 
@@ -369,6 +391,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 				return
 			}
 			clearInterval(this.oauthRequestCheck);
+			trackEvent("AddAccountOAuthResponse", { accountType: this.props.accountType });
 
 			this.setState({ isLoadingNewAccount: true });
 
@@ -381,10 +404,13 @@ class OauthAccountFormMixin extends GenericAccountForm {
 			AccountsService.AutoconfigureNewAccount(resp.email, data).then(settings => {
 				this.setState({
 					newAccountAddressEmail: resp.email,
+					newAccountAddressName: deriveNameFromEmail(resp.email),
 					newAccountSettings: settings,
 					isLoadingNewAccount: false,
 				});
 			}).catch(e => {
+				e = normalizeError(e);
+
 				this.setState({
 					newAccountError: "Authentication failed!",
 					isLoadingNewAccount: false,
@@ -395,7 +421,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 					settings = e.cause.settings as AccountSettings;
 				}
 
-				this.props.handleAddAccountError(settings, e)
+				this.props.handleAddAccountError(settings, e.message);
 			})
 		});
 	};
@@ -522,6 +548,8 @@ const getInitialState = (): NewAccountFormState => ({
 	// Add account phase 2 - manual config if auto fails
 	isLoadingNewAccount: false,
 	manuallyConfiguringAccount: false,
+	showErrorRecovery: false,
+	autoconfigError: "",
 	newAccountSettings: null,
 });
 
@@ -540,6 +568,8 @@ interface NewAccountFormState {
 
 	isLoadingNewAccount: boolean;
 	manuallyConfiguringAccount: boolean;
+	showErrorRecovery: boolean;
+	autoconfigError: string;
 
 	newAccountSettings: AccountSettings | null;
 }
@@ -555,15 +585,17 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 	};
 
 	handleAddAccountError = (settings: AccountSettings, error: string) => {
-		error = `Email account setup failed, please update the settings manually below: ${error}`;
 		this.setState({
 			isLoadingNewAccount: false,
-			manuallyConfiguringAccount: true,
+			showErrorRecovery: true,
 			newAccountSettings: settings,
-			newAccountError: error,
+			autoconfigError: error,
 		});
+		const imapUsernameBits = settings.imapSettings.username.split("@");
 		trackEvent("AddAccountError", {
 			accountType: this.state.accountType,
+			error: error, // should be generic/non-PII
+			domain: imapUsernameBits[imapUsernameBits.length - 1], // domain only, no PII
 		});
 	};
 
@@ -591,7 +623,104 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		});
 	};
 
+	renderErrorRecovery() {
+		const settings = this.state.newAccountSettings;
+		const error = this.state.autoconfigError.toLowerCase();
+		const hasPartialConfig = settings && settings.imapSettings.host;
+
+		const isAuthError = error.includes("auth")
+			|| error.includes("login")
+			|| error.includes("password")
+			|| error.includes("credentials");
+		const isConnectionError = error.includes("connect")
+			|| error.includes("timeout")
+			|| error.includes("network")
+			|| error.includes("dial");
+
+		return (
+			<div className="account-overlay">
+				<div className="account-overlay-content">
+					<h3><i className="fa fa-exclamation-triangle" /> Account Setup Problem</h3>
+
+					{isAuthError && (
+						<p>
+							The email or password appears to be incorrect.
+							Some providers require an <strong>app-specific password</strong> instead
+							of your regular password.{" "}
+							<button
+								type="button"
+								className="manual"
+								onClick={() => openLink("https://kanmail.io/docs/email-providers")}
+							>Learn more</button>
+						</p>
+					)}
+
+					{isConnectionError && (
+						<p>
+							Could not connect to the email server.
+							Please check your internet connection and try again.
+						</p>
+					)}
+
+					{!isAuthError && !isConnectionError && (
+						<p>
+							Automatic setup was not able to configure your account.
+						</p>
+					)}
+
+					{hasPartialConfig && (
+						<p>
+							<small>Detected server: {settings.imapSettings.host}:{settings.imapSettings.port}</small>
+						</p>
+					)}
+
+					<div className="account-control-buttons">
+						<button
+							className="submit main-button"
+							onClick={() => {
+								trackEvent("AddAccountErrorRetry", { accountType: this.state.accountType });
+								this.setState({
+									showErrorRecovery: false,
+									newAccountSettings: null,
+									autoconfigError: "",
+								});
+							}}
+						>
+							<i className="fa fa-refresh" /> Try again
+						</button>
+						<button
+							className="submit"
+							onClick={() => {
+								trackEvent("AddAccountErrorManual", { accountType: this.state.accountType });
+								this.setState({
+									showErrorRecovery: false,
+									manuallyConfiguringAccount: true,
+									newAccountError: this.state.autoconfigError,
+								});
+							}}
+						>
+							Configure manually
+						</button>
+						<button
+							className="cancel"
+							onClick={() => {
+								trackEvent("AddAccountErrorCancel", { accountType: this.state.accountType });
+								this.resetState();
+							}}
+						>
+							Cancel
+						</button>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
 	render() {
+		if (this.state.showErrorRecovery) {
+			return this.renderErrorRecovery();
+		}
+
 		if (this.state.manuallyConfiguringAccount) {
 			const { newAccountSettings } = this.state;
 			newAccountSettings!.name = this.state.newAccountName;
@@ -620,6 +749,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			const Component = ACCOUNT_TYPE_TO_COMPONENT[this.state.accountType];
 			return (
 				<Component
+					accountType={this.state.accountType}
 					closeForm={this.resetState}
 					handleAddAccountError={this.handleAddAccountError}
 					completeAddNewAccount={this.completeAddNewAccount}
