@@ -49,7 +49,7 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context) error {
 
 func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountName types.AccountName) error {
 	a.accountsLock.Lock()
-	defer a.accountsLock.Lock()
+	defer a.accountsLock.Unlock()
 
 	// Remove any cached account
 	if account, ok := a.accounts[accountName]; ok {

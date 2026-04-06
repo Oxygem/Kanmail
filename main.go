@@ -30,10 +30,12 @@ func main() {
 
 	writers := []io.Writer{}
 	f, createTempErr := os.CreateTemp("", "kanmail")
+
 	if createTempErr != nil {
 		writers = append(writers, os.Stderr)
 	} else {
 		writers = append(writers, f)
+		defer f.Close()
 	}
 	if constants.ENV_DEBUG_PRETTY_LOGS != "" {
 		writers = append(writers, zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})

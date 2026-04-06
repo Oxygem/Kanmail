@@ -288,6 +288,10 @@ func (c *FolderEmailCache) SearchReferences(
 	accountName types.AccountName,
 	references []string,
 ) (map[string][]*types.Email, error) {
+	if c.disabled {
+		return nil, nil
+	}
+
 	inSQL, args := makeInSQL(references)
 	query := `
 		SELECT r.to_message_id, e.data FROM account_references AS r

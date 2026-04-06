@@ -100,7 +100,7 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 		}
 
 		if err := client.Auth(auth); err != nil {
-			return nil, fmt.Errorf("failed imap oauth login: %w", err)
+			return nil, fmt.Errorf("failed smtp oauth login: %w", err)
 		}
 
 		log.Debug().Msg("Authenticated")

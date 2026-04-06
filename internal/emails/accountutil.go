@@ -21,9 +21,12 @@ func listMailboxesRecursive(
 	separator string,
 ) ([]*imap.ListData, error) {
 	var allMailboxes []*imap.ListData
+	seenMailboxes := make(map[string]bool)
 
 	var getMailboxes func(folder string) error
 	getMailboxes = func(folder string) error {
+		seenMailboxes[folder] = true
+
 		pattern := folder
 		if pattern != "" {
 			pattern = pattern + separator
@@ -48,7 +51,7 @@ func listMailboxesRecursive(
 					break
 				}
 			}
-			if !noChildren && mailbox.Mailbox != folder {
+			if !noChildren && mailbox.Mailbox != folder && !seenMailboxes[mailbox.Mailbox] {
 				if err := getMailboxes(mailbox.Mailbox); err != nil {
 					return err
 				}

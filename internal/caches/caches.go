@@ -164,7 +164,7 @@ func (c *Caches) DeleteByAccount(ctx context.Context, accountName types.AccountN
 
 	for i, stmt := range stmts {
 		if _, err := stmt.ExecContext(ctx, accountName); err != nil {
-			return fmt.Errorf("failed to delete account stmt: %d", i)
+			return fmt.Errorf("failed to delete account stmt: %d: %w", i, err)
 		}
 	}
 
