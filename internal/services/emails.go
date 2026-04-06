@@ -58,7 +58,10 @@ func (e *EmailsService) CreateSendAttachments(ctx context.Context) ([]emails.Sen
 	ctx = e.log.With().Str("method", "CreateSendAttachments").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
-	paths := e.app.OpenOpenFilesDialog()
+	paths, err := e.app.OpenOpenFilesDialog()
+	if err != nil {
+		return nil, err
+	}
 	attachments := make([]emails.SendAttachment, len(paths))
 
 	for i, path := range paths {
@@ -351,9 +354,9 @@ func (e *EmailsService) DownloadAccountFolderEmailPartData(
 		return "", fmt.Errorf("%w: %s", ErrNoAccount, accountName)
 	}
 
-	path := e.app.OpenSaveFileDialog(part)
-	if path == "" {
-		return "", nil
+	path, err := e.app.OpenSaveFileDialog(part)
+	if err != nil || path == "" {
+		return path, err
 	}
 
 	folder := account.GetFolder(folderName)

@@ -257,27 +257,17 @@ func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings type
 	a.app.Event.Emit(string(types.SettingsChangedEvent), settings)
 }
 
-func (a *AppService) OpenSaveFileDialog(part types.BodyPart) string {
+func (a *AppService) OpenSaveFileDialog(part types.BodyPart) (string, error) {
 	dialog := application.Get().Dialog.SaveFile()
 	dialog.SetFilename(part.Description)
 	dialog.SetDirectory("Downloads")
 
-	if path, err := dialog.PromptForSingleSelection(); err == nil {
-		// Save file to selected path
-		return path
-	} else {
-		panic(err)
-	}
+	return dialog.PromptForSingleSelection()
 }
 
-func (a *AppService) OpenOpenFilesDialog() []string {
+func (a *AppService) OpenOpenFilesDialog() ([]string, error) {
 	dialog := application.Get().Dialog.OpenFile()
-
-	if paths, err := dialog.PromptForMultipleSelection(); err == nil {
-		return paths
-	} else {
-		panic(err)
-	}
+	return dialog.PromptForMultipleSelection()
 }
 
 func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
