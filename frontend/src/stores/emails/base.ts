@@ -479,7 +479,9 @@ export default class BaseEmails {
         uid
       );
 
-      email.flags = _.without(email.flags, Flag.FlagFlagged);
+      if (!_.includes(email.flags, Flag.FlagFlagged)) {
+        email.flags.push(Flag.FlagFlagged);
+      }
     });
   }
 
@@ -500,9 +502,7 @@ export default class BaseEmails {
         uid
       );
 
-      if (!_.includes(email.flags, Flag.FlagFlagged)) {
-        email.flags.push(Flag.FlagFlagged);
-      }
+      email.flags = _.without(email.flags, Flag.FlagFlagged);
     });
   }
 
