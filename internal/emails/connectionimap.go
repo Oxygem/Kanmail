@@ -55,7 +55,11 @@ func (c *IMAPConnectionPool) WithFolderConnection(
 				return err
 			}
 			defer zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Unselected folder")
-			defer func() { conn.Unselect().Wait() }()
+			defer func() {
+				if err := conn.Unselect().Wait(); err != nil {
+					zerolog.Ctx(ctx).Err(err).Str("folder", string(folderName)).Msg("Failed to unselect folder")
+				}
+			}()
 			zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Selected folder")
 
 			return fn(conn)
