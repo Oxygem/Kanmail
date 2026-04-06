@@ -33,6 +33,9 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
 
   doc: HTMLElement;
 
+  private frameLoadHandler: (() => void) | null = null;
+  private iframeWindow: Window | null = null;
+
   constructor(props: IThreadMessageContentProps) {
     super(props);
 
@@ -60,6 +63,21 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
 
   componentDidMount() {
     this.postRender()
+  }
+
+  componentWillUnmount() {
+    this.cleanupFrameListeners();
+  }
+
+  private cleanupFrameListeners() {
+    if (this.frameLoadHandler && this.frameElement) {
+      this.frameElement.removeEventListener("load", this.frameLoadHandler);
+    }
+    if (this.iframeWindow) {
+      this.iframeWindow.removeEventListener("keydown", keyboard.handleKeyboardEvents);
+      this.iframeWindow = null;
+    }
+    this.frameLoadHandler = null;
   }
 
   checkDocForImages(): boolean {
@@ -266,9 +284,13 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     }
 
     if (this.frameElement) {
+      // Remove previous listeners before adding new ones
+      this.cleanupFrameListeners();
+
       // Handle color scheme + post process on doc load
-      this.frameElement.addEventListener("load", () => {
+      this.frameLoadHandler = () => {
         const window = this.frameElement!.contentWindow!;
+        this.iframeWindow = window;
 
         // Proxy keydown events to the main keyboard handler
         window.addEventListener("keydown", keyboard.handleKeyboardEvents);
@@ -290,7 +312,8 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
 
         // @ts-ignore
         window.document.processed = true;
-      });
+      };
+      this.frameElement.addEventListener("load", this.frameLoadHandler);
 
       const doc = this.doc;
 
