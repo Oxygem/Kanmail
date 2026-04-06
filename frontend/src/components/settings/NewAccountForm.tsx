@@ -5,9 +5,11 @@ import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/int
 import { OAuthRequest } from "../../../bindings/github.com/oxygem/kanmail/internal/services/models.ts";
 import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import ColorPicker from "../../components/ColorPicker.tsx";
-import { APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
+import { ACCOUNT_ACCENT_COLORS, APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { normalizeError } from "../../util/error.ts";
+import settingsStore from "../../stores/settings.ts";
+import { getNextAccentColor } from "../../util/accounts.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "./AccountForm.tsx";
 
@@ -65,7 +67,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			newAccountName: "",
 			newAccountAddressEmail: "",
 			newAccountAddressName: "",
-			newAccountAccentColor: "transparent",
+			newAccountAccentColor: getNextAccentColor(settingsStore.props.accounts),
 
 			oauthError: null,
 			oauthRequestId: null,
@@ -289,6 +291,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 								onClose={() => this.setState({ showColorPicker: false })}
 								onClear={() => this.setState({ newAccountAccentColor: "transparent" })}
 								showClear={this.state.newAccountAccentColor !== "transparent"}
+								colors={ACCOUNT_ACCENT_COLORS}
 							/>
 						</div>
 					</div>
