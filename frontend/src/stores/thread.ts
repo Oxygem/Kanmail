@@ -88,8 +88,8 @@ class ThreadStore extends BaseStore {
 
   isOpen: boolean;
   onClose: () => void;
-  propps: IThreadStoreProps;
   columnContainer: Element;
+  private loadId: number = 0;
 
   constructor() {
     super();
@@ -159,6 +159,8 @@ class ThreadStore extends BaseStore {
   }
 
   loadThread(thread: Thread) {
+    const currentLoadId = ++this.loadId;
+
     // First split thread up into one per account
     const accountToThread = new Map<string, Thread>();
     // Track set of all senders we need to check
@@ -232,8 +234,8 @@ class ThreadStore extends BaseStore {
         }
       });
 
-      if (!this.props.fetching) {
-        console.debug("Ignoring returned emails, thread already closed!");
+      if (currentLoadId !== this.loadId) {
+        console.debug("Ignoring stale thread load response");
         return;
       }
 
