@@ -74,6 +74,7 @@ func (a *AppService) SetAnalyticsEnabled(enabled bool) {
 
 func (a *AppService) SetDeviceID(dirname string) {
 	a.DeviceID = ensureDeviceIDFile(a.log, path.Join(dirname, "device-id"))
+	util.SetDeviceID(a.DeviceID)
 }
 
 // FIXME: Exists only so the types.EventName type is exported to JS

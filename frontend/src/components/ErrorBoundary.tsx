@@ -1,5 +1,6 @@
 import React from "react";
 
+import { trackError } from "../util/analytics.ts";
 import showErrorInformation from "./ErrorInformation.tsx";
 
 interface IErrorBoundaryProps {
@@ -27,6 +28,10 @@ export default class ErrorBoundary extends React.Component<IErrorBoundaryProps, 
         this.state = {
             hasError: false,
         }
+    }
+
+    componentDidCatch(error: Error) {
+        trackError("react_boundary", error.message, error.stack);
     }
 
     render() {

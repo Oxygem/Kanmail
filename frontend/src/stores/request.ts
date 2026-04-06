@@ -2,6 +2,7 @@ import _ from "lodash";
 
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Call, Events } from "../../wails/runtime.js";
+import { trackError } from "../util/analytics.ts";
 import { BaseStore } from "./base.tsx";
 import settingsStore from "./settings.ts";
 
@@ -12,6 +13,7 @@ export interface RuntimeError {
   accountName?: string;
   folderName?: string;
   error?: any;
+  cause?: any;
 }
 
 export interface IRequestStoreProps {
@@ -68,6 +70,11 @@ class RequestStore extends BaseStore {
     target.unshift(newError);
     this.triggerUpdate();
     console.debug("[requestStore] Received error", err, newError);
+
+    trackError(action, newError.message, err?.stack, {
+      accountName: newError.accountName,
+      folderName: newError.folderName,
+    });
   }
 
   clearNetworkErrors = () => {
