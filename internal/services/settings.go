@@ -121,7 +121,7 @@ func (s *SettingsService) addOnPutSettingsCallbacks(f func(context.Context) erro
 	s.onPutSettingsCallbacks = append(s.onPutSettingsCallbacks, f)
 }
 
-func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) {
+func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) error {
 	ctx = s.log.WithContext(ctx)
 	defer util.LogPanic(ctx)
 
@@ -150,9 +150,9 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	hiddenSettings.Accounts = hiddenAccounts
 
 	if json, err := json.Marshal(hiddenSettings); err != nil {
-		panic(err)
+		return err
 	} else if err := os.WriteFile(s.settingsFile, json, 0644); err != nil {
-		panic(err)
+		return err
 	}
 
 	s.settings = &settings
@@ -160,9 +160,11 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 
 	for _, f := range s.onPutSettingsCallbacks {
 		if err := f(ctx); err != nil {
-			panic(fmt.Errorf("put setting callback error: %w", err))
+			return fmt.Errorf("put setting callback error: %w", err)
 		}
 	}
+
+	return nil
 }
 
 func (s *SettingsService) getKeyringUser(subservice string, name types.AccountName) string {
