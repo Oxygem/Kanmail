@@ -183,7 +183,7 @@ class ThreadStore extends BaseStore {
     this.triggerUpdate(["fetching"]);
 
     // Map of sender -> default show images
-    let senderShowImagesMap: Map<string, boolean>;
+    let senderShowImagesMap: Map<string, boolean> = new Map();
 
     const requests: Promise<any>[] = [
       contactsStore.shouldSendersShowImages(Array.from(threadSenders)).then(m => senderShowImagesMap = m),
