@@ -51,7 +51,10 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
 
   renderTitle() {
     let { thread } = this.props;
-    thread = thread!;
+
+    if (!thread || thread.length === 0) {
+      return <h1>Unknown thread</h1>;
+    }
 
     const latestEmail = thread[0];
 
