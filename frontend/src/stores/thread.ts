@@ -234,7 +234,7 @@ class ThreadStore extends BaseStore {
         }
       });
 
-      if (currentLoadId !== this.loadId) {
+      if (!this.isOpen || currentLoadId !== this.loadId) {
         console.debug("Ignoring stale thread load response");
         return;
       }
