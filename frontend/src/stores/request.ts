@@ -71,10 +71,12 @@ class RequestStore extends BaseStore {
     this.triggerUpdate();
     console.debug("[requestStore] Received error", err, newError);
 
-    trackError(action, newError.message, err?.stack, {
-      accountName: newError.accountName,
-      folderName: newError.folderName,
-    });
+    if (!newError.isNetwork) {
+      trackError(action, newError.message, err?.stack, {
+        accountName: newError.accountName,
+        folderName: newError.folderName,
+      });
+    }
   }
 
   clearNetworkErrors = () => {
