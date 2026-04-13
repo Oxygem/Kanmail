@@ -57,10 +57,6 @@ func (a *Account) GetFolder(name types.FolderName) *Folder {
 	a.foldersLock.Lock()
 	defer a.foldersLock.Unlock()
 
-	if name == "" {
-		panic("folder must have a name")
-	}
-
 	aliasName := name
 
 	if otherName := a.Folders.GetFromName(name); otherName != "" {
