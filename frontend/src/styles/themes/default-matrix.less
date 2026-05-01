@@ -1,0 +1,86 @@
+@matrixBlack: #000000;
+@matrixDarkest: #020a02;
+@matrixDark: #061a06;
+@matrixMid: #0d2f0d;
+@matrixBorder: #134f13;
+@matrixGreen: #00ff41;
+@matrixGreenDim: #00cc33;
+@matrixGreenDark: #008f1f;
+@matrixGreenDarker: #005c14;
+@matrixGreenMuted: #4a8f4a;
+
+@bodyBackgroundColor: @matrixBlack;
+@bodyTextColor: @matrixGreen;
+
+@buttonTextColor: @matrixGreen;
+@buttonBackgroundColor: @matrixDarkest;
+@buttonHoverBackgroundColor: @matrixGreenDarker;
+@buttonCancelHoverColor: darken(@red, 20%);
+@buttonSubmitBackgroundColor: @matrixGreenDark;
+@buttonSubmitHoverBackgroundColor: @matrixGreenDim;
+@buttonSubmitTextColor: @matrixBlack;
+
+@labelColor: @matrixGreenMuted;
+@inputColor: @matrixGreen;
+@inputBackgroundColor: @matrixDarkest;
+@inputBorderColor: @matrixBorder;
+@inputBorderHoverColor: @matrixGreen;
+
+@headerBackgroundColor: @matrixBlack;
+@headerBorderColor: @matrixDark;
+@headerButtonHoverColor: @matrixDark;
+
+@sidebarBackgroundColor: @matrixBlack;
+@sidebarTextColor: @matrixGreen;
+@sidebarHeaderIconColor: @matrixGreenDim;
+@sidebarLinkTextColor: @matrixGreen;
+@sidebarLinkHoverBackgroundColor: @matrixDark;
+@sidebarLinkHoverTextColor: @white;
+
+@addColumnLinkTextColor: @matrixGreenMuted;
+@addColumnLinkHoverTextColor: @matrixGreen;
+@addColumnLinkActiveTextColor: @matrixGreen;
+@addColumnLinkActiveBackgroundColor: @matrixDark;
+@addColumnInputBackgroundColor: @matrixDark;
+
+@threadBackgroundColor: @matrixBlack;
+@threadBorderColor: @matrixDark;
+@threadTitleBackgroundColor: @matrixBlack;
+@threadTitleBorderColor: @matrixDark;
+@threadMetaBackgroundColor: @matrixDarkest;
+@threadMetaBorderColor: @matrixDark;
+@threadMessageBorderColor: @matrixDark;
+@threadMessageTagBackgroundColor: @matrixDark;
+@threadMessageControlLinkHoverBackgroundColor: @matrixDark;
+@threadMessageAttachmentLinkBackgroundColor: @matrixDark;
+
+@threadContentCodeBackgroundColor: @matrixDarkest;
+@threadContentCodeTextColor: @matrixGreen;
+
+@columnBorderColor: @matrixDark;
+@columnTitleBorderColor: @matrixDark;
+@columnEmailBackgroundColor: @matrixDarkest;
+@columnEmailHoverBackgroundColor: @matrixDark;
+
+@contactListBorderColor: @matrixDark;
+@contactHoverBackgroundColor: @matrixDark;
+
+@settingsAccountBackgroundColor: @matrixDarkest;
+@settingsAccountFormOverlayBackgroundColor: rgba(0, 255, 65, 0.05);
+@settingsNewAccountButtonHoverBackgroundColor: @matrixDark;
+@settingsNavTextColor: @matrixGreenMuted;
+@settingsNavActiveTextColor: @matrixGreen;
+
+@searchFormBackgroundColor: @matrixDarkest;
+
+@tooltipBackgroundColor: @matrixDark;
+@tooltipTextColor: @matrixGreen;
+
+@selectMenuBackgroundColor: @matrixDarkest;
+@selectMenuHoverBackgroundColor: @matrixDark;
+
+body.theme-default-matrix {
+  @import (multiple) "base.less";
+
+  font-family: "Courier New", Courier, monospace;
+}

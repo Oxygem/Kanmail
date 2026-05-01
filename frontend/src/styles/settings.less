@@ -129,19 +129,22 @@ section#welcome-settings {
         flex-wrap: wrap;
       }
 
+      div.theme-grid {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
       div.appear-button {
-        width: auto;
+        width: 100%;
         display: flex;
         justify-content: center;
         padding: 10px;
         border-radius: @borderRadius;
         cursor: pointer;
         flex-wrap: wrap;
-        margin-right: 20px;
-
-        &.active, &:hover {
-          background: @darkestGrey;
-        }
 
         span {
           width: 100%;
@@ -185,6 +188,56 @@ section#welcome-settings {
           }
           div.main {
             background: lighten(@darkestGrey, 10%);
+          }
+        }
+
+        &.nord-light {
+          div.sidebar {
+            background: #d8dee9;
+          }
+          div.main {
+            background: #eceff4;
+          }
+        }
+
+        &.midnight-blue {
+          div.sidebar {
+            background: #060f1c;
+          }
+          div.main {
+            background: #0d1b2a;
+          }
+        }
+
+        &.matrix {
+          div.sidebar {
+            background: #000000;
+            border-right: 1px solid #00ff41;
+          }
+          div.main {
+            background: #000000;
+            color: #00ff41;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 18px;
+            line-height: 50px;
+            text-align: center;
+          }
+          div.main::before {
+            content: "01";
+          }
+        }
+
+        &.locked {
+          opacity: 0.55;
+
+          span i.fa-lock {
+            margin-left: 6px;
+            font-size: 0.85em;
+          }
+
+          &:hover {
+            background: transparent;
+            opacity: 0.75;
           }
         }
       }

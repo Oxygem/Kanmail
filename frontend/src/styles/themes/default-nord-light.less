@@ -1,0 +1,84 @@
+@nordSnowLightest: #eceff4;
+@nordSnowMid: #e5e9f0;
+@nordSnowDark: #d8dee9;
+@nordPolarLightest: #4c566a;
+@nordPolarMid: #3b4252;
+@nordPolarDark: #2e3440;
+@nordFrostTeal: #8fbcbb;
+@nordFrostCyan: #88c0d0;
+@nordFrostBlue: #81a1c1;
+@nordFrostDeep: #5e81ac;
+
+@bodyBackgroundColor: @nordSnowLightest;
+@bodyTextColor: @nordPolarDark;
+
+@buttonTextColor: @nordPolarDark;
+@buttonBackgroundColor: @nordSnowMid;
+@buttonHoverBackgroundColor: lighten(@nordFrostCyan, 10%);
+@buttonCancelHoverColor: darken(@red, 20%);
+@buttonSubmitBackgroundColor: @nordFrostDeep;
+@buttonSubmitHoverBackgroundColor: darken(@nordFrostDeep, 8%);
+@buttonSubmitTextColor: @white;
+
+@labelColor: @nordPolarLightest;
+@inputColor: @nordPolarDark;
+@inputBackgroundColor: @white;
+@inputBorderColor: @nordSnowDark;
+@inputBorderHoverColor: @nordFrostDeep;
+
+@headerBackgroundColor: @nordSnowMid;
+@headerBorderColor: @nordSnowDark;
+@headerButtonHoverColor: @nordSnowDark;
+
+@sidebarBackgroundColor: @nordSnowDark;
+@sidebarTextColor: @nordPolarDark;
+@sidebarHeaderIconColor: @nordPolarLightest;
+@sidebarLinkTextColor: @nordPolarMid;
+@sidebarLinkHoverBackgroundColor: @nordFrostCyan;
+@sidebarLinkHoverTextColor: @nordPolarDark;
+
+@addColumnLinkTextColor: @nordPolarLightest;
+@addColumnLinkHoverTextColor: @nordPolarDark;
+@addColumnLinkActiveTextColor: @nordPolarDark;
+@addColumnLinkActiveBackgroundColor: @nordSnowMid;
+@addColumnInputBackgroundColor: @nordSnowMid;
+
+@threadBackgroundColor: @white;
+@threadBorderColor: @nordSnowDark;
+@threadTitleBackgroundColor: @white;
+@threadTitleBorderColor: @nordSnowMid;
+@threadMetaBackgroundColor: @nordSnowMid;
+@threadMetaBorderColor: @nordSnowDark;
+@threadMessageBorderColor: @nordSnowMid;
+@threadMessageTagBackgroundColor: @nordSnowMid;
+@threadMessageControlLinkHoverBackgroundColor: @nordSnowMid;
+@threadMessageAttachmentLinkBackgroundColor: @nordSnowDark;
+
+@threadContentCodeBackgroundColor: @nordSnowMid;
+@threadContentCodeTextColor: @nordFrostDeep;
+
+@columnBorderColor: @nordSnowDark;
+@columnTitleBorderColor: @nordSnowMid;
+@columnEmailBackgroundColor: @white;
+@columnEmailHoverBackgroundColor: @nordSnowMid;
+
+@contactListBorderColor: @nordSnowMid;
+@contactHoverBackgroundColor: @nordSnowMid;
+
+@settingsAccountBackgroundColor: @nordSnowMid;
+@settingsAccountFormOverlayBackgroundColor: rgba(94, 129, 172, 0.1);
+@settingsNewAccountButtonHoverBackgroundColor: @nordSnowDark;
+@settingsNavTextColor: @nordPolarLightest;
+@settingsNavActiveTextColor: @nordPolarDark;
+
+@searchFormBackgroundColor: @nordSnowMid;
+
+@tooltipBackgroundColor: @nordPolarDark;
+@tooltipTextColor: @nordSnowLightest;
+
+@selectMenuBackgroundColor: @white;
+@selectMenuHoverBackgroundColor: @nordSnowMid;
+
+body.theme-default-nord-light {
+  @import (multiple) "base.less";
+}

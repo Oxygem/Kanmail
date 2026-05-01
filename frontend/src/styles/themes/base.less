@@ -646,6 +646,16 @@ section#settings-app {
       }
     }
   }
+
+  div.appear-button {
+    &.active, &:hover {
+      background: @settingsNewAccountButtonHoverBackgroundColor;
+    }
+
+    &.locked:hover {
+      background: transparent;
+    }
+  }
 }
 
 div.accounts {
