@@ -27,6 +27,8 @@ export async function trackError(
 }
 
 export async function trackEvent(eventName: string, properties: params = {}): Promise<void> {
+    console.debug("[analytics] sending event", eventName, properties);
+
     try {
         await AppService.TrackAnalytics(eventName, {
             ...getBaseParams(),
