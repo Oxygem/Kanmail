@@ -10,13 +10,13 @@ import { getEmailStore } from "../../stores/emails/controller.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import ColumnSelect from "./ColumnSelect.tsx";
 
 interface IRightbarProps extends Partial<ISettings> {
   thread?: Thread | null;
 }
 
 interface IRightbarState {
-  addColumnInput: string | null;
   isAddingColumn: boolean;
 
   saveColumnGroupInput: string | null;
@@ -30,7 +30,6 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
     super(props);
 
     this.state = {
-      addColumnInput: null,
       isAddingColumn: false,
 
       saveColumnGroupInput: null,
@@ -38,22 +37,10 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
     };
   }
 
-  handleSaveAddColumn = (ev) => {
-    ev.preventDefault();
-
-    // Add the column, don't wait for settings to save
-    settingsStore.addColumn(this.state.addColumnInput!);
-
-    // Immediately load the first page of folder emails
-    getEmailStore().getFolderEmails(this.state.addColumnInput!, {});
-
-    // Reset the input
-    this.setState({
-      addColumnInput: "",
-      isAddingColumn: false,
-    });
-
-    trackEvent("AddColumn")
+  handleAddColumn = (name: string) => {
+    settingsStore.addColumn(name);
+    this.setState({ isAddingColumn: false });
+    trackEvent("AddColumn");
   };
 
   handleSaveColumnGroup = (ev) => {
@@ -73,14 +60,13 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
     }
 
     return (
-      <input
-        type="text"
-        onChange={(ev) => (this.setState({ addColumnInput: ev.target.value }))}
-        onFocus={keyboard.disable}
-        onBlur={keyboard.enable}
-        value={this.state.addColumnInput || ""}
+      <ColumnSelect
+        className="add-column-select"
+        autoFocus={true}
+        defaultMenuIsOpen={true}
         placeholder="Column name..."
-        ref={(ref) => (ref ? ref.focus() : null)}
+        onAdd={this.handleAddColumn}
+        onBlur={() => this.setState({ isAddingColumn: false })}
       />
     );
   }
@@ -108,19 +94,22 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
       return null;
     }
 
+    const showLabels = settingsStore.getCurrentColumns().length == 2;
+
     return (
       <div id="add-column">
-        <form onSubmit={this.handleSaveAddColumn}>
+        <form onSubmit={(ev) => ev.preventDefault()}>
           {this.renderAddColumnInput()}
           <Tooltip text="Add new column" position={"left"}>
             <a
               className={this.state.isAddingColumn ? "active" : ""}
+              onMouseDown={(ev) => ev.preventDefault()}
               onClick={() => (this.setState({
                 isAddingColumn: !this.state.isAddingColumn,
-                addColumnInput: null,
               }))}
             >
               <i className="fa fa-plus"></i>
+              {showLabels && <span className="label">Add Column</span>}
             </a>
           </Tooltip>
         </form>
@@ -136,6 +125,7 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
               }))}
             >
               <i className="fa fa-columns"></i>
+              {showLabels && <span className="label">Save Workflow</span>}
             </a>
           </Tooltip>
         </form>}

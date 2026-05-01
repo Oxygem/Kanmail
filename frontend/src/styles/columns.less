@@ -33,6 +33,45 @@ section#columns {
     }
   }
 
+  div#onboarding-columns-panel {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    overflow-y: auto;
+
+    div.content {
+      max-width: 520px;
+      text-align: center;
+    }
+
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 24px 0;
+      font-size: @bigTextSize;
+      line-height: 1.5;
+    }
+
+    div.select-row {
+      max-width: 320px;
+      margin: 0 auto;
+      text-align: left;
+
+      div.react-select__control {
+        border-radius: @borderRadius;
+        padding: 4px 6px;
+      }
+    }
+  }
+
   div#add-column {
     height: @topHeight;
     // width: 0;
@@ -45,6 +84,17 @@ section#columns {
       a {
         padding: 14px;
         display: block;
+
+        i {
+          vertical-align: middle;
+        }
+
+        span.label {
+          margin-left: 8px;
+          font-size: @smallTextSize;
+          font-weight: 600;
+          vertical-align: middle;
+        }
       }
 
       input {
@@ -57,6 +107,19 @@ section#columns {
 
         a {
           margin-top: 0;
+        }
+      }
+
+      .add-column-select {
+        width: 220px;
+        position: absolute;
+        margin-left: -220px;
+        z-index: 1200;
+        top: 0;
+        height: 100%;
+
+        div.react-select__control {
+          height: 100%;
         }
       }
     }

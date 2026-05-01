@@ -15,6 +15,7 @@ import { createWindowPositionHandlers } from "../../window.ts";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import ControlInput from "./ControlInput.jsx";
 import EmailColumn from "./EmailColumn.tsx";
+import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
 import Search from "./Search.jsx";
 import Sidebar from "./Sidebar.jsx";
 import Thread from "./Thread.jsx";
@@ -142,9 +143,6 @@ export default class EmailsApp extends React.Component<ISettings> {
     };
 
     const columns = settingsStore.getCurrentColumns();
-    if (columns.length == 0) {
-      columns.push("inbox");
-    }
 
     _.each(columns, (columnName, i) => {
       const getPreviousColumn = () => getColumn(i - 1);
@@ -175,6 +173,7 @@ export default class EmailsApp extends React.Component<ISettings> {
       >{/* @ts-ignore */}
         <Search />
         {this.renderColumns()}
+        <OnboardingColumnsPanel />
         <AddNewColumnForm />
       </section>
     );

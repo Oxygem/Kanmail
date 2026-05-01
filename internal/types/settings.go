@@ -123,6 +123,10 @@ func NewDefaultSettings() Settings {
 	s := Settings{}
 	s.ApplyDefaults()
 
+	s.ColumnGroups = map[string][]FolderName{
+		"": []FolderName{"inbox"},
+	}
+
 	s.System.LoadContactIcons = true
 	s.System.ShareAnalytics = true
 	s.System.ShowHelpButton = true

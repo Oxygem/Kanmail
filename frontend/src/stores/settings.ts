@@ -64,7 +64,8 @@ class SettingsStore extends BaseStore {
 		this.savePrevProps();
 		this.props.columnGroups[name] = this.getCurrentColumns();
 		this.props.currentColumnGroup = name;
-		this.props.columnGroups[""] = [];
+		// Reset default column group to inbox
+		this.props.columnGroups[""] = ["inbox"];
 		await this.putSettings();
 	}
 
