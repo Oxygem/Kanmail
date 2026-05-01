@@ -102,6 +102,9 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   getNewEmailsLoop = async () => {
+    if (this.props.accounts.length === 0) {
+      return;
+    }
     const folderNames = this.getFoldersToSync();
     console.info(`[EmailsApp] New emails sync for current folders: ${folderNames}`);
     const start = performance.now();
