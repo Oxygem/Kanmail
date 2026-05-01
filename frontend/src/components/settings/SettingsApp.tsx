@@ -5,9 +5,10 @@ import { Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/t
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
+import systemStore from "../../stores/system.ts";
 import SettingsView from "./SettingsView.tsx";
 
-@subscribe(settingsStore)
+@subscribe(settingsStore, systemStore)
 export default class SettingsApp extends React.Component<ISettings> {
   constructor(props) {
     super(props);

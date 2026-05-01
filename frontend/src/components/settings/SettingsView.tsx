@@ -433,58 +433,54 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       })
     }
 
+    const themes = [
+      { id: "theme-default", className: "default", label: "default (contrast)", locked: false },
+      { id: "theme-default-light", className: "light", label: "light", locked: false },
+      { id: "theme-default-dark", className: "dark", label: "dark", locked: false },
+      { id: "theme-default-nord-light", className: "nord-light", label: "nord light", locked: true },
+      { id: "theme-default-midnight-blue", className: "midnight-blue", label: "midnight blue", locked: true },
+      { id: "theme-default-matrix", className: "matrix", label: "matrix", locked: true },
+    ];
+
+    const isLicensed = systemStore.props.isLicensed;
+
+    const renderThemeButton = (
+      theme: { id: string; className: string; label: string; locked: boolean },
+      selected: string,
+      setTheme: (id: string) => void,
+    ) => {
+      const lockedNow = theme.locked && !isLicensed;
+      const onClick = lockedNow
+        ? () => AppService.OpenPurchaseLicenseDialog()
+        : () => setTheme(theme.id);
+      const classes = [
+        "appear-button",
+        theme.className,
+        selected == theme.id ? "active" : "",
+        lockedNow ? "locked" : "",
+      ].filter(Boolean).join(" ");
+      return (
+        <div key={theme.id} className={classes} onClick={onClick}>
+          <div className="sidebar"></div>
+          <div className="main"></div>
+          <span>
+            {theme.label}
+            {lockedNow && <i className="fa fa-lock" title="Requires a Kanmail license" />}
+          </span>
+        </div>
+      );
+    };
+
     return <div className="content appearance">
       <div className="group">
         <h3>Theme to use when the system theme is <strong>light</strong></h3>
-        <div
-          className={`appear-button default ${this.props.system.theme.light == "theme-default" && "active"}`}
-          onClick={() => setLightTheme("theme-default")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>default (contrast)</span>
-        </div>
-        <div
-          className={`appear-button light ${this.props.system.theme.light == "theme-default-light" && "active"}`}
-          onClick={() => setLightTheme("theme-default-light")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>light</span>
-        </div>
-        <div
-          className={`appear-button dark ${this.props.system.theme.light == "theme-default-dark" && "active"}`}
-          onClick={() => setLightTheme("theme-default-dark")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>dark</span>
+        <div className="theme-grid">
+          {themes.map((t) => renderThemeButton(t, this.props.system.theme.light, setLightTheme))}
         </div>
 
         <h3>Theme to use when the system theme is <strong>dark</strong></h3>
-        <div
-          className={`appear-button default ${this.props.system.theme.dark == "theme-default" && "active"}`}
-          onClick={() => setDarkTheme("theme-default")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>default (contrast)</span>
-        </div>
-        <div
-          className={`appear-button light ${this.props.system.theme.dark == "theme-default-light" && "active"}`}
-          onClick={() => setDarkTheme("theme-default-light")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>light</span>
-        </div>
-        <div
-          className={`appear-button dark ${this.props.system.theme.dark == "theme-default-dark" && "active"}`}
-          onClick={() => setDarkTheme("theme-default-dark")}
-        >
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>dark</span>
+        <div className="theme-grid">
+          {themes.map((t) => renderThemeButton(t, this.props.system.theme.dark, setDarkTheme))}
         </div>
       </div>
 
