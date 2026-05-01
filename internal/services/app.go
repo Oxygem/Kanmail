@@ -27,6 +27,7 @@ import (
 
 	"github.com/oxygem/kanmail/internal/backend"
 	"github.com/oxygem/kanmail/internal/caches"
+	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/types"
 	"github.com/oxygem/kanmail/internal/util"
 )
@@ -572,6 +573,10 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 
 // Checks license key, called by frontend on startup + LicenseChangedEvent events
 func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
+	if constants.ENV_DEBUG_LICENSED != "" {
+		return true, nil
+	}
+
 	ctx = a.log.With().Str("method", "CheckLicense").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
@@ -602,6 +607,10 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 }
 
 func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
+	if constants.ENV_DEBUG_LICENSED != "" {
+		return true
+	}
+
 	ctx = a.log.With().Str("method", "CheckCachedLicense").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
