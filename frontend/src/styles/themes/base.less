@@ -119,8 +119,8 @@ textarea {
     ??? */
 
 span.multi-subject {
-  background: @lightGrey;
-  color: @lightTextGrey;
+  background: @threadMessageTagBackgroundColor;
+  color: @labelColor;
 }
 
 .tooltip {
@@ -151,7 +151,7 @@ header {
       color: @bodyTextColor;
 
       p {
-        border-color: @lightGrey;
+        border-color: @headerBorderColor;
 
         span.meta {
           color: @bodyTextColor;
@@ -231,6 +231,10 @@ section#sidebar {
         }
       }
 
+      span.unread-count {
+        background: @sidebarLinkHoverBackgroundColor;
+      }
+
       a {
         &:hover {
           background: @sidebarLinkHoverBackgroundColor;
@@ -273,8 +277,8 @@ section#sidebar {
     }
 
     section#status {
-      background: @lightGrey;
-      border-color: #d7d7d7;
+      background: @settingsAccountBackgroundColor;
+      border-color: @headerBorderColor;
     }
   }
 }
@@ -453,7 +457,7 @@ section#control {
 section#meta-file {
   pre,
   code {
-    background: @lightestGrey;
+    background: @threadContentCodeBackgroundColor;
   }
   code {
     padding: 1px;
@@ -503,6 +507,14 @@ section#columns {
 
       span.meta {
         color: @formBorderGreyActive;
+
+        div.icons i {
+          color: @labelColor;
+
+          &:hover {
+            color: @bodyTextColor;
+          }
+        }
       }
     }
 
@@ -594,17 +606,17 @@ section#columns {
 section#new-email {
   form {
     blockquote#reply-quote {
-      background: @lightestGrey;
-      border-color: @lightGrey;
+      background: @inputBackgroundColor;
+      border-color: @inputBorderColor;
     }
 
     div.buttons {
       button.save {
-        background: @lightestGrey;
-        color: @lightTextGrey;
+        background: @buttonBackgroundColor;
+        color: @labelColor;
 
         &:hover {
-          background: @lightGrey;
+          background: @settingsNewAccountButtonHoverBackgroundColor;
         }
       }
     }
@@ -675,8 +687,8 @@ div.accounts {
     }
 
     &.active {
-      background: @lightGrey;
-      border-color: @midGrey;
+      background: @settingsNewAccountButtonHoverBackgroundColor;
+      border-color: @inputBorderColor;
     }
   }
 
@@ -722,6 +734,10 @@ section#contacts {
 form#send-form {
   .form-top {
     background: @inputBackgroundColor;
+  }
+
+  div.form-attachments .attachment {
+    border: 1px solid @inputBorderColor;
   }
 
   .squire-editor-container {
