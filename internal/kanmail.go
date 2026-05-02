@@ -121,6 +121,13 @@ func (k *Kanmail) Run() error {
 		}
 	}
 
+	if constants.ENV_DEBUG_WINDOW_WIDTH > 0 {
+		options.Width = constants.ENV_DEBUG_WINDOW_WIDTH
+	}
+	if constants.ENV_DEBUG_WINDOW_HEIGHT > 0 {
+		options.Height = constants.ENV_DEBUG_WINDOW_HEIGHT
+	}
+
 	emailsWindow := util.MakeWindow(ctx, k.App, options)
 
 	k.App.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {

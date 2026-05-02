@@ -12,6 +12,8 @@ import (
 	"github.com/emersion/go-imap/v2/imapclient"
 	"github.com/emersion/go-sasl"
 	"github.com/rs/zerolog"
+
+	"github.com/oxygem/kanmail/internal/constants"
 )
 
 // Our fake imap client implements IMAPClient
@@ -33,8 +35,10 @@ type FakeCommand struct {
 }
 
 func (c *FakeCommand) Wait() error {
-	// Sleep anywhere between 0-1s
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+	if constants.ENV_DEBUG_FAKE_JITTER != "" {
+		// Sleep anywhere between 0-1s
+		time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+	}
 	return c.err
 }
 
