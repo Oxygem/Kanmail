@@ -29,6 +29,7 @@ import (
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/upgrades"
 	"github.com/oxygem/kanmail/internal/util"
 )
 
@@ -89,6 +90,19 @@ func (a *AppService) OpenLink(ctx context.Context, url string) error {
 
 func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error) {
 	return a.caches.GetStats(ctx)
+}
+
+// RunUpgrades applies any pending data upgrades against caches.db. Called by
+// the main window on startup before normal app bootstrap; other windows block
+// on the same lock so they wait naturally if opened during an upgrade run.
+func (a *AppService) RunUpgrades(ctx context.Context) error {
+	ctx = a.log.With().Str("method", "RunUpgrades").Logger().WithContext(ctx)
+	defer util.LogPanic(ctx)
+
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	return types.WrapError(upgrades.Run(ctx, a.log, a.caches))
 }
 
 func (a *AppService) GetExecutable() (string, error) {

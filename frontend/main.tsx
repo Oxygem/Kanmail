@@ -12,7 +12,7 @@ import systemStore from "./src/stores/system.ts";
 import "./src/style.less";
 import { setupThemes } from "./src/theme.js";
 
-import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AppService, EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import DebugApp from "./src/components/debug/DebugApp.tsx";
 import EmailsApp from "./src/components/emails/EmailsApp.tsx";
 import LicenseApp from "./src/components/license/LicenseApp.tsx";
@@ -37,8 +37,10 @@ const bootApp = (
     classNames.push("frameless");
     // }
 
-    // Load the settings *then* bootstrap the app into the DOM
-    Promise.all([
+    // Run any pending data upgrades before touching anything else. The main
+    // window does the work; secondary windows block on the same backend lock
+    // and proceed once it's done.
+    AppService.RunUpgrades().then(() => Promise.all([
         settingsStore.getSettings(),
         // Don't need these here, but want it populated
         systemStore.checkCurrentVersion(),
@@ -46,7 +48,7 @@ const bootApp = (
         systemStore.checkDebug(),
         systemStore.getLogFilename(),
         systemStore.getExecutableFilename(),
-    ]).then(([settings]) => {
+    ])).then(([settings]) => {
         setupThemes(settings);
 
         console.debug("Settings loaded, bootstrapping app to DOM...");

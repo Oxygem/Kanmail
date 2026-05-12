@@ -28,7 +28,8 @@ type FolderEmailCache struct {
 	stmtSetAccountLookup,
 	stmtSetAccountReference,
 	stmtDeleteAccountLookups,
-	stmtDeleteAccountReferences *sql.Stmt
+	stmtDeleteAccountReferences,
+	stmtStoreAttachment *sql.Stmt
 }
 
 func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
@@ -111,6 +112,15 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare deleteAccountReferences statement: %w", err)
 	}
 
+	stmtStoreAttachment, err := db.Prepare(`
+		INSERT OR IGNORE INTO folder_email_attachments
+			(account_name, folder_name, uid, part_id,
+			 content_type, filename, size, content_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare storeAttachment statement: %w", err)
+	}
+
 	return &FolderEmailCache{
 		db:                          db,
 		stmtStore:                   stmtStore,
@@ -124,6 +134,7 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		stmtSetAccountReference:     stmtSetAccountReference,
 		stmtDeleteAccountLookups:    stmtDeleteAccountLookups,
 		stmtDeleteAccountReferences: stmtDeleteAccountReferences,
+		stmtStoreAttachment:         stmtStoreAttachment,
 	}, nil
 }
 
@@ -146,6 +157,8 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 	defer stmtStore.Close()
 	stmtSetAccountRef := tx.Stmt(c.stmtSetAccountReference)
 	defer stmtSetAccountRef.Close()
+	stmtStoreAttachment := tx.Stmt(c.stmtStoreAttachment)
+	defer stmtStoreAttachment.Close()
 
 	if _, err := stmtStore.ExecContext(
 		ctx,
@@ -167,6 +180,25 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 	for _, ref := range email.References {
 		if _, err := stmtSetAccountRef.Exec(email.AccountName, ref, email.MessageID); err != nil {
 			return fmt.Errorf("failed to set account reference: %w", err)
+		}
+	}
+
+	for _, part := range email.Parts {
+		if part.Description == "" {
+			continue
+		}
+		if _, err := stmtStoreAttachment.ExecContext(
+			ctx,
+			email.AccountName,
+			email.FolderName,
+			email.UID,
+			part.PartStr,
+			part.Type,
+			part.Description,
+			part.Size,
+			part.ContentID,
+		); err != nil {
+			return fmt.Errorf("failed to store attachment: %w", err)
 		}
 	}
 

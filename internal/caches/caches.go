@@ -86,6 +86,14 @@ func (c *Caches) Close() error {
 	return c.db.Close()
 }
 
+// DB exposes the underlying connection for code that needs raw access (e.g.
+// the upgrades runner). Cache implementations should keep using their own
+// prepared statements rather than reaching for this.
+func (c *Caches) DB() *sql.DB {
+	c.log.Warn().Msg("caches database instances accessed directly")
+	return c.db
+}
+
 func (c *Caches) CloseAndDelete() error {
 	if err := c.Close(); err != nil {
 		return fmt.Errorf("failed to close database: %w", err)
