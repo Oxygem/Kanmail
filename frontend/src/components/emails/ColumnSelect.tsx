@@ -22,6 +22,15 @@ interface IProps extends Partial<ISettings> {
 @subscribe(settingsStore)
 @subscribe(filterStore)
 export default class ColumnSelect extends React.Component<IProps> {
+  private releaseKeyboard: (() => void) | null = null;
+
+  componentWillUnmount() {
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
+    }
+  }
+
   getOptions() {
     const current = settingsStore.getCurrentColumns();
     const userFolders = this.props.folderNames || [];
@@ -37,8 +46,17 @@ export default class ColumnSelect extends React.Component<IProps> {
     this.props.onAdd(value);
   };
 
+  handleFocus = () => {
+    if (!this.releaseKeyboard) {
+      this.releaseKeyboard = keyboard.suspend("ColumnSelect");
+    }
+  };
+
   handleBlur = () => {
-    keyboard.enable();
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
+    }
     this.props.onBlur?.();
   };
 
@@ -52,7 +70,7 @@ export default class ColumnSelect extends React.Component<IProps> {
         defaultMenuIsOpen={this.props.defaultMenuIsOpen}
         placeholder={this.props.placeholder || "Add a column..."}
         onChange={this.handleChange}
-        onFocus={keyboard.disable}
+        onFocus={this.handleFocus}
         onBlur={this.handleBlur}
         value={null}
       />

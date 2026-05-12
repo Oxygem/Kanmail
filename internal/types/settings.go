@@ -78,6 +78,14 @@ type Signature struct {
 	HTML string `json:"html"`
 }
 
+type KeyboardBinding struct {
+	Key   string `json:"key"`
+	Shift bool   `json:"shift,omitempty"`
+	Alt   bool   `json:"alt,omitempty"`
+	Meta  bool   `json:"meta,omitempty"`
+	Ctrl  bool   `json:"ctrl,omitempty"`
+}
+
 type SystemSettings struct {
 	BatchSize    int `json:"batchSize"`
 	SyncInterval int `json:"syncInterval"`
@@ -106,6 +114,10 @@ type SystemSettings struct {
 
 	// Thread colors (global, applies across all accounts)
 	SenderColors map[string]string `json:"senderColors"`
+
+	// Per-shortcut binding overrides (shortcut id → list of bindings).
+	// Missing entries fall back to the frontend's registered defaults.
+	KeyboardShortcuts map[string][]KeyboardBinding `json:"keyboardShortcuts,omitempty"`
 }
 
 type Settings struct {

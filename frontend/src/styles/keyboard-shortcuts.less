@@ -1,0 +1,84 @@
+/*
+    Keyboard shortcut customization tab */
+
+.content.keyboard-shortcuts {
+  .shortcut-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    flex-wrap: wrap;
+  }
+
+  .shortcut-description {
+    flex: 1;
+    font-size: @textSize;
+  }
+
+  .shortcut-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shortcut-binding {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 1px solid @formBorderGrey;
+    border-radius: @smallBorderRadius;
+    font-family: inherit;
+    font-size: @smallTextSize;
+    background: @lightestGrey;
+    color: @textGrey;
+    min-width: 80px;
+    text-align: center;
+    cursor: pointer;
+
+    &:hover {
+      border-color: @formBorderGreyActive;
+    }
+
+    &.capturing {
+      cursor: default;
+      border-color: @blue;
+      background: lighten(@blue, 45%);
+      color: @blue;
+    }
+
+    &.disabled {
+      color: @lightestTextGrey;
+      font-style: italic;
+    }
+  }
+
+  .shortcut-disable {
+    background: none;
+    border: none;
+    color: @lightestTextGrey;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+
+    &:hover {
+      color: @red;
+    }
+  }
+
+  .shortcut-reset {
+    font-size: @smallTextSize;
+    color: @lightTextGrey;
+    cursor: pointer;
+
+    &:hover {
+      color: @textGrey;
+      text-decoration: underline;
+    }
+  }
+
+  .shortcut-conflict {
+    width: 100%;
+    margin-top: 4px;
+    font-size: @smallTextSize;
+    color: @red;
+  }
+}

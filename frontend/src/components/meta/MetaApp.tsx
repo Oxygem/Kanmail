@@ -4,9 +4,15 @@ import keyboard from "../../keyboard.ts";
 import systemStore from "../../stores/system.ts";
 
 export default class MetaApp extends React.Component {
+  private releaseKeyboard: () => void;
+
   constructor(props) {
     super(props);
-    keyboard.disable();
+    this.releaseKeyboard = keyboard.suspend("MetaApp");
+  }
+
+  componentWillUnmount() {
+    this.releaseKeyboard();
   }
 
   render() {

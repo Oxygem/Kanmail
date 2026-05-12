@@ -14,13 +14,15 @@ interface DebugAppState {
 }
 
 export default class DebugApp extends React.Component<{}, DebugAppState> {
+  private releaseKeyboard: () => void;
+
   constructor(props: {
     accountName?: string,
     folderName?: string,
     uid?: string,
   }) {
     super(props);
-    keyboard.disable();
+    this.releaseKeyboard = keyboard.suspend("DebugApp");
 
     this.state = {
       accountName: props.accountName || "",
@@ -36,6 +38,10 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
     if (props.accountName !== "" && props.folderName !== "" && props.uid !== "") {
       this.loadData();
     }
+  }
+
+  componentWillUnmount() {
+    this.releaseKeyboard();
   }
 
   handleInputChange = (field: keyof Pick<DebugAppState, "accountName" | "folderName" | "uid">) => (

@@ -17,16 +17,21 @@ interface IControlInputState {
 }
 
 class ControlInput extends React.Component<IControlInputProps, IControlInputState> {
-  keyboardWasEnabled: boolean;
+  private releaseKeyboard: (() => void) | null = null;
 
   constructor(props: IControlInputProps) {
     super(props);
 
-    this.keyboardWasEnabled = !keyboard.disabled;
-
     this.state = {
       inputValue: "",
     };
+  }
+
+  componentWillUnmount() {
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
+    }
   }
 
   handleSelectChange = (value: string) => {
@@ -42,8 +47,24 @@ class ControlInput extends React.Component<IControlInputProps, IControlInputStat
 
   handleClose = () => {
     controlStore.close(false);
-    if (this.keyboardWasEnabled) {
-      setTimeout(keyboard.enable, 0); // prevent the *current* keyboard event executing
+    // Release on the next tick so the *current* keyboard event finishes first.
+    if (this.releaseKeyboard) {
+      const release = this.releaseKeyboard;
+      this.releaseKeyboard = null;
+      setTimeout(release, 0);
+    }
+  };
+
+  handleFocus = () => {
+    if (!this.releaseKeyboard) {
+      this.releaseKeyboard = keyboard.suspend("ControlInput");
+    }
+  };
+
+  handleBlur = () => {
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
     }
   };
 
@@ -64,8 +85,8 @@ class ControlInput extends React.Component<IControlInputProps, IControlInputStat
           menuIsOpen={true}
           onMenuClose={this.handleClose}
           onChange={this.handleSelectChange}
-          onFocus={this.keyboardWasEnabled ? keyboard.disable : undefined}
-          onBlur={this.keyboardWasEnabled ? keyboard.enable : undefined}
+          onFocus={this.handleFocus}
+          onBlur={this.handleBlur}
         />
       );
     } else {

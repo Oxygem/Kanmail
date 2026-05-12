@@ -26,6 +26,8 @@ interface IRightbarState {
 @subscribe(settingsStore)
 @subscribe(threadStore)
 export default class AddNewColumnForm extends React.Component<IRightbarProps, IRightbarState> {
+  private releaseSaveInput: (() => void) | null = null;
+
   constructor(props) {
     super(props);
 
@@ -36,6 +38,26 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
       isSavingColumnGroup: false,
     };
   }
+
+  componentWillUnmount() {
+    if (this.releaseSaveInput) {
+      this.releaseSaveInput();
+      this.releaseSaveInput = null;
+    }
+  }
+
+  handleSaveInputFocus = () => {
+    if (!this.releaseSaveInput) {
+      this.releaseSaveInput = keyboard.suspend("AddNewColumnForm.save");
+    }
+  };
+
+  handleSaveInputBlur = () => {
+    if (this.releaseSaveInput) {
+      this.releaseSaveInput();
+      this.releaseSaveInput = null;
+    }
+  };
 
   handleAddColumn = (name: string) => {
     settingsStore.addColumn(name);
@@ -80,8 +102,8 @@ export default class AddNewColumnForm extends React.Component<IRightbarProps, IR
       <input
         type="text"
         onChange={(ev) => (this.setState({ saveColumnGroupInput: ev.target.value }))}
-        onFocus={keyboard.disable}
-        onBlur={keyboard.enable}
+        onFocus={this.handleSaveInputFocus}
+        onBlur={this.handleSaveInputBlur}
         value={this.state.saveColumnGroupInput || ""}
         placeholder="Workflow name..."
         ref={(ref) => (ref ? ref.focus() : null)}

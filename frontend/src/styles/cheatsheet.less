@@ -1,0 +1,99 @@
+/*
+    Keyboard shortcut cheatsheet overlay */
+
+section#cheatsheet-background {
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(100, 100, 100, 0.6);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+section#cheatsheet {
+  width: 600px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  border-radius: @borderRadius;
+  padding: 20px 24px 24px 24px;
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: @titleTextSize;
+    }
+  }
+
+  .cheatsheet-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    color: @lightTextGrey;
+
+    &:hover {
+      color: @textGrey;
+    }
+  }
+
+  .cheatsheet-group {
+    margin-bottom: 16px;
+
+    h4 {
+      margin: 0 0 6px 0;
+      font-size: @smallTextSize;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: @lightTextGrey;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 4px 0;
+      vertical-align: middle;
+    }
+
+    td.cheatsheet-keys {
+      width: 180px;
+      white-space: nowrap;
+    }
+
+    td.cheatsheet-description {
+      font-size: @textSize;
+    }
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid @formBorderGrey;
+    border-radius: @smallBorderRadius;
+    font-family: inherit;
+    font-size: @smallTextSize;
+    background: @lightestGrey;
+    color: @textGrey;
+    min-width: 24px;
+    text-align: center;
+  }
+
+  .cheatsheet-sep {
+    margin: 0 6px;
+    color: @lightestTextGrey;
+  }
+}

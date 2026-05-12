@@ -3,7 +3,6 @@ import React from "react";
 import { DragDropContext } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { ALWAYS_SYNC_FOLDERS, INBOX } from "../../constants.ts";
-import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
@@ -13,6 +12,7 @@ import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
+import Cheatsheet from "./Cheatsheet.tsx";
 import ControlInput from "./ControlInput.jsx";
 import EmailColumn from "./EmailColumn.tsx";
 import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
@@ -38,10 +38,8 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   componentDidMount() {
-    // Enable keyboard controls
-    if (this.props.accounts.length > 0) {
-      keyboard.enable();
-    }
+    // Keyboard is enabled by default. WelcomeSettings (shown when accounts
+    // is empty) suspends it via the SettingsView it mounts.
 
     // Create resize/move window position saver handlers
     createWindowPositionHandlers();
@@ -192,6 +190,8 @@ export default class EmailsApp extends React.Component<ISettings> {
         <Thread />
         {/* @ts-ignore */}
         <ControlInput />
+        {/* @ts-ignore */}
+        <Cheatsheet />
       </section>
     );
   }

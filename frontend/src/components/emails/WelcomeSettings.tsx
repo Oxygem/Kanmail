@@ -3,7 +3,6 @@ import React from "react";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import keyboard from "../../keyboard.ts";
 import settingsStore from "../../stores/settings.ts";
 import SettingsView from "../settings/SettingsView.tsx";
 
@@ -11,10 +10,10 @@ interface IWelcomeSettingsState {
   settings: Settings;
 }
 
+// Keyboard suspension is handled by the inner SettingsView.
 export default class WelcomeSettings extends React.Component<{}, IWelcomeSettingsState> {
   constructor(props) {
     super(props);
-    keyboard.disable();
 
     this.state = {
       settings: settingsStore.props,

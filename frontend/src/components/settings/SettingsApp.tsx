@@ -10,9 +10,15 @@ import SettingsView from "./SettingsView.tsx";
 
 @subscribe(settingsStore, systemStore)
 export default class SettingsApp extends React.Component<ISettings> {
+  private releaseKeyboard: () => void;
+
   constructor(props) {
     super(props);
-    keyboard.disable();
+    this.releaseKeyboard = keyboard.suspend("SettingsApp");
+  }
+
+  componentWillUnmount() {
+    this.releaseKeyboard();
   }
 
   render() {

@@ -20,6 +20,7 @@ interface ISearchState {
 export default class Search extends React.Component<ISearchProps, ISearchState> {
   executeSearch: () => void;
   input: HTMLInputElement | null;
+  releaseKeyboard: (() => void) | null = null;
 
   constructor(props) {
     super(props);
@@ -33,16 +34,26 @@ export default class Search extends React.Component<ISearchProps, ISearchState> 
 
   componentDidUpdate(prevProps) {
     if (!prevProps.isSearching && this.props.isSearching) {
-      keyboard.disable();
+      this.releaseKeyboard = keyboard.suspend("Search");
       this.input!.focus();
     }
 
     if (prevProps.isSearching && !this.props.isSearching) {
       this.input!.blur();
-      keyboard.enable();
+      if (this.releaseKeyboard) {
+        this.releaseKeyboard();
+        this.releaseKeyboard = null;
+      }
     }
 
     this.executeSearch();
+  }
+
+  componentWillUnmount() {
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
+    }
   }
 
   _executeSearch = () => {

@@ -102,7 +102,6 @@ export default class EmailColumnThread extends React.Component<
   EmailColumnThreadProps,
   EmailColumnThreadState
 > {
-  mouseMoveEvents: number;
   sendNotifications: boolean;
   element: Element | null;
 
@@ -116,8 +115,6 @@ export default class EmailColumnThread extends React.Component<
     if (getColumnStore(this.props.columnId).hasReadThread(this.props.thread)) {
       unread = false;
     }
-
-    this.mouseMoveEvents = 0;
 
     this.sendNotifications = this.props.columnId == INBOX;
 
@@ -193,10 +190,6 @@ export default class EmailColumnThread extends React.Component<
     this.setState({
       hover: state,
     });
-
-    if (!state) {
-      this.mouseMoveEvents = 0;
-    }
   };
 
   setIsMoving = () => {
@@ -265,11 +258,11 @@ export default class EmailColumnThread extends React.Component<
   /*
         Hover states/handling
     */
-  handleMouseMove = () => {
-    // This is an awful hack around mouseMove being triggered when the
-    // parent (column) is scrolled.
-    this.mouseMoveEvents += 1;
-    if (this.mouseMoveEvents <= 1) {
+  handleMouseMove = (ev: React.MouseEvent) => {
+    // Ignore mouse events fired when the DOM moves under a stationary
+    // cursor — column auto-scroll, or a neighbouring thread being archived
+    // causing reflow. See keyboard.isCursorStationary for the mechanism.
+    if (keyboard.isCursorStationary(ev.clientX, ev.clientY)) {
       return;
     }
 
@@ -285,7 +278,11 @@ export default class EmailColumnThread extends React.Component<
     keyboard.setThreadComponent(this);
   };
 
-  handleMouseLeave = () => {
+  handleMouseLeave = (ev: React.MouseEvent) => {
+    if (keyboard.isCursorStationary(ev.clientX, ev.clientY)) {
+      return;
+    }
+
     if (this.isBusy() || threadStore.isOpen || controlStore.props.open) {
       return;
     }

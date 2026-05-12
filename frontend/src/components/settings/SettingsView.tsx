@@ -12,6 +12,7 @@ import { trackEvent } from "../../util/analytics.ts";
 import { arrayMove } from "../../util/array.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
+import KeyboardShortcutsTab from "../settings/KeyboardShortcutsTab.tsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
 
 interface ISenderColorFormProps {
@@ -191,10 +192,12 @@ interface ISettingsViewState {
 }
 
 export default class SettingsView extends React.Component<ISettingsViewProps, ISettingsViewState> {
+  private releaseKeyboard: () => void;
+
   constructor(props: ISettingsViewProps) {
     super(props);
 
-    keyboard.disable();
+    this.releaseKeyboard = keyboard.suspend("SettingsView");
 
     this.state = {
       showAccountForm: false,
@@ -209,6 +212,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         cacheStats: stats,
       });
     })
+  }
+
+  componentWillUnmount() {
+    this.releaseKeyboard();
   }
 
   getAccountNames = (idx: number = -1): string[] => {
@@ -753,6 +760,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         className={this.state.tab == "appearance" ? "active" : ""}
       >Appearance</a>
       <a
+        onClick={() => (this.setState({ tab: "shortcuts" }))}
+        className={this.state.tab == "shortcuts" ? "active" : ""}
+      >Shortcuts</a>
+      <a
         onClick={() => (this.setState({ tab: "system" }))}
         className={this.state.tab == "system" ? "active" : ""}
       >System</a>
@@ -792,12 +803,23 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     </div>;
   }
 
+  renderShortcuts() {
+    return (
+      <KeyboardShortcutsTab
+        system={this.props.system}
+        updateFn={this.props.updateFn}
+      />
+    );
+  }
+
   renderCurrentTab() {
     switch (this.state.tab) {
       case "accounts":
         return this.renderAccounts()
       case "appearance":
         return this.renderAppearanceSettings()
+      case "shortcuts":
+        return this.renderShortcuts()
       case "system":
         return this.renderSystemSettings()
       case "licensed":
