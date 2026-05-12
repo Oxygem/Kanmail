@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
+	"github.com/wailsapp/wails/v3/pkg/services/dock"
 
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/constants"
@@ -45,6 +46,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	accountsService := services.NewAccountsService(log, settingsService, caches)
 	emailsService := services.NewEmailsService(log, accountsService, appService)
 	contactsService := services.NewContactsService(log, caches)
+	dockService := dock.New()
 
 	var assetsHandler http.Handler
 	if assets != nil {
@@ -61,6 +63,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 			application.NewService(accountsService),
 			application.NewService(emailsService),
 			application.NewService(contactsService),
+			application.NewService(dockService),
 		},
 		Assets: application.AssetOptions{
 			Handler: assetsHandler,

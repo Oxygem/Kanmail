@@ -2,13 +2,14 @@ import _ from "lodash";
 
 import { PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { DockService } from "../../../bindings/github.com/wailsapp/wails/v3/pkg/services/dock/index.ts";
 import { INBOX } from "../../constants.ts";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import BaseEmails from "../../stores/emails/base.js";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import { encodeFolderName, formatAddress } from "../../util/string.js";
-import type { IPaginateOptions, ISyncOptions } from "./base.jsx";
+import type { IPaginateOptions, ISyncOptions, Thread } from "./base.jsx";
 
 export class RequestError extends Error {
   statusCode: number;
@@ -33,14 +34,30 @@ class MainEmails extends BaseEmails {
     this.initializedFolderNames = new Set();
   }
 
-  // setInboxUnreadCount() {
-  //   post("/api/notifications/set-count", { count: this.unreadThreadCount });
-  //   getSidebarFolderLinkStore(INBOX).setUnreadCount(this.unreadThreadCount);
-  // }
-
   reduceInboxUnreadCount() {
-    // this.unreadThreadCount -= 1;
-    // this.setInboxUnreadCount();
+    // Optimistic decrement no-op: badge re-syncs on next processEmailChanges.
+  }
+
+  protected onProcessedEmailChanges(folderEmails: Map<string, Thread[]>) {
+    const accounts = this.getAccountKeys();
+    const inboxMeta = this.meta[INBOX] || {};
+    const incomplete = _.some(accounts, (accountName) => {
+      const meta = inboxMeta[accountName];
+      if (!meta) return true;
+      const loaded = Object.keys(this.getAccountFolder(accountName, INBOX)).length;
+      return loaded < meta.count;
+    });
+
+    const inboxThreads = folderEmails.get(INBOX) || [];
+    const unreadCount = _.filter(inboxThreads, (t) => t.unread).length;
+
+    const promise =
+      unreadCount === 0
+        ? DockService.RemoveBadge()
+        : DockService.SetBadge(incomplete ? "·" : String(unreadCount));
+    promise
+      .then(() => console.debug("[mainEmailStore] dock badge updated", unreadCount))
+      .catch((err) => console.warn("[mainEmailStore] dock badge update failed", err));
   }
 
   // Called every time we re-render a column, aim is to ensure we're looking at the latest emails

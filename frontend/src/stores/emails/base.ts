@@ -722,5 +722,11 @@ export default class BaseEmails {
     console.info(
       `${emails.length} Emails processed in ${processTaken}ms and rendered in ${renderTaken}ms`
     );
+
+    this.onProcessedEmailChanges(folderEmails);
+  }
+
+  protected onProcessedEmailChanges(_folderEmails: Map<string, Thread[]>): void {
+    // Override in subclass.
   }
 }
