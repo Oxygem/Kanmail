@@ -253,9 +253,10 @@ export default class EmailColumnThread extends React.Component<
 
     const rgb = hexToRgb(c);
     const desiredOpacity = window.matchMedia("(prefers-color-scheme: dark)").matches ? 0.2 : 0.05;
+    const alwaysShow = settingsStore.props.system.theme.alwaysShowThreadBackgrounds;
     let opacity = isHover ? desiredOpacity : 0.0;
-    if (!isHover && settingsStore.props.system.theme.alwaysShowThreadBackgrounds) {
-      opacity = desiredOpacity;
+    if (alwaysShow) {
+      opacity = isHover ? desiredOpacity * 2 : desiredOpacity;
     }
 
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
