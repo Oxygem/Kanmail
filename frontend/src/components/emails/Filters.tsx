@@ -22,6 +22,8 @@ const ALIAS_TO_CLASS = {
   junk: "yellow",
 };
 
+const COLLAPSIBLE_ALIAS_FOLDERS = ["junk", "trash"];
+
 const folderLinkTarget = {
   canDrop(props, monitor) {
     const { oldColumn } = monitor.getItem();
@@ -184,7 +186,11 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   }
 
   renderMainFolderLinks() {
-    return this.renderFolderLinks(ALIAS_FOLDERS);
+    const mainFolders = _.filter(
+      ALIAS_FOLDERS,
+      (f) => !COLLAPSIBLE_ALIAS_FOLDERS.includes(f),
+    );
+    return this.renderFolderLinks(mainFolders);
   }
 
   renderCustomFolderLinks() {
@@ -197,14 +203,20 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   }
 
   renderShowAllFolders() {
+    const pinnedSet = new Set(this.props.sidebarFolders || []);
+    const hiddenAliases = _.filter(
+      COLLAPSIBLE_ALIAS_FOLDERS,
+      (n) => !pinnedSet.has(n),
+    ).length;
+    const hiddenCustom = _.filter(
+      this.props.folderNames || [],
+      (n) => !pinnedSet.has(n),
+    ).length;
+    const nFolders = hiddenAliases + hiddenCustom;
 
-    if (!this.props.folderNames || !this.props.folderNames.length) {
+    if (nFolders === 0) {
       return;
     }
-
-    const sidebarFoldersLength =
-      (this.props.sidebarFolders || []).length || 0;
-    const nFolders = this.props.folderNames.length - sidebarFoldersLength;
 
     if (this.state.showAllFolders) {
       return (
@@ -241,6 +253,14 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
 
     if (this.state.showAllFolders) {
       const sidebarFolderNames = new Set(folderNames);
+      const unpinnedAliases = _.filter(
+        COLLAPSIBLE_ALIAS_FOLDERS,
+        (name) => !sidebarFolderNames.has(name),
+      );
+      sidebarFolders.push(
+        ...this.renderFolderLinks(unpinnedAliases, { pinned: false })
+      );
+
       const otherFolderNames = _.filter(
         this.props.folderNames,
         (name) => !sidebarFolderNames.has(name)
