@@ -25,7 +25,8 @@ Kanmail is a desktop email client that functions like a kanban board, built with
 **Email Implementation** (`internal/emails/`):
 - `Account`: Represents a single email account with IMAP/SMTP connection pools
 - `Folder`: Represents an IMAP mailbox with UID tracking and pagination
-  - Tracks UIDs from the last 90 days for pagination
+  - Tracks UIDs for pagination
+  - UIDs themselves are also paginated if >1000 in a folder
   - Uses sparse UID → email cache populated during pagination
   - `lastSentUID` and `lastSentDate` track what frontend knows about
 - `ConnectionPool`: Manages pooled IMAP/SMTP connections (regular, priority, background)
