@@ -55,10 +55,10 @@ export default class KeyboardShortcutsTab extends React.Component<IProps, IState
   }
 
   private writeOverrides(
-    mutate: (next: Record<string, Binding[]>) => void,
+    mutate: (next: { [_ in string]?: Binding[] }) => void,
   ) {
     const current = this.props.system.keyboardShortcuts ?? {};
-    const next: Record<string, Binding[]> = { ...current };
+    const next: { [_ in string]?: Binding[] } = { ...current };
     mutate(next);
     this.props.updateFn({
       system: { ...this.props.system, keyboardShortcuts: next },

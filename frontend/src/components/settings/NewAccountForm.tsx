@@ -363,7 +363,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 }
 
 class OauthAccountFormMixin extends GenericAccountForm {
-	oauthRequestCheck: NodeJS.Timeout
+	oauthRequestCheck: ReturnType<typeof setInterval>
 
 	constructor(props) {
 		super(props);

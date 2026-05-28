@@ -19,7 +19,7 @@ export interface RuntimeError {
 export interface IRequestStoreProps {
   fetchRequests: Map<number, string>;
   pushRequests: Map<number, string>;
-  pendingRequests: [NodeJS.Timeout, [() => void, () => void]][];
+  pendingRequests: [ReturnType<typeof setTimeout>, [() => void, () => void]][];
   // TODO
   requestErrors: RuntimeError[];
   networkErrors: RuntimeError[];

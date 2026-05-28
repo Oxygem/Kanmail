@@ -24,7 +24,7 @@ import WelcomeSettings from "./WelcomeSettings.jsx";
 @subscribe(settingsStore)
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component<ISettings> {
-  getNewEmailsInterval: NodeJS.Timeout;
+  getNewEmailsInterval: ReturnType<typeof setInterval>;
 
   getFoldersToSync() {
     return _.concat(

@@ -396,7 +396,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     return (
       <div className="sender-colors-list">
-        {entries.map(([email, color]) => this.renderSenderColorRow(email, color))}
+        {entries.map(([email, color]) => this.renderSenderColorRow(email, color ?? ""))}
       </div>
     );
   }

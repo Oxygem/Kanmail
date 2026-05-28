@@ -168,9 +168,9 @@ class Keyboard {
   getShortcuts = (): Shortcut[] => Array.from(this.shortcuts.values());
 
   getBindingsFor = (id: string): Binding[] => {
-    const overrides = settingsStore.props.system?.keyboardShortcuts;
-    if (overrides && id in overrides) {
-      return overrides[id];
+    const override = settingsStore.props.system?.keyboardShortcuts?.[id];
+    if (override) {
+      return override;
     }
     return this.shortcuts.get(id)?.defaults ?? [];
   };
