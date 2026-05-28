@@ -107,20 +107,22 @@ func (k *Kanmail) Run() error {
 		AppName: startApp,
 	}
 	// Restore saved window position and size
-	if state, err := k.Caches.WindowStateCache.Get(ctx, mainWindowName); err != nil {
+	savedState, err := k.Caches.WindowStateCache.Get(ctx, mainWindowName)
+	if err != nil {
 		k.log.Warn().Err(err).Msg("Failed to get saved window state")
-	} else if state != nil {
+	} else if savedState != nil {
 		k.log.Debug().
-			Int("x", state.X).
-			Int("y", state.Y).
-			Int("width", state.Width).
-			Int("height", state.Height).
+			Int("x", savedState.X).
+			Int("y", savedState.Y).
+			Int("width", savedState.Width).
+			Int("height", savedState.Height).
+			Str("screen_id", savedState.ScreenID).
 			Msg("Restoring window state")
-		options.X = state.X
-		options.Y = state.Y
-		if state.Width > 100 && state.Height > 100 {
-			options.Width = state.Width
-			options.Height = state.Height
+		options.X = savedState.X
+		options.Y = savedState.Y
+		if savedState.Width > 100 && savedState.Height > 100 {
+			options.Width = savedState.Width
+			options.Height = savedState.Height
 		}
 	}
 
@@ -136,6 +138,29 @@ func (k *Kanmail) Run() error {
 	k.App.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		// Initial position doesn't seem to work (macOS)?
 		emailsWindow.SetPosition(options.X, options.Y)
+
+		// When the saved screen is no longer at the saved coordinates (display
+		// rearranged, monitor unplugged, screen ID changed across a cable
+		// swap), the absolute coords would otherwise land on the wrong screen.
+		// Look the saved screen up in the current layout and re-anchor.
+		if savedState == nil || savedState.ScreenID == "" {
+			return
+		}
+		target := findRestoreScreen(k.App.Screen.GetAll(), savedState)
+		if target == nil {
+			if screen, err := emailsWindow.GetScreen(); err != nil {
+				k.log.Warn().Err(err).Msg("Failed to read window screen for restore")
+				return
+			} else {
+				target = screen
+			}
+		}
+		if target == nil {
+			return
+		}
+		offsetX := savedState.X - savedState.ScreenX
+		offsetY := savedState.Y - savedState.ScreenY
+		emailsWindow.SetPosition(target.X+offsetX, target.Y+offsetY)
 	})
 
 	var saveLock sync.Mutex
@@ -146,6 +171,17 @@ func (k *Kanmail) Run() error {
 		x, y := emailsWindow.Position()
 		width, height := emailsWindow.Size()
 		state := caches.WindowState{X: x, Y: y, Width: width, Height: height}
+
+		if screen, err := emailsWindow.GetScreen(); err != nil {
+			k.log.Warn().Err(err).Msg("Failed to read window screen for save")
+		} else if screen != nil {
+			state.ScreenID = screen.ID
+			state.ScreenX = screen.X
+			state.ScreenY = screen.Y
+			state.ScreenWidth = screen.Size.Width
+			state.ScreenHeight = screen.Size.Height
+		}
+
 		if err := k.Caches.WindowStateCache.Store(ctx, mainWindowName, state); err != nil {
 			k.log.Warn().Err(err).Msg("Failed to save window state")
 		} else {
@@ -154,6 +190,7 @@ func (k *Kanmail) Run() error {
 				Int("y", y).
 				Int("width", width).
 				Int("height", height).
+				Str("screen_id", state.ScreenID).
 				Msg("Saved window state")
 		}
 	}
@@ -170,4 +207,32 @@ func (k *Kanmail) Run() error {
 	})
 
 	return k.App.Run()
+}
+
+// findRestoreScreen returns the screen in the current layout that best matches
+// the screen the window was on when state was saved. Display IDs are not
+// stable across reboots or cable replugs, so we also fall back to origin
+// equality (same position in the virtual desktop) and finally to any screen
+// whose bounds enclose the saved screen's origin.
+func findRestoreScreen(screens []*application.Screen, saved *caches.WindowState) *application.Screen {
+	if saved == nil || saved.ScreenID == "" {
+		return nil
+	}
+	for _, s := range screens {
+		if s.ID == saved.ScreenID {
+			return s
+		}
+	}
+	for _, s := range screens {
+		if s.X == saved.ScreenX && s.Y == saved.ScreenY {
+			return s
+		}
+	}
+	for _, s := range screens {
+		if saved.ScreenX >= s.X && saved.ScreenX < s.X+s.Bounds.Width &&
+			saved.ScreenY >= s.Y && saved.ScreenY < s.Y+s.Bounds.Height {
+			return s
+		}
+	}
+	return nil
 }
