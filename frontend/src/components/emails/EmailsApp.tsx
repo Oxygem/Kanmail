@@ -113,9 +113,9 @@ export default class EmailsApp extends React.Component<ISettings> {
       const columnMetaStore = getColumnMetaStore(folder);
       if (columnMetaStore.props.isSyncing) {
         console.debug(`[EmailsApp] Not syncing ${folder} as we are already syncing!`);
-        return;
+      } else {
+        await mainEmailStore.syncFolderEmails(folder, {});
       }
-      await mainEmailStore.syncFolderEmails(folder, {});
     }
 
     // Reschedule the next loop call
