@@ -6,7 +6,6 @@ import { ALIAS_FOLDERS } from "../../constants.ts";
 
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore } from "../../stores/columns.ts";
-import filterStore from "../../stores/filters.ts";
 import searchStore from "../../stores/search.js";
 import settingsStore from "../../stores/settings.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
@@ -21,7 +20,7 @@ interface IEmailColumnHeaderProps {
   isLoading?: boolean;
   isSyncing?: boolean;
 
-  accountName?: string;
+  currentAccount?: string;
   counts?: {
     [_: string]: number;
   };
@@ -115,7 +114,7 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
   }
 
   renderMeta() {
-    const totalAccounts = this.props.accountName
+    const totalAccounts = this.props.currentAccount
       ? 1
       : _.size(this.props.counts);
 
@@ -126,9 +125,10 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
     const totalEmails = _.reduce(
       this.props.counts,
       (memo, value, accountKey) => {
-        if (!this.props.accountName || accountKey === this.props.accountName) {
-          memo += value;
+        if (this.props.currentAccount && accountKey !== this.props.currentAccount) {
+          return memo;
         }
+        memo += value;
         if (value > 1000) {
           accountHasMany = true;
         }
@@ -168,7 +168,7 @@ export default class EmailColumnHeaderWrapper extends EmailColumnHeader {
   render() {
     const WrappedEmailColumnHeader = subscribe(
       getColumnMetaStore(this.props.id),
-      [filterStore, ["accountName"]],
+      [settingsStore, ["currentAccount"]],
       [searchStore, ["isSearching"]]
     )(EmailColumnHeader);
 

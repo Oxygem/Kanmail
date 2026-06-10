@@ -27,10 +27,13 @@ class SettingsStore extends BaseStore {
 	}
 
 	getCurrentColumns(): Array<string> {
-		if (!this.props.columnGroups[this.props.currentColumnGroup]) {
-			this.props.columnGroups[this.props.currentColumnGroup] = [];
+		const key = this.props.currentColumnGroup;
+		let columns = this.props.columnGroups[key];
+		if (!columns) {
+			columns = [];
+			this.props.columnGroups[key] = columns;
 		}
-		return this.props.columnGroups[this.props.currentColumnGroup];
+		return columns;
 	}
 
 	getPrevColumns(): Array<string> {
@@ -102,8 +105,9 @@ class SettingsStore extends BaseStore {
 
 	async moveColumn(name: string, position: number) {
 		this.savePrevProps();
-		const index = this.props.columnGroups[this.props.currentColumnGroup].indexOf(name);
-		arrayMove(this.props.columnGroups[this.props.currentColumnGroup], index, index + position);
+		const columns = this.getCurrentColumns();
+		const index = columns.indexOf(name);
+		arrayMove(columns, index, index + position);
 		await this.putSettings();
 	}
 
