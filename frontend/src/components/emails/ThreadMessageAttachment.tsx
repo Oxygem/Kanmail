@@ -59,7 +59,7 @@ export default class ThreadMessageAttachment extends React.Component<
     }))).catch((ev) => (this.setState({
       downloading: false,
       downloaded: false,
-      downloadError: ev,
+      downloadError: ev?.message ?? String(ev),
     })));
   };
 

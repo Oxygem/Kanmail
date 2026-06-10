@@ -96,19 +96,26 @@ func (f *Folder) reset() {
 	f.lastSentDate = time.Now().Add(24 * time.Hour)
 }
 
-func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) error {
-	return f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) (imap.UID, error) {
+	var assignedUID imap.UID
+	err := f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
 		size := int64(b.Len())
 		appendCmd := conn.Append(string(f.Name), size, nil)
 		if _, err := appendCmd.Write(b.Bytes()); err != nil {
 			return fmt.Errorf("failed to write message: %w", err)
 		} else if err := appendCmd.Close(); err != nil {
 			return fmt.Errorf("failed to close message: %w", err)
-		} else if _, err := appendCmd.Wait(); err != nil {
+		}
+		data, err := appendCmd.Wait()
+		if err != nil {
 			return fmt.Errorf("APPEND command failed: %w", err)
+		}
+		if data != nil {
+			assignedUID = data.UID
 		}
 		return nil
 	})
+	return assignedUID, err
 }
 
 // Fetch & search (does not alter folder state, no lock)
@@ -893,57 +900,17 @@ func (f *Folder) fetchEmailHeadersWithConnection(
 		emails = append(emails, email)
 		uidToEmail[msg.UID] = email
 
-		var textPart, htmlPart, displayPart *types.BodyPart
-		var parts []types.BodyPart
-		msg.BodyStructure.Walk(func(part []int, body imap.BodyStructure) bool {
-			bstruct, ok := body.(*imap.BodyStructureSinglePart)
-			if !ok {
-				return true
-			}
-			bPart := types.NewBodyPartFromStructure(part, bstruct)
-			parts = append(parts, bPart)
-			if body.MediaType() == "text/plain" {
-				textPart = &bPart
-			} else if body.MediaType() == "text/html" {
-				htmlPart = &bPart
-			}
-			return true
-		})
-
-		// Find the best "display" part
-		if htmlPart == nil {
-			// No HTML -> text or nothing
-			displayPart = textPart
-		} else if textPart == nil {
-			// No text -> HTML or nothing
-			displayPart = htmlPart
-		} else if htmlPart.Size < (textPart.Size * 3) {
-			// Pick text > HTML if relatively close in size (3x)
-			// Idea here is an email with just <p> wrappers is probably generated from the plaintext,
-			// so just use that and avoid rendering HTML in an iframe. The 3x is a finger in the air
-			// based on random testing.
-			displayPart = textPart
-		} else {
-			displayPart = htmlPart
-		}
-
+		parts, textPart, htmlPart, displayPart := types.ExtractBodyParts(msg.BodyStructure)
 		email.Parts = parts
-
-		if displayPart != nil {
-			email.PartDisplay = displayPart
-		}
+		email.PartText = textPart
+		email.PartHTML = htmlPart
+		email.PartDisplay = displayPart
 
 		// Prefer text > html for excerpt
-		var partForExcerpt *types.BodyPart
-		if htmlPart != nil {
-			partForExcerpt = htmlPart
-			email.PartHTML = htmlPart
-		}
+		partForExcerpt := htmlPart
 		if textPart != nil {
 			partForExcerpt = textPart
-			email.PartText = textPart
 		}
-
 		if partForExcerpt != nil {
 			partsToFetch[email.UID] = *partForExcerpt
 		}

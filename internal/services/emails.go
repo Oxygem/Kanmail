@@ -85,7 +85,7 @@ func (e *EmailsService) SendEmail(
 	ctx context.Context,
 	accountName types.AccountName,
 	options emails.SendOptions,
-) error {
+) (*types.Email, error) {
 	ctx = e.log.With().Str("method", "SendEmail").Logger().WithContext(ctx)
 	defer util.LogPanic(ctx)
 
@@ -95,10 +95,11 @@ func (e *EmailsService) SendEmail(
 
 	account := e.accounts.GetOrCreateAccount(ctx, accountName)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
 	}
 
-	return types.WrapAccountError(accountName, account.SendEmail(ctx, options))
+	email, err := account.SendEmail(ctx, options)
+	return email, types.WrapAccountError(accountName, err)
 }
 
 func (e *EmailsService) GetAccountFolderNames(

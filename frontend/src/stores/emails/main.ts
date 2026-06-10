@@ -2,6 +2,7 @@ import _ from "lodash";
 
 import { PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { DockService } from "../../../bindings/github.com/wailsapp/wails/v3/pkg/services/dock/index.ts";
 import { INBOX } from "../../constants.ts";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
@@ -300,6 +301,28 @@ class MainEmails extends BaseEmails {
         this.processEmailChanges(options);
       }
     });
+  }
+
+  // Optimistically inject a just-sent email into the sent folder, rebuild
+  // threads synchronously, and return the rebuilt thread (if any) containing
+  // the new message. Used so a sent quick reply appears in the open thread
+  // immediately, without waiting for an IMAP sync round-trip.
+  injectSentEmail(email: Email): Thread | null {
+    console.debug(`[mainEmailStore] injecting email: ${email}`);
+
+    const accountName = email.accountName;
+    this.addEmailsToAccountFolder(accountName, "sent", [email]);
+
+    // processEmailChanges is debounced; _processEmailChanges runs synchronously.
+    this._processEmailChanges([[{ forceProcess: true }]]);
+
+    const accountMessageId = `${accountName}-${email.messageId}`;
+    const sentStore = getColumnStore("sent");
+    const threads = sentStore.props.threads || [];
+    return _.find(
+      threads,
+      (t) => _.some(t, (m) => m.accountMessageId === accountMessageId),
+    ) || null;
   }
 }
 

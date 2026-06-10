@@ -3,6 +3,7 @@ import React from "react";
 
 import { Flag } from "../../../bindings/github.com/emersion/go-imap/v2/index.ts";
 import Tooltip from "../../components/Tooltip.tsx";
+import QuickReply from "../../components/emails/QuickReply.tsx";
 import ThreadMessage from "../../components/emails/ThreadMessage.jsx";
 import { subscribe } from "../../stores/base.tsx";
 import threadStore, { IThreadStoreProps } from "../../stores/thread.ts";
@@ -104,6 +105,19 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
     });
   }
 
+  renderQuickReply() {
+    const { messages, fetching } = this.props;
+    if (fetching || !messages || messages.length === 0) {
+      return null;
+    }
+    const latestMessage = messages[messages.length - 1];
+    const isDraft = _.includes(_.keys(latestMessage.folderUids), "drafts");
+    if (isDraft) {
+      return null;
+    }
+    return <QuickReply latestMessage={latestMessage} />;
+  }
+
   render() {
     if (!this.props.messages) {
       return null;
@@ -120,7 +134,10 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
           onClick={(ev) => ev.stopPropagation()}
         >
           {this.renderTitle()}
-          <section id="content">{this.renderContent()}</section>
+          <section id="content">
+            {this.renderContent()}
+            {this.renderQuickReply()}
+          </section>
         </section>
       </section>
     );

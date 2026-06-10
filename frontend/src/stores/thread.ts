@@ -120,6 +120,19 @@ class ThreadStore extends BaseStore {
     this.loadThread(this.props.thread);
   }
 
+  // Replace the open thread snapshot with an updated one (e.g. after an
+  // optimistically-injected sent reply). knownBodies pre-seeds body content for
+  // messages whose HTML we already have locally, skipping the IMAP fetch.
+  replaceCurrentThread(newThread: Thread, knownBodies?: Map<string, string>) {
+    if (!this.isOpen) {
+      return;
+    }
+    this.props.thread = newThread;
+    this.props.messages = [];
+    this.triggerUpdate();
+    this.loadThread(newThread, knownBodies);
+  }
+
   close(isClosing = true) {
     if (!this.isOpen) {
       return;
@@ -158,7 +171,7 @@ class ThreadStore extends BaseStore {
     this.loadThread(thread);
   }
 
-  loadThread(thread: Thread) {
+  loadThread(thread: Thread, knownBodies?: Map<string, string>) {
     const currentLoadId = ++this.loadId;
 
     // First split thread up into one per account
@@ -191,6 +204,16 @@ class ThreadStore extends BaseStore {
 
     const fetchedParts = new Map<string, BodyPartResp | null>();
 
+    // Pre-seed body content for messages we already have locally (e.g. just-sent replies).
+    if (knownBodies) {
+      knownBodies.forEach((body, accountMessageId) => {
+        fetchedParts.set(accountMessageId, new BodyPartResp({
+          data: body,
+          trusted: true,
+        }));
+      });
+    }
+
     // For each account get folder/parts pairs and for each of those create the fetch requests
     accountToThread.forEach((aThread, accountName) => {
       const folderUids = getFolderUidsForThread(aThread);
@@ -198,9 +221,16 @@ class ThreadStore extends BaseStore {
         const parts: FetchPartsMap = {};
         const uidToAccountMessageId: { [_: string]: string } = {};
         _.each(messageParts, (messagePart, uid) => {
+          if (fetchedParts.has(messagePart.accountMessageId)) {
+            // Already have the body inline — skip the remote fetch for this UID.
+            return;
+          }
           parts[uid] = messagePart.part;
           uidToAccountMessageId[uid] = messagePart.accountMessageId;
         })
+        if (Object.keys(parts).length === 0) {
+          return;
+        }
         requests.push(
           requestStore.doFetchRequest(
             `Fetch ${Object.keys(uidToAccountMessageId).length} parts in ${accountName}/${folderName}`,

@@ -13,14 +13,19 @@ import {
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import {
-  AccountSettings,
   Address,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore, { ISystem } from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
+import {
+  AccountAddressOption,
+  getAccountContactOptions,
+  prependIfNotPresent,
+} from "../../util/send.ts";
 import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
 import ControlInput from "../emails/ControlInput.tsx";
@@ -31,40 +36,7 @@ interface addressOption {
   label: string,
 }
 
-interface accountAddressOption {
-  value: [_: string, _: Address],
-  label: string,
-}
-
-function getAccountContactOptions(account: AccountSettings): accountAddressOption[] {
-  if (account.contacts && account.contacts.length > 0) {
-    return account.contacts.map(addr => ({
-      value: [account.name, addr],
-      label: formatAddress(addr),
-    }))
-  }
-
-  const addr = new Address({
-    name: "",
-    email: account.smtpSettings.username,
-  })
-
-  return [{
-    value: [account.name, addr],
-    label: formatAddress(addr),
-  }]
-}
-
-function prependIfNotPresent(prependTo, prependString) {
-  if (
-    prependTo.startsWith(prependString) ||
-    prependTo.startsWith(prependString.toLowerCase()) ||
-    prependTo.startsWith(prependString.toUpperCase())
-  ) {
-    return prependTo;
-  }
-  return `${prependString}: ${prependTo}`;
-}
+type accountAddressOption = AccountAddressOption;
 
 function getFilename(path) {
   const bits = path.split("/");
@@ -97,6 +69,8 @@ interface ISendAppState {
 
 @subscribe(settingsStore, systemStore)
 export default class SendApp extends React.Component<ISendAppProps, ISendAppState> {
+  private releaseKeyboard: (() => void) | null = null;
+
   constructor(props: ISendAppProps) {
     super(props);
 
@@ -174,6 +148,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
 
     this.state = state;
+  }
+
+  componentDidMount() {
+    this.releaseKeyboard = keyboard.suspend("SendApp");
+  }
+
+  componentWillUnmount() {
+    if (this.releaseKeyboard) {
+      this.releaseKeyboard();
+      this.releaseKeyboard = null;
+    }
   }
 
   handleInputChange = (field: keyof ISendAppState, ev) => {

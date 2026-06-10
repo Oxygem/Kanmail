@@ -65,6 +65,44 @@ func NewBodyPartFromStructure(id []int, bs *imap.BodyStructureSinglePart) BodyPa
 	}
 }
 
+// ExtractBodyParts walks an IMAP BodyStructure and produces the flat Parts
+// list plus the preferred text, HTML, and display parts. The display heuristic
+// picks the text part over HTML when their sizes are within 3x (an email with
+// only <p>-wrapped plaintext is treated as plain).
+func ExtractBodyParts(bs imap.BodyStructure) (parts []BodyPart, textPart, htmlPart, displayPart *BodyPart) {
+	if bs == nil {
+		return nil, nil, nil, nil
+	}
+
+	bs.Walk(func(path []int, body imap.BodyStructure) bool {
+		bstruct, ok := body.(*imap.BodyStructureSinglePart)
+		if !ok {
+			return true
+		}
+		bPart := NewBodyPartFromStructure(path, bstruct)
+		parts = append(parts, bPart)
+		switch body.MediaType() {
+		case "text/plain":
+			textPart = &bPart
+		case "text/html":
+			htmlPart = &bPart
+		}
+		return true
+	})
+
+	switch {
+	case htmlPart == nil:
+		displayPart = textPart
+	case textPart == nil:
+		displayPart = htmlPart
+	case htmlPart.Size < textPart.Size*3:
+		displayPart = textPart
+	default:
+		displayPart = htmlPart
+	}
+	return
+}
+
 type Email struct {
 	// Internal meta
 	AccountName AccountName `json:"accountName"`

@@ -398,6 +398,103 @@ section#thread {
       }
     }
   }
+
+  div.quick-reply {
+    &.collapsed div.prompt {
+      background: @inputBackgroundColor;
+      border-color: @inputBorderColor;
+      color: @lightTextGrey;
+
+      i {
+        color: @midGrey;
+      }
+    }
+
+    &.collapsed:hover div.prompt {
+      border-color: @formBorderGreyActive;
+      color: @bodyTextColor;
+
+      i {
+        color: @blue;
+      }
+    }
+
+    &.expanded {
+      background: @threadBackgroundColor;
+      border-color: @inputBorderColor;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    div.quick-reply-header {
+      background: @inputBackgroundColor;
+      border-bottom-color: @inputBorderColor;
+
+      div.mode-toggle button {
+        color: @lightTextGrey;
+
+        &:hover:not([disabled]) {
+          background: @buttonHoverBackgroundColor;
+          color: @bodyTextColor;
+        }
+
+        &.active {
+          background: @buttonHoverBackgroundColor;
+          color: @blue;
+        }
+      }
+
+      a.pop-out {
+        color: @lightTextGrey;
+
+        &:hover {
+          color: @blue;
+          background: @threadMessageControlLinkHoverBackgroundColor;
+        }
+      }
+    }
+
+    div.recipients {
+      background: @threadBackgroundColor;
+      border-bottom-color: @inputBorderColor;
+      color: @bodyTextColor;
+
+      span.label {
+        color: @labelColor;
+      }
+    }
+
+    .squire-editor-container {
+      div.toolbar {
+        background: @inputBackgroundColor;
+        border-bottom-color: @inputBorderColor;
+
+        button {
+          background: transparent;
+          color: @lightTextGrey;
+
+          &:hover {
+            background: @buttonHoverBackgroundColor;
+            color: @bodyTextColor;
+          }
+
+          &.active {
+            background: @buttonHoverBackgroundColor;
+            color: @blue;
+          }
+        }
+      }
+
+      .squire-editor {
+        background: @threadBackgroundColor;
+        color: @bodyTextColor;
+      }
+    }
+
+    div.quick-reply-actions {
+      background: @inputBackgroundColor;
+      border-top-color: @inputBorderColor;
+    }
+  }
 }
 
 /*
