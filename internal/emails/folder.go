@@ -84,6 +84,9 @@ func NewFolder(account *Account, name types.FolderName, aliasName types.FolderNa
 		AccountName: account.Name,
 		Name:        name,
 		AliasName:   aliasName,
+
+		// Matches reset() - a future date means nothing has been sent yet
+		lastSentDate: time.Now().Add(24 * time.Hour),
 	}
 }
 
@@ -366,6 +369,19 @@ func (f *Folder) SearchReferences(ctx context.Context, references []EmailRef) (m
 // Sync & pagination (alters folder state, uses lock)
 //
 
+// Pagination state sent to the frontend, must be called with the folder lock
+// held and the folder initialized.
+func (f *Folder) paginateMeta() PaginateRespMeta {
+	return PaginateRespMeta{
+		Count:        f.uids.Length(),
+		LastSentDate: f.lastSentDate,
+		// Exhausted when the UID list covers the whole folder (uidsStartAt 0) and
+		// nothing remains below lastSentUID. When nothing has been sent yet
+		// lastSentUID-1 wraps to maxuint32, matching PaginateEmails.
+		Exhausted: f.uidsStartAt == 0 && len(f.uids.PaginateFrom(f.lastSentUID-1, 1)) == 0,
+	}
+}
+
 func (f *Folder) PaginateEmails(ctx context.Context, options PaginateOptions) (*PaginateResp, error) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -406,9 +422,7 @@ func (f *Folder) PaginateEmails(ctx context.Context, options PaginateOptions) (*
 
 	if len(uids) == 0 {
 		return &PaginateResp{
-			Meta: PaginateRespMeta{
-				Count: f.uids.Length(),
-			},
+			Meta: f.paginateMeta(),
 		}, nil
 	}
 
@@ -433,9 +447,7 @@ func (f *Folder) PaginateEmails(ctx context.Context, options PaginateOptions) (*
 
 	return &PaginateResp{
 		Emails: emails,
-		Meta: PaginateRespMeta{
-			Count: f.uids.Length(),
-		},
+		Meta:   f.paginateMeta(),
 	}, nil
 }
 
@@ -471,6 +483,9 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
 			f.reset()
+			// Post-reset the count is unknown and the (future) lastSentDate tells
+			// the frontend nothing has been sent yet
+			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
 			return nil
 		}
 
@@ -502,11 +517,12 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
 			f.reset()
+			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
 			return nil
 		}
 
 		added, removed, unchanged := f.uids.UpdateFrom(ctx, f.lastSentUID, NewUIDList(newUIDs...))
-		resp.Meta.Count = f.uids.Length()
+		resp.Meta = f.paginateMeta()
 
 		log.Info().
 			Int("added", len(added)).

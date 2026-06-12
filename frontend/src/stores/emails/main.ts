@@ -89,9 +89,11 @@ class MainEmails extends BaseEmails {
 
     // Now check if we need to paginate, and which accounts. Paginate any accounts that have less
     // than the batch side emails shown.
-    // TODO: handle no more uids - or just allow backend to?
     const accountsToPaginate: string[] = [];
     _.each(settingsStore.props.accounts, a => {
+      if (this.getMetaForAccountFolder(a.name, folderName)?.exhausted) {
+        return;
+      }
       const accountFolder = this.getAccountFolder(a.name, folderName);
       if (Object.keys(accountFolder).length < settingsStore.props.system.batchSize) {
         accountsToPaginate.push(a.name);
@@ -114,40 +116,56 @@ class MainEmails extends BaseEmails {
       return;
     }
 
-    if (allAccounts) {
-      console.debug(`[mainEmailStore] onsScrollFolder: ${folderName}, paginating all accounts`)
-      this.getFolderEmails(folderName);
-      return;
-    } else if (accountNames) {
-      console.debug(`[mainEmailStore] onsScrollFolder: ${folderName}, paginating accounts: ${accountNames}`)
+    if (accountNames) {
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating accounts: ${accountNames}`)
       this.getFolderEmails(folderName, { accountNames })
       return;
     }
 
-    // If we're not near the bottom: check for outsized accounts, paginate small ones
-    const accountToSize: Map<string, number> = new Map();
-    let totalCount = 0;
-    _.each(settingsStore.props.accounts, a => {
-      const accountFolder = this.getAccountFolder(a.name, folderName);
-      const size = Object.keys(accountFolder).length;
-      accountToSize.set(a.name, size);
-      totalCount += size;
+    // Respect any current account filter, then drop accounts with nothing left
+    const unexhausted = _.filter(
+      settingsStore.props.currentAccount
+        ? [settingsStore.props.currentAccount]
+        : this.getAccountKeys(),
+      (accountName) => !this.getMetaForAccountFolder(accountName, folderName)?.exhausted,
+    );
+    if (unexhausted.length === 0) {
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, all accounts exhausted`)
+      return;
+    }
+
+    if (allAccounts) {
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating all accounts`)
+      this.getFolderEmails(folderName, { accountNames: unexhausted });
+      return;
+    }
+
+    // Not near the bottom: advance the account(s) holding back the date watermark, ie those whose
+    // pagination frontier (oldest loaded email date) is the most recent. This aligns accounts by
+    // date rather than count, so new batches always land below the rendered (watermark clipped)
+    // threads instead of inserting above the scroll position.
+    const frontierAccounts: string[] = [];
+    let maxFrontier: number | null = null;
+    _.each(unexhausted, (accountName) => {
+      const meta = this.getMetaForAccountFolder(accountName, folderName);
+      if (!meta?.lastSentDate) {
+        return; // not paginated yet, initialization is onShowFolder's job
+      }
+      const frontier = new Date(meta.lastSentDate).getTime();
+      if (maxFrontier === null || frontier > maxFrontier) {
+        maxFrontier = frontier;
+        frontierAccounts.length = 0;
+        frontierAccounts.push(accountName);
+      } else if (frontier === maxFrontier) {
+        frontierAccounts.push(accountName);
+      }
     });
 
-    // Constants for account size balancing
-    const SMALL_ACCOUNT_THRESHOLD = 0.5; // Accounts with less than 50% of average size are considered small
-
-    const averageSize = totalCount / accountToSize.size;
-    const smallAccounts = Array.from(accountToSize.entries())
-      .filter(([_, count]) => count < averageSize * SMALL_ACCOUNT_THRESHOLD)
-      .map(([accountName]) => accountName);
-
-    // Only trigger additional loading if we have small accounts to balance
-    if (smallAccounts.length > 0) {
-      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating small accounts: ${smallAccounts}`, accountToSize)
-      this.getFolderEmails(folderName, { accountNames: smallAccounts });
+    if (frontierAccounts.length > 0) {
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating watermark accounts: ${frontierAccounts}`)
+      this.getFolderEmails(folderName, { accountNames: frontierAccounts });
     } else {
-      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, not bottom & accounts balanced:`, accountToSize)
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, no accounts to paginate`)
     }
   }
 
@@ -288,6 +306,14 @@ class MainEmails extends BaseEmails {
     ).then(data => {
       data = data!; // TODO
 
+      // Meta-only changes (frontier date moved, account became exhausted) shift the column date
+      // watermark even when no new emails are returned, so trigger a reprocess for those too.
+      const prevMeta = this.getMetaForAccountFolder(accountName, folderName);
+      const metaChanged =
+        !prevMeta ||
+        prevMeta.exhausted !== data.meta.exhausted ||
+        prevMeta.lastSentDate !== data.meta.lastSentDate;
+
       this.setMetaForAccountFolder(accountName, folderName, data.meta);
 
       let changed = false;
@@ -297,7 +323,7 @@ class MainEmails extends BaseEmails {
         changed = true;
       }
 
-      if (changed || options.forceProcess) {
+      if (changed || metaChanged || options.forceProcess) {
         this.processEmailChanges(options);
       }
     });

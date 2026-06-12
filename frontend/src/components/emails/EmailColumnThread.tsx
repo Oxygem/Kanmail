@@ -493,8 +493,10 @@ export default class EmailColumnThread extends React.Component<
 
     requestStore.addUndoable(moveThread, undoMove);
 
+    // Top up the affected columns, letting the store pick which accounts to
+    // paginate (those holding back the date watermark)
     _.each(allMessageFolderUids, (_, folderName) => {
-      getEmailStore().onScrollFolder(folderName, false, [accountKey]);
+      getEmailStore().onScrollFolder(folderName, false);
     });
   };
 

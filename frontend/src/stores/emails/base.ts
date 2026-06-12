@@ -209,6 +209,41 @@ export default class BaseEmails {
     this.meta[folderName][accountKey] = meta;
   }
 
+  getMetaForAccountFolder(accountKey: string, folderName: string) {
+    return (this.meta[folderName] || {})[accountKey];
+  }
+
+  // The date down to which a folder's emails are complete: every account still
+  // having more emails (not exhausted) has paginated at least this far back.
+  // Threads older than this may be missing messages from accounts that haven't
+  // loaded that far yet. Null when no account has pagination meta (eg search).
+  getFolderDateWatermark(folderName: string): Date | null {
+    const accountNames = settingsStore.props.currentAccount
+      ? [settingsStore.props.currentAccount]
+      : this.getAccountKeys();
+
+    let watermark: Date | null = null;
+    const now = new Date();
+
+    _.each(accountNames, (accountName) => {
+      const meta = this.getMetaForAccountFolder(accountName, folderName);
+      if (!meta || meta.exhausted || !meta.lastSentDate) {
+        return;
+      }
+      const frontier = new Date(meta.lastSentDate);
+      // A future date means the backend hasn't sent anything yet (it
+      // initializes to now+24h), don't block rendering on it
+      if (frontier > now) {
+        return;
+      }
+      if (!watermark || frontier > watermark) {
+        watermark = frontier;
+      }
+    });
+
+    return watermark;
+  }
+
   getAccountFolderKey(accountName: string, folderName: string): string {
     return `${accountName}-${folderName}`;
   }
@@ -704,6 +739,17 @@ export default class BaseEmails {
               // @ts-ignore
               _.clone(_.filter(thread, (msg) => msg.folderUids["trash"]))
             )
+          );
+        }
+
+        // Only render threads down to the column's date watermark - anything
+        // older may be incomplete and would later insert *above* the user's
+        // scroll position as other accounts paginate that far back.
+        const watermark = this.getFolderDateWatermark(columnName);
+        if (watermark) {
+          threads = _.filter(
+            threads,
+            (thread) => new Date(thread[0].date) >= watermark
           );
         }
 

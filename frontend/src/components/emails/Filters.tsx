@@ -5,6 +5,7 @@ import { DropTarget } from "react-dnd";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { ALIAS_FOLDERS, ALIAS_TO_ICON } from "../../constants.ts";
 import { subscribe } from "../../stores/base.tsx";
+import { getEmailStore } from "../../stores/emails/controller.ts";
 import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
@@ -154,6 +155,8 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
 
   setAccountFilter = (accountName) => {
     settingsStore.setCurrentAccount(accountName);
+    // The column date watermark depends on the account filter, rebuild threads
+    getEmailStore().processEmailChanges({ forceProcess: true });
   };
 
   toggleShowAllFolders = () => {

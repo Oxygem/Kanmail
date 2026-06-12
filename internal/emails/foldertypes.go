@@ -1,6 +1,8 @@
 package emails
 
 import (
+	"time"
+
 	"github.com/emersion/go-imap/v2"
 
 	"github.com/oxygem/kanmail/internal/types"
@@ -13,6 +15,11 @@ type PaginateOptions struct {
 
 type PaginateRespMeta struct {
 	Count int `json:"count"`
+	// Date of the oldest email sent to the frontend, ie how far back in time
+	// pagination has reached for this account folder
+	LastSentDate time.Time `json:"lastSentDate"`
+	// True when there are no more emails to paginate
+	Exhausted bool `json:"exhausted"`
 }
 
 type PaginateResp struct {
