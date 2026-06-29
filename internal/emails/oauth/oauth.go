@@ -272,7 +272,13 @@ func GetOAuthResponse(ctx context.Context, uid string) (*OAuthResponse, error) {
 	defer oauthRequestLock.Unlock()
 
 	if currentOAuthRequest == nil {
-		return nil, fmt.Errorf("no in-flight oauth request found")
+		// No request in flight: either none was started, or a prior poll already
+		// consumed the response and cleared it. The frontend polls on an interval
+		// and a tick almost always fires between the successful poll and its
+		// clearInterval, so this is an expected, benign state - return an empty
+		// response rather than an error that surfaces as a spurious alert.
+		zerolog.Ctx(ctx).Trace().Msg("No in-flight oauth request to return")
+		return nil, nil
 	}
 	resp := currentOAuthRequest.response
 	// Only return resp once
