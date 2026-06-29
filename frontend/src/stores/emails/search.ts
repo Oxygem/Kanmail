@@ -46,6 +46,21 @@ class SearchEmails extends BaseEmails {
     return Promise.all(requests).then(finishLoading).catch(finishLoading);
   };
 
+  onShowFolder = (folderName: string) => {
+    // Search results are driven by the active query. (Re)fetch them when a
+    // column is shown, but only once we actually have something to search for -
+    // toggling into search mode mounts the columns before a query exists.
+    if (!this.searchValue) {
+      return;
+    }
+    this.getFolderEmails(folderName, { reset: true });
+  };
+
+  onScrollFolder = (folderName: string) => {
+    // Search returns a single fixed result set per folder - nothing to paginate.
+    console.debug(`[searchEmailStore] onScrollFolder: ${folderName} is a no-op`);
+  };
+
   async searchEmails(accountName: string, folderName: string): Promise<void> {
     const emails = await requestStore.doFetchRequest(
       `Search & fetch emails from ${accountName}/${folderName}`,

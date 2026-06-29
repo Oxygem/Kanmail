@@ -10,11 +10,23 @@ function makeDefaults() {
 class SearchStore extends BaseStore {
   static storeKey = "searchStore";
 
+  focusHandler: (() => void) | null = null;
+
   constructor() {
     super();
 
     this.props = makeDefaults();
   }
+
+  setFocusHandler = (handler: (() => void) | null) => {
+    this.focusHandler = handler;
+  };
+
+  focus = () => {
+    if (this.focusHandler) {
+      this.focusHandler();
+    }
+  };
 
   open = () => {
     if (!this.props.isSearching) {
