@@ -1,6 +1,7 @@
 import _ from "lodash";
 
 import { AppService } from "../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import type EmailsApp from "./components/emails/EmailsApp.tsx";
 import EmailColumnThread from "./components/emails/EmailColumnThread.tsx";
 import cheatsheetStore from "./stores/cheatsheet.ts";
 import controlStore from "./stores/control.ts";
@@ -10,7 +11,7 @@ import settingsStore from "./stores/settings.ts";
 import threadStore from "./stores/thread.ts";
 import tooltipStore from "./stores/tooltip.ts";
 import { trackEvent } from "./util/analytics.ts";
-import { ensureInView } from "./util/element.ts";
+import { ensureInView, isPointInElement } from "./util/element.ts";
 import {
   getNextColumnThreadComponent,
   getNextThreadComponent,
@@ -96,6 +97,10 @@ class Keyboard {
   // The thread currently in keyboard focus (hovered or last-selected).
   currentComponent: EmailColumnThread | null = null;
 
+  // The mounted EmailsApp, used to find a thread to focus when entering
+  // keyboard mode with nothing selected.
+  emailsApp: EmailsApp | null = null;
+
   // id → Shortcut
   private shortcuts = new Map<string, Shortcut>();
 
@@ -122,6 +127,20 @@ class Keyboard {
   private handleWindowMouseMove = (ev: MouseEvent) => {
     this.lastCursorX = ev.clientX;
     this.lastCursorY = ev.clientY;
+
+    // Moving the mouse deactivates keyboard mode: if the focused thread isn't
+    // under the cursor, clear it (when it is, hover/mouseleave takes over).
+    // Skipped while a thread or control overlay is open, where mouse hover is
+    // intentionally ignored.
+    if (threadStore.isOpen || controlStore.props.open) {
+      return;
+    }
+    if (this.currentComponent) {
+      const el = this.currentComponent.element;
+      if (!el || !isPointInElement(ev.clientX, ev.clientY, el)) {
+        this.setThreadComponent(null);
+      }
+    }
   };
 
   isCursorStationary = (clientX: number, clientY: number): boolean =>
@@ -159,8 +178,10 @@ class Keyboard {
 
   register = (shortcut: Shortcut) => {
     if (this.shortcuts.has(shortcut.id)) {
-      console.warn(`[keyboard] Shortcut ${shortcut.id} already registered`);
-      return;
+      // Overwrite rather than bail so hot-reloads pick up the latest handler —
+      // the registry is a module-level singleton that survives HMR, and the
+      // re-run registration would otherwise keep the stale handler.
+      console.warn(`[keyboard] Re-registering shortcut ${shortcut.id}`);
     }
     this.shortcuts.set(shortcut.id, shortcut);
   };
@@ -247,6 +268,10 @@ class Keyboard {
     return true;
   };
 
+  // Enter keyboard mode from cold by focusing the first visible thread.
+  selectFirstThread = () =>
+    this.selectThread(this.emailsApp?.getFirstThreadComponent(), "nearest");
+
   selectNextThread = () =>
     this.selectThread(getNextThreadComponent(this.currentComponent), "end");
 
@@ -325,6 +350,13 @@ class Keyboard {
     }
 
     if (shortcut.scope === "thread" && !this.currentComponent) {
+      // Arrow keys with nothing selected enter keyboard mode at the first
+      // thread rather than doing nothing. Other thread shortcuts (archive,
+      // trash, ...) stay inert so they can't act on an unintended thread.
+      if (shortcut.id.startsWith("nav.")) {
+        ev.preventDefault();
+        this.selectFirstThread();
+      }
       return;
     }
 
@@ -393,11 +425,11 @@ keyboard.register({
 
 keyboard.register({
   id: "app.search",
-  description: "Toggle search",
+  description: "Focus search",
   scope: "global",
   defaults: [{ key: "/" }],
   handler: () => {
-    searchStore.toggle();
+    searchStore.focus();
     trackEvent("KeyboardToggleSearch");
   },
 });

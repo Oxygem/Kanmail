@@ -16,6 +16,11 @@ export function ensureInView(element: HTMLElement, options: ScrollIntoViewOption
   }
 }
 
+export function isPointInElement(x: number, y: number, element: Element): boolean {
+  const rect = element.getBoundingClientRect();
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
 export function stopEventPropagation(ev) {
   ev.stopPropagation();
 }
