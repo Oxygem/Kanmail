@@ -1,51 +1,107 @@
 /*
-    Control input overlay */
+    Control input overlay (command / move palette) — styled like the manage
+    workflows modal: a bordered token card with shadow. Themed via var(--*).
+*/
 
 section#control-background {
   position: absolute;
+  inset: 0;
   z-index: 9;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(100, 100, 100, 0.6);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 section#control {
-  margin: 200px auto 0 auto;
+  margin: 150px auto 0 auto;
   width: 600px;
-  border-radius: @borderRadius @borderRadius 0 0;
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 220px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--ring);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-win);
+  color: var(--ink);
   font-size: @bigTextSize;
 
   p {
-    padding: 20px 20px 0 20px;
+    flex: none;
+    padding: 16px 20px 4px;
     margin: 0;
+    font-size: 13px;
+    color: var(--muted);
   }
 
+  /* react-select (move/command options) */
   div.react-select__control {
-    margin-top: 10px;
+    margin: 0;
     border: none;
+    background: transparent;
+    box-shadow: none;
     font-size: @bigTextSize;
-    padding: 0 20px;
+    padding: 2px 12px 8px;
+    min-height: auto;
   }
 
-  div.react-select__menu {
-    border: none;
-    border-radius: 0 0 @borderRadius @borderRadius;
-  }
-
-  div.react-select__option {
-    padding: 4px 20px;
+  div.react-select__value-container {
+    padding: 2px 6px;
   }
 
   div.react-select__indicators {
     display: none;
   }
 
-  input {
-    margin: 10px 0;
-    font-size: @bigTextSize;
-    padding: 0 20px;
+  div.react-select__input-container,
+  div.react-select__single-value,
+  div.react-select__placeholder {
+    color: var(--ink);
+  }
+
+  // In-flow menu so the bordered card wraps the whole palette.
+  div.react-select__menu {
+    position: relative;
+    margin: 0;
     border: none;
+    border-top: 1px solid var(--divider);
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  div.react-select__menu-list {
+    padding: 6px;
+    max-height: 320px;
+  }
+
+  div.react-select__option {
+    padding: 9px 14px;
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+
+    &--is-focused {
+      background: var(--pill);
+    }
+
+    &--is-selected {
+      background: var(--grad-soft);
+      color: var(--brand-pink);
+    }
+  }
+
+  /* plain text input fallback (no select options) */
+  form {
+    margin: 0;
+  }
+
+  input {
+    margin: 0;
+    font-size: @bigTextSize;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--ink);
   }
 }

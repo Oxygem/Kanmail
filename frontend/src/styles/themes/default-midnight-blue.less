@@ -78,5 +78,34 @@
 @selectMenuHoverBackgroundColor: @midnightBlueMid;
 
 body.theme-default-midnight-blue {
+  .km-tokens-shared();
+  .km-tokens-dark();
+
+  /* midnight-blue palette → design tokens (override the shared dark defaults) */
+  --bg: @midnightBlueDark;
+  --ink: @midnightBlueText;
+  --sub: lighten(@midnightBlueTextMuted, 12%);
+  --muted: @midnightBlueTextMuted;
+  --faint: @midnightBlueTextDim;
+  --ring: rgba(74, 144, 194, 0.18);
+  --divider: rgba(197, 210, 224, 0.08);
+
+  --side-bg: @midnightBlueDarkest;
+  --side-ink: @midnightBlueText;
+  --side-muted: @midnightBlueTextMuted;
+  --side-ring: rgba(197, 210, 224, 0.08);
+  --side-active: rgba(74, 144, 194, 0.16);
+
+  --bar: @midnightBlueDarkest;
+  --pill: @midnightBlueMid;
+  --label: @midnightBlueMid;
+  --label-ink: @midnightBlueTextMuted;
+
+  --card: @midnightBlueDarkest;
+  --card-ring: rgba(197, 210, 224, 0.08);
+  --input: @midnightBlueDarkest;
+  --kbd: @midnightBlueMid;
+  --check-ring: rgba(197, 210, 224, 0.2);
+
   @import (multiple) "base.less";
 }

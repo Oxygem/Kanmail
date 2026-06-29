@@ -1,185 +1,486 @@
 /*
-    New email (send app) form */
+    New email (send app) form — redesigned compose window.
+    Maps the existing markup onto the .win-compose reference look using the
+    shared design tokens (var(--*)). Theme-aware: one rule set works in light
+    and dark.
+*/
 
 section#new-email {
-  padding-top: 40px;
-  height: 100%;
-}
+  /* Fill the window (the .frameless ancestor has auto height, so height:100%
+     would collapse) — this lets the flex column stretch, pinning the dock to
+     the bottom and giving the editor all the leftover space. */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
 
-form#send-form {
-  position: absolute;
-  width: 100%;
-  top: 40px;
-  bottom: 0;
-  justify-content: flex-start;
-  margin: 0;
+  /* --------------------------- titlebar -------------------------------- */
+  header.new-email.titlebar {
+    height: 44px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    background: var(--bar);
+    border-bottom: 1px solid var(--divider);
+    -webkit-app-region: drag;
 
-  label {
-    text-align: center;
-    padding-right: 10px;
-    font-size: 14px;
-    margin: 3px 0;
+    .title {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+
+      i {
+        font-size: 12px;
+      }
+    }
   }
 
-  div input {
-    padding: 2px 9px;
-    // margin: 0 2px;
-    font-size: 14px;
+  /* On macOS leave room for the native traffic-light controls. */
+  body.os-darwin & header.new-email.titlebar {
+    padding-left: 78px;
+  }
+
+  /* ------------------------------ form --------------------------------- */
+  form#send-form {
+    position: static;
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    outline: none;
-  }
-
-  input#subject {
-    height: 32px;
-    width: auto;
-    flex-grow: 1;
-  }
-
-  div#account,
-  div#to,
-  div#cc,
-  div#bcc {
-    flex-grow: 1;
-  }
-
-  label#message-label {
-    margin-top: 5px;
+    margin: 0;
+    justify-content: flex-start;
   }
 
   div.form-top {
-    padding: 10px;
+    flex: none;
   }
 
-  div.form-content {
+  /* ------------------------------ fields ------------------------------- */
+  .field {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--divider);
+
+    .lbl {
+      font-size: 12.5px;
+      color: var(--faint);
+      width: 52px;
+      flex: none;
+      text-align: left;
+      margin: 0;
+      padding: 0;
+    }
+
+    .recip {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .cc {
+      font-size: 12px;
+      color: var(--faint);
+      display: flex;
+      gap: 12px;
+      flex: none;
+
+      span {
+        cursor: pointer;
+      }
+      span:hover {
+        color: var(--ink);
+      }
+    }
+
+    input#subject.subject-val {
+      flex: 1;
+      height: auto;
+      width: auto;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      outline: none;
+
+      &::placeholder {
+        color: var(--faint);
+        font-weight: 500;
+      }
+    }
+  }
+
+  /* From account select styled as a .from-pill */
+  #field-from {
+    div#account {
+      flex: none;
+    }
+
+    div.react-select__control {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 4px 3px 10px;
+      border-radius: var(--r-md);
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      min-height: 0;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    /* Strip react-select's default vertical padding / separator so the pill
+       hugs its content instead of ballooning to the chevron's default size. */
+    div.react-select__value-container {
+      padding: 0;
+    }
+    div.react-select__indicator-separator {
+      display: none;
+    }
+    div.react-select__dropdown-indicator {
+      padding: 0 2px;
+    }
+    div.react-select__single-value {
+      margin: 0;
+    }
+
+    .from-pill-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      line-height: 1.2;
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 99px;
+        flex: none;
+      }
+      .nm {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .em {
+        font-size: 12.5px;
+        color: var(--faint);
+      }
+    }
+  }
+
+  /* To / Cc react-select restyled into recipient pills */
+  .recip {
+    /* The react-select container is a flex child here; let it grow to fill the
+       row (up to the Cc affordance) instead of collapsing to its content. */
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    div.react-select__control {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      min-height: 0;
+      padding: 0;
+      cursor: text;
+    }
+
+    div.react-select__value-container {
+      gap: 7px;
+      padding: 0;
+      flex-wrap: wrap;
+    }
+
+    div.react-select__multi-value {
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      border-radius: 99px;
+      margin: 2px 0;
+      padding: 2px 5px 2px 3px;
+      align-items: center;
+    }
+
+    div.react-select__multi-value__label {
+      padding: 0;
+      margin: 0;
+      color: var(--ink);
+    }
+
+    div.react-select__multi-value__remove {
+      color: var(--faint);
+      border-radius: 99px;
+      padding: 0 2px;
+
+      &:hover {
+        background: transparent;
+        color: var(--brand-pink);
+      }
+    }
+
+    .recip-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      .av {
+        width: 20px;
+        height: 20px;
+        border-radius: 99px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        flex: none;
+      }
+      .em {
+        font-size: 12.5px;
+        color: var(--ink);
+      }
+    }
+
+    div.react-select__menu {
+      border-radius: var(--r-md);
+      border: 1px solid var(--ring);
+      box-shadow: var(--shadow);
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    div.react-select__option {
+      padding: 6px 10px;
+      cursor: pointer;
+
+      &--is-focused {
+        background: var(--pill);
+      }
+    }
+
+    div.react-select__placeholder {
+      color: var(--faint);
+    }
+
+    div.react-select__input-container,
+    div.react-select__input {
+      color: var(--ink);
+      margin: 0;
+    }
+  }
+
+  /* ----------------------------- body ---------------------------------- */
+  div.compose-body.form-content {
+    flex: 1;
+    min-height: 0;
     overflow: auto;
-    flex-grow: 1;
-    max-height: 100%;
+    background: var(--bg);
+    padding: 0;
 
     div {
       width: 100%;
     }
   }
 
+  .sig-block {
+    border-top: 1px solid var(--divider);
+    margin: 13px 22px 0 22px;
+    padding-top: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .nm {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .rl {
+      font-size: 11.5px;
+      color: var(--faint);
+    }
+  }
+
+  /* --------------------------- attachments ----------------------------- */
   div.form-attachments {
+    flex: none;
     height: 60px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
-    padding-top: 8px;
+    padding: 0 22px;
+    border-top: 1px solid var(--divider);
+    background: var(--bar);
+
     &.empty {
       height: 0;
+      border-top: 0;
+      padding: 0;
     }
 
     .attachment {
-      padding: 5px;
-      margin-bottom: 10px;
+      padding: 6px 10px;
       margin-right: 10px;
-      border-radius: @borderRadius;
+      border-radius: var(--r-sm);
+      background: var(--pill);
+      border: 1px solid var(--ring);
       display: flex;
+      align-items: center;
+      cursor: pointer;
 
       i {
-        font-size: 24px;
+        font-size: 20px;
         margin-right: 10px;
         display: block;
+        color: var(--muted);
       }
 
       span {
         display: block;
         font-size: 12px;
-        font-family: Courier;
-        line-height: 12px;
+        line-height: 14px;
+        color: var(--ink);
+
+        & + span {
+          color: var(--faint);
+          font-size: 11px;
+        }
       }
     }
   }
 
-  div.ProseMirror {
-    height: 100%;
-    margin-top: -10px;
-    outline: none;
-    padding: 0 10px;
-  }
+  /* ------------------------------ dock --------------------------------- */
+  .compose-dock {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 22px;
+    border-top: 1px solid var(--divider);
+    background: var(--bar);
 
-  blockquote#reply-quote {
-    margin: 0;
-    // max-height: 100px;
-    overflow-y: auto;
-    border: 1px solid @formBorderGrey;
-
-    * {
-      pointer-events: none;
-    }
-  }
-
-  #include-quote {
-    label {
-      width: auto;
-      padding-left: 1px;
-      position: relative;
-    }
-    input {
-      width: auto;
-    }
-  }
-
-  div.buttons {
-    left: 60px;
-    padding: 5px 10px;
-    font-size: 16px;
-    border: none;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-
-    button.send.submit {
-      border-radius: @borderRadius 0 0 @borderRadius;
+    .spacer {
+      flex: 1;
     }
 
-    button.save {
-      border-radius: 0 @borderRadius @borderRadius 0;
+    .vrule {
+      width: 1px;
+      height: 22px;
+      background: var(--divider);
+      margin: 0 6px;
+      flex: none;
     }
 
-    button.attach {
-      left: auto;
-      right: 20px;
-      bottom: 10px;
-      float: right;
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 38px;
+      font-size: 13.5px;
+      padding: 0 20px 0 16px;
+      background: var(--grad);
+      color: #fff;
+      border: 0;
+      border-radius: var(--r-md);
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+      cursor: pointer;
+
+      i {
+        font-size: 13px;
+      }
+
+      &:hover {
+        filter: brightness(1.04);
+      }
     }
-  }
 
-  div.signature,
-  div.quote {
-    margin: 13px 10px 0 10px;
-  }
+    .tool-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      color: var(--muted);
+      border: 0;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 0;
 
-  div.signature {
-    margin-bottom: 10px;
+      &:hover {
+        background: var(--pill);
+        color: var(--ink);
+      }
 
-    p {
-      margin: 0;
+      &.active {
+        background: var(--pill);
+        color: var(--brand-pink);
+      }
+
+      &.danger {
+        color: var(--faint);
+
+        &:hover {
+          color: var(--brand-pink);
+          background: var(--pill);
+        }
+      }
     }
   }
 }
 
-
-.squire-editor-container {
-  .squire-editor {
+/* ----------------------------------------------------------------------- */
+/* SquireEditor inside the compose window — clean writing surface.         */
+/* Scoped under section#new-email so the inline quick-reply (thread.less)   */
+/* usage is unaffected.                                                     */
+/* ----------------------------------------------------------------------- */
+section#new-email {
+  .squire-editor-container {
     height: 100%;
-    outline: none;
-    padding: 40px 10px 0 10px;
-  }
+    display: flex;
+    flex-direction: column;
 
-  div.toolbar {
-    position: fixed;
-    left: 0;
-    right: 0;
-    padding-left: 6px;
-    padding-bottom: 10px;
+    .squire-editor {
+      flex: 1;
+      min-height: 0;
+      height: auto;
+      outline: none;
+      padding: 20px 22px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--ink);
 
-    button {
-      font-size: 16px;
+      p,
+      div.paragraph {
+        margin: 0 0 13px 0;
+      }
 
-        &.active {
-          background: black;
-        }
+      a {
+        color: var(--brand-pink);
+      }
+
+      blockquote {
+        border-left: 2px solid var(--divider);
+        margin: 0 0 13px 0;
+        padding-left: 12px;
+        color: var(--muted);
+      }
     }
   }
 }

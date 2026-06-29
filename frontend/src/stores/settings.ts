@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { EmailsService, SettingsService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, EventName, Settings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, EventName, FolderName, Settings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events } from "../../wails/runtime.js";
 import { setupThemes } from "../theme.ts";
 import { arrayMove } from "../util/array.ts";
@@ -80,6 +80,124 @@ class SettingsStore extends BaseStore {
 		delete (this.props.columnGroups[this.props.currentColumnGroup]);
 		this.props.currentColumnGroup = "";
 		await this.putSettings();;
+	}
+
+	/*
+		Workflow (column group) management for the toolbar switcher + manage modal.
+		The default group is keyed by "" and is always present; named groups are
+		the user's "workflows".
+	*/
+
+	getColumnGroupNames(): string[] {
+		// Default ("") first, then named groups in insertion order.
+		const keys = _.keys(this.props.columnGroups);
+		return _.sortBy(keys, (k) => (k === "" ? 0 : 1));
+	}
+
+	getColumnGroupColumns(name: string): string[] {
+		return this.props.columnGroups[name] || [];
+	}
+
+	uniqueColumnGroupName(base: string): string {
+		let name = base;
+		let i = 2;
+		while (this.props.columnGroups[name] !== undefined) {
+			name = `${base} ${i}`;
+			i += 1;
+		}
+		return name;
+	}
+
+	async switchColumnGroup(name: string) {
+		if (name === "") {
+			return this.closeColumnGroup();
+		}
+		return this.selectColumnGroup(name);
+	}
+
+	async createColumnGroup(name: string, columns?: string[]) {
+		const trimmed = name.trim();
+		if (!trimmed) {
+			throw new Error("workflow name required");
+		}
+		if (this.props.columnGroups[trimmed] !== undefined) {
+			throw new Error("workflow already exists");
+		}
+		this.savePrevProps();
+		this.props.columnGroups[trimmed] = (columns || ["inbox"]) as FolderName[];
+		this.props.currentColumnGroup = trimmed;
+		await this.putSettings();
+	}
+
+	async renameColumnGroup(oldName: string, newName: string) {
+		const trimmed = newName.trim();
+		if (oldName === "") {
+			throw new Error("cannot rename the default workflow");
+		}
+		if (!trimmed || trimmed === oldName) {
+			return;
+		}
+		if (this.props.columnGroups[trimmed] !== undefined) {
+			throw new Error("workflow already exists");
+		}
+		this.savePrevProps();
+		// Rebuild to preserve ordering.
+		const rebuilt: { [key: string]: FolderName[] } = {};
+		_.each(this.props.columnGroups, (columns, key) => {
+			rebuilt[key === oldName ? trimmed : key] = columns!;
+		});
+		this.props.columnGroups = rebuilt;
+		if (this.props.currentColumnGroup === oldName) {
+			this.props.currentColumnGroup = trimmed;
+		}
+		await this.putSettings();
+	}
+
+	async duplicateColumnGroup(name: string) {
+		const source = this.props.columnGroups[name];
+		if (!source) {
+			return;
+		}
+		const base = name === "" ? "Default copy" : `${name} copy`;
+		const newName = this.uniqueColumnGroupName(base);
+		this.savePrevProps();
+		this.props.columnGroups[newName] = [...source];
+		this.props.currentColumnGroup = newName;
+		await this.putSettings();
+	}
+
+	async deleteColumnGroup(name: string) {
+		if (name === "") {
+			throw new Error("cannot delete the default workflow");
+		}
+		this.savePrevProps();
+		delete this.props.columnGroups[name];
+		if (this.props.currentColumnGroup === name) {
+			this.props.currentColumnGroup = "";
+		}
+		await this.putSettings();
+	}
+
+	async reorderColumnGroups(orderedNames: string[]) {
+		this.savePrevProps();
+		const rebuilt: { [key: string]: FolderName[] } = {};
+		// Keep the default group first if it isn't part of the ordered list.
+		if (this.props.columnGroups[""] !== undefined && !_.includes(orderedNames, "")) {
+			rebuilt[""] = this.props.columnGroups[""]!;
+		}
+		_.each(orderedNames, (name) => {
+			if (this.props.columnGroups[name] !== undefined) {
+				rebuilt[name] = this.props.columnGroups[name]!;
+			}
+		});
+		// Include any keys not covered by the ordered list.
+		_.each(this.props.columnGroups, (columns, key) => {
+			if (rebuilt[key] === undefined) {
+				rebuilt[key] = columns!;
+			}
+		});
+		this.props.columnGroups = rebuilt;
+		await this.putSettings();
 	}
 
 	async setColumn(name: string, idx) {

@@ -2,6 +2,8 @@ import _ from "lodash";
 import React from "react";
 import { DragDropContext } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
+import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import keyboard from "../../keyboard.ts";
 import { ALWAYS_SYNC_FOLDERS, INBOX } from "../../constants.ts";
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
@@ -10,21 +12,25 @@ import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import { collectVisibleThreadComponents } from "../../util/threads.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
 import ControlInput from "./ControlInput.jsx";
 import EmailColumn from "./EmailColumn.tsx";
+import HeaderErrors from "../HeaderErrors.tsx";
 import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
 import Search from "./Search.jsx";
 import Sidebar from "./Sidebar.jsx";
 import Thread from "./Thread.jsx";
 import WelcomeSettings from "./WelcomeSettings.jsx";
+import WorkflowSwitcher from "./WorkflowSwitcher.tsx";
 
 @subscribe(settingsStore)
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component<ISettings> {
   getNewEmailsInterval: ReturnType<typeof setInterval>;
+  columnRefs: (EmailColumn | null)[] = [];
 
   getFoldersToSync() {
     return _.concat(
@@ -40,6 +46,9 @@ export default class EmailsApp extends React.Component<ISettings> {
   componentDidMount() {
     // Keyboard is enabled by default. WelcomeSettings (shown when accounts
     // is empty) suspends it via the SettingsView it mounts.
+
+    // Let the keyboard reach our columns to enter keyboard mode from cold.
+    keyboard.emailsApp = this;
 
     // Create resize/move window position saver handlers
     createWindowPositionHandlers();
@@ -85,6 +94,21 @@ export default class EmailsApp extends React.Component<ISettings> {
 
   componentWillUnmount() {
     clearInterval(this.getNewEmailsInterval);
+    if (keyboard.emailsApp === this) {
+      keyboard.emailsApp = null;
+    }
+  }
+
+  // First visible thread in the first non-empty column — used by the keyboard
+  // to enter keyboard mode when an arrow key is pressed with nothing selected.
+  getFirstThreadComponent() {
+    for (const ref of this.columnRefs) {
+      const column = ref?.getDecoratedComponentInstance();
+      const threads = column && collectVisibleThreadComponents(column.threadRefs);
+      if (threads && threads.length > 0) {
+        return threads[0];
+      }
+    }
   }
 
   componentDidUpdate(prevProps: ISettings) {
@@ -127,10 +151,10 @@ export default class EmailsApp extends React.Component<ISettings> {
 
   renderColumns() {
     const columnElements = [];
-    const columnRefs: (EmailColumn | null)[] = [];
+    this.columnRefs = [];
 
     const getColumn = (id) => {
-      const column = columnRefs[id];
+      const column = this.columnRefs[id];
 
       if (column) {
         // Email columns are wrapped dynamically with their store so
@@ -153,12 +177,36 @@ export default class EmailsApp extends React.Component<ISettings> {
           id={columnName}
           getPreviousColumn={getPreviousColumn}
           getNextColumn={getNextColumn}
-          ref={(ref) => (columnRefs[i] = ref)}
+          ref={(ref) => (this.columnRefs[i] = ref)}
         />
       );
     });
 
     return columnElements;
+  }
+
+  renderToolbar() {
+    return (
+      <div className="km-toolbar" data-tauri-drag-region>
+        <WorkflowSwitcher />
+        <div className="km-toolbar-divider"></div>
+        {/* @ts-ignore */}
+        <Search />
+        {/* @ts-ignore */}
+        <HeaderErrors />
+        <div className="spacer" data-tauri-drag-region></div>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            AppService.OpenSendWindow({});
+            trackEvent("ToolbarOpenSend");
+          }}
+        >
+          <i className="fa fa-pencil-square-o"></i>
+          Compose
+        </button>
+      </div>
+    );
   }
 
   renderColumnsSection() {
@@ -168,11 +216,13 @@ export default class EmailsApp extends React.Component<ISettings> {
       // className={
       //   this.props.styleSettings.compact_columns ? "compact" : undefined
       // }
-      >{/* @ts-ignore */}
-        <Search />
-        {this.renderColumns()}
-        <OnboardingColumnsPanel />
-        <AddNewColumnForm />
+      >
+        {this.renderToolbar()}
+        <div className="km-columns-row">
+          {this.renderColumns()}
+          <OnboardingColumnsPanel />
+          <AddNewColumnForm />
+        </div>
       </section>
     );
   }

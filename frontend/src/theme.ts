@@ -10,8 +10,12 @@ const LOCKED_THEMES = new Set([
 ]);
 
 function resolveTheme(theme: string): string {
+  // The old default/contrast theme was removed; map any saved value to light.
+  if (theme === "theme-default") {
+    theme = "theme-default-light";
+  }
   if (LOCKED_THEMES.has(theme) && !systemStore.props.isLicensed) {
-    return "theme-default";
+    return "theme-default-light";
   }
   return theme;
 }
@@ -26,7 +30,7 @@ function applyThemes() {
   }
 
   const darkTheme = resolveTheme(currentSettings.system.theme.dark || "theme-default-dark");
-  const lightTheme = resolveTheme(currentSettings.system.theme.light || "theme-default");
+  const lightTheme = resolveTheme(currentSettings.system.theme.light || "theme-default-light");
 
   const urlParams = new URLSearchParams(window.location.search);
   const osClassName = "os-" + (urlParams.get("os") || "unknown");

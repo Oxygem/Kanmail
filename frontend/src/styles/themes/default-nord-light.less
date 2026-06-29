@@ -80,5 +80,34 @@
 @selectMenuHoverBackgroundColor: @nordSnowMid;
 
 body.theme-default-nord-light {
+  .km-tokens-shared();
+  .km-tokens-light();
+
+  /* nord palette → design tokens (override the shared light defaults) */
+  --bg: #f7f9fc;
+  --ink: @nordPolarDark;
+  --sub: @nordPolarMid;
+  --muted: @nordPolarLightest;
+  --faint: lighten(@nordPolarLightest, 18%);
+  --ring: rgba(46, 52, 64, 0.1);
+  --divider: rgba(46, 52, 64, 0.07);
+
+  --side-bg: @nordSnowDark;
+  --side-ink: @nordPolarDark;
+  --side-muted: @nordPolarLightest;
+  --side-ring: rgba(46, 52, 64, 0.08);
+  --side-active: rgba(94, 129, 172, 0.14);
+
+  --bar: @nordSnowMid;
+  --pill: @nordSnowMid;
+  --label: @nordSnowMid;
+  --label-ink: @nordPolarLightest;
+
+  --card: #f3f6fa;
+  --card-ring: rgba(46, 52, 64, 0.1);
+  --input: @white;
+  --kbd: @nordSnowMid;
+  --check-ring: rgba(46, 52, 64, 0.22);
+
   @import (multiple) "base.less";
 }

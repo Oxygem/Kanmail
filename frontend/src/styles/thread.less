@@ -1,5 +1,9 @@
 /*
-    Threads overlay */
+    Threads overlay — redesigned reader panel (2.x).
+    Chrome (head, body scroll area, reply dock, attachments) and the message
+    body card (.mail-card) all follow the active theme via design tokens
+    (var(--*)). Untrusted HTML emails carry their own styling inside the
+    sandboxed iframe, so they render on whatever background the email sets. */
 
 section#thread-background {
   position: absolute;
@@ -8,49 +12,203 @@ section#thread-background {
   top: 0;
   width: @sidebarWidth;
   bottom: 0;
-  background: rgba(100, 100, 100, 0.6);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 section#thread {
   z-index: 9;
   position: absolute;
-  top: 0;
+  // Contained reader panel beside the narrowed list, below the board toolbar.
+  top: @topHeight;
   bottom: 0;
-  // left: @sidebarWidth;
   left: calc(@sidebarWidth + ((100vw - @sidebarWidth)*0.3));
   right: 0;
 
-  h1 {
-    margin: 0 0 10px 0;
-    padding-left: 20px;
-    padding-top: 15px;
-    font-size: @titleTextSize;
-    height: @topHeight;
-    background: white;
-    border-bottom: 1px solid;
-    overflow: auto;
-    font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+
+  /* ----------------------------- reader head ---------------------------- */
+  .reader-head {
+    flex: none;
+    padding: 20px 26px 16px;
+    border-bottom: 1px solid var(--divider);
+    background: var(--bg);
+
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+
+      h2 {
+        margin: 0;
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--ink);
+        line-height: 1.2;
+
+        span.multi-subject {
+          color: var(--muted);
+          font-weight: 600;
+          margin-right: 6px;
+        }
+      }
+    }
+
+    .reader-actions {
+      display: flex;
+      gap: 4px;
+      flex: none;
+    }
+
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      color: var(--muted);
+      border: 0;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+
+      &:hover {
+        background: var(--pill);
+      }
+    }
+
+    .reader-from {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+
+      div.avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 9px;
+        line-height: 38px;
+        text-align: center;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        flex: none;
+        position: relative;
+        overflow: hidden;
+
+        span {
+          position: relative;
+          z-index: 1;
+        }
+
+        img {
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          width: 38px;
+          height: 38px;
+          border-radius: 9px;
+        }
+      }
+
+      .reader-from-detail {
+        min-width: 0;
+
+        .reader-from-name {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+
+          .name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+          }
+
+          .email {
+            font-size: 12.5px;
+            color: var(--faint);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+
+        .to {
+          font-size: 12.5px;
+          color: var(--muted);
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      .when {
+        font-size: 12px;
+        color: var(--faint);
+        flex: none;
+      }
+    }
+
+    .label-chips {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+
+      .label-chip {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 500;
+        padding: 3px 10px;
+        border-radius: 99px;
+        background: var(--label);
+        color: var(--label-ink);
+
+        i {
+          width: 6px;
+          height: 6px;
+          border-radius: 99px;
+          display: block;
+          background: var(--brand-pink);
+        }
+      }
+    }
   }
 
+  /* ----------------------------- reader body ---------------------------- */
   section#content {
+    flex: 1;
+    min-height: 0;
     overflow-x: hidden;
-    overflow-y: scroll;
-    top: @topHeight;
-    padding-top: 10px;
-    padding-bottom: 100px;
-    bottom: 0;
-    left: 0;
-    // right: @threadSidebarWidth;
-    right: 0;
-    position: absolute;
+    overflow-y: auto;
+    background: var(--bg);
+    padding: 14px 26px 200px 14px;
+
+    .scrollbar;
 
     div.loader {
       padding: 0px 15px;
       position: relative;
       font-size: 24px;
+      color: var(--muted);
     }
-
-    .scrollbar;
 
     iframe {
       width: 100%;
@@ -60,127 +218,177 @@ section#thread {
 
     .content {
       position: relative;
-      margin-bottom: 20px;
 
       p.data-notice {
-        margin: 0 0 20px 0;
+        margin: 0 0 16px 0;
         font-size: 13px;
+        color: var(--muted);
       }
     }
   }
 
-  section#meta {
-    width: @threadSidebarWidth;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    padding: 20px 10px 10px 10px;
-    position: absolute;
-    border-left: 1px solid;
-
-    button#close {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-
-    button {
-      font-size: @textSize;
-    }
-
-    button span {
-      display: block;
-      font-weight: normal;
-      font-size: @smallTextSize;
-      margin-top: 4px;
-    }
-
-    div#other-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-
-      button {
-        width: 48%;
-        padding: 5px;
-        margin-bottom: 10px;
-      }
-    }
-
-    div#respond-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-
-      button {
-        width: 48%;
-        padding: 10px 0;
-        margin-bottom: 10px;
-      }
-    }
-  }
-
-  a.show-all-messages {
-    font-size: 12px;
-  }
-
-  button {
-    padding: 3px;
-    font-size: @smallTextSize;
-    border: none;
-  }
-
-  div.message {
-    margin-bottom: 5px;
-    padding: 0 20px;
-    border-bottom: 1px solid;
+  /* The message body card follows the active theme. */
+  div.mail-card {
+    margin: 0;
+    background: var(--card);
+    border: 1px solid var(--card-ring);
+    border-radius: var(--r-lg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding: 30px 34px;
+    color: var(--ink);
 
     div.content {
       width: 100%;
       position: relative;
       font-size: @bigTextSize;
+      color: var(--ink);
 
       p {
-        margin: 20px 5px;
+        margin: 14px 0 0;
+      }
+
+      a {
+        color: #2e8b57;
       }
 
       code {
-        background: black;
+        background: var(--pill);
+        color: var(--ink);
         padding: 2px;
         border-radius: 2px;
       }
-      pre::selection, code::selection {
-        background: green;
+
+      pre::selection,
+      code::selection {
+        background: #2e8b57;
         color: white;
       }
 
       iframe {
         overflow: hidden;
       }
+
+      // Outlook/Gmail empty paragraph spacers
+      p.MsoNormal {
+        margin: 0;
+      }
+
+      button {
+        font-size: @smallTextSize;
+        padding: 3px 8px;
+        border: 1px solid var(--ring);
+        border-radius: @smallBorderRadius;
+        background: var(--pill);
+        color: var(--ink);
+        cursor: pointer;
+
+        &:hover {
+          background: var(--label);
+        }
+      }
+    }
+  }
+
+  /* ------------------------------ attachments --------------------------- */
+  .attach-row {
+    margin: 16px 0 0;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  div.attach {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 13px 9px 10px;
+    border-radius: var(--r-lg);
+    background: var(--pill);
+    border: 1px solid var(--ring);
+    cursor: pointer;
+    max-width: 320px;
+    transition: border-color 120ms ease, background-color 120ms ease;
+
+    &:hover {
+      border-color: var(--brand-pink);
+    }
+
+    .ic {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--r-sm);
+      background: var(--label);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      flex: none;
+      font-size: 13px;
+    }
+
+    .attach-detail {
+      min-width: 0;
+    }
+
+    .nm {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mt {
+      font-size: 10.5px;
+      color: var(--faint);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* ---------------------- per-message meta (multi) ---------------------- */
+  div.message {
+    margin-bottom: 8px;
+
+    pre {
+      word-wrap: break-word;
     }
 
     div.meta {
-      padding: 10px;
-      margin: 0 -5px;
+      display: flex;
+      margin: 0;
+      padding: 12px 0;
+      gap: 12px;
+      cursor: pointer;
+      .no-select;
 
       span.meta-text {
         font-size: @smallTextSize;
+        color: var(--muted);
       }
 
-      div.date {
-        text-align: right;
+      div.half {
+        min-width: 0;
       }
 
       div.addresses {
+        flex: 1;
+        font-size: @textSize;
+        color: var(--ink);
+
         div.avatar {
-          width: 44px;
-          height: 44px;
-          border-radius: 44px;
-          line-height: 44px;
+          width: 38px;
+          height: 38px;
+          border-radius: 9px;
+          line-height: 38px;
           text-align: center;
           float: left;
-          margin-right: 5px;
+          margin-right: 10px;
           position: relative;
           color: white;
+          overflow: hidden;
 
           span {
             position: relative;
@@ -191,15 +399,26 @@ section#thread {
             position: absolute;
             left: 0;
             right: 0;
-            border-radius: 44px;
-            width: 44px;
-            height: 44px;
+            top: 0;
+            border-radius: 9px;
+            width: 38px;
+            height: 38px;
           }
         }
       }
 
-      .no-select;
-      cursor: pointer;
+      div.date {
+        text-align: right;
+        flex: none;
+        font-size: @smallTextSize;
+        color: var(--faint);
+
+        i.fa-star,
+        i.fas {
+          color: var(--brand-pink);
+          margin-left: 6px;
+        }
+      }
     }
 
     &.trash div.meta {
@@ -207,222 +426,322 @@ section#thread {
     }
 
     div.controls {
-      width: 100%;
+      margin: 0 0 14px;
       font-size: @smallTextSize;
-      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
-
+      align-items: center;
       .no-select;
 
+      span.tag {
+        padding: 2px 8px;
+        margin-right: 4px;
+        border-radius: 99px;
+        background: var(--label);
+        color: var(--label-ink);
+        font-size: 11px;
+        font-weight: 500;
+      }
+
       a {
+        padding: 3px 8px;
+        border-radius: var(--r-sm);
+        color: var(--muted);
+        cursor: pointer;
+        transition: background-color 120ms ease, color 120ms ease;
+
+        &:hover {
+          background: var(--pill);
+          color: var(--ink);
+        }
+
         i {
-          margin: 0 5px 0 5px;
+          margin: 0 5px 0 0;
         }
 
         &.tracker-count {
           background: none !important;
           cursor: default;
+          color: var(--faint);
+
+          &:hover {
+            background: none;
+            color: var(--faint);
+          }
 
           i {
-            margin: 0 2px 0 5px;
+            margin: 0 4px 0 0;
+          }
+        }
+      }
+    }
+  }
+
+  /* ------------------------------ reply dock ---------------------------- */
+  div.reply-dock {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 26px;
+    border-top: 1px solid var(--divider);
+    background: var(--pill);
+
+    .spacer {
+      flex: 1;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 18px 0 15px;
+      background: var(--grad);
+      color: #fff;
+      border: 0;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+
+      i {
+        margin: 0;
+      }
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--r-md);
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--brand-pink);
+      }
+
+      &[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+
+        &:hover {
+          border-color: var(--ring);
+        }
+      }
+
+      i {
+        margin: 0;
+      }
+    }
+
+    .dock-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 14px;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--ink);
+      }
+    }
+  }
+
+  /* ----------------------- quick reply (expanded) ----------------------- */
+  div.quick-reply.expanded {
+    flex: none;
+    margin: 0;
+    border-top: 1px solid var(--divider);
+    background: var(--bar);
+    overflow: hidden;
+    max-height: 60%;
+    display: flex;
+    flex-direction: column;
+
+    div.quick-reply-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 26px;
+      border-bottom: 1px solid var(--divider);
+      .no-select;
+
+      div.mode-toggle {
+        display: flex;
+        gap: 4px;
+
+        button {
+          padding: 5px 12px;
+          font-size: @smallTextSize;
+          font-weight: 600;
+          border-radius: var(--r-sm);
+          cursor: pointer;
+          background: transparent;
+          border: 1px solid transparent;
+          color: var(--muted);
+          line-height: 18px;
+
+          i {
+            margin-right: 5px;
+          }
+
+          &.active {
+            background: var(--pill);
+            color: var(--ink);
+          }
+
+          &[disabled] {
+            opacity: 0.4;
+            cursor: not-allowed;
           }
         }
       }
 
-      span.tag {
-        padding: 2px 5px;
-        margin-left: 2px;
-        margin-right: 2px;
-        border-radius: 2px;
-      }
-
-      a {
-        padding: 2px 5px 2px 2px;
-        border-radius: 2px;
-      }
-    }
-
-    pre {
-      word-wrap: break-word;
-    }
-
-    .attachment-link {
-      cursor: pointer;
-      padding: 5px;
-      display: inline-block;
-      border-radius: @smallBorderRadius;
-      margin: 0 10px 10px 0;
-
-      .attachment-meta {
-        display: block;
+      a.pop-out {
+        padding: 5px 10px;
+        border-radius: var(--r-sm);
         font-size: @smallTextSize;
-      }
-    }
-  }
-}
-
-section#thread div.content {
-  // Set by Outlook which seems to use a p->span with empty " " in it as an alternative to just
-  // using a paragraph like any sane person. Gmail also does this.
-  p.MsoNormal {
-    margin: 0;
-  }
-}
-
-section#thread div.quick-reply {
-  margin: 15px 20px 40px 20px;
-  border-radius: @borderRadius;
-  transition: box-shadow 150ms ease, transform 150ms ease;
-
-  &.collapsed {
-    cursor: pointer;
-    .no-select;
-
-    div.prompt {
-      display: flex;
-      align-items: center;
-      padding: 12px 16px;
-      font-size: @textSize;
-      border-radius: @borderRadius;
-      border: 1px solid transparent;
-      transition: border-color 150ms ease, background-color 150ms ease;
-
-      i {
-        margin-right: 10px;
-        font-size: @bigTextSize;
-      }
-    }
-  }
-
-  &.expanded {
-    border: 1px solid;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  div.quick-reply-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    border-bottom: 1px solid;
-    .no-select;
-
-    div.mode-toggle {
-      display: flex;
-      gap: 4px;
-
-      button {
-        padding: 4px 10px;
-        font-size: @smallTextSize;
-        font-weight: 600;
-        border-radius: @smallBorderRadius;
+        color: var(--muted);
         cursor: pointer;
-        background: transparent;
-        line-height: 18px;
+
+        &:hover {
+          color: var(--ink);
+          background: var(--pill);
+        }
 
         i {
           margin-right: 5px;
         }
+      }
+    }
 
-        &[disabled] {
-          opacity: 0.4;
-          cursor: not-allowed;
+    div.recipients {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 4px 8px;
+      padding: 8px 26px;
+      font-size: @smallTextSize;
+      color: var(--muted);
+      border-bottom: 1px solid var(--divider);
+      line-height: 18px;
+      .no-select;
+
+      span.label {
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        font-size: 10px;
+        color: var(--faint);
+      }
+
+      span.value {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--ink);
+      }
+    }
+
+    .squire-editor-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+
+      div.toolbar {
+        position: static;
+        padding: 6px 22px;
+        border-bottom: 1px solid var(--divider);
+        display: flex;
+        gap: 2px;
+
+        button {
+          font-size: @textSize;
+          padding: 4px 8px;
+          border-radius: var(--r-sm);
+          line-height: 18px;
+          color: var(--muted);
+
+          &:hover {
+            background: var(--pill);
+            color: var(--ink);
+          }
         }
       }
-    }
 
-    a.pop-out {
-      padding: 4px 8px;
-      border-radius: @smallBorderRadius;
-      font-size: @smallTextSize;
-
-      i {
-        margin-right: 5px;
+      .squire-editor {
+        min-height: 120px;
+        max-height: 320px;
+        padding: 14px 26px;
+        overflow-y: auto;
+        outline: none;
+        font-size: @textSize;
+        line-height: 20px;
+        color: var(--ink);
       }
     }
-  }
 
-  div.recipients {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-    padding: 6px 14px;
-    font-size: @smallTextSize;
-    border-bottom: 1px solid;
-    line-height: 18px;
-    .no-select;
-
-    span.label {
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      font-size: 10px;
-    }
-
-    span.value {
-      flex: 1 1 auto;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  .squire-editor-container {
-    display: flex;
-    flex-direction: column;
-
-    div.toolbar {
-      position: static;
-      padding: 6px 8px;
-      border-bottom: 1px solid;
+    div.quick-reply-actions {
       display: flex;
-      gap: 2px;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 26px;
+      border-top: 1px solid var(--divider);
+      .no-select;
 
       button {
+        height: 36px;
+        padding: 0 16px;
         font-size: @textSize;
-        padding: 4px 8px;
-        border-radius: @smallBorderRadius;
+        font-weight: 600;
+        border-radius: var(--r-md);
         line-height: 18px;
-      }
-    }
+        cursor: pointer;
 
-    .squire-editor {
-      min-height: 120px;
-      max-height: 320px;
-      padding: 12px 14px;
-      overflow-y: auto;
-      outline: none;
-      font-size: @textSize;
-      line-height: 20px;
-    }
-  }
+        i {
+          margin-right: 6px;
+        }
 
-  div.quick-reply-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 10px;
-    border-top: 1px solid;
-    .no-select;
+        &.cancel {
+          background: var(--bg);
+          border: 1px solid var(--ring);
+          color: var(--ink);
+        }
 
-    button {
-      padding: 6px 14px;
-      font-size: @textSize;
-      font-weight: 600;
-      border-radius: @smallBorderRadius;
-      line-height: 18px;
+        &.submit {
+          background: var(--grad);
+          color: #fff;
+          border: 0;
+          box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
 
-      i {
-        margin-right: 6px;
-      }
+          &.error {
+            background: @red;
+            box-shadow: none;
+          }
 
-      &.cancel {
-        padding-left: 6px;
-        padding-right: 6px;
+          &.disabled,
+          &[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
       }
     }
   }

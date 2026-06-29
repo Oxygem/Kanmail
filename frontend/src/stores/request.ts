@@ -16,10 +16,18 @@ export interface RuntimeError {
   cause?: any;
 }
 
+export interface PendingRequest {
+  id: number;
+  name: string;
+  timeoutId: ReturnType<typeof setTimeout>;
+  callback: () => void;
+  onUndo: () => void;
+}
+
 export interface IRequestStoreProps {
   fetchRequests: Map<number, string>;
   pushRequests: Map<number, string>;
-  pendingRequests: [ReturnType<typeof setTimeout>, [() => void, () => void]][];
+  pendingRequests: PendingRequest[];
   // TODO
   requestErrors: RuntimeError[];
   networkErrors: RuntimeError[];
@@ -124,15 +132,16 @@ class RequestStore extends BaseStore {
     }
   }
 
-  addUndoable = (callback: () => void, onUndo: () => void) => {
-    const callbackUndoTuple: [() => void, () => void] = [callback, onUndo];
+  addUndoable = (name: string, callback: () => void, onUndo: () => void) => {
+    const id = this.counter;
+    this.counter++;
 
     // Create a timeout to actually make the request
     const requestTimeoutId = setTimeout(() => {
       // Remove self from pending requests
       this.props.pendingRequests = _.filter(
         this.props.pendingRequests,
-        (pendingRequest) => pendingRequest[1] !== callbackUndoTuple
+        (pendingRequest) => pendingRequest.id !== id
       );
       this.triggerUpdate();
 
@@ -141,7 +150,13 @@ class RequestStore extends BaseStore {
     }, settingsStore.props.system.undoMS);
 
     // Push to pending requests
-    this.props.pendingRequests.push([requestTimeoutId, callbackUndoTuple]);
+    this.props.pendingRequests.push({
+      id,
+      name,
+      timeoutId: requestTimeoutId,
+      callback,
+      onUndo,
+    });
     this.triggerUpdate();
   };
 
@@ -151,23 +166,22 @@ class RequestStore extends BaseStore {
     }
 
     // Pop the latest pending request off the list
-    const [requestTimeoutId, callbackUndoTuple] =
-      this.props.pendingRequests.pop()!;
+    const pendingRequest = this.props.pendingRequests.pop()!;
 
     // Remove the pending timeout
-    clearTimeout(requestTimeoutId);
+    clearTimeout(pendingRequest.timeoutId);
     this.triggerUpdate();
 
     // And run the undo function
-    callbackUndoTuple[1]();
+    pendingRequest.onUndo();
   };
 
   close = async () => {
     // Firstly kick all the pending requests
     _.each(this.props.pendingRequests, req => {
-      clearTimeout(req[0]);
+      clearTimeout(req.timeoutId);
       // Run the callback function
-      req[1][0]();
+      req.callback();
     });
 
     // Now wait for requests to stop coming in

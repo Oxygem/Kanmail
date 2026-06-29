@@ -259,7 +259,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
 
   renderBody() {
     const { message } = this.props;
-    return <ThreadMessageContent
+    return <div className="mail-card"><ThreadMessageContent
       body={message.body}
       parts={message.parts}
       folderName={message.folderName}
@@ -283,11 +283,11 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
           this.trackerCount.setCount(n);
         }
       }}
-    />;
+    /></div>;
   }
 
   renderAttachments() {
-    return _.map(this.props.message.parts, (part) => {
+    const attachments = _.map(this.props.message.parts, (part) => {
       return (
         <ThreadMessageAttachment
           key={part.partStr}
@@ -297,6 +297,8 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
         />
       );
     });
+
+    return <div className="attach-row">{attachments}</div>;
   }
 
   isTrashed() {

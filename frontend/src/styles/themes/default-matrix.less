@@ -80,6 +80,40 @@
 @selectMenuHoverBackgroundColor: @matrixDark;
 
 body.theme-default-matrix {
+  .km-tokens-shared();
+  .km-tokens-dark();
+
+  /* matrix palette → design tokens (override the shared dark defaults) */
+  --bg: @matrixBlack;
+  --ink: @matrixGreen;
+  --sub: @matrixGreenDim;
+  --muted: @matrixGreenMuted;
+  --faint: @matrixGreenDark;
+  --ring: rgba(0, 255, 65, 0.18);
+  --divider: rgba(0, 255, 65, 0.1);
+
+  --side-bg: @matrixBlack;
+  --side-ink: @matrixGreen;
+  --side-muted: @matrixGreenMuted;
+  --side-ring: rgba(0, 255, 65, 0.14);
+  --side-active: rgba(0, 255, 65, 0.1);
+
+  --bar: @matrixBlack;
+  --pill: @matrixDark;
+  --label: @matrixDark;
+  --label-ink: @matrixGreenDim;
+
+  --card: @matrixDarkest;
+  --card-ring: rgba(0, 255, 65, 0.15);
+  --input: @matrixDarkest;
+  --kbd: @matrixDark;
+  --check-ring: rgba(0, 255, 65, 0.3);
+
+  /* the brand accent is pink everywhere else — matrix goes green */
+  --brand-pink: @matrixGreen;
+  --grad: linear-gradient(100deg, @matrixGreenDark, @matrixGreen);
+  --grad-soft: linear-gradient(100deg, rgba(0, 255, 65, 0.14), rgba(0, 255, 65, 0.06));
+
   @import (multiple) "base.less";
 
   font-family: "Courier New", Courier, monospace;

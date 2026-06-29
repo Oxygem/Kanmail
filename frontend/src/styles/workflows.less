@@ -1,0 +1,467 @@
+/*
+    Workflow (column group) switcher + manage modal — 2.x toolbar.
+    Themed via design tokens (var(--*)); dropdown/modal use fixed positioning so
+    they escape the section#columns `overflow: hidden`.
+*/
+
+/* --------------------------- toolbar pill button ------------------------- */
+.workflow-switcher {
+  flex: none;
+  position: relative;
+  .no-select;
+
+  button.wf-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: var(--r-md);
+    background: var(--pill);
+    border: 1px solid var(--ring);
+    color: var(--ink);
+    cursor: pointer;
+
+    i.wf-button-icon {
+      font-size: 14px;
+      color: var(--brand-pink);
+    }
+
+    span.wf-button-name {
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    i.wf-caret {
+      font-size: 11px;
+      color: var(--faint);
+      margin-left: 2px;
+    }
+
+    &:hover,
+    &.open {
+      border-color: var(--brand-pink);
+    }
+  }
+}
+
+.km-toolbar-divider {
+  flex: none;
+  width: 1px;
+  height: 22px;
+  background: var(--divider);
+}
+
+/* ------------------------------ dropdown -------------------------------- */
+.workflow-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+}
+
+.workflow-dropdown {
+  position: fixed;
+  z-index: 1201;
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  border: 1px solid var(--ring);
+  box-shadow: var(--shadow);
+  .no-select;
+
+  .wf-head {
+    padding: 8px 12px 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
+  }
+
+  a.wf-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+
+    i.wf-icon {
+      font-size: 16px;
+      color: var(--muted);
+      flex: none;
+      width: 18px;
+      text-align: center;
+    }
+
+    .wf-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .wf-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 18px;
+    }
+
+    .wf-sub {
+      font-size: 12px;
+      color: var(--faint);
+      line-height: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .kbd {
+      flex: none;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      color: var(--muted);
+    }
+
+    i.wf-check {
+      flex: none;
+      color: var(--brand-pink);
+      font-size: 14px;
+    }
+
+    &:hover {
+      background: var(--pill);
+    }
+
+    &.current {
+      background: var(--grad-soft);
+
+      &:hover {
+        background: var(--grad-soft);
+      }
+
+      i.wf-icon,
+      .wf-name {
+        color: var(--brand-pink);
+      }
+    }
+  }
+
+  .wf-divider {
+    height: 1px;
+    margin: 8px 6px;
+    background: var(--divider);
+  }
+
+  a.wf-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--ink);
+
+    i {
+      font-size: 15px;
+      color: var(--muted);
+      width: 18px;
+      text-align: center;
+      flex: none;
+    }
+
+    &:hover {
+      background: var(--pill);
+    }
+  }
+
+  .wf-create {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 12px;
+
+    i {
+      font-size: 15px;
+      color: var(--muted);
+      width: 18px;
+      text-align: center;
+      flex: none;
+    }
+
+    input {
+      flex: 1;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--ring);
+      background: var(--pill);
+      color: var(--ink);
+      font-size: 13.5px;
+    }
+  }
+}
+
+/* --------------------------- manage modal ------------------------------- */
+.workflow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  .no-select;
+}
+
+.workflow-modal {
+  width: 660px;
+  max-width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--ring);
+  border-radius: 16px;
+  box-shadow: var(--shadow-win);
+  overflow: hidden;
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 15px;
+
+    &:hover {
+      background: var(--pill);
+      color: var(--ink);
+    }
+
+    &[disabled] {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
+  }
+
+  .wfm-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--divider);
+
+    > i {
+      font-size: 18px;
+      color: var(--brand-pink);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .icon-btn {
+      margin-left: auto;
+    }
+  }
+
+  .wfm-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 6px 22px;
+    .scrollbar;
+  }
+
+  .wfm-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--divider);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    &.drag-over {
+      box-shadow: inset 0 2px 0 var(--brand-pink);
+    }
+
+    .wfm-handle {
+      flex: none;
+      display: flex;
+      gap: 1px;
+      color: var(--faint);
+      cursor: grab;
+      font-size: 13px;
+
+      &.disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+    }
+
+    .wfm-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .wfm-name-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wfm-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .wfm-rename {
+      width: 240px;
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--brand-pink);
+      background: var(--pill);
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .wfm-current {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 99px;
+      background: var(--grad);
+      color: #fff;
+    }
+
+    .wfm-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .chip {
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 11px;
+        border-radius: 99px;
+        background: var(--pill);
+        color: var(--sub);
+      }
+    }
+
+    .wfm-actions {
+      flex: none;
+      display: flex;
+      gap: 2px;
+    }
+  }
+
+  .wfm-foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 22px;
+    border-top: 1px solid var(--divider);
+
+    .wfm-create {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      i {
+        color: var(--muted);
+      }
+
+      input {
+        width: 220px;
+        height: 38px;
+        padding: 0 12px;
+        border-radius: var(--r-md);
+        border: 1px solid var(--ring);
+        background: var(--pill);
+        color: var(--ink);
+        font-size: 14px;
+      }
+    }
+
+    // Nested so they beat the generic themed `button` rule on specificity.
+    button.btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 16px;
+      border-radius: var(--r-md);
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      color: var(--ink);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+
+      i {
+        color: var(--muted);
+      }
+
+      &:hover {
+        border-color: var(--brand-pink);
+      }
+    }
+
+    button.btn-primary {
+      height: 38px;
+      padding: 0 22px;
+      border-radius: var(--r-md);
+      background: var(--grad);
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      border: 0;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+
+      &:hover {
+        filter: brightness(1.04);
+      }
+    }
+  }
+}

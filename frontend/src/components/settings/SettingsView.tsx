@@ -122,58 +122,58 @@ class Account extends React.Component<IAccountProps, IAccountState> {
       (this.props.imapSettings && (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken))
       && (this.props.smtpSettings && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken));
 
-    let deleteButton: React.ReactElement;
-    if (this.state.isDeleting) {
-      deleteButton = <button
-        className="cancel"
-        onClick={this.deleteAccount}
-      >Confirm remove</button>;
-    } else {
-      deleteButton = <button
-        className="cancel"
-        onClick={() => (this.setState({ isDeleting: true }))}
-      >Remove</button>;
-    }
+    const deleteButton = (
+      <button
+        className="btn-remove"
+        onClick={this.state.isDeleting
+          ? this.deleteAccount
+          : () => this.setState({ isDeleting: true })}
+      >
+        {this.state.isDeleting ? "Confirm remove" : "Remove"}
+      </button>
+    );
 
     return (
-      <div className="account">
-        <Avatar
-          border={settingsStore.getAccountAccentColor(this.props.name)}
-          address={(this.props.contacts && this.props.contacts.length > 0)
-            ? this.props.contacts[0]
-            : new Address({ email: hasValidCredentials ? this.props.imapSettings.username : "" })
-          }
-        />
-        <div className="name">
-          <strong>{this.props.name}</strong>
-          <br />
-          {hasValidCredentials ?
-            this.props.imapSettings.username
-            : <span className="red">Credentials invalid, please remove and re-setup.</span>
-          }
-        </div>
-        <div className="buttons">
+      <div className="acct-row-wrap">
+        <div className="acct-row">
+          <Avatar
+            border={settingsStore.getAccountAccentColor(this.props.name)}
+            address={(this.props.contacts && this.props.contacts.length > 0)
+              ? this.props.contacts[0]
+              : new Address({ email: hasValidCredentials ? this.props.imapSettings.username : "" })
+            }
+          />
+          <div className="grow">
+            <div className="nm">{this.props.name}</div>
+            {hasValidCredentials
+              ? <div className="em">{this.props.imapSettings.username}</div>
+              : <div className="em error">Credentials invalid, please remove and re-setup.</div>}
+          </div>
           {hasValidCredentials && <button
+            className="icon-btn"
+            title="Move up"
             onClick={() => this.props.moveAccount(this.props.accountIndex, -1)}
           ><i className="fa fa-arrow-up" /></button>}
           {hasValidCredentials && <button
+            className="icon-btn"
+            title="Move down"
             onClick={() => this.props.moveAccount(this.props.accountIndex, 1)}
           ><i className="fa fa-arrow-down" /></button>}
           {hasValidCredentials && <button
-            className={this.state.isEditing ? "active" : ""}
-            onClick={() => (this.setState({ isEditing: !this.state.isEditing, isDeleting: false }))}
+            className={this.state.isEditing ? "btn-soft active" : "btn-soft"}
+            onClick={() => this.setState({ isEditing: !this.state.isEditing, isDeleting: false })}
           >Edit</button>}
           {deleteButton}
         </div>
-        {
-          this.state.isEditing && <AccountForm
+        {this.state.isEditing && <div className="account-edit">
+          <AccountForm
             accountSettings={this.props}
             itemIndex={this.props.accountIndex}
             updateItem={this.props.updateAccount}
-            closeForm={() => (this.setState({ isEditing: false }))}
+            closeForm={() => this.setState({ isEditing: false })}
           />
-        }
-      </div >
+        </div>}
+      </div>
     );
   }
 }
@@ -274,47 +274,60 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     this.setAccounts(items);
   };
 
+  // ---- shared render helpers --------------------------------------------
+
+  renderPanel(panelClass: string, body: React.ReactNode) {
+    // No header — the tab bar already names the current section.
+    return (
+      <section className={`km-panel ${panelClass}`}>
+        <div className="panel-body">{body}</div>
+      </section>
+    );
+  }
+
+  renderCheckRow(
+    checked: boolean,
+    onToggle: () => void,
+    label: React.ReactNode,
+    opts: { hint?: string } = {},
+  ) {
+    return (
+      <div className="check-row" onClick={onToggle}>
+        <span className={`cbox ${checked ? "on" : "off"}`}>
+          {checked && <i className="fa fa-check" />}
+        </span>
+        <div className="ctxt">
+          <div className="ctxt-main">{label}</div>
+          {opts.hint && <div className="ghint">{opts.hint}</div>}
+        </div>
+      </div>
+    );
+  }
+
+  updateSystem(patch: Partial<Settings["system"]>) {
+    this.props.updateFn({
+      system: { ...this.props.system, ...patch },
+    });
+  }
+
   renderPrivacyToggles() {
     return <div>
-      <div>
-        <input
-          id="use-contact-icons"
-          type="checkbox"
-          checked={this.props.system.loadContactIcons}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                loadContactIcons: !this.props.system.loadContactIcons,
-              }
-            })
-          )}
-        />
-        <label htmlFor="use-contact-icons">
-          Use gravatar & duckduckgo for contact icons?
-        </label>
-      </div>
-      <div>
-        <input
-          id="share-crash-analytics"
-          type="checkbox"
-          checked={this.props.system.shareAnalytics}
-          onChange={() => (
-            this.props.updateFn({
-              system: {
-                ...this.props.system,
-                shareAnalytics: !this.props.system.shareAnalytics,
-              }
-            })
-          )}
-        />
-        <label htmlFor="share-crash-analytics">
-          Share anonymous analytics to help us improve Kanmail. <a onClick={(ev) => {
+      {this.renderCheckRow(
+        this.props.system.loadContactIcons,
+        () => this.updateSystem({ loadContactIcons: !this.props.system.loadContactIcons }),
+        "Use Gravatar & DuckDuckGo for contact icons",
+      )}
+      {this.renderCheckRow(
+        this.props.system.shareAnalytics,
+        () => this.updateSystem({ shareAnalytics: !this.props.system.shareAnalytics }),
+        <span>
+          Share anonymous analytics to help improve Kanmail. <a onClick={(ev) => {
             ev.preventDefault();
-            openLink("https://kanmail.io/privacy")
+            ev.stopPropagation();
+            openLink("https://kanmail.io/privacy");
           }}>Privacy policy</a>.
-        </label>
-      </div>
+        </span>,
+      )}
     </div>;
   }
 
@@ -417,31 +430,14 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
   renderAppearanceSettings() {
     const setLightTheme = (theme: string) => {
-      this.props.updateFn({
-        system: {
-          ...this.props.system,
-          theme: {
-            ...this.props.system.theme,
-            light: theme,
-          },
-        }
-      })
+      this.updateSystem({ theme: { ...this.props.system.theme, light: theme } });
     }
 
     const setDarkTheme = (theme: string) => {
-      this.props.updateFn({
-        system: {
-          ...this.props.system,
-          theme: {
-            ...this.props.system.theme,
-            dark: theme,
-          },
-        }
-      })
+      this.updateSystem({ theme: { ...this.props.system.theme, dark: theme } });
     }
 
     const themes = [
-      { id: "theme-default", className: "default", label: "default (contrast)", locked: false },
       { id: "theme-default-light", className: "light", label: "light", locked: false },
       { id: "theme-default-dark", className: "dark", label: "dark", locked: false },
       { id: "theme-default-nord-light", className: "nord-light", label: "nord light", locked: true },
@@ -451,7 +447,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     const isLicensed = systemStore.props.isLicensed;
 
-    const renderThemeButton = (
+    const renderThemeCard = (
       theme: { id: string; className: string; label: string; locked: boolean },
       selected: string,
       setTheme: (id: string) => void,
@@ -461,288 +457,189 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         ? () => AppService.OpenPurchaseLicenseDialog()
         : () => setTheme(theme.id);
       const classes = [
-        "appear-button",
+        "theme-card",
         theme.className,
         selected == theme.id ? "active" : "",
         lockedNow ? "locked" : "",
       ].filter(Boolean).join(" ");
       return (
         <div key={theme.id} className={classes} onClick={onClick}>
-          <div className="sidebar"></div>
-          <div className="main"></div>
-          <span>
-            {theme.label}
-            {lockedNow && <i className="fa fa-lock" title="Requires a Kanmail license" />}
-          </span>
+          <div className="preview">
+            <div className="side"></div>
+            <div className="body"></div>
+          </div>
+          <div className="cap">
+            <span className="nm">
+              {theme.label}
+              {lockedNow && <i className="fa fa-lock" title="Requires a Kanmail license" />}
+            </span>
+            {selected == theme.id && <span className="tick"><i className="fa fa-check" /></span>}
+          </div>
         </div>
       );
     };
 
-    return <div className="content appearance">
-      <div className="group">
-        <h3>Theme to use when the system theme is <strong>light</strong></h3>
-        <div className="theme-grid">
-          {themes.map((t) => renderThemeButton(t, this.props.system.theme.light, setLightTheme))}
-        </div>
+    const theme = this.props.system.theme;
 
-        <h3>Theme to use when the system theme is <strong>dark</strong></h3>
-        <div className="theme-grid">
-          {themes.map((t) => renderThemeButton(t, this.props.system.theme.dark, setDarkTheme))}
-        </div>
+    const body = <>
+      <h3 className="sub">When the system theme is <span className="accent">light</span></h3>
+      <div className="theme-grid">
+        {themes.map((t) => renderThemeCard(t, theme.light, setLightTheme))}
       </div>
 
-      <div className="group">
-        <h3>Thread Background Colors</h3>
-        <div className="wide">
-          <input
-            id="per-sender-thread-backgrounds"
-            type="checkbox"
-            checked={this.props.system.theme.perSenderThreadBackgrounds}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  theme: {
-                    ...this.props.system.theme,
-                    perSenderThreadBackgrounds: !this.props.system.theme.perSenderThreadBackgrounds,
-                  },
-                },
-              })
-            )}
-          />
-          <label htmlFor="per-sender-thread-backgrounds">
-            Use different backgrounds for email thread accounts?
-          </label>
-        </div>
-        <div className="wide">
-          <input
-            id="always-show-thread-backgrounds"
-            type="checkbox"
-            checked={this.props.system.theme.alwaysShowThreadBackgrounds}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  theme: {
-                    ...this.props.system.theme,
-                    alwaysShowThreadBackgrounds: !this.props.system.theme.alwaysShowThreadBackgrounds,
-                  },
-                },
-              })
-            )}
-          />
-          <label htmlFor="always-show-thread-backgrounds">
-            Always show email thread backgrounds?
-          </label>
-        </div>
+      <h3 className="sub sp">When the system theme is <span className="accent">dark</span></h3>
+      <div className="theme-grid">
+        {themes.map((t) => renderThemeCard(t, theme.dark, setDarkTheme))}
       </div>
 
-      <div className="group">
-        <h3>Sender-specific thread colors</h3>
-        <p className="help-text">
-          Highlight email threads from specific senders with custom background colors.
-        </p>
-        {this.renderSenderColors()}
-        {this.state.showSenderColorForm ? (
-          <SenderColorForm
-            existingEmails={Object.keys(this.props.system.senderColors || {})}
-            onSave={this.saveSenderColor}
-            onCancel={() => this.setState({ showSenderColorForm: false })}
-          />
-        ) : (
-          <button
-            type="button"
-            className="submit small"
-            onClick={() => this.setState({ showSenderColorForm: true })}
-          >
-            Add sender color
-          </button>
-        )}
+      <h3 className="sub sp">Thread background colors</h3>
+      {this.renderCheckRow(
+        !!theme.perSenderThreadBackgrounds,
+        () => this.updateSystem({ theme: { ...theme, perSenderThreadBackgrounds: !theme.perSenderThreadBackgrounds } }),
+        "Tint email threads with their account’s color",
+      )}
+      {this.renderCheckRow(
+        !!theme.alwaysShowThreadBackgrounds,
+        () => this.updateSystem({ theme: { ...theme, alwaysShowThreadBackgrounds: !theme.alwaysShowThreadBackgrounds } }),
+        "Always show thread backgrounds (not just on hover)",
+      )}
+
+      <h3 className="sub sp">Sender-specific thread colors</h3>
+      <p className="help-text">
+        Highlight email threads from specific senders with custom background colors.
+      </p>
+      {this.renderSenderColors()}
+      {this.state.showSenderColorForm ? (
+        <SenderColorForm
+          existingEmails={Object.keys(this.props.system.senderColors || {})}
+          onSave={this.saveSenderColor}
+          onCancel={() => this.setState({ showSenderColorForm: false })}
+        />
+      ) : (
+        <button
+          type="button"
+          className="submit small"
+          onClick={() => this.setState({ showSenderColorForm: true })}
+        >
+          <i className="fa fa-plus" /> Add sender color
+        </button>
+      )}
+    </>;
+
+    return this.renderPanel("appearance-panel", body);
+  }
+
+  renderNumberField(label: string, value: number, onChange: (v: number) => void) {
+    return (
+      <div className="field-group">
+        <div className="lbl">{label}</div>
+        <input
+          type="number"
+          value={value}
+          onChange={(ev) => onChange(parseInt(ev.target.value))}
+        />
       </div>
-    </div>;
+    );
   }
 
   renderSystemSettings() {
-    return <div className="content advanced">
-      <div className="group">
-        <h3>Privacy</h3>
-        {this.renderPrivacyToggles()}
+    const { cacheStats } = this.state;
+    const cacheStat = (k: string, v: React.ReactNode) => (
+      <div className="cache-stat"><span className="k">{k}</span><span className="v">{v}</span></div>
+    );
+
+    const body = <>
+      <h3 className="sub">Privacy</h3>
+      {this.renderPrivacyToggles()}
+
+      <h3 className="sub sp">Sync</h3>
+      <div className="sync-grid">
+        {this.renderNumberField("Undo timeout (ms)", this.props.system.undoMS, (v) => this.updateSystem({ undoMS: v }))}
+        {this.renderNumberField("Sync interval (ms)", this.props.system.syncInterval, (v) => this.updateSystem({ syncInterval: v }))}
+        {this.renderNumberField("Pagination batch size", this.props.system.batchSize, (v) => this.updateSystem({ batchSize: v }))}
       </div>
 
-      <div className="group">
-        <h3>Sync</h3>
-        <div>
-          <label htmlFor="undo-ms">
-            Undo timeout (ms)
-          </label>
-          <input
-            id="undo-ms"
-            type="number"
-            value={this.props.system.undoMS}
-            onChange={(ev) => (this.props.updateFn({
-              system: {
-                ...this.props.system,
-                undoMS: parseInt(ev.target.value),
-              }
-            }))}
-          />
+      <h3 className="sub sp">Cache</h3>
+      {cacheStats && <div className="cache-card">
+        <div className="cache-grid">
+          {cacheStat("Database size", cacheStats.DatabaseSizeFormatted)}
+          {systemStore.props.isDebug && cacheStat("Schema version", cacheStats.SchemaVersion)}
+          {systemStore.props.isDebug && cacheStat("Page size", cacheStats.PageSize)}
+          {systemStore.props.isDebug && cacheStat("Page count", cacheStats.PageCount)}
+          {systemStore.props.isDebug && cacheStat("Free pages", cacheStats.FreelistPages)}
         </div>
-        <div>
-          <label htmlFor="sync-interval">
-            Sync interval (ms)
-          </label>
-          <input
-            id="sync-interval"
-            type="number"
-            value={this.props.system.syncInterval}
-            onChange={(ev) => (this.props.updateFn({
-              system: {
-                ...this.props.system,
-                syncInterval: parseInt(ev.target.value),
-              }
-            }))}
-          />
-        </div>
-        <div>
-          <label htmlFor="batch-size">
-            Pagination batch size
-          </label>
-          <input
-            id="batch-size"
-            type="number"
-            value={this.props.system.batchSize}
-            onChange={(ev) => (this.props.updateFn({
-              system: {
-                ...this.props.system,
-                batchSize: parseInt(ev.target.value),
-              }
-            }))}
-          />
-        </div>
-      </div>
+      </div>}
+      <button className="btn-danger" onClick={AppService.ClearCacheAndRestart}>
+        <i className="fa fa-trash" /> Clear cache &amp; restart
+      </button>
 
-      <div className="group">
-        <h3>Cache</h3>
-        {this.state.cacheStats && <ul>
-          <li>Database size: {this.state.cacheStats.DatabaseSizeFormatted}</li>
-          <li>Database path: <code>{this.state.cacheStats.DatabaseFilename}</code></li>
-          {systemStore.props.isDebug && <li>(debug)
-            <ul>
-              <li>Page size: {this.state.cacheStats.PageSize}</li>
-              <li>Page count: {this.state.cacheStats.PageCount}</li>
-              <li>Free pages: {this.state.cacheStats.FreelistPages}</li>
-              <li>Schema version: {this.state.cacheStats.SchemaVersion}</li>
-            </ul>
-          </li>}
-        </ul>}
-        <div>
-          <button
-            className="red"
-            onClick={AppService.ClearCacheAndRestart}
-          >Clear cache &amp; restart</button>
-        </div>
+      <h3 className="sub sp">Debug</h3>
+      {cacheStats && <div className="debug-row">
+        <div className="k">Database path</div>
+        <div className="v">{cacheStats.DatabaseFilename}</div>
+      </div>}
+      <div className="debug-row">
+        <div className="k">Log file</div>
+        <div className="v">{systemStore.props.logFilename}</div>
       </div>
+      <div className="debug-row">
+        <div className="k">Executable</div>
+        <div className="v">{systemStore.props.executableFilename}</div>
+      </div>
+      <div className="debug-actions">
+        <button className="btn-soft" onClick={AppService.RestartApp}>
+          <i className="fa fa-refresh" /> Restart Kanmail
+        </button>
+        <button className="btn-soft" onClick={() => AppService.OpenLink(systemStore.props.logFilename)}>
+          <i className="fa fa-file-text-o" /> Open log file
+        </button>
+      </div>
+    </>;
 
-      <div className="group">
-        <h3>Debug</h3>
-        <ul>
-          <li>Log file: <code>{systemStore.props.logFilename}</code></li>
-          <li>Executable: <code>{systemStore.props.executableFilename}</code></li>
-        </ul>
-        <div>
-          <button
-            className="green"
-            onClick={AppService.RestartApp}
-          >Restart Kanmail</button>
-          <button
-            onClick={() => AppService.OpenLink(systemStore.props.logFilename)}
-          >Open Log File</button>
-        </div>
-      </div>
-    </div>;
+    return this.renderPanel("system-panel", body);
   }
 
   renderLicensedSettings() {
-    return <div className="content advanced">
-      <div className="group">
-        <p>Thank you for purchasing a Kanmail license!</p>
+    const body = <>
+      <div className="goodies-banner">
+        <span className="ic"><i className="fa fa-trophy" /></span>
         <div>
-          <input
-            id="show-help-button"
-            type="checkbox"
-            checked={this.props.system.showHelpButton}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  showHelpButton: !this.props.system.showHelpButton,
-                }
-              })
-            )}
-          />
-          <label htmlFor="show-help-button">
-            Show help button in sidebar
-          </label>
-        </div>
-
-        <div>
-          <input
-            id="show-hidden-attachments"
-            type="checkbox"
-            checked={this.props.system.showHiddenAttachments}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  showHiddenAttachments: !this.props.system.showHiddenAttachments,
-                }
-              })
-            )}
-          />
-          <label htmlFor="show-hidden-attachments">
-            Show hidden attachments (text/html)
-          </label>
-        </div>
-
-        <div>
-          <input
-            id="group-single-threads-by-sender"
-            type="checkbox"
-            checked={this.props.system.groupSingleSenderThreads}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads,
-                }
-              })
-            )}
-          />
-          <label htmlFor="group-single-threads-by-sender">
-            [EXPERIMENT, requires restart] Merge single emails from each sender
-          </label>
-        </div>
-
-        <div>
-          <input
-            id="group-threads-by-subject"
-            type="checkbox"
-            checked={this.props.system.groupThreadsBySubject}
-            onChange={() => (
-              this.props.updateFn({
-                system: {
-                  ...this.props.system,
-                  groupThreadsBySubject: !this.props.system.groupThreadsBySubject,
-                }
-              })
-            )}
-          />
-          <label htmlFor="group-threads-by-subject">
-            [EXPERIMENT, requires restart] Merge threads (per account) with similar subjects
-          </label>
+          <div className="tt">Thanks for buying Kanmail!</div>
+          <div className="ds">A few extras and experiments, unlocked for licensed users.</div>
         </div>
       </div>
-    </div>
+
+      {this.renderCheckRow(
+        this.props.system.showHelpButton,
+        () => this.updateSystem({ showHelpButton: !this.props.system.showHelpButton }),
+        "Show help button in sidebar",
+      )}
+      {this.renderCheckRow(
+        this.props.system.showHiddenAttachments,
+        () => this.updateSystem({ showHiddenAttachments: !this.props.system.showHiddenAttachments }),
+        "Show hidden attachments (text/html)",
+      )}
+      {this.renderCheckRow(
+        this.props.system.groupSingleSenderThreads,
+        () => this.updateSystem({ groupSingleSenderThreads: !this.props.system.groupSingleSenderThreads }),
+        <>
+          <span className="glabel">Merge single emails from each sender</span>
+          <span className="badge-exp">Experiment</span>
+        </>,
+        { hint: "Requires restart" },
+      )}
+      {this.renderCheckRow(
+        this.props.system.groupThreadsBySubject,
+        () => this.updateSystem({ groupThreadsBySubject: !this.props.system.groupThreadsBySubject }),
+        <>
+          <span className="glabel">Merge threads (per account) with similar subjects</span>
+          <span className="badge-exp">Experiment</span>
+        </>,
+        { hint: "Requires restart" },
+      )}
+    </>;
+
+    return this.renderPanel("goodies-panel", body);
   }
 
   renderTabMenu() {
@@ -750,7 +647,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       return null;
     }
 
-    return <nav>
+    return <nav className="titlebar">
       <a
         onClick={() => (this.setState({ tab: "accounts" }))}
         className={this.state.tab == "accounts" ? "active" : ""}
@@ -785,13 +682,15 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       />
     } else {
       accountForm = <button
+        className="add-account-button"
         onClick={() => (this.setState({ showAccountForm: true }))}
-      >Add new account</button>;
+      ><i className="fa fa-plus" /> Add new account</button>;
     }
 
-    return <div className="content">
-      <div className="accounts">
+    const body = <>
+      <div className="km-accounts">
         {this.props.accounts.map((account, i) => <Account
+          key={account.name || i}
           accountIndex={i}
           deleteAccount={this.deleteAccount}
           updateAccount={this.updateAccount}
@@ -800,15 +699,17 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         />)}
       </div>
       {accountForm}
-    </div>;
+    </>;
+
+    return this.renderPanel("accounts-panel", body);
   }
 
   renderShortcuts() {
-    return (
+    return this.renderPanel("shortcuts-panel",
       <KeyboardShortcutsTab
         system={this.props.system}
         updateFn={this.props.updateFn}
-      />
+      />,
     );
   }
 
@@ -836,27 +737,20 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       return;
     }
 
-    let text: React.JSX.Element | string = (
-      <span>
-        Start using Kanmail <i className="fa fa-arrow-right" />
-      </span>
-    );
-    const classes = ["main-button"];
-
     return (
-      <div className="content">
+      <div className="welcome-actions">
         <button
           type="submit"
-          className={classes.join(" ")}
+          className="main-button"
           // Apply the settings we have (held by WelcomeSettings) to the main store
           onClick={() => {
             trackEvent("OnboardingComplete");
             settingsStore.updateSettings(this.props);
           }}
         >
-          {text}
+          Start using Kanmail <i className="fa fa-arrow-right" />
         </button>
-        {this.props.isWelcomeSettings && this.renderPrivacyToggles()}
+        {this.renderPrivacyToggles()}
       </div>
     );
   }
@@ -865,8 +759,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     return (
       <section id="settings">
         {this.renderTabMenu()}
-        {this.renderCurrentTab()}
-        {this.renderWelcomeSettingsButton()}
+        <div className="km-settings">
+          {this.renderCurrentTab()}
+          {this.renderWelcomeSettingsButton()}
+        </div>
       </section>
     );
   }

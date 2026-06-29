@@ -62,7 +62,7 @@ const bootApp = (
                 <section className={classNames.join(" ")} >
                     <TheTooltip />
                     < Component {...rootProps} />
-                </section>,
+                </section>
             </ErrorBoundary>,
             rootElement,
         );

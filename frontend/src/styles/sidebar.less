@@ -1,5 +1,13 @@
 /*
-    Folders/filters (left column) */
+    Folders/filters (left column) — redesigned to match the 2.x board reference.
+    Light `var(--side-bg)` panel, rounded nav items, gradient-accented active row.
+    Laid out as a flex column: wordmark header, scrollable folder/account list,
+    pinned Settings/Help, then the version + status footer.
+*/
+
+// The reference sidebar is ~214px wide. Override the layout var locally so the
+// columns section (which also reads @sidebarWidth) lines up.
+@sidebarWidth: 214px;
 
 section#sidebar {
   width: @sidebarWidth;
@@ -7,70 +15,85 @@ section#sidebar {
   left: 0;
   top: 0;
   bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--side-bg);
+  border-right: 1px solid var(--side-ring);
 
   .no-select;
 
+  /* ------------------------------- wordmark ------------------------------ */
   header {
-    height: @topHeight;
-    position: absolute;
-    left: 0;
-    width: @sidebarWidth;
-    top: 0;
+    flex: none;
+    padding: 21px 18px 22px;
+    position: relative;
 
-    div.buttons {
-      padding-top: 8px;
-      margin: 0 10px;
-      overflow: hidden;
-      height: @topHeight;
+    div.wordmark {
       display: flex;
-      justify-content: space-between;
-    }
-
-    div.logo {
-      margin-top: 7px;
-      margin-left: 10px;
+      align-items: center;
+      gap: 9px;
       font-size: 16px;
-    }
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--side-ink);
 
-    a {
-      vertical-align: top;
-      margin-top: 6px;
-      margin-left: 10px;
-      display: inline-block;
-    }
-
-    a.compose {
-      font-size: 18px;
-    }
-
-    a.search {
-      font-size: 15px;
-      margin-top: 5px;
+      img {
+        width: 22px;
+        height: 22px;
+        border-radius: 5px;
+        flex: none;
+      }
     }
   }
 
+  /* ---------------------------- folders + accounts ----------------------- */
   div#filters {
-    overflow: auto;
-    position: fixed;
-    width: @sidebarWidth;
-    left: 0;
-    top: @topHeight + 4;
-    bottom: 78px;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 12px 0;
+
+    div.filters-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 8px;
+    }
+  }
+
+  div.nav-head {
+    padding: 14px 10px 6px;
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
   }
 
   ul {
-    margin: 0 0 20px 0;
+    margin: 0 0 8px 0;
     padding: 0;
 
     li {
       list-style: none;
-      margin: 5px 0 5px 10px;
+      margin: 2px 0;
+      position: relative;
 
       a,
       span {
-        padding: 5px 0 5px 10px;
-        display: block;
-        border-radius: @borderRadius 0 0 @borderRadius;
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+        border-radius: var(--r-md);
+        color: var(--side-muted);
+        font-size: 13px;
+        line-height: 16px;
+
+        &:hover {
+          background: var(--side-active);
+          color: var(--side-ink);
+        }
       }
 
       span.update {
@@ -78,31 +101,95 @@ section#sidebar {
       }
 
       i {
-        margin-right: 7px;
-        margin-top: -13.5px;
-        font-size: 12px;
+        margin-right: 9px;
+        font-size: 13px;
+        width: 16px;
+        text-align: center;
+        flex: none;
+        color: inherit;
+      }
+
+      // Per-account accent dot (replaces the old account icon).
+      span.acct-dot {
+        flex: none;
+        width: 9px;
+        height: 9px;
+        border-radius: 99px;
+        margin-left: 4px;
+        margin-right: 12px;
+        padding: 0;
+        display: inline-block;
       }
 
       i.pin-button {
         position: absolute;
-        margin-top: 2px;
+        top: 50%;
+        transform: translateY(-50%);
         padding: 5px;
-        right: 8px;
+        right: 6px;
+        width: auto;
+        opacity: 0;
+        font-size: 12px;
+      }
+
+      &:hover i.pin-button {
+        opacity: 0.6;
       }
 
       span.unread-count {
         position: absolute;
-        right: 18px;
-        margin-top: -22px;
-        padding: 1.5px;
-        line-height: 18px;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 0;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 16px;
+        color: var(--side-muted);
+        background: none;
+        width: auto;
+        display: inline;
+      }
+
+      // Active folder/account row: soft gradient bg, pink text, left gradient bar
+      &.active {
+        > a {
+          background: var(--grad-soft);
+          color: var(--brand-pink);
+          font-weight: 600;
+
+          &:hover {
+            background: var(--grad-soft);
+            color: var(--brand-pink);
+          }
+        }
+
+        > a::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 7px;
+          bottom: 7px;
+          width: 3px;
+          border-radius: 99px;
+          background: linear-gradient(180deg, #e3196e, #f08c1d);
+        }
+
+        span.unread-count {
+          color: var(--brand-pink);
+        }
       }
 
       &.small {
         font-size: 12px;
 
         a {
-          padding: 2px 0 2px 10px;
+          padding: 6px 10px;
+          color: var(--faint);
+
+          i {
+            font-size: 12px;
+          }
         }
 
         a.disabled {
@@ -112,35 +199,79 @@ section#sidebar {
     }
   }
 
+  // Settings / Help / update links pinned to the bottom of the filters area.
   ul.window-links {
+    flex: none;
     margin: 0;
+    padding-top: 8px;
+  }
 
-    li {
-      a {
-        padding: 0 10px;
-        i {
-          margin-right: 4px;
+  /* -------------------------------- footer ------------------------------- */
+  footer {
+    flex: none;
+    font-size: @smallTextSize;
+    line-height: 16px;
+    padding: 0 18px 12px;
+
+    div.sb-foot-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 11px;
+      border-top: 1px solid var(--side-ring);
+
+      span.ver {
+        color: var(--faint);
+        font-size: 10.5px;
+        cursor: pointer;
+
+        &:hover {
+          color: var(--side-ink);
+        }
+      }
+
+      a.lic {
+        color: var(--faint);
+        font-size: 10.5px;
+
+        &:hover {
+          color: var(--brand-pink);
+        }
+      }
+
+      a.badge-up {
+        font-size: 10.5px;
+        font-weight: 700;
+        padding: 3px 11px;
+        border-radius: 99px;
+        background: var(--grad);
+        color: #fff;
+        box-shadow: 0 3px 10px rgba(227, 25, 110, 0.3);
+
+        &:hover {
+          color: #fff;
         }
       }
     }
-  }
 
-  footer {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    font-size: @smallTextSize;
-    line-height: 16px;
-    padding: 0px 0 10px 10px;
-    width: @sidebarWidth;
+    span.debug-link {
+      color: var(--faint);
+      font-size: 10.5px;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--side-ink);
+      }
+    }
 
     div#footer-status {
-      margin-top: 10px;
+      margin-top: 8px;
       position: relative;
       width: 100%;
 
       span {
-        opacity: 0.5;
+        opacity: 0.6;
         display: inline-block;
         width: 30px;
       }
@@ -162,21 +293,33 @@ section#sidebar {
       }
     }
 
-    section#status {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      left: @sidebarWidth;
-      height: 100px;
-      border-top: 5px solid;
-      z-index: 9;
-      display: flex;
-      justify-content: space-between;
+    div#status-list {
+      height: 0;
+      margin-top: 0;
+      border-top: 0 solid var(--side-ring);
+      overflow: hidden;
+      transition: height 0.2s ease, margin-top 0.2s ease,
+        border-top-width 0.2s ease;
 
-      div {
-        width: 32%;
-        padding: 5px;
+      &.open {
+        height: 50px;
+        margin-top: 8px;
+        border-top-width: 1px;
         overflow-y: auto;
+      }
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 4px 0;
+      }
+
+      li {
+        font-size: 10.5px;
+        line-height: 1.5;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }

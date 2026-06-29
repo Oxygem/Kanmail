@@ -115,6 +115,10 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
   }
 
   render() {
+    if (!this.props.requestErrors.length && !this.props.networkErrors.length) {
+      return null;
+    }
+
     return (
       <div className="header-errors">
         {this.renderRequestErrors()}

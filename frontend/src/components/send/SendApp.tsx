@@ -29,7 +29,7 @@ import {
 import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
 import ControlInput from "../emails/ControlInput.tsx";
-import SquireEditor from "./SquireEditor.tsx";
+import SquireEditor, { SquireEditorApi, SquireFormatStates } from "./SquireEditor.tsx";
 
 interface addressOption {
   value: Address,
@@ -41,6 +41,23 @@ type accountAddressOption = AccountAddressOption;
 function getFilename(path) {
   const bits = path.split("/");
   return bits[bits.length - 1];
+}
+
+// Deterministic accent colour for an account / recipient, derived from a string
+// so any account name or email gets a stable, theme-agnostic colour.
+function stringToColor(value: string): string {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = value.charCodeAt(i) + ((hash << 5) - hash);
+    hash = hash & hash;
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 58%, 48%)`;
+}
+
+function avatarInitial(value: string): string {
+  const trimmed = (value || "").trim();
+  return trimmed ? trimmed[0].toUpperCase() : "?";
 }
 
 interface ISendAppProps extends ISettings, ISystem {
@@ -65,11 +82,15 @@ interface ISendAppState {
   isSending: boolean;
   isSaving: boolean;
   isSentOrSaved?: boolean;
+
+  showCc: boolean;
+  formatStates: SquireFormatStates;
 }
 
 @subscribe(settingsStore, systemStore)
 export default class SendApp extends React.Component<ISendAppProps, ISendAppState> {
   private releaseKeyboard: (() => void) | null = null;
+  private editorApi: SquireEditorApi | null = null;
 
   constructor(props: ISendAppProps) {
     super(props);
@@ -101,6 +122,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
       isSending: false,
       isSaving: false,
+
+      showCc: false,
+      formatStates: {
+        bold: false,
+        italic: false,
+        underline: false,
+        code: false,
+        quote: false,
+        unorderedList: false,
+        orderedList: false,
+      },
     };
 
     if (props.message) {
@@ -143,6 +175,9 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           })
         })
         state.cc = cc
+        if (cc.length > 0) {
+          state.showCc = true;
+        }
       }
     }
 
@@ -236,6 +271,19 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       })
     };
 
+    const formatOptionLabel = (option: addressOption) => {
+      const email = option.value?.email || option.label || "";
+      const name = option.value?.name || "";
+      return (
+        <span className="recip-label">
+          <span className="av" style={{ background: stringToColor(email) }}>
+            {avatarInitial(name || email)}
+          </span>
+          <span className="em">{name ? `${name} <${email}>` : email}</span>
+        </span>
+      );
+    };
+
     return (
       <AsyncCreatableSelect
         isMulti
@@ -244,6 +292,8 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         loadOptions={loadOptions}
         id={dataKey}
         classNamePrefix="react-select"
+        placeholder=""
+        formatOptionLabel={formatOptionLabel}
         value={this.state[dataKey]}
         onChange={_.partial(this.handleSelectChange, dataKey)}
         onCreateOption={(value: string) => {
@@ -263,35 +313,53 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     );
   }
 
-  renderAttachLink() {
-    if (this.state.isSending) {
-      return null;
+  handleEditorCommand = (command: string, value?: any) => {
+    if (this.editorApi) {
+      this.editorApi.command(command, value);
     }
+  };
 
-    return <a onClick={this.handleClickAttach}>
-      <span>
-        <i className="fa fa-file" /> Attach
-      </span>
-    </a>;
-  }
+  handlePromptEditorCommand = (command: string, promptText: string) => {
+    if (this.editorApi) {
+      this.editorApi.promptCommand(command, promptText);
+    }
+  };
 
-  renderSendLink() {
+  // The gradient primary action, reflecting the dynamic send states.
+  renderSendButton() {
+    let icon = "fa fa-paper-plane";
+    let label = "Send";
+
     if (this.state.isSentOrSaved === true) {
-      return <a onClick={this.handleSendEmail}>
-        <span><i className="fa fa-check" /> Sent!</span>
-      </a>
+      icon = "fa fa-check";
+      label = "Sent!";
     } else if (this.state.isSentOrSaved === false) {
-      return <a onClick={this.handleSendEmail}>
-        <span><i className="fa fa-times" /> Error sending!</span>
-      </a>
+      icon = "fa fa-times";
+      label = "Error sending!";
     } else if (this.state.isSending) {
-      return <a onClick={this.handleSendEmail}>
-        <span><i className="fa fa-spin fa-refresh" /> Sending email</span>
-      </a>
+      icon = "fa fa-spin fa-refresh";
+      label = "Sending";
     }
 
-    return <a onClick={this.handleSendEmail}><span><i className="fa fa-paper-plane" /> Send</span></a>;
+    return (
+      <button className="btn-primary" onClick={this.handleSendEmail}>
+        <i className={icon} /> {label}
+      </button>
+    );
   }
+
+  // Renders the account dot + name + email inside the From react-select control.
+  formatAccountOptionLabel = (option: accountAddressOption) => {
+    const accountName = option.value[0];
+    const addr = option.value[1];
+    return (
+      <span className="from-pill-label">
+        <span className="dot" style={{ background: stringToColor(accountName) }} />
+        <span className="nm">{addr.name || accountName}</span>
+        {addr.email && <span className="em">{addr.email}</span>}
+      </span>
+    );
+  };
 
   render() {
     const accountOptions: accountAddressOption[] = _.reduce(
@@ -302,6 +370,8 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       []
     );
 
+    const { formatStates } = this.state;
+
     return (
       <section
         id="new-email"
@@ -310,14 +380,13 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         <ControlInput />
 
         <header
-          className="new-email flex header-bar"
+          className="new-email titlebar"
           onClick={stopEventPropagation}
           ref={makeDragElement}
         >
-          <nav>
-            {this.renderSendLink()}
-            {this.renderAttachLink()}
-          </nav>
+          <span className="title">
+            <i className="fa fa-pencil" /> New Message
+          </span>
         </header>
 
         <form
@@ -326,44 +395,59 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           // Prevent button clicks submitting the form
           onSubmit={(ev) => ev.preventDefault()}
         >
-          <div className="flex form-top" onClick={stopEventPropagation}>
-            <div className="wide flex flex-nowrap">
-              <label htmlFor="to">To:</label>
-              {this.renderContactsSelect("to")}
-            </div>
-
-            <div className="wide flex flex-nowrap">
-              <label htmlFor="cc">CC:</label>
-              {this.renderContactsSelect("cc")}
-            </div>
-
-            <div className="wide flex flex-nowrap">
-              <label htmlFor="subject">Subject:</label>
-              <input
-                id="subject"
-                type="text"
-                value={this.state.subject}
-                onChange={_.partial(this.handleInputChange, "subject")}
-              />
-            </div>
-
-            <div className="wide flex">
-              <label htmlFor="account">From:</label>
+          <div className="form-top" onClick={stopEventPropagation}>
+            <div className="field" id="field-from">
+              <span className="lbl">From</span>
               <Select
                 id="account"
                 classNamePrefix="react-select"
                 options={accountOptions}
                 value={this.state.accountContact}
+                formatOptionLabel={this.formatAccountOptionLabel}
                 onChange={(v) => this.handleSelectChange("accountContact", v)}
+              />
+            </div>
+
+            <div className="field" id="field-to">
+              <span className="lbl">To</span>
+              <div className="recip">
+                {this.renderContactsSelect("to")}
+              </div>
+              {!this.state.showCc && (
+                <span className="cc">
+                  <span onClick={() => this.setState({ showCc: true })}>Cc</span>
+                </span>
+              )}
+            </div>
+
+            {this.state.showCc && (
+              <div className="field" id="field-cc">
+                <span className="lbl">Cc</span>
+                <div className="recip">
+                  {this.renderContactsSelect("cc")}
+                </div>
+              </div>
+            )}
+
+            <div className="field" id="field-subject">
+              <label className="lbl" htmlFor="subject">Subject</label>
+              <input
+                id="subject"
+                type="text"
+                className="subject-val"
+                value={this.state.subject}
+                onChange={_.partial(this.handleInputChange, "subject")}
               />
             </div>
           </div>
 
-          <div className="flex form-content" onClick={stopEventPropagation}>
+          <div className="compose-body form-content" onClick={stopEventPropagation}>
             <SquireEditor
               initialContent={this.getInitialEditorContent()}
+              hideToolbar
+              onReady={(api) => { this.editorApi = api; }}
+              onFormatStateChange={(states) => this.setState({ formatStates: states })}
               onUpdate={data => {
-                console.log("SET", data);
                 this.setState({
                   html: data,
                 })
@@ -371,7 +455,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             />
           </div>
 
-          <div className={`flex form-attachments ${this.state.attachments.length === 0 && "empty"}`}>
+          <div className={`form-attachments ${this.state.attachments.length === 0 ? "empty" : ""}`}>
             {_.map(this.state.attachments, (attachment, i) => (
               <div className="attachment" onClick={() => {
                 const attachments = this.state.attachments;
@@ -385,6 +469,93 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="compose-dock" onClick={stopEventPropagation}>
+            {this.renderSendButton()}
+            <div className="vrule" />
+            <button
+              type="button"
+              className="tool-btn"
+              title="Attach"
+              onClick={this.handleClickAttach}
+            >
+              <i className="fa fa-paperclip" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.bold ? "active" : ""}`}
+              title="Bold"
+              onClick={() => this.handleEditorCommand(formatStates.bold ? "removeBold" : "bold")}
+            >
+              <i className="fa fa-bold" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.italic ? "active" : ""}`}
+              title="Italic"
+              onClick={() => this.handleEditorCommand(formatStates.italic ? "removeItalic" : "italic")}
+            >
+              <i className="fa fa-italic" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.underline ? "active" : ""}`}
+              title="Underline"
+              onClick={() => this.handleEditorCommand(formatStates.underline ? "removeUnderline" : "underline")}
+            >
+              <i className="fa fa-underline" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.quote ? "active" : ""}`}
+              title="Quote"
+              onClick={() => this.handleEditorCommand(formatStates.quote ? "decreaseQuoteLevel" : "increaseQuoteLevel")}
+            >
+              <i className="fa fa-quote-left" />
+            </button>
+            <button
+              type="button"
+              className="tool-btn"
+              title="Link"
+              onClick={() => this.handlePromptEditorCommand("makeLink", "Enter a URL:")}
+            >
+              <i className="fa fa-link" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.unorderedList ? "active" : ""}`}
+              title="Bullet list"
+              onClick={() => this.handleEditorCommand(formatStates.unorderedList ? "removeList" : "makeUnorderedList")}
+            >
+              <i className="fa fa-list-ul" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.orderedList ? "active" : ""}`}
+              title="Numbered list"
+              onClick={() => this.handleEditorCommand(formatStates.orderedList ? "removeList" : "makeOrderedList")}
+            >
+              <i className="fa fa-list-ol" />
+            </button>
+            <button
+              type="button"
+              className={`tool-btn ${formatStates.code ? "active" : ""}`}
+              title="Code"
+              onClick={() => this.handleEditorCommand(formatStates.code ? "removeCode" : "code")}
+            >
+              <i className="fa fa-code" />
+            </button>
+            <span className="spacer" />
+            <button
+              type="button"
+              className="tool-btn danger"
+              title="Discard"
+              // @ts-ignore
+              onClick={() => wails.Window.Close()}
+            >
+              <i className="fa fa-trash" />
+            </button>
           </div>
         </form>
       </section>

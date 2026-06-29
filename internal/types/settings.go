@@ -143,7 +143,7 @@ func NewDefaultSettings() Settings {
 	s.System.ShareAnalytics = true
 	s.System.ShowHelpButton = true
 
-	s.System.Theme.Light = "theme-default"
+	s.System.Theme.Light = "theme-default-light"
 	s.System.Theme.Dark = "theme-default-dark"
 
 	// Default enable per-sender thread backgrounds (on hover only)

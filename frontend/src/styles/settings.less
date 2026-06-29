@@ -1,476 +1,740 @@
 /*
-    Settings */
+    Settings — 2.x redesign.
+    The settings window (?app=settings) renders #settings-app > #settings, while
+    onboarding renders #welcome-settings > #settings. Reusable panel / control
+    styling is therefore scoped to #settings (shared by both); page-level chrome
+    (background, fixed tab bar, macOS inset) is scoped to #settings-app only.
+    Everything is themed via design tokens (var(--*)) — one rule set covers light
+    and dark themes.
+*/
 
-section#settings {
-  // left: 0;
-  // right: 0;
-  // overflow-y: auto;
-  // position: fixed;
+/* ============================ page + tab bar ============================ */
+section#settings-app {
+  min-height: 100vh;
+  background: var(--bar);
+  color: var(--ink);
 
-  button.main-button {
-    // margin-left: 20px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-  }
-
-  div.settings {
-    padding: 20px;
-
-    label {
-      display: block;
-
-      small {
-        display: block;
-      }
-    }
-
-    > input {
-      margin-bottom: 30px;
-    }
-
-    .select-wrapper {
-      padding-bottom: 30px;
-    }
-
-    div.no-input {
-      margin-top: 30px;
-    }
-  }
-
-  div.checkbox {
-    margin-bottom: 30px;
-    display: flex;
-    label {
-      width: 300px;
-    }
-  }
-}
-
-section#welcome-settings {
-  margin: 100px auto;
-  width: 90%;
-
-  h2 {
-    margin-top: 160px;
-  }
-
-  img {
-    vertical-align: middle;
-    margin-top: -10px;
-  }
-
-  > p {
-    margin: 20px 0;
-    font-size: 18px;
-
-    button {
-      margin-top: 10px;
-    }
-  }
-
-  small {
-    font-size: 14px;
-  }
-}
-
-
-#settings-app {
-  padding-top: 40px;
-
-  nav {
-    font-size: 15px;
-    width: 100%;
-    padding: 8px 0 8px 8px;
+  /* Tab bar doubles as the window titlebar — matches the compose window's
+     header.new-email.titlebar metrics (height, padding, macOS traffic-light
+     inset) so both windows share the same chrome. */
+  nav.titlebar {
     position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    height: 44px;
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 0 14px;
+    background: var(--bar);
+    border-bottom: 1px solid var(--divider);
+    -webkit-app-region: drag;
+    .no-select;
 
     a {
-      margin-right: 10px;
-      color: @lightestTextGrey;
+      -webkit-app-region: no-drag;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 14px;
+      margin: 0;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+
+      &:hover {
+        color: var(--ink);
+      }
 
       &.active {
-        color: white;
+        font-weight: 700;
+        color: var(--ink);
+      }
+
+      &.active::after {
+        content: "";
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 0;
+        height: 2px;
+        border-radius: 99px;
+        background: var(--grad);
       }
     }
   }
+}
 
-  .content {
-    width: 90%;
+body.os-darwin section#settings-app nav.titlebar {
+  padding-left: 78px;
+}
+
+/* ============================ shared layout ============================= */
+section#settings {
+  .km-settings {
+    max-width: 880px;
     margin: 0 auto;
-
-    div.group {
-      width: 100%;
-      margin-bottom: 30px;
-    }
-
-    &.advanced {
-      margin-top: 20px;
-      display: flex;
-      flex-wrap: wrap;
-    }
-
-    &.appearance{
-      display: flex;
-      justify-content: flex-start;
-      flex-wrap: wrap;
-
-      label {
-        width: 100%;
-        font-size: @bigTextSize;
-        margin: 40px 0 20px 0;
-      }
-
-      h3 {
-        width: 100%;
-      }
-
-      div.group {
-        display: flex;
-        flex-wrap: wrap;
-      }
-
-      div.theme-grid {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
-      }
-
-      div.appear-button {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        padding: 10px;
-        border-radius: @borderRadius;
-        cursor: pointer;
-        flex-wrap: wrap;
-
-        span {
-          width: 100%;
-          text-align: center;
-          margin-top: 20px;
-        }
-
-        div.sidebar {
-          width: 20px;
-          height: 50px;
-          border-radius: 8px 0 0 8px;
-        }
-
-        div.main {
-          width: 60px;
-          height: 50px;
-          border-radius: 0 8px 8px 0;
-        }
-
-        &.default {
-          div.sidebar {
-            background: @black;
-          }
-          div.main {
-            background: @lightGrey;
-          }
-        }
-
-        &.light {
-          div.sidebar {
-            background: @midGrey;
-          }
-          div.main {
-            background: @lightGrey;
-          }
-        }
-
-        &.dark {
-          div.sidebar {
-            background: @black;
-          }
-          div.main {
-            background: lighten(@darkestGrey, 10%);
-          }
-        }
-
-        &.nord-light {
-          div.sidebar {
-            background: #d8dee9;
-          }
-          div.main {
-            background: #eceff4;
-          }
-        }
-
-        &.midnight-blue {
-          div.sidebar {
-            background: #060f1c;
-          }
-          div.main {
-            background: #0d1b2a;
-          }
-        }
-
-        &.matrix {
-          div.sidebar {
-            background: #000000;
-            border-right: 1px solid #00ff41;
-          }
-          div.main {
-            background: #000000;
-            color: #00ff41;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 18px;
-            line-height: 50px;
-            text-align: center;
-          }
-          div.main::before {
-            content: "01";
-          }
-        }
-
-        &.locked {
-          opacity: 0.55;
-
-          span i.fa-lock {
-            margin-left: 6px;
-            font-size: 0.85em;
-          }
-
-          &:hover {
-            background: transparent;
-            opacity: 0.75;
-          }
-        }
-      }
-    }
+    padding: 26px 28px 100px;
   }
 }
 
-body.os-darwin #settings-app nav {
-  padding-left: 88px;
+section#settings-app #settings .km-settings {
+  padding-top: 76px;
 }
 
+/* ------------------------------- panel --------------------------------- */
+/* The reference stacks every section as a bordered card with its own header to
+   show them apart; the app shows one tab at a time and the tab bar names the
+   section, so the card chrome and per-panel header are dropped — each panel
+   reads as a plain page section. */
+#settings .km-panel {
+  margin-bottom: 26px;
 
-/*
-  Accounts */
+  .panel-body {
+    padding: 0;
+  }
+}
 
-div.accounts {
-  margin-top: 30px;
-  margin-bottom: 30px;
+/* sub-headings inside a panel body */
+#settings h3.sub {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--ink);
 
-  h2 {
-    margin-bottom: 0;
+  &.sp {
+    margin-top: 30px;
   }
 
-  > small {
-    display: block;
-    margin-left: 10px;
+  .accent {
+    color: var(--brand-pink);
+  }
+}
+
+#settings p.help-text {
+  margin: -6px 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ============================ form controls ============================= */
+#settings {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea {
+    height: 38px;
+    padding: 0 13px;
+    border-radius: var(--r-md);
+    border: 1px solid var(--ring);
+    background: var(--input);
+    color: var(--ink);
+    font-size: 14px;
+
+    &:hover {
+      border-color: var(--faint);
+    }
+
+    &:focus {
+      border-color: var(--brand-pink);
+    }
   }
 
-  div.hidden {
-    display: none;
+  textarea {
+    height: auto;
+    padding: 10px 13px;
+    line-height: 1.5;
   }
 
-  .account {
+  .lbl {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+}
+
+/* ------------------------------- buttons ------------------------------- */
+#settings {
+  button.btn-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: var(--r-md);
+    background: var(--pill);
+    border: 1px solid var(--ring);
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--brand-pink);
+      background: var(--pill);
+    }
+  }
+
+  button.btn-remove {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--danger);
+    padding: 8px 12px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--danger-bg);
+      border-radius: var(--r-md);
+    }
+  }
+
+  button.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--danger);
+    padding: 9px 16px;
+    border-radius: var(--r-md);
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-ring);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--danger-bg);
+      filter: brightness(1.03);
+    }
+  }
+
+  button.icon-btn {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px;
-    margin: 0 0 10px 0;
-    border-radius: @borderRadius;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    color: var(--faint);
+    cursor: pointer;
+    background: none;
+    border: 0;
+    font-size: 14px;
+    flex: none;
 
-    &.active {
-      border: 1px solid;
+    &:hover {
+      background: var(--pill);
+      color: var(--ink);
     }
 
-    div.avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 32px;
-      margin-right: 10px;
-      text-align: center;
-      line-height: 32px;
-      color: white;
-      text-shadow: 0px 0px 1px black;
-      font-size: 16px;
-      font-weight: bold;
-      img {
-        width: 32px;
-        border-radius: 32px;
+    &[disabled] {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+  }
+}
+
+/* --------------------------- custom checkbox --------------------------- */
+#settings .check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 8px 0;
+  cursor: pointer;
+
+  .cbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    flex: none;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+
+    &.on {
+      background: var(--grad);
+    }
+
+    &.off {
+      background: var(--input);
+      border: 1px solid var(--check-ring);
+    }
+  }
+
+  .ctxt {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--sub);
+    line-height: 1.45;
+
+    .ctxt-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    a {
+      color: var(--brand-pink);
+
+      &:hover {
+        color: var(--brand-pink);
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .ghint {
+    font-size: 12.5px;
+    color: var(--faint);
+    margin-top: 3px;
+  }
+
+  .badge-exp {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #c77f1a;
+    background: rgba(240, 140, 29, 0.16);
+    padding: 2px 7px;
+    border-radius: 99px;
+  }
+}
+
+/* ============================== accounts =============================== */
+#settings .km-accounts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+#settings .acct-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border-radius: var(--r-xl);
+  background: var(--card);
+  border: 1px solid var(--card-ring);
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 99px;
+    flex: none;
+    line-height: 40px;
+    font-size: 16px;
+
+    img {
+      width: 40px;
+      height: 40px;
+      border-radius: 99px;
+    }
+  }
+
+  .grow {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .nm {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .em {
+    font-size: 13px;
+    color: var(--muted);
+
+    &.error {
+      color: var(--danger);
+    }
+  }
+}
+
+/* the add-new-account trigger */
+#settings .add-account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: var(--r-lg);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--pill);
+  border: 1px solid var(--ring);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--brand-pink);
+  }
+}
+
+/* --------------------------- account edit form ------------------------- */
+/* AccountForm renders <form class="account"> inline under an account row, and
+   also (for manual setup) inside .account-overlay. Style its existing markup
+   into the reference edit card. */
+#settings .account-edit {
+  margin-top: 12px;
+}
+
+/* The provider-picker / OAuth wrapper forms also carry `.account` but merely
+   wrap a fixed overlay — exclude `.new-account` so only the real edit /
+   manual-config AccountForm becomes a card. */
+#settings form.account:not(.new-account) {
+  border-radius: var(--r-xl);
+  background: var(--card);
+  border: 1px solid var(--edit-ring);
+  box-shadow: var(--edit-shadow);
+  overflow: hidden;
+  padding: 0;
+
+  .top-bar {
+    padding: 16px;
+    border-bottom: 1px solid var(--divider);
+
+    .right {
+      float: right;
+      display: flex;
+      gap: 8px;
+    }
+
+    .error {
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    button[type="submit"].submit,
+    button.submit {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 16px;
+      border-radius: var(--r-md);
+      background: var(--grad);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+      box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
+
+      &:hover {
+        filter: brightness(1.04);
       }
     }
 
-    div.name {
+    .right > button:not(.submit) {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--r-md);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+
+      &:hover {
+        background: var(--pill);
+        color: var(--ink);
+      }
+    }
+  }
+
+  /* sub tabs */
+  .button-set.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 14px;
+
+    button {
+      position: relative;
+      padding: 9px 12px 11px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: 0;
+      border-radius: 0;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--ink);
+        background: none;
+      }
+
+      &.active {
+        font-weight: 700;
+        color: var(--ink);
+        background: none;
+      }
+
+      &.active::after {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 0;
+        height: 2px;
+        border-radius: 99px;
+        background: var(--grad);
+      }
+    }
+  }
+
+  /* form body */
+  > .wide:not(.top-bar),
+  > div {
+    padding: 0 16px;
+  }
+
+  > .top-bar {
+    padding: 16px;
+  }
+
+  .flex.wide,
+  > .wide > .flex {
+    padding: 18px 0 0;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 7px;
+
+    &.checkbox {
+      display: inline-block;
+      margin: 0 8px 0 0;
+      font-size: 13px;
+      color: var(--sub);
+    }
+  }
+
+  .half {
+    margin-bottom: 16px;
+  }
+
+  .contact {
+    align-items: flex-end;
+    gap: 10px;
+    margin-bottom: 10px;
+
+    .contact-address {
       flex-grow: 1;
     }
 
+    button.cancel {
+      height: 38px;
+      margin: 0;
+      padding: 0 12px;
+      color: var(--faint);
+
+      &:hover {
+        color: var(--danger);
+        background: var(--danger-bg);
+        border-radius: var(--r-md);
+      }
+    }
+  }
+
+  .add-contact-button {
+    margin: 4px 0 20px;
+  }
+
+  > div:last-child,
+  > .wide:last-child {
+    padding-bottom: 20px;
+  }
+}
+
+/* tab content visibility (preserve the JS show/hide) */
+#settings form.account .hidden {
+  display: none;
+}
+
+/* ---------------------- new account (add) flow ------------------------- */
+#settings .new-account-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 6px;
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 12px;
+    border-radius: var(--r-lg);
+    background: var(--card);
+    border: 1px solid var(--card-ring);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+
+    &:hover {
+      border-color: var(--brand-pink);
+      background: var(--card);
+    }
+
+    img,
     i {
-      float: right;
+      width: 34px;
+      height: 34px;
+      font-size: 34px;
+      line-height: 34px;
+      margin: 0;
+      vertical-align: middle;
     }
 
-    label {
-      display: block;
-      margin-top: 10px;
+    &.manual {
+      width: auto;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      flex-direction: row;
+      background: none;
+      border: 0;
+      color: var(--brand-pink);
 
-      &.checkbox {
-        display: inline-block;
+      &:hover {
+        background: none;
+        text-decoration: underline;
       }
-    }
-
-    div.top-bar {
-      margin-bottom: 10px;
-    }
-
-    div.buttons {
-      button {
-        margin-left: 15px;
-      }
-    }
-
-    div.error,
-    div.tabs {
-      margin-top: 10px;
-    }
-
-    input#name {
-      width: 300px;
-    }
-
-    // h3 {
-    //   margin-top: 8px;
-
-    //   img,
-    //   i {
-    //     width: 48px;
-    //     vertical-align: middle;
-    //     margin-top: -10px;
-    //     margin-right: 14px;
-    //     float: none;
-    //     font-size: 48px;
-    //   }
-    // }
-
-    .contact {
-      margin-bottom: 5px;
-
-      .contact-address {
-        flex-grow: 1;
-        margin-right: 5px;
-      }
-
-      button {
-        height: 24px;
-        margin-top: 36px;
-      }
-    }
-
-    .add-contact-button {
-      margin-top: 10px;
     }
   }
 }
 
-form.account {
-  margin-bottom: 40px;
-
-  h3 {
-    font-size: 18px;
-    margin: 40px 0 20px 0;
-
-    img {
-      width: 36px;
-    }
-
-    i {
-      font-size: 36px;
-    }
-  }
-
-  &.new-account {
-    label {
-      font-size: 18px;
-    }
-  }
-
-  p {
-    font-size: 15px;
-    margin: 20px 0;
-  }
-
-  div.input {
-    margin-bottom: 30px;
-
-    input {
-      border: none;
-      font-size: 18px;
-      padding: 20px;
-    }
-  }
-
-  .new-account-buttons {
-    button {
-      // width: 25%;
-      color: @lightGrey;
-      text-align: center;
-      width: 25%;
-      background: transparent;
-      padding: 20px 10px 20px 10px;
-      font-size: 18px;
-
-      img,
-      i {
-        vertical-align: middle;
-        margin: 0 0 20px 0;
-        font-size: 48px;
-        width: 48px;
-        // display: block;
-      }
-
-      &.manual {
-        font-size: 13px;
-        font-weight: normal;
-        padding: 10px;
-        width: auto;
-      }
-    }
-  }
-
-  .account-control-buttons {
-    margin-bottom: 40px;
-
-    span, button {
-      margin-right: 10px;
-    }
-  }
-
-}
-
-.account-overlay {
+#settings .account-overlay {
   position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
+  z-index: 1400;
   overflow: auto;
+  background: rgba(0, 0, 0, 0.45);
 
   .account-overlay-content {
-    margin: 100px auto 0 auto;
+    margin: 60px auto;
     width: 90%;
-    max-width: 800px;
+    max-width: 640px;
+    padding: 26px;
+    background: var(--bg);
+    border: 1px solid var(--ring);
+    border-radius: 16px;
+    box-shadow: var(--shadow-win);
+
+    h3 {
+      margin: 0 0 16px;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+
+      img {
+        width: 28px;
+        vertical-align: middle;
+        margin-right: 10px;
+      }
+
+      i {
+        margin-right: 10px;
+        color: var(--brand-pink);
+      }
+    }
+
+    p {
+      font-size: 14px;
+      color: var(--sub);
+      margin: 14px 0;
+    }
+
+    .input {
+      margin-bottom: 16px;
+    }
+
+    .account-control-buttons {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 22px;
+      flex-wrap: wrap;
+
+      button.submit,
+      button.main-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        height: 40px;
+        padding: 0 20px;
+        border-radius: var(--r-md);
+        background: var(--grad);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        border: 0;
+        box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
+
+        &:hover {
+          filter: brightness(1.04);
+        }
+      }
+
+      button.cancel {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: var(--r-md);
+        background: transparent;
+        color: var(--muted);
+        font-weight: 600;
+
+        &:hover {
+          background: var(--pill);
+          color: var(--ink);
+        }
+      }
+    }
+
+    .manual {
+      background: none;
+      border: 0;
+      color: var(--brand-pink);
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
 }
 
-.setup-steps {
-  margin-bottom: 20px;
-  font-size: @textSize;
+#settings .setup-steps {
+  margin-bottom: 18px;
+  font-size: 13px;
 
   span {
-    color: @lightestTextGrey;
+    color: var(--faint);
 
     &.active {
-      color: @green;
-      font-weight: bold;
+      color: var(--brand-pink);
+      font-weight: 700;
     }
 
     &.separator {
@@ -479,72 +743,391 @@ form.account {
   }
 }
 
-/*
-  Color Picker */
+/* ============================= appearance ============================== */
+#settings .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 4px;
+}
 
+#settings .theme-card {
+  border-radius: var(--r-lg);
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--card-ring);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--faint);
+  }
+
+  &.active {
+    border-color: rgba(227, 25, 110, 0.5);
+    background: var(--grad-soft);
+  }
+
+  &.locked {
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 0.8;
+      border-color: var(--card-ring);
+    }
+  }
+
+  .preview {
+    height: 80px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    display: flex;
+    border: 1px solid var(--divider);
+  }
+
+  .preview .side {
+    width: 30%;
+  }
+
+  .preview .body {
+    flex: 1;
+  }
+
+  .cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 11px;
+    padding: 0 2px;
+
+    .nm {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      text-transform: capitalize;
+
+      i.fa-lock {
+        margin-left: 6px;
+        font-size: 0.85em;
+        color: var(--faint);
+      }
+    }
+
+    .tick {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 99px;
+      background: var(--grad);
+      color: #fff;
+      font-size: 10px;
+      flex: none;
+    }
+  }
+
+  /* per-theme preview swatches */
+  &.light .preview .side { background: #a6a8a9; }
+  &.light .preview .body { background: #e6e8e9; }
+
+  &.dark .preview .side { background: #000; }
+  &.dark .preview .body { background: #3a3d3e; }
+
+  &.nord-light .preview .side { background: #d8dee9; }
+  &.nord-light .preview .body { background: #eceff4; }
+
+  &.midnight-blue .preview .side { background: #060f1c; }
+  &.midnight-blue .preview .body { background: #0d1b2a; }
+
+  &.matrix .preview .side {
+    background: #000;
+    border-right: 1px solid #00ff41;
+  }
+  &.matrix .preview .body {
+    background: #000;
+    color: #00ff41;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  &.matrix .preview .body::before {
+    content: "01";
+  }
+}
+
+/* --------------------------- sender colors ----------------------------- */
+#settings .sender-colors-empty {
+  color: var(--faint);
+  font-style: italic;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+#settings .sender-colors-list {
+  margin-bottom: 12px;
+}
+
+#settings .sender-color-row,
+#settings .sender-color-form .sender-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  input[type="text"] {
+    flex-grow: 1;
+    max-width: 320px;
+  }
+
+  button.cancel.small,
+  button.small {
+    height: 38px;
+  }
+}
+
+#settings .sender-color-form .error {
+  color: var(--danger);
+  font-size: 12.5px;
+  margin-top: 4px;
+}
+
+#settings button.submit.small,
+#settings button.small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--ring);
+  background: var(--pill);
+  color: var(--ink);
+
+  &.submit {
+    background: var(--grad);
+    color: #fff;
+    border: 0;
+    box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
+  }
+
+  &.cancel {
+    background: none;
+    border: 0;
+    color: var(--faint);
+
+    &:hover {
+      color: var(--danger);
+    }
+  }
+}
+
+/* =============================== system =============================== */
+#settings .sync-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  .field-group .lbl {
+    margin-bottom: 7px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+}
+
+#settings .cache-card {
+  border-radius: var(--r-lg);
+  background: var(--card);
+  border: 1px solid var(--card-ring);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+
+  .cache-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 28px;
+  }
+
+  .cache-stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid var(--divider);
+    padding-bottom: 9px;
+
+    .k {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .v {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12.5px;
+      color: var(--ink);
+      text-align: right;
+    }
+  }
+}
+
+#settings .debug-row {
+  margin-bottom: 10px;
+
+  .k {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .v {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: var(--sub);
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--kbd);
+    border: 1px solid var(--ring);
+    word-break: break-all;
+  }
+}
+
+#settings .debug-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* =============================== goodies =============================== */
+#settings .goodies-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--r-xl);
+  background: var(--grad-soft);
+  border: 1px solid var(--edit-ring);
+  margin-bottom: 18px;
+
+  .ic {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--grad);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    font-size: 17px;
+  }
+
+  .tt {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .ds {
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+}
+
+/* ========================= welcome / onboarding ======================== */
+section#welcome-settings {
+  margin: 80px auto 60px;
+  width: 90%;
+  max-width: 880px;
+  color: var(--ink);
+
+  > p {
+    margin: 16px 0 6px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  > small {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+
+    i {
+      margin-right: 6px;
+      color: var(--brand-pink);
+    }
+
+    a {
+      color: var(--brand-pink);
+    }
+  }
+
+  #settings .km-settings {
+    padding: 22px 0 0;
+  }
+}
+
+#settings button.main-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 46px;
+  padding: 0 26px;
+  margin: 8px 0 22px;
+  border-radius: var(--r-lg);
+  background: var(--grad);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border: 0;
+  box-shadow: 0 6px 18px rgba(227, 25, 110, 0.32);
+
+  &:hover {
+    filter: brightness(1.04);
+  }
+}
+
+/* ============================= color picker ============================ */
 .color-picker-wrapper {
   display: inline-block;
   position: relative;
 }
 
 .color-picker-swatch {
-  border-radius: @borderRadius;
-  // box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
-  border: 1px solid black;
+  border-radius: var(--r-md);
+  border: 1px solid var(--ring);
   display: inline-block;
   cursor: pointer;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  background: var(--input);
 }
 
 .color-picker-swatch-color {
-  width: 36px;
+  width: 38px;
   height: 24px;
-  border-radius: 2px;
-  margin-top: 7px;
+  border-radius: 6px;
 }
 
 .color-picker-popover {
   position: absolute;
-  z-index: 2;
-  top: 39px;
-  left: -66px;
+  z-index: 1500;
+  top: 44px;
+  left: 0;
 }
 
 .color-picker-cover {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-}
-
-.sender-colors-empty {
-  color: @lightestTextGrey;
-  font-style: italic;
-  margin-bottom: 10px;
-}
-
-.sender-colors-list {
-  margin-bottom: 10px;
-
-  .sender-color-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-
-    input[type="text"] {
-      flex-grow: 1;
-      max-width: 300px;
-    }
-
-    button.cancel.small {
-      padding: 4px 8px;
-      height: auto;
-    }
-  }
-}
-
-button.small {
-  padding: 6px 12px;
-  font-size: 13px;
+  inset: 0;
 }

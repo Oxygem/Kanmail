@@ -1,4 +1,3 @@
-import _ from "lodash";
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 
@@ -6,9 +5,9 @@ import { subscribe } from "../../stores/base.tsx";
 import requestStore, { IRequestStoreProps } from "../../stores/request.ts";
 
 interface FooterStatusState {
-  showStatusBar: boolean;
-
+  enabled: boolean;
 }
+
 @subscribe(requestStore)
 export default class FooterStatus extends Component<IRequestStoreProps, FooterStatusState> {
   static propTypes = {
@@ -17,76 +16,44 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
     pendingRequests: PropTypes.array.isRequired,
   };
 
-  constructor(props: IRequestStoreProps) {
-    super(props);
-
-    this.state = {
-      showStatusBar: false,
-    };
-  }
-
-  toggleStatusBar = () => {
-    this.setState({
-      showStatusBar: !this.state.showStatusBar,
-    });
+  state: FooterStatusState = {
+    enabled: false,
   };
 
-  renderStatusBar() {
-    if (!this.state.showStatusBar) {
-      return null;
-    }
+  toggleEnabled = () => {
+    this.setState({ enabled: !this.state.enabled });
+  };
 
+  renderStatusList(open: boolean) {
     const { fetchRequests, pushRequests, pendingRequests } = this.props;
 
-    const fetchRequestItems: React.JSX.Element[] = [];
-    fetchRequests.forEach(s => {
-      fetchRequestItems.push(<li>{s}</li>);
-    })
-
-    const pushRequestItems: React.JSX.Element[] = [];
-    pushRequests.forEach(s => {
-      pushRequestItems.push(<li>{s}</li>);
-    })
-
-    const pendingPushRequestItems = _.map(pendingRequests, (request) => (
-      // <p key={request[1]}>{request[1]}</p>
-      null
-    ));
+    const entries: { id: number; name: string; cls: string }[] = [];
+    fetchRequests.forEach((name, id) => entries.push({ id, name, cls: "green" }));
+    pushRequests.forEach((name, id) => entries.push({ id, name, cls: "red" }));
+    pendingRequests.forEach((p) => entries.push({ id: p.id, name: p.name, cls: "yellow" }));
+    entries.sort((a, b) => a.id - b.id);
 
     return (
-      <section id="status">
-        <div>
-          <h4>
-            <i className="fa fa-arrow-down"></i>
-            {fetchRequests.size} fetching
-          </h4>
-          {fetchRequestItems}
-        </div>
-        <div>
-          <h4>
-            <i className="fa fa-arrow-up"></i>
-            {pushRequests.size} pushing
-          </h4>
-          {pushRequestItems}
-        </div>
-        <div>
-          <h4>
-            <i className="fa fa-clock-o"></i>
-            {pendingRequests.length} pending pushes
-          </h4>
-          {pendingPushRequestItems}
-        </div>
-      </section>
+      <div id="status-list" className={open ? "open" : ""}>
+        <ul>
+          {entries.map((e) => (
+            <li key={e.id} className={e.cls}>{e.name}</li>
+          ))}
+        </ul>
+      </div>
     );
   }
 
   render() {
     const fetchCount = this.props.fetchRequests.size;
-    const pushCount = this.props.pushRequests.size;;
+    const pushCount = this.props.pushRequests.size;
     const pendingCount = this.props.pendingRequests.length;
+    const hasRequests = fetchCount + pushCount + pendingCount > 0;
 
     return (
       <div>
+        {this.renderStatusList(this.state.enabled && hasRequests)}
+
         <div id="footer-status">
           <span className={fetchCount > 0 ? "green" : ""}>
             <i className="fa fa-arrow-down"></i>
@@ -103,14 +70,11 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
 
           <span className="toggle">
             <i
-              className={`fa fa-chevron-circle-${this.state.showStatusBar ? "down" : "up"
-                }`}
-              onClick={this.toggleStatusBar}
+              className={`fa fa-chevron-circle-${this.state.enabled ? "down" : "up"}`}
+              onClick={this.toggleEnabled}
             ></i>
           </span>
         </div>
-
-        {this.renderStatusBar()}
       </div>
     );
   }

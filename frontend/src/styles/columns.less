@@ -1,36 +1,253 @@
 /*
-    Columns/emails */
+    Columns/emails — redesigned 2.x board.
+    A full-width toolbar (pill search + gradient Compose) above a flex row of
+    hairline-separated dense columns/cards.
+*/
+
+// Keep in sync with sidebar.less — the columns section sits to the right of it.
+@sidebarWidth: 214px;
 
 section#columns {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   top: 0px;
   left: @sidebarWidth;
   bottom: 0;
   right: 0;
   position: absolute;
-  // position: fixed;
   overflow: hidden;
+  background: var(--bg);
 
   .no-select;
 
-  div#search {
-    height: 0;
-    width: 100%;
+  /* ---------------------------------- toolbar ---------------------------- */
+  div.km-toolbar {
+    height: @topHeight;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    border-bottom: 1px solid var(--divider);
+
+    div.km-search {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      width: 320px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--r-md);
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      color: var(--faint);
+      font-size: 13px;
+
+      i.fa-search {
+        font-size: 13px;
+        flex: none;
+      }
+
+      input {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        border: none;
+        background: transparent;
+        color: var(--ink);
+        font-size: 13px;
+
+        &::placeholder {
+          color: var(--faint);
+        }
+      }
+
+      i.clear {
+        flex: none;
+        padding: 4px;
+        margin-right: -4px;
+        font-size: 13px;
+        cursor: pointer;
+        color: var(--faint);
+
+        &:hover {
+          color: var(--brand-pink);
+        }
+      }
+
+      &:hover,
+      &:focus-within,
+      &.open {
+        border-color: var(--brand-pink);
+      }
+    }
+
+    /* sync/UI error indicator + hover popover, sat to the right of search */
+    div.header-errors {
+      flex: none;
+
+      div.icon-wrapper {
+        position: relative;
+        display: inline-block;
+
+        // Invisible bridge over the 8px gap to the popover so the hover isn't
+        // lost as the cursor travels from the icon down into the popover.
+        // Lives on the wrapper (not the popover, which clips it via overflow).
+        &:hover::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 100%;
+          width: 100%;
+          height: 8px;
+        }
+
+        > a {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          height: 34px;
+          padding: 0 12px;
+          border-radius: var(--r-md);
+          background: var(--pill);
+          border: 1px solid var(--ring);
+          color: var(--red, #e5484d);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+
+          i.error {
+            font-size: 14px;
+            line-height: 1;
+            color: var(--red, #e5484d);
+          }
+
+          &:hover {
+            border-color: var(--red, #e5484d);
+          }
+        }
+      }
+
+      div.icon-contents {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        width: 460px;
+        max-width: 80vw;
+        max-height: 460px;
+        overflow-y: auto;
+        z-index: 1300;
+        padding: 16px 18px;
+        border-radius: var(--r-lg);
+        background: var(--bg);
+        border: 1px solid var(--ring);
+        box-shadow: var(--shadow);
+        color: var(--ink);
+        text-align: left;
+        cursor: default;
+        user-select: text;
+
+        strong {
+          display: block;
+          font-size: 13px;
+          margin-bottom: 6px;
+        }
+
+        > p {
+          margin: 0 0 10px;
+          font-size: 12px;
+          line-height: 1.5;
+          color: var(--muted);
+
+          a {
+            color: var(--brand-pink);
+            cursor: pointer;
+          }
+        }
+
+        p {
+          padding-bottom: 12px;
+          margin-bottom: 12px;
+          border-bottom: 1px solid var(--divider);
+
+          &:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+          }
+
+          span.meta {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 6px;
+          }
+
+          textarea {
+            width: 100%;
+            height: 90px;
+            resize: none;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 8px 10px;
+            border-radius: var(--r-sm);
+            border: 1px solid var(--ring);
+            background: var(--pill);
+            color: var(--muted);
+          }
+        }
+      }
+
+      div.icon-wrapper:hover div.icon-contents,
+      div.icon-contents:hover {
+        display: block;
+      }
+    }
+
+    div.spacer {
+      flex: 1;
+      align-self: stretch;
+    }
+
+    // Nested so it beats the generic themed `button` rule on specificity.
+    button.btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 34px;
+      padding: 0 16px 0 13px;
+      border-radius: var(--r-md);
+      background: var(--grad);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+
+      i {
+        font-size: 14px;
+      }
+
+      &:hover {
+        background: var(--grad);
+        filter: brightness(1.04);
+      }
+    }
+  }
+
+  /* ---------------------------- columns flex row ------------------------- */
+  div.km-columns-row {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 0;
+    position: relative;
     overflow: hidden;
-    transition: height 500ms;
-
-    &.open {
-      height: @topHeight;
-    }
-
-    input {
-      width: 100%;
-      border: none;
-      height: @topHeight;
-      padding-top: 6px;
-      padding-left: 20px;
-    }
   }
 
   div#onboarding-columns-panel {
@@ -72,41 +289,42 @@ section#columns {
     }
   }
 
+  /* ------------------------------ add column ----------------------------- */
   div#add-column {
-    height: @topHeight;
-    // width: 0;
+    flex: none;
+    align-self: stretch;
+    width: 56px;
+    padding: 12px 11px;
+    display: flex;
 
     form {
+      flex: 1;
       margin: 0;
       position: relative;
+      display: flex;
 
-      // display: inline-block;
       a {
-        padding: 14px;
-        display: block;
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 16px;
+        border: 1.5px dashed var(--ring);
+        border-radius: var(--r-lg);
+        color: var(--faint);
+
+        &:hover {
+          border-color: var(--brand-pink);
+          color: var(--brand-pink);
+        }
+
+        &.active {
+          border-color: var(--brand-pink);
+          color: var(--brand-pink);
+        }
 
         i {
-          vertical-align: middle;
-        }
-
-        span.label {
-          margin-left: 8px;
-          font-size: @smallTextSize;
-          font-weight: 600;
-          vertical-align: middle;
-        }
-      }
-
-      input {
-        width: 220px;
-        position: absolute;
-        margin-left: -220px;
-        z-index: 1200;
-        height: 100%;
-        border: none;
-
-        a {
-          margin-top: 0;
+          font-size: 18px;
         }
       }
 
@@ -116,45 +334,41 @@ section#columns {
         margin-left: -220px;
         z-index: 1200;
         top: 0;
-        height: 100%;
+        height: 48px;
 
         div.react-select__control {
           height: 100%;
         }
       }
     }
-
-    form:hover + form.delete-group {
-      height: 52px;
-    }
-
-    form.delete-group {
-      height: 0;
-      overflow: hidden;
-      transition: height 500ms 1s;
-
-      &:hover {
-        height: 52px;
-      }
-    }
-
-    input {
-      width: 160px;
-      margin-right: 3px;
-    }
   }
 
+  /* -------------------------------- columns ------------------------------ */
   div.column {
     flex: 10;
     position: relative;
     max-width: 40%;
     height: 100%;
-    border-right: 1px solid;
+    border-right: 1px solid var(--divider);
     overflow: hidden;
     transition: max-width 100ms;
+    display: flex;
+    flex-direction: column;
 
+    // Drop-target hover (dragging an email over the column): gradient top bar.
     &.hover {
-      opacity: 0.5;
+      background: var(--grad-soft);
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--grad);
+        z-index: 3;
+      }
     }
 
     &.hidden {
@@ -168,45 +382,71 @@ section#columns {
       max-width: 30%;
     }
 
+    // Frosted header floats over the top of the scrolling list, so emails are
+    // visible (blurred) behind it while scrolling. No background/border — the
+    // blur alone provides the effect, leaving it chrome-less at rest.
+    // A vertical mask fades the blur out toward the bottom so there's no hard
+    // line where it stops (the gradient stays solid through the title text,
+    // then fades over the padding below it).
+    > div.header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+    }
+
     h3 {
       margin: 0;
-      padding: 10px 20px;
-      border-bottom: 1px solid;
+      flex: none;
+      padding: 17px 20px 13px;
       height: @topHeight;
-      padding-top: 17px;
       line-height: 20px;
       position: relative;
-      font-size: @titleTextSize;
+      font-size: 16px;
+      letter-spacing: -0.02em;
       z-index: 2;
-      font-weight: 600;
+      font-weight: 700;
+      color: var(--ink);
 
       i.loading {
         font-size: 12px;
         margin-left: 5px;
         margin-top: -2px;
+        color: var(--brand-pink);
       }
 
       span.meta {
         float: right;
-        font-size: @smallTextSize;
-        margin-right: 8px;
-        margin-top: 1px;
+        font-size: 11.5px;
+        margin-right: 0;
+        margin-top: 3px;
         font-weight: normal;
+        color: var(--faint);
 
         div.icons {
           display: none;
           margin-left: 3px;
           float: right;
           cursor: pointer;
+          color: var(--muted);
 
           i {
             padding-left: 8px;
-            font-size: 16px;
+            font-size: 15px;
             float: left;
 
+            &:hover {
+              color: var(--brand-pink);
+            }
+
             &.delete {
-              font-size: 19px;
-              margin-top: -2px;
+              font-size: 17px;
+              margin-top: -1px;
             }
           }
         }
@@ -223,64 +463,191 @@ section#columns {
         }
       }
     }
-
-    &:last-child h3 {
-      border-bottom: none;
-    }
   }
 
   div.emails {
-    position: absolute;
+    position: relative;
+    flex: 1;
     width: 100%;
-    top: @topHeight;
-    padding-top: 10px;
-    bottom: 0;
+    // Clear the absolutely-positioned frosted header; emails scroll beneath it.
+    padding-top: @topHeight;
+    min-height: 0;
     overflow-x: hidden;
 
     div.loader {
       text-align: center;
       padding: 20px 0;
       position: relative;
+      color: var(--faint);
     }
 
     .scrollbar;
+
+    // Standard scrollbar properties — the cross-platform fallback for engines
+    // that ignore ::-webkit-scrollbar (Firefox; some Linux WebKitGTK builds).
+    // These can thin and hide-until-hover the bar, but can't inset it below the
+    // header (the track-margin trick is WebKit/Chromium only).
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+
+    &:hover,
+    &.scrolling {
+      scrollbar-color: var(--ring) transparent;
+    }
+
+    // WebKit / Chromium (macOS WKWebView + Windows WebView2): a fully custom
+    // scrollbar. The list scrolls under the floating header, so the scroll
+    // container spans the full column height — insetting the track by the
+    // header height keeps the thumb below the header (starting at the first
+    // email) without clipping the under-header scroll.
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+      margin-top: @topHeight;
+      background: transparent;
+    }
+
+    // Hidden until the list is hovered, then revealed — mimicking the macOS
+    // auto-hiding scrollbar. (Engines don't animate scrollbar pseudo-elements,
+    // so this is an instant show/hide rather than a true opacity fade.) The
+    // transparent border thins the thumb via background-clip.
+    &::-webkit-scrollbar-thumb {
+      background: transparent;
+      background-clip: padding-box;
+      border: 2px solid transparent;
+      border-radius: 99px;
+    }
+
+    &:hover::-webkit-scrollbar-thumb,
+    &.scrolling::-webkit-scrollbar-thumb {
+      background: var(--ring);
+      background-clip: padding-box;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: var(--faint);
+      background-clip: padding-box;
+    }
   }
 
+  /* --------------------------------- cards ------------------------------- */
   div.email {
-    padding: 10px;
-    margin: 0 10px 10px 10px;
-    border-radius: @borderRadius;
+    padding: 13px 20px;
+    margin: 0;
+    border-radius: 0;
     cursor: pointer;
     position: relative;
     overflow: hidden;
-    height: 132px;
-    transition: height 500ms, padding 500ms;
+    // Anchors the archive/trash collapse animation; comfortably above the
+    // card's fixed natural height (~134px) so it never clips a real card.
+    max-height: 160px;
 
-    &.open, &.hover {
-      div.meta span.buttons {
-        display: block;
-      }
+    // The visible row background (hover / open / per-sender tint) is an inset,
+    // rounded layer rather than the full-width box. It sits behind the content
+    // and over the inset dividers.
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 8px;
+      right: 8px;
+      border-radius: var(--r-md);
+      background: var(--thread-bg, transparent);
+      z-index: 0;
+      pointer-events: none;
+      transition: background 120ms;
+    }
 
-      div.meta span.extra-meta {
-        // display: none;
+    // Keep the card content above the background layer.
+    > h5,
+    > h4,
+    > p,
+    > div.meta {
+      position: relative;
+      z-index: 1;
+    }
+
+    // Divider between cards, inset to the content padding rather than spanning
+    // the full column width.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: var(--divider);
+    }
+
+    // Only divide *between* cards — no line above the first (the column header
+    // already provides the boundary there).
+    &:first-child::after {
+      display: none;
+    }
+
+    // Highlight is driven by the `.hover` class — the single source of truth
+    // managed by keyboard.setThreadComponent for both mouse and keyboard
+    // selection. (The CSS `:hover` pseudo isn't used: it can't be cleared in JS,
+    // so it would linger under a stationary cursor when navigating by keyboard.)
+    // Falls back to --pill when the account/sender has no custom colour.
+    &.hover::before {
+      background: var(--thread-bg, var(--pill));
+    }
+
+    // The highlighted row's background sits over the dividers directly above
+    // and below it (its own, and the following row's top divider).
+    &.hover::after,
+    &.open::after,
+    &.hover + div.email::after,
+    &.open + div.email::after {
+      display: none;
+    }
+
+    &.open,
+    &.hover {
+      div.meta {
+        span.buttons {
+          display: flex;
+        }
+
+        // Hide the passive indicators while the action buttons are shown so
+        // the buttons sit hard against the right edge.
+        span.extra-meta {
+          display: none;
+        }
       }
     }
 
+    // Opened/selected card: soft gradient fills the inset background layer.
     &.open {
       z-index: 8;
+
+      &::before {
+        background: linear-gradient(100deg, rgba(227, 25, 110, 0.1), rgba(240, 140, 29, 0.07));
+      }
     }
 
+    // Archiving / trashing / moving: flash a red tint, then fade out while
+    // collapsing the row to zero height (rather than leaving a blank gap).
     &.archiving,
     &.trashing {
-      height: 0;
-      padding: 0 10px;
-      margin: 0 10px;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin: 0;
       pointer-events: none;
       overflow: hidden;
+      opacity: 0;
+      background: rgba(255, 59, 48, 0.18);
+      transition: max-height 300ms ease, padding 300ms ease, opacity 220ms ease,
+        background 120ms ease;
     }
 
     &.error {
-      background: rgba(255, 0, 0, 0.2) !important;
+      background: rgba(255, 0, 0, 0.18) !important;
     }
 
     &.incoming {
@@ -291,95 +658,157 @@ section#columns {
       }
     }
 
+    // Row 1: sender(s) + date
     h5 {
-      margin: 0 8px 0 30px;
-      height: 24px;
+      margin: 0 0 5px 0;
+      height: 18px;
       overflow: hidden;
-      font-size: @smallTextSize;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      display: flex;
+      align-items: baseline;
 
-      span {
-        margin-right: 4px;
+      span.sender {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
-    h4 {
-      margin: 0;
+    span.date {
       font-weight: normal;
-      height: 24px;
-      font-size: @bigTextSize;
+      font-size: 11px;
+      color: var(--faint);
+      flex: none;
+      margin-left: 8px;
+    }
+
+    // Subject row
+    h4 {
+      margin: 0 0 4px 0;
+      font-weight: normal;
+      height: 22px;
+      font-size: 13px;
+      color: var(--sub);
       display: flex;
-
-      div.avatar {
-        // float: left;
-        margin-right: 8px;
-        border-radius: 22px;
-        // position: relative;
-        width: 22px;
-
-        img {
-          width: 22px;
-          height: 22px;
-          border-radius: 22px;
-        }
-
-        span {
-          // position: absolute;
-          color: white;
-          text-shadow: 0 0 1px;
-          left: 0;
-          right: 0;
-          font-size: 12px;
-          text-align: center;
-          overflow: hidden;
-        }
-      }
+      align-items: center;
 
       span.subject {
         overflow: hidden;
-        height: 24px;
+        height: 22px;
+        line-height: 22px;
         display: inline-block;
-        width: 80%;
+        flex: 1;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
     }
 
     &.unread h4 {
       font-weight: 600;
+      color: var(--ink);
     }
 
-    span.date {
-      float: right;
-      font-weight: normal;
-    }
-
+    // Preview (2-line clamp)
     p {
-      margin: 0 8px 0 30px;
-      line-height: 20px;
-      height: 40px; // line-height * 2
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.42;
+      color: var(--muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
+      max-height: 34px;
     }
 
+    // Meta row: account dot+name, labels, hover buttons
     div.meta {
-      font-size: @smallTextSize;
-      margin: 4px 8px 0 30px;
+      font-size: 11px;
+      color: var(--muted);
+      margin: 6px 0 0 0;
+      display: flex;
+      align-items: center;
+      min-height: 18px;
 
-      span.tag {
-        margin-left: 5px;
+      span.acct {
+        display: flex;
+        align-items: center;
+        flex: none;
+        white-space: nowrap;
+
+        span.dot {
+          width: 9px;
+          height: 9px;
+          border-radius: 99px;
+          flex: none;
+          margin-right: 6px;
+          display: inline-block;
+        }
+      }
+
+      span.chips {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 8px;
+        overflow: hidden;
+      }
+
+      span.chip {
+        font-size: 10px;
+        line-height: 14px;
+        padding: 1px 7px;
+        border-radius: 99px;
+        background: var(--label);
+        color: var(--label-ink);
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
       }
 
       span.extra-meta {
-        float: right;
+        margin-left: auto;
+        color: var(--faint);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
         i {
-          margin-left: 5px;
+          margin-left: 0;
+          margin-right: 3px;
+        }
+
+        span {
+          display: flex;
+          align-items: center;
+        }
+
+        a.star.active {
+          color: var(--yellow, #ecc30b);
         }
       }
 
       span.buttons {
-        float: right;
+        margin-left: auto;
         font-size: 14px;
         display: none;
+        align-items: center;
 
         a {
-          padding: 5px;
+          padding: 4px 5px;
+          color: var(--faint);
+
+          &:hover {
+            color: var(--brand-pink);
+          }
+
+          &.star.active {
+            color: #ecc30b;
+          }
 
           &:last-child {
             padding-right: 0;
@@ -390,15 +819,16 @@ section#columns {
   }
 }
 
+/* compact variant (kept for the reading/narrow column reuse) */
 section#columns.compact {
-  div.emails {
-    padding-top: 5px;
-  }
-
   div.email {
-    padding: 5px 10px;
-    margin: 0 5px;
-    height: 86px;
+    padding: 9px 16px;
+
+    // Match the inset divider to the compact padding.
+    &::after {
+      left: 16px;
+      right: 16px;
+    }
 
     p {
       display: none;

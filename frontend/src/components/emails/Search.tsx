@@ -1,5 +1,4 @@
 import _ from "lodash";
-import PropTypes from "prop-types";
 import React from "react";
 
 import keyboard from "../../keyboard.ts";
@@ -7,13 +6,14 @@ import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import emailStoreController from "../../stores/emails/controller.ts";
 import searchStore from "../../stores/search.js";
+import { trackEvent } from "../../util/analytics.ts";
 
 interface ISearchProps {
   isSearching: boolean;
 }
 
 interface ISearchState {
-  searchValue: string | null;
+  searchValue: string;
 }
 
 @subscribe([searchStore, ["isSearching"]])
@@ -26,30 +26,22 @@ export default class Search extends React.Component<ISearchProps, ISearchState> 
     super(props);
 
     this.state = {
-      searchValue: null,
+      searchValue: "",
     };
 
     this.executeSearch = _.debounce(this._executeSearch, 500);
   }
 
-  componentDidUpdate(prevProps) {
-    if (!prevProps.isSearching && this.props.isSearching) {
-      this.releaseKeyboard = keyboard.suspend("Search");
-      this.input!.focus();
-    }
-
-    if (prevProps.isSearching && !this.props.isSearching) {
-      this.input!.blur();
-      if (this.releaseKeyboard) {
-        this.releaseKeyboard();
-        this.releaseKeyboard = null;
-      }
-    }
-
-    this.executeSearch();
+  componentDidMount() {
+    searchStore.setFocusHandler(() => this.input?.focus());
   }
 
   componentWillUnmount() {
+    searchStore.setFocusHandler(null);
+    this.releaseKeyboardIfHeld();
+  }
+
+  releaseKeyboardIfHeld() {
     if (this.releaseKeyboard) {
       this.releaseKeyboard();
       this.releaseKeyboard = null;
@@ -62,31 +54,73 @@ export default class Search extends React.Component<ISearchProps, ISearchState> 
     }
   };
 
-  handleInputChange = (ev) => {
-    const value = ev.target.value || null;
+  handleFocus = () => {
+    // Suspend keyboard shortcuts so typing lands in the field, but don't flip
+    // into search mode until there's actually a query (see handleInputChange).
+    if (!this.releaseKeyboard) {
+      this.releaseKeyboard = keyboard.suspend("Search");
+    }
+  };
 
-    this.setState({
-      searchValue: value,
-    });
+  handleBlur = () => {
+    this.releaseKeyboardIfHeld();
+    // Keep the search results visible while a query is present (so the user can
+    // navigate them with the keyboard); only drop back to the inbox once empty.
+    if (!this.state.searchValue) {
+      searchStore.close();
+    }
+  };
+
+  handleInputChange = (ev) => {
+    const value = ev.target.value;
+    this.setState({ searchValue: value });
+
+    if (value) {
+      if (!this.props.isSearching) {
+        trackEvent("ToolbarToggleSearch");
+      }
+      searchStore.open();
+      this.executeSearch();
+    } else {
+      searchStore.close();
+    }
+  };
+
+  handleKeyDown = (ev) => {
+    if (ev.key === "Escape") {
+      this.clearSearch();
+    }
+  };
+
+  clearSearch = () => {
+    this.setState({ searchValue: "" });
+    searchStore.close();
+    this.input?.blur();
   };
 
   render() {
     return (
-      <div id="search" className={this.props.isSearching ? "open" : ""}>
+      <div className={`km-search ${this.props.isSearching ? "open" : ""}`}>
+        <i className="fa fa-search"></i>
         <input
           type="text"
-          value={this.state.searchValue || undefined}
+          value={this.state.searchValue}
           onChange={this.handleInputChange}
-          placeholder="Search..."
+          onFocus={this.handleFocus}
+          onBlur={this.handleBlur}
+          onKeyDown={this.handleKeyDown}
+          placeholder="Search all mail"
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck="false"
-          disabled={!this.props.isSearching}
           ref={(input) => {
             this.input = input;
           }}
         />
+        {this.state.searchValue && (
+          <i className="fa fa-times clear" onClick={this.clearSearch}></i>
+        )}
       </div>
     );
   }

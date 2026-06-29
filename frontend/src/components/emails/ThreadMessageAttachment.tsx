@@ -86,13 +86,12 @@ export default class ThreadMessageAttachment extends React.Component<
     }
 
     return (
-      <div>
-        {nameOrIcon}
-        <span className="attachment-meta">
+      <div className="attach-detail">
+        <div className="nm">{nameOrIcon}</div>
+        <div className="mt">
           {topMeta}
-          <br />
-          {bottomMeta}
-        </span>
+          {bottomMeta && bottomMeta !== "" ? <> · {bottomMeta}</> : null}
+        </div>
       </div>
     );
   }
@@ -105,9 +104,10 @@ export default class ThreadMessageAttachment extends React.Component<
     return (
       <div
         key={this.props.partId}
-        className="attachment-link"
+        className="attach attachment-link"
         onClick={this.handleClick}
       >
+        <span className="ic"><i className="fa fa-paperclip"></i></span>
         {this.renderName()}
       </div>
     );

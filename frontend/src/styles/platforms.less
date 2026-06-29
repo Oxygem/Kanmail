@@ -1,11 +1,20 @@
-section.frameless {
-  section#sidebar header div.logo * {
-    display: none;
-  }
+/*
+    Per-platform tweaks. The root <section> always carries `frameless` (the app
+    runs in a frameless window); the active platform is on <body> as `os-darwin`
+    / `os-win` / `os-linux` (see theme.ts).
+*/
 
-  &.Darwin {
-    header h2 {
-      margin-left: 90px;
-    }
+// On macOS the native traffic-light controls sit at the window top-left, which
+// is the sidebar's top-left — reserve space so the wordmark clears them.
+body.os-darwin section#sidebar header {
+  // padding-top: 60px;
+  padding-left: 100px;
+  padding-top: 16px;
+}
+
+// Send/Contacts header titles also clear the traffic lights on macOS.
+body.os-darwin {
+  header.header-bar h2 {
+    margin-left: 90px;
   }
 }

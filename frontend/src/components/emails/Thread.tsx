@@ -50,22 +50,21 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
     });
   };
 
-  renderTitle() {
-    let { thread } = this.props;
+  renderSubject() {
+    const { thread } = this.props;
 
     if (!thread || thread.length === 0) {
-      return <h1>Unknown thread</h1>;
+      return "Unknown thread";
     }
 
     const latestEmail = thread[0];
-
     const uniqueSubjects = _.uniq(_.map(thread, (message) => message.subject));
     const subject = thread.mergedThreads
       ? uniqueSubjects.join(", ")
       : latestEmail.subject;
 
     return (
-      <h1>
+      <>
         {thread.mergedThreads && (
           <Tooltip text={`${thread.mergedThreads} merged threads`}>
             <span className="multi-subject tooltip-wrapper">
@@ -74,7 +73,28 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
           </Tooltip>
         )}
         {subject}
-      </h1>
+      </>
+    );
+  }
+
+  renderHead() {
+    // The reader head is just the thread title — each message renders its own
+    // sender/meta below, so a from-block here would be redundant.
+    return (
+      <div className="reader-head">
+        <div className="top">
+          <h2>{this.renderSubject()}</h2>
+          <div className="reader-actions">
+            <button
+              className="icon-btn"
+              title="Close"
+              onClick={this.handleClickClose}
+            >
+              <i className="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -99,7 +119,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
           key={message.messageId}
           message={message}
           scrollToOnLoad={isLast}
-          open={unread || isLast}
+          open={true}
         />
       );
     });
@@ -133,11 +153,11 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
           id="thread"
           onClick={(ev) => ev.stopPropagation()}
         >
-          {this.renderTitle()}
+          {this.renderHead()}
           <section id="content">
             {this.renderContent()}
-            {this.renderQuickReply()}
           </section>
+          {this.renderQuickReply()}
         </section>
       </section>
     );

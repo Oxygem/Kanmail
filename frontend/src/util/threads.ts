@@ -52,7 +52,11 @@ export function moveOrCopyThread(
     });
   };
 
-  requestStore.addUndoable(moveThread, undoMove);
+  requestStore.addUndoable(
+    `Move to ${capitalizeFirstLetter(targetFolder)}`,
+    moveThread,
+    undoMove
+  );
 }
 
 /*
@@ -102,7 +106,7 @@ export const getNextThreadComponent = (thread) =>
 export const getPreviousThreadComponent = (thread) =>
   getThreadComponent(thread, "getPreviousThread");
 
-function collectVisibleThreadComponents(threadRefs) {
+export function collectVisibleThreadComponents(threadRefs) {
   return _.reduce(
     threadRefs,
     (memo: EmailColumnThread[], value) => {

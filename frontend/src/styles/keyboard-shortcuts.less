@@ -1,17 +1,40 @@
 /*
-    Keyboard shortcut customization tab */
+    Keyboard shortcut customization tab — 2.x redesign.
+    Lives inside the Shortcuts settings panel; themed via design tokens.
+*/
 
-.content.keyboard-shortcuts {
+#settings .content.keyboard-shortcuts {
+  .group {
+    margin-bottom: 26px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    /* group name (Anywhere / App / Thread) */
+    h3 {
+      margin: 0 0 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+    }
+  }
+
   .shortcut-row {
     display: flex;
     align-items: center;
-    padding: 6px 0;
+    gap: 14px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--divider);
     flex-wrap: wrap;
   }
 
   .shortcut-description {
     flex: 1;
-    font-size: @textSize;
+    font-size: 14px;
+    color: var(--sub);
   }
 
   .shortcut-controls {
@@ -20,57 +43,68 @@
     gap: 8px;
   }
 
+  /* the binding chip (also reused by BindingCapture via .shortcut-binding) */
   .shortcut-binding {
-    display: inline-block;
-    padding: 4px 10px;
-    border: 1px solid @formBorderGrey;
-    border-radius: @smallBorderRadius;
-    font-family: inherit;
-    font-size: @smallTextSize;
-    background: @lightestGrey;
-    color: @textGrey;
-    min-width: 80px;
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    padding: 5px 11px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--kbd);
+    border: 1px solid var(--ring);
+    border-bottom-width: 2px;
+    border-radius: 7px;
     cursor: pointer;
 
     &:hover {
-      border-color: @formBorderGreyActive;
+      border-color: var(--brand-pink);
+      background: var(--kbd);
     }
 
     &.capturing {
       cursor: default;
-      border-color: @blue;
-      background: lighten(@blue, 45%);
-      color: @blue;
+      border-color: var(--brand-pink);
+      color: var(--brand-pink);
     }
 
     &.disabled {
-      color: @lightestTextGrey;
+      color: var(--faint);
       font-style: italic;
+      font-family: inherit;
     }
   }
 
   .shortcut-disable {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
     background: none;
-    border: none;
-    color: @lightestTextGrey;
-    font-size: 18px;
+    border: 0;
+    color: var(--faint);
+    font-size: 16px;
     line-height: 1;
-    padding: 0 4px;
     cursor: pointer;
 
     &:hover {
-      color: @red;
+      color: var(--danger);
+      background: var(--danger-bg);
     }
   }
 
   .shortcut-reset {
-    font-size: @smallTextSize;
-    color: @lightTextGrey;
+    font-size: 12.5px;
+    color: var(--muted);
     cursor: pointer;
 
     &:hover {
-      color: @textGrey;
+      color: var(--ink);
       text-decoration: underline;
     }
   }
@@ -78,7 +112,27 @@
   .shortcut-conflict {
     width: 100%;
     margin-top: 4px;
-    font-size: @smallTextSize;
-    color: @red;
+    font-size: 12.5px;
+    color: var(--danger);
+  }
+
+  /* reset-all button */
+  button.red {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 9px 16px;
+    border-radius: var(--r-md);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--danger);
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-ring);
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.03);
+    }
   }
 }

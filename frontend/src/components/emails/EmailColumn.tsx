@@ -213,6 +213,25 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
     this.lastScrollTop = scrollTop;
   };
 
+  // Reveal this column's scrollbar while it's actively scrolling (macOS-style),
+  // then hide it shortly after scrolling stops. Toggled as a DOM class so it
+  // doesn't re-render the column, and so each column reveals independently.
+  private hideScrollbarTimer: ReturnType<typeof setTimeout> | null = null;
+  private debouncedHandleScroll = _.debounce(() => this.handleScroll(), 1000, { maxWait: 1000 });
+
+  handleScrollEvent = () => {
+    if (this.emailsContainer) {
+      this.emailsContainer.classList.add("scrolling");
+      if (this.hideScrollbarTimer) {
+        clearTimeout(this.hideScrollbarTimer);
+      }
+      this.hideScrollbarTimer = setTimeout(() => {
+        this.emailsContainer && this.emailsContainer.classList.remove("scrolling");
+      }, 900);
+    }
+    this.debouncedHandleScroll();
+  };
+
   render() {
     console.debug(`Render EmailColumn ${this.props.id} (hidden=${this.props.hidden})`);
 
@@ -240,7 +259,7 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
 
         <div
           className="emails"
-          onScroll={_.debounce(this.handleScroll, 1000, { maxWait: 1000 })}
+          onScroll={this.handleScrollEvent}
           ref={(ref) => ref && (this.emailsContainer = ref)}
         >
           {this.renderEmailThreads(threads)}

@@ -31,6 +31,12 @@ export function formatDate(date) {
 }
 
 export function formatAddress(address: Address, short = false) {
+  // Messages can legitimately have no from/to/cc entries (drafts, malformed
+  // headers), leaving from[0] etc. undefined - don't crash the thread render.
+  if (!address) {
+    return "(unknown)";
+  }
+
   if (short) {
     let name = address.email;
 

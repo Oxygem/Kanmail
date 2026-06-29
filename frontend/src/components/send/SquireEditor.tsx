@@ -5,24 +5,50 @@ import Squire from "squire-rte";
 // @ts-ignore
 window.DOMPurify = DOMPurify;
 
+export interface SquireFormatStates {
+  bold: boolean;
+  italic: boolean;
+  underline: boolean;
+  code: boolean;
+  quote: boolean;
+  unorderedList: boolean;
+  orderedList: boolean;
+}
+
+export interface SquireEditorApi {
+  command: (command: string, value?: any) => void;
+  promptCommand: (command: string, promptText: string) => void;
+}
+
+const defaultFormatStates: SquireFormatStates = {
+  bold: false,
+  italic: false,
+  underline: false,
+  code: false,
+  quote: false,
+  unorderedList: false,
+  orderedList: false,
+};
+
 const SquireEditor = ({
   initialContent,
-  onUpdate
+  onUpdate,
+  // When provided, the built-in toolbar is hidden and the parent renders its own
+  // controls (e.g. the compose dock) using the exposed editor API + format states.
+  // The inline quick-reply view omits these props and keeps the built-in toolbar.
+  onReady,
+  onFormatStateChange,
+  hideToolbar,
 }: {
   initialContent: string,
-  onUpdate: (data: string) => void
+  onUpdate: (data: string) => void,
+  onReady?: (api: SquireEditorApi) => void,
+  onFormatStateChange?: (states: SquireFormatStates) => void,
+  hideToolbar?: boolean,
 }) => {
   const editorRef = useRef(null);
   const squireRef: React.MutableRefObject<null | Squire> = useRef(null);
-  const [formatStates, setFormatStates] = useState({
-    bold: false,
-    italic: false,
-    underline: false,
-    code: false,
-    quote: false,
-    unorderedList: false,
-    orderedList: false
-  });
+  const [formatStates, setFormatStates] = useState<SquireFormatStates>(defaultFormatStates);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -53,7 +79,7 @@ const SquireEditor = ({
       const range = editor.getSelection();
       if (!range) return;
 
-      setFormatStates({
+      const states: SquireFormatStates = {
         bold: editor.hasFormat('B'),
         italic: editor.hasFormat('I'),
         underline: editor.hasFormat('U'),
@@ -61,7 +87,11 @@ const SquireEditor = ({
         quote: editor.getPath().includes('BLOCKQUOTE'),
         unorderedList: editor.getPath().includes('UL'),
         orderedList: editor.getPath().includes('OL')
-      });
+      };
+      setFormatStates(states);
+      if (onFormatStateChange) {
+        onFormatStateChange(states);
+      }
     };
 
     // Listen for selection changes
@@ -88,6 +118,10 @@ const SquireEditor = ({
     editor.addEventListener("input", function () {
       onUpdate(editor.getHTML());
     })
+
+    if (onReady) {
+      onReady({ command: handleCommand, promptCommand: handlePromptCommand });
+    }
 
     return () => {
       if (squireRef.current) {
@@ -116,57 +150,59 @@ const SquireEditor = ({
 
   return (
     <div className="squire-editor-container">
-      <div className="toolbar">
-        <button
-          className={`toolbar-btn ${formatStates.bold ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.bold ? 'removeBold' : 'bold')}
-          title="Bold"
-        >
-          <i className="fa fa-bold"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.italic ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.italic ? 'removeItalic' : 'italic')}
-          title="Italic"
-        >
-          <i className="fa fa-italic"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.underline ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.underline ? 'removeUnderline' : 'underline')}
-          title="Underline"
-        >
-          <i className="fa fa-underline"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.quote ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.quote ? 'decreaseQuoteLevel' : 'increaseQuoteLevel')}
-          title="Quote"
-        >
-          <i className="fa fa-quote-left"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.unorderedList ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.unorderedList ? 'removeList' : 'makeUnorderedList')}
-          title="Bullet list"
-        >
-          <i className="fa fa-list-ul"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.orderedList ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.orderedList ? 'removeList' : 'makeOrderedList')}
-          title="Numbered list"
-        >
-          <i className="fa fa-list-ol"></i>
-        </button>
-        <button
-          className={`toolbar-btn ${formatStates.code ? 'active' : ''}`}
-          onClick={() => handleCommand(formatStates.code ? 'removeCode' : 'code')}
-          title="Code"
-        >
-          <i className="fa fa-code"></i>
-        </button>
-      </div>
+      {!hideToolbar && (
+        <div className="toolbar">
+          <button
+            className={`toolbar-btn ${formatStates.bold ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.bold ? 'removeBold' : 'bold')}
+            title="Bold"
+          >
+            <i className="fa fa-bold"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.italic ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.italic ? 'removeItalic' : 'italic')}
+            title="Italic"
+          >
+            <i className="fa fa-italic"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.underline ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.underline ? 'removeUnderline' : 'underline')}
+            title="Underline"
+          >
+            <i className="fa fa-underline"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.quote ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.quote ? 'decreaseQuoteLevel' : 'increaseQuoteLevel')}
+            title="Quote"
+          >
+            <i className="fa fa-quote-left"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.unorderedList ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.unorderedList ? 'removeList' : 'makeUnorderedList')}
+            title="Bullet list"
+          >
+            <i className="fa fa-list-ul"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.orderedList ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.orderedList ? 'removeList' : 'makeOrderedList')}
+            title="Numbered list"
+          >
+            <i className="fa fa-list-ol"></i>
+          </button>
+          <button
+            className={`toolbar-btn ${formatStates.code ? 'active' : ''}`}
+            onClick={() => handleCommand(formatStates.code ? 'removeCode' : 'code')}
+            title="Code"
+          >
+            <i className="fa fa-code"></i>
+          </button>
+        </div>
+      )}
 
       <div
         ref={editorRef}

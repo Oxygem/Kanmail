@@ -82,8 +82,19 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     return getAccountContactOptions(account)[0].value[1];
   }
 
-  handleExpand = () => {
-    this.setState({ expanded: true });
+  handleExpand = (mode: Mode = "reply") => {
+    const hasCc = this.props.latestMessage.cc && this.props.latestMessage.cc.length > 0;
+    this.setState({ expanded: true, mode: mode === "reply-all" && !hasCc ? "reply" : mode });
+  };
+
+  handleForward = () => {
+    const { latestMessage } = this.props;
+    AppService.OpenSendWindow({
+      mode: "forward",
+      accountName: latestMessage.accountName,
+      folderName: latestMessage.folderName,
+      uid: latestMessage.uid,
+    });
   };
 
   handleCancel = () => {
@@ -179,16 +190,37 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
   renderCollapsed() {
     const { latestMessage } = this.props;
-    const senderLabel = latestMessage.from && latestMessage.from[0]
-      ? formatAddress(latestMessage.from[0])
-      : "";
+    const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
 
     return (
-      <div className="quick-reply collapsed" onClick={this.handleExpand}>
-        <div className="prompt">
-          <i className="fa fa-reply"></i>
-          <span>Reply{senderLabel ? ` to ${senderLabel}` : ""}…</span>
-        </div>
+      <div className="reply-dock" onClick={stopEventPropagation}>
+        <button
+          type="button"
+          className="btn-primary lg"
+          onClick={() => this.handleExpand("reply")}
+        >
+          <i className="fa fa-reply"></i> Reply
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={() => this.handleExpand("reply-all")}
+          disabled={!hasCc}
+          title={hasCc ? "" : "No CC recipients to reply to"}
+        >
+          <i className="fa fa-reply-all"></i> Reply all
+        </button>
+        <button
+          type="button"
+          className="btn-ghost"
+          onClick={this.handleForward}
+        >
+          <i className="fa fa-share"></i> Forward
+        </button>
+        <span className="spacer"></span>
+        <span className="dock-meta" onClick={this.handlePopOut}>
+          <i className="fa fa-external-link"></i> Pop out
+        </span>
       </div>
     );
   }

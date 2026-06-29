@@ -9,21 +9,9 @@ import { getEmailStore } from "../../stores/emails/controller.ts";
 import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
-import { getAccountIconName } from "../../util/accounts.js";
 import { trackEvent } from "../../util/analytics.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
 import { moveOrCopyThread } from "../../util/threads.js";
-
-const ALIAS_TO_CLASS = {
-  inbox: "pink",
-  sent: "blue",
-  drafts: "white",
-  archive: "green",
-  trash: "red",
-  junk: "yellow",
-};
-
-const COLLAPSIBLE_ALIAS_FOLDERS = ["junk", "trash"];
 
 const folderLinkTarget = {
   canDrop(props, monitor) {
@@ -166,7 +154,8 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   renderFolderLinks(folders, extraProps: any = undefined) {
     return _.map(folders, (folderName) => {
       const iconName = ALIAS_TO_ICON[folderName] || "folder";
-      const iconClassName = ALIAS_TO_CLASS[folderName] || "white";
+      // Nav icons are monochrome in the 2.x design — they inherit the row colour.
+      const iconClassName = "";
       const isActive = settingsStore.getCurrentColumns()[0] === folderName;
       const handleClick = () => {
         if (!isActive) {
@@ -189,11 +178,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   }
 
   renderMainFolderLinks() {
-    const mainFolders = _.filter(
-      ALIAS_FOLDERS,
-      (f) => !COLLAPSIBLE_ALIAS_FOLDERS.includes(f),
-    );
-    return this.renderFolderLinks(mainFolders);
+    return this.renderFolderLinks(ALIAS_FOLDERS);
   }
 
   renderCustomFolderLinks() {
@@ -206,16 +191,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   }
 
   renderShowAllFolders() {
-    const pinnedSet = new Set(this.props.sidebarFolders || []);
-    const hiddenAliases = _.filter(
-      COLLAPSIBLE_ALIAS_FOLDERS,
-      (n) => !pinnedSet.has(n),
-    ).length;
-    const hiddenCustom = _.filter(
-      this.props.folderNames || [],
-      (n) => !pinnedSet.has(n),
-    ).length;
-    const nFolders = hiddenAliases + hiddenCustom;
+    const nFolders = this.props.sidebarFolders.length;
 
     if (nFolders === 0) {
       return;
@@ -226,7 +202,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
         <li key="show-all" className="small">
           <a onClick={this.toggleShowAllFolders}>
             <i className="fa fa-arrow-up" />
-            Hide {nFolders} folders
+            Hide all folders
           </a>
         </li>
       );
@@ -236,7 +212,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
       <li key="show-all" className="small">
         <a onClick={this.toggleShowAllFolders}>
           <i className="fa fa-arrow-down" />
-          Show {nFolders} folders
+          Show all folders
         </a>
       </li>
     );
@@ -256,14 +232,6 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
 
     if (this.state.showAllFolders) {
       const sidebarFolderNames = new Set(folderNames);
-      const unpinnedAliases = _.filter(
-        COLLAPSIBLE_ALIAS_FOLDERS,
-        (name) => !sidebarFolderNames.has(name),
-      );
-      sidebarFolders.push(
-        ...this.renderFolderLinks(unpinnedAliases, { pinned: false })
-      );
-
       const otherFolderNames = _.filter(
         this.props.folderNames,
         (name) => !sidebarFolderNames.has(name)
@@ -283,10 +251,10 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
         className={this.props.currentAccount === account.name ? "active" : ""}
       >
         <a onClick={_.partial(this.setAccountFilter, account.name)}>
-          <i
-            className={`fa fa-${getAccountIconName(account)} white`}
-            style={{ color: settingsStore.getAccountAccentColor(account.name) }}
-          ></i>{" "}
+          <span
+            className="acct-dot"
+            style={{ background: settingsStore.getAccountAccentColor(account.name) || "var(--side-muted)" }}
+          ></span>
           {account.name}
         </a>
       </li>
@@ -346,32 +314,22 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   render() {
     return (
       <div id="filters">
-        {!systemStore.props.isLicensed && (
+        <div className="filters-scroll">
           <ul>
-            <li>
-              <a onClick={() => {
-                AppService.OpenPurchaseLicenseDialog();
-                trackEvent("SidebarOpenLicense");
-              }}>
-                <i className="fa fa-shopping-cart green"></i> Purchase Kanmail
+            {this.renderMainFolderLinks()}
+            {this.renderOtherFolderLinks()}
+          </ul>
+
+          <div className="nav-head">Accounts</div>
+          <ul>
+            <li className={!this.props.currentAccount ? "active" : ""}>
+              <a onClick={_.partial(this.setAccountFilter, null)}>
+                <i className="fa fa-globe"></i> All accounts
               </a>
             </li>
+            {this.renderAccounts()}
           </ul>
-        )}
-
-        <ul>
-          {this.renderMainFolderLinks()}
-          {this.renderOtherFolderLinks()}
-        </ul>
-
-        <ul>
-          <li className={!this.props.currentAccount ? "active" : ""}>
-            <a onClick={_.partial(this.setAccountFilter, null)}>
-              <i className="fa fa-globe white"></i> All accounts
-            </a>
-          </li>
-          {this.renderAccounts()}
-        </ul>
+        </div>
 
         <ul className="window-links">
           {this.renderUpdateLink()}
@@ -380,7 +338,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
               AppService.OpenSettingsWindow();
               trackEvent("SidebarOpenSettings");
             }}>
-              <i className="fa fa-cog"></i> Settings
+              <i className="fa fa-sliders"></i> Settings
             </a>
           </li>
           {settingsStore.props.system.showHelpButton && (
@@ -394,8 +352,6 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
             </li>
           )}
         </ul>
-
-        {/*<ul>{this.renderUpdateLink()}</ul>*/}
       </div >
     );
   }

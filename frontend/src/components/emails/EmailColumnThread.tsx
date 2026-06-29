@@ -4,7 +4,6 @@ import { DragSource } from "react-dnd";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import Avatar from "../../components/Avatar.jsx";
 import Tooltip from "../../components/Tooltip.tsx";
 import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import keyboard from "../../keyboard.ts";
@@ -16,8 +15,8 @@ import mainEmailStore from "../../stores/emails/main.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
-import { getAccountIconName } from "../../util/accounts.js";
 import {
+  capitalizeFirstLetter,
   formatAddress,
   formatDate,
   hexToRgb,
@@ -448,7 +447,7 @@ export default class EmailColumnThread extends React.Component<
         For every message in this thread, *any folder*, generate a move request
         to another folder.
     */
-  handleThreadMessages = (previousState, folderFilter, handler: (any) => Promise<void>) => {
+  handleThreadMessages = (name, previousState, folderFilter, handler: (any) => Promise<void>) => {
     const thread = this.props.thread;
     const accountKey = thread[0].accountName;
 
@@ -491,7 +490,7 @@ export default class EmailColumnThread extends React.Component<
       });
     };
 
-    requestStore.addUndoable(moveThread, undoMove);
+    requestStore.addUndoable(name, moveThread, undoMove);
 
     // Top up the affected columns, letting the store pick which accounts to
     // paginate (those holding back the date watermark)
@@ -502,6 +501,7 @@ export default class EmailColumnThread extends React.Component<
 
   moveThreadMessages = (targetFolder, previousState, folderFilter) => {
     return this.handleThreadMessages(
+      `Move to ${capitalizeFirstLetter(targetFolder)}`,
       previousState,
       folderFilter,
       ({ accountKey, uids, folderName }) =>
@@ -511,6 +511,7 @@ export default class EmailColumnThread extends React.Component<
 
   deleteThreadMessages = (previousState) => {
     return this.handleThreadMessages(
+      "Delete",
       previousState,
       null,
       ({ accountKey, uids, folderName }) =>
@@ -806,8 +807,12 @@ export default class EmailColumnThread extends React.Component<
     }
 
     return (
-      <span className="tag">
-        <i className="fa fa-tag" /> {folderNames.join(", ")}
+      <span className="chips">
+        {_.map(folderNames, (name) => (
+          <span className="chip" key={name}>
+            {name}
+          </span>
+        ))}
       </span>
     );
   }
@@ -876,10 +881,12 @@ export default class EmailColumnThread extends React.Component<
       classNames.push("incoming");
     }
 
-    // Apply custom background color (but not during animations)
+    // Apply the custom per-sender colour via a CSS variable — the visible row
+    // background is an inset, rounded ::before layer (see columns.less), not the
+    // full-width box. Suppressed during the archive/trash animation.
     const backgroundColor = this.getThreadBackgroundColor(this.state.hover || false);
     const style = backgroundColor && !this.state.archiving && !this.state.trashing
-      ? { backgroundColor }
+      ? ({ "--thread-bg": backgroundColor } as React.CSSProperties)
       : undefined;
 
     return connectDragSource(
@@ -892,11 +899,10 @@ export default class EmailColumnThread extends React.Component<
         ref={(ref) => this.element = ref}
       >
         <h5 data-uid={latestEmail.uid}>
+          <span className="sender">{addresses}</span>
           <span className="date">{formatDate(latestEmail.date)}</span>
-          {addresses}
         </h5>
         <h4>
-          <Avatar address={latestEmailNotUs.from[0]} />
           {thread.mergedThreads && (
             <Tooltip text={`${thread.mergedThreads} merged threads`}>
               <span className="multi-subject tooltip-wrapper">
@@ -911,10 +917,13 @@ export default class EmailColumnThread extends React.Component<
         </h4>
         <p dangerouslySetInnerHTML={{ __html: latestEmail.excerpt }}></p>
         <div className="meta">
-          <i className={`fa fa-${getAccountIconName(
-            settingsStore.getAccountSettings(latestEmail.accountName)!,
-          )}`} />
-          &nbsp;{latestEmail.accountName}
+          <span className="acct">
+            <span
+              className="dot"
+              style={{ background: settingsStore.getAccountAccentColor(latestEmail.accountName) || "var(--faint)" }}
+            />
+            {latestEmail.accountName}
+          </span>
           {this.renderLabels()}
           <span className="buttons">
             {this.renderStarButton()}
