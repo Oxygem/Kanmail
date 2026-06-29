@@ -74,6 +74,9 @@ Kanmail is a desktop email client that functions like a kanban board, built with
 ## Important Notes
 
 - NEVER edit files in `frontend/wails/` or `frontend/bindings/` - they are auto-generated
-- The project uses a custom fork of go-imap (`github.com/oxygem/go-imap/v2`) - see replace directive in `go.mod`
+- The project uses a custom fork of go-imap (`github.com/oxygem/go-imap/v2`) - see replace directive in `go.mod
+
 - Email threading logic in `frontend/src/threading.js`
 - Connection pools maintain 2 regular + 2 priority + 1 background IMAP connections per account
+
+- Do not include redundant or unncessary comments, code should be self-explanatory where possible

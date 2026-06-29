@@ -16,4 +16,5 @@ build/windows/nsis/project.nsi
 build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 
 internal/constants/secrets_production.go
+scripts/dev-production.sh
 *.syso
