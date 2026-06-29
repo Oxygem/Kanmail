@@ -27,8 +27,12 @@ func listMailboxesRecursive(
 	getMailboxes = func(folder string) error {
 		seenMailboxes[folder] = true
 
+		// List the direct children of folder (LIST "<folder><sep>" "%"). The
+		// namespace prefix already includes its trailing separator on some
+		// servers (e.g. Courier reports "INBOX."), so only append when missing -
+		// otherwise we'd query a bogus "INBOX.." reference and list nothing.
 		pattern := folder
-		if pattern != "" {
+		if pattern != "" && !strings.HasSuffix(pattern, separator) {
 			pattern = pattern + separator
 		}
 		mailboxes, err := conn.List(pattern, "%", &imap.ListOptions{}).Collect()
