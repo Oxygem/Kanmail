@@ -1,0 +1,750 @@
+[
+  [
+    {
+      "subject": "Team Meeting - Q3 Planning",
+      "content": "Hi team,\n\nWe need to schedule our Q3 planning session. Please let me know your availability for next week.\n\nBest,\nSarah"
+    },
+    {
+      "subject": "Re: Team Meeting - Q3 Planning",
+      "content": "Tuesday afternoon works for me. How about 2 PM?\n\n- Mike"
+    },
+    {
+      "subject": "Re: Team Meeting - Q3 Planning",
+      "content": "Tuesday 2 PM is perfect. I'll send out the calendar invite.\n\n- Sarah"
+    }
+  ],
+  [
+    {
+      "subject": "Server Maintenance Window",
+      "content": "This is to inform you that we will be performing scheduled maintenance on our servers this Saturday from 2 AM to 6 AM EST. Please plan accordingly.\n\nIT Operations Team"
+    }
+  ],
+  [
+    {
+      "subject": "Budget Proposal Review",
+      "content": "Please find attached the budget proposal for the upcoming fiscal year. I need your review and feedback by Friday.\n\nThanks,\nJohn"
+    },
+    {
+      "subject": "Re: Budget Proposal Review",
+      "content": "I've reviewed the proposal. The marketing budget seems a bit high. Can we discuss this in tomorrow's meeting?\n\n- Lisa"
+    }
+  ],
+  [
+    {
+      "subject": "New Employee Onboarding",
+      "content": "Welcome to the team! Your first day is Monday, March 15th. Please arrive at 9 AM at the main office reception.\n\nHR Department"
+    },
+    {
+      "subject": "Re: New Employee Onboarding",
+      "content": "Thank you for the information. I'm excited to start! Should I bring any specific documents on my first day?\n\n- Alex"
+    },
+    {
+      "subject": "Re: New Employee Onboarding",
+      "content": "Please bring a photo ID and your signed offer letter. We'll handle the rest during orientation.\n\n- HR Team"
+    }
+  ],
+  [
+    {
+      "subject": "Client Presentation Feedback",
+      "content": "The presentation went well yesterday. The client was impressed with our proposal. They want to schedule a follow-up meeting next week.\n\nGreat job everyone!\n- David"
+    }
+  ],
+  [
+    {
+      "subject": "Project Status Update",
+      "content": "Hi team,\n\nHere's the weekly project status update:\n- Phase 1: Complete\n- Phase 2: 75% complete\n- Phase 3: Starting next week\n\nLet me know if you have any questions.\n\n- Rachel"
+    },
+    {
+      "subject": "Re: Project Status Update",
+      "content": "Thanks for the update. When do we expect Phase 2 to be fully complete?\n\n- Tom"
+    },
+    {
+      "subject": "Re: Project Status Update",
+      "content": "Phase 2 should be complete by end of this week. I'll send another update on Friday.\n\n- Rachel"
+    },
+    {
+      "subject": "Re: Project Status Update",
+      "content": "Perfect, that aligns with our client timeline. Thanks Rachel!\n\n- Tom"
+    }
+  ],
+  [
+    {
+      "subject": "Company Holiday Party",
+      "content": "Save the date! Our annual holiday party will be held on December 15th at the Riverside Hotel. More details to follow.\n\nEvent Planning Committee"
+    },
+    {
+      "subject": "Re: Company Holiday Party",
+      "content": "Sounds great! Will there be vegetarian options available?\n\n- Emma"
+    }
+  ],
+  [
+    {
+      "subject": "Software License Renewal",
+      "content": "Our software licenses expire next month. I need approval to renew them. The total cost is $12,500.\n\nPlease approve at your earliest convenience.\n\n- IT Manager"
+    }
+  ],
+  [
+    {
+      "subject": "🚀 Exclusive 50% Off Summer Sale - Limited Time!",
+      "content": "Don't miss out on our biggest sale of the year! Get 50% off everything in our store. Use code SUMMER50 at checkout. Hurry - offer expires in 48 hours!\n\nShop now at www.dealstore.com"
+    }
+  ],
+  [
+    {
+      "subject": "Weekly Newsletter - Tech Updates",
+      "content": "Here are this week's top tech stories:\n\n• AI breakthrough in medical research\n• New smartphone launches\n• Cryptocurrency market updates\n\nStay informed with TechDaily!"
+    }
+  ],
+  [
+    {
+      "subject": "Your Amazon order has shipped",
+      "content": "Good news! Your order #12345-67890 has been shipped and is on its way to you.\n\nExpected delivery: Tomorrow by 8 PM\nTracking number: 1Z999AA1234567890\n\nTrack your package at amazon.com/tracking"
+    }
+  ],
+  [
+    {
+      "subject": "Marketing Campaign Results",
+      "content": "Hi team,\n\nHere are the results from last week's email campaign:\n- Open rate: 24%\n- Click-through rate: 3.2%\n- Conversions: 127\n\nOverall a successful campaign!\n\n- Marketing Team"
+    },
+    {
+      "subject": "Re: Marketing Campaign Results",
+      "content": "Great results! What was our cost per acquisition for this campaign?\n\n- CEO"
+    }
+  ],
+  [
+    {
+      "subject": "💎 VIP Member Exclusive - Early Access Sale",
+      "content": "As a valued VIP member, you get exclusive early access to our flash sale! 30% off premium products before anyone else.\n\nUse code: VIP30\nValid for the next 24 hours only!\n\nLuxury Fashion Boutique"
+    }
+  ],
+  [
+    {
+      "subject": "System Backup Completed",
+      "content": "Automated system backup completed successfully at 2:00 AM.\n\nBackup size: 2.3 GB\nLocation: /backups/2024-03-15/\nStatus: Success\n\nSystem Administrator"
+    }
+  ],
+  [
+    {
+      "subject": "Conference Room Booking Confirmation",
+      "content": "Your booking has been confirmed:\n\nRoom: Conference Room A\nDate: March 20, 2024\nTime: 10:00 AM - 11:30 AM\nPurpose: Team Standup\n\nFacilities Management"
+    }
+  ],
+  [
+    {
+      "subject": "🍕 Free Pizza Friday - Join Us!",
+      "content": "It's Pizza Friday! Come to the break room at 12:00 PM for free pizza and team bonding.\n\nMenu today:\n- Margherita\n- Pepperoni\n- Vegetarian Supreme\n\nSee you there!\n\nEmployee Relations"
+    }
+  ],
+  [
+    {
+      "subject": "📚 Learn Python in 30 Days - Free Course!",
+      "content": "Master Python programming with our comprehensive free course!\n\n✓ 30 days of structured lessons\n✓ Hands-on projects\n✓ Certificate upon completion\n\nEnroll now at CodeAcademy.com"
+    }
+  ],
+  [
+    {
+      "subject": "Expense Report Reminder",
+      "content": "Friendly reminder that your monthly expense report is due by end of day Friday.\n\nPlease submit all receipts and documentation through the expense portal.\n\nAccounting Department"
+    }
+  ],
+  [
+    {
+      "subject": "Performance Review Schedule",
+      "content": "Your annual performance review has been scheduled:\n\nDate: March 25, 2024\nTime: 2:00 PM\nLocation: Manager's Office\n\nPlease prepare your self-evaluation form beforehand.\n\nHR Team"
+    },
+    {
+      "subject": "Re: Performance Review Schedule",
+      "content": "Thanks for scheduling this. Should I bring any specific documents or examples of my work?\n\n- Employee"
+    },
+    {
+      "subject": "Re: Performance Review Schedule",
+      "content": "Yes, please bring examples of your key achievements from this year and your completed self-evaluation form.\n\n- Manager"
+    }
+  ],
+  [
+    {
+      "subject": "🎯 Investment Opportunity - Act Fast!",
+      "content": "Limited time investment opportunity with guaranteed 15% returns!\n\nMinimum investment: $1,000\nExpected returns: 15% annually\nRisk level: Low\n\nContact our investment advisor today!\n\nWealth Management Inc."
+    }
+  ],
+  [
+    {
+      "subject": "Parking Space Assignment",
+      "content": "You have been assigned parking space #47 in the main parking garage.\n\nYour parking pass will be ready for pickup at the front desk.\n\nBuilding Management"
+    }
+  ],
+  [
+    {
+      "subject": "Training Session: Cybersecurity Awareness",
+      "content": "Mandatory cybersecurity training session:\n\nDate: March 22, 2024\nTime: 1:00 PM - 2:30 PM\nLocation: Training Room B\n\nAttendance is required for all employees.\n\nIT Security"
+    }
+  ],
+  [
+    {
+      "subject": "🌟 Customer Satisfaction Survey",
+      "content": "We value your feedback! Please take 2 minutes to complete our customer satisfaction survey.\n\nYour responses help us improve our service.\n\nSurvey link: surveymonkey.com/customer-feedback\n\nCustomer Success Team"
+    }
+  ],
+  [
+    {
+      "subject": "Database Migration Status",
+      "content": "Database migration update:\n\nProgress: 65% complete\nEstimated completion: Tomorrow 6 PM\nDowntime: None expected\n\nWill update with final status.\n\n- Database Admin"
+    }
+  ],
+  [
+    {
+      "subject": "🎉 Black Friday Mega Sale - 70% Off Everything!",
+      "content": "Our biggest sale event of the year is here!\n\n🔥 70% off all products\n🚚 Free shipping worldwide\n💳 No minimum purchase required\n\nShop now before everything sells out!\n\nMegaStore Online"
+    }
+  ],
+  [
+    {
+      "subject": "Office Supplies Order",
+      "content": "Please submit your office supply requests by Wednesday.\n\nCommon items available:\n- Pens and pencils\n- Paper and notebooks\n- Printer cartridges\n\nOffice Manager"
+    },
+    {
+      "subject": "Re: Office Supplies Order",
+      "content": "I need 2 boxes of black pens and 1 pack of sticky notes.\n\n- Jennifer"
+    }
+  ],
+  [
+    {
+      "subject": "💰 Claim Your $500 Gift Card Now!",
+      "content": "Congratulations! You've been selected to receive a $500 Amazon gift card!\n\nTo claim your prize:\n1. Click the link below\n2. Complete our short survey\n3. Provide your mailing address\n\nClaim now: giftcard-promo.com/claim\n\nPromo Team"
+    }
+  ],
+  [
+    {
+      "subject": "Project Milestone Achieved",
+      "content": "Congratulations team! We've successfully completed the first major milestone of Project Alpha.\n\nNext steps:\n- Client presentation on Friday\n- Begin Phase 2 development\n- Team celebration dinner next week\n\nGreat work everyone!\n\n- Project Manager"
+    }
+  ],
+  [
+    {
+      "subject": "Health Insurance Open Enrollment",
+      "content": "Open enrollment period starts Monday, March 18th.\n\nImportant dates:\n- Enrollment period: March 18-31\n- Coverage starts: April 1st\n- Information session: March 19 at 3 PM\n\nBenefits Team"
+    }
+  ],
+  [
+    {
+      "subject": "🏠 Mortgage Rates at Historic Lows - Apply Today!",
+      "content": "Don't miss out on record-low mortgage rates!\n\n✓ Rates as low as 2.9% APR\n✓ No application fees\n✓ Quick approval process\n✓ Refinancing available\n\nApply online at BestMortgage.com\n\nFirst National Bank"
+    }
+  ],
+  [
+    {
+      "subject": "Server Maintenance Complete",
+      "content": "Scheduled server maintenance has been completed successfully.\n\nAll systems are now operational.\nNo data loss occurred.\nPerformance improvements implemented.\n\nIT Operations"
+    }
+  ],
+  [
+    {
+      "subject": "Team Building Event",
+      "content": "Join us for our quarterly team building event!\n\nActivity: Bowling and Arcade\nDate: March 30, 2024\nTime: 6:00 PM - 9:00 PM\nLocation: Strike Zone Bowling\n\nFood and drinks provided!\n\nHR Team"
+    },
+    {
+      "subject": "Re: Team Building Event",
+      "content": "Count me in! Do we need to RSVP?\n\n- Mark"
+    },
+    {
+      "subject": "Re: Team Building Event",
+      "content": "Yes please RSVP by March 25th so we can get an accurate headcount for food.\n\n- HR Team"
+    }
+  ],
+  [
+    {
+      "subject": "🎓 MBA Program - Transform Your Career!",
+      "content": "Take your career to the next level with our Executive MBA program!\n\n🎯 Weekend classes available\n🎯 Industry-leading faculty\n🎯 Networking opportunities\n🎯 Financial aid available\n\nSchedule a consultation today!\n\nBusiness School Admissions"
+    }
+  ],
+  [
+    {
+      "subject": "Quarterly Budget Review",
+      "content": "Time for our Q1 budget review meeting.\n\nPlease prepare:\n- Department spending reports\n- Q2 budget projections\n- Any budget concerns or requests\n\nMeeting: March 28 at 10 AM\n\n- Finance Director"
+    }
+  ],
+  [
+    {
+      "subject": "New Employee Welcome Package",
+      "content": "Welcome to the team! Your employee welcome package includes:\n\n- Employee handbook\n- Company laptop\n- Access cards\n- Parking permit\n\nPickup from reception anytime today.\n\nEmployee Services"
+    }
+  ],
+  [
+    {
+      "subject": "⚡ Flash Sale - 24 Hours Only!",
+      "content": "Lightning deal alert! ⚡\n\n24-hour flash sale on electronics:\n📱 Smartphones - 40% off\n💻 Laptops - 35% off\n🎧 Headphones - 50% off\n\nHurry - limited quantities!\n\nElectronics Warehouse"
+    }
+  ],
+  [
+    {
+      "subject": "API Documentation Update",
+      "content": "The API documentation has been updated with new endpoints and examples.\n\nChanges include:\n- Authentication improvements\n- New rate limiting info\n- Updated code samples\n\nView at docs.api.company.com\n\n- Development Team"
+    }
+  ],
+  [
+    {
+      "subject": "Office Temperature Complaint",
+      "content": "Multiple complaints about office temperature being too cold.\n\nWe're adjusting the HVAC system and should see improvements by tomorrow.\n\nBuilding Maintenance"
+    },
+    {
+      "subject": "Re: Office Temperature Complaint",
+      "content": "Thank you for addressing this quickly. The temperature is much better today.\n\n- Sarah from Accounting"
+    }
+  ],
+  [
+    {
+      "subject": "🍔 Food Truck Friday - Gourmet Burgers!",
+      "content": "This Friday's food truck is serving gourmet burgers!\n\nMenu highlights:\n🍔 Classic Cheeseburger\n🍔 BBQ Bacon Burger\n🍔 Veggie Black Bean Burger\n\nParking lot 11:30 AM - 1:30 PM\n\nEmployee Activities Committee"
+    }
+  ],
+  [
+    {
+      "subject": "Code Review Request",
+      "content": "Please review my pull request for the user authentication module.\n\nPR #247: Enhanced login security\nFiles changed: 12\nLines added: 156\n\nThanks!\n\n- Junior Developer"
+    },
+    {
+      "subject": "Re: Code Review Request",
+      "content": "Reviewed and approved! Great work on the input validation. Just one minor suggestion about error handling.\n\n- Senior Developer"
+    }
+  ],
+  [
+    {
+      "subject": "🎈 Kids Birthday Party Supplies - 50% Off!",
+      "content": "Make your child's birthday magical! 🎉\n\n50% off all party supplies:\n🎈 Balloons and decorations\n🎂 Party favors\n🎪 Themed party kits\n\nFree same-day delivery available!\n\nParty Central"
+    }
+  ],
+  [
+    {
+      "subject": "Client Meeting Notes",
+      "content": "Meeting notes from today's client call:\n\n- Approved Phase 1 deliverables\n- Requested changes to UI design\n- Budget increase approved\n- Next meeting: April 2nd\n\nFull notes attached.\n\n- Account Manager"
+    }
+  ],
+  [
+    {
+      "subject": "Printer Replacement",
+      "content": "The printer in Conference Room C will be replaced tomorrow morning.\n\nReplacement time: 9 AM - 11 AM\nRoom will be unavailable during installation\n\nNew printer features wireless printing.\n\nIT Support"
+    }
+  ],
+  [
+    {
+      "subject": "🏆 Win a Free Vacation - Enter Now!",
+      "content": "Enter our contest for a chance to win a free 7-day Caribbean vacation!\n\n🏝️ All-inclusive resort\n✈️ Flights included\n🍹 Food and drinks covered\n\nEnter at: vacation-contest.com\nDeadline: March 31st\n\nTravel Adventures Inc."
+    }
+  ],
+  [
+    {
+      "subject": "Security Badge Renewal",
+      "content": "Your security badge expires next month. Please schedule a renewal appointment.\n\nRequired documents:\n- Photo ID\n- Current badge\n- Completed renewal form\n\nSecurity Office hours: 8 AM - 5 PM\n\nSecurity Department"
+    }
+  ],
+  [
+    {
+      "subject": "Weekly Time Sheet Reminder",
+      "content": "Reminder to submit your timesheet by end of day Friday.\n\nMissing timesheets may delay payroll processing.\n\nSubmit at: timesheet.company.com\n\nPayroll Department"
+    }
+  ],
+  [
+    {
+      "subject": "💻 Learn Web Development - Free Bootcamp!",
+      "content": "Join our 12-week intensive web development bootcamp!\n\n✅ HTML, CSS, JavaScript\n✅ React and Node.js\n✅ Job placement assistance\n✅ 100% online or in-person\n\nLimited spots available!\n\nTech Bootcamp Academy"
+    }
+  ],
+  [
+    {
+      "subject": "Fire Drill Schedule",
+      "content": "Monthly fire drill scheduled for tomorrow at 2 PM.\n\nAll employees must evacuate immediately when alarm sounds.\nMeet at designated assembly point in parking lot.\n\nSafety Coordinator"
+    }
+  ],
+  [
+    {
+      "subject": "🎵 Music Streaming - 3 Months Free!",
+      "content": "Experience premium music streaming at no cost!\n\n🎶 50 million songs ad-free\n🎶 Offline downloads\n🎶 High-quality audio\n🎶 Multiple device support\n\nStart your free trial: MusicStream.com\n\nMusicStream Premium"
+    }
+  ],
+  [
+    {
+      "subject": "Vendor Payment Approved",
+      "content": "Payment to TechSupplies Inc. has been approved and processed.\n\nAmount: $15,750.00\nInvoice #: TS-2024-0356\nPayment method: Bank transfer\n\nPayment will arrive in 2-3 business days.\n\nAccounts Payable"
+    }
+  ],
+  [
+    {
+      "subject": "Employee Referral Program",
+      "content": "Refer a qualified candidate and earn a $1,000 bonus!\n\nProgram details:\n- Bonus paid after 90 days\n- Must be external candidate\n- Position must be filled\n\nSubmit referrals to HR.\n\nHuman Resources"
+    }
+  ],
+  [
+    {
+      "subject": "🏋️ Gym Membership - Join Today & Save 40%!",
+      "content": "Transform your fitness journey with our state-of-the-art facilities!\n\n💪 Modern equipment\n💪 Personal training available\n💪 Group fitness classes\n💪 Swimming pool and sauna\n\n40% off first year membership!\n\nFitness First Gym"
+    }
+  ],
+  [
+    {
+      "subject": "Office Supply Delivery",
+      "content": "Your office supply order has been delivered to the mailroom.\n\nOrder #: OS-2024-0892\nItems: Paper, pens, folders\nDelivery time: 10:30 AM\n\nPlease pick up at your convenience.\n\nMailroom Services"
+    }
+  ],
+  [
+    {
+      "subject": "🛒 Online Shopping Deals - Up to 60% Off!",
+      "content": "Massive savings on thousands of products!\n\n🛍️ Fashion - 60% off\n🛍️ Electronics - 45% off  \n🛍️ Home & Garden - 50% off\n🛍️ Sports & Outdoors - 40% off\n\nFree shipping on orders over $50!\n\nShopMart Online"
+    }
+  ],
+  [
+    {
+      "subject": "Meeting Room Booking Change",
+      "content": "Your meeting room booking has been updated:\n\nOriginal: Conference Room B, 2 PM\nNew: Conference Room A, 2 PM\n\nDate remains the same: March 21st\nReason: Room B has A/V issues\n\nFacilities Team"
+    }
+  ],
+  [
+    {
+      "subject": "🎨 Art Supplies Sale - Creative Minds Rejoice!",
+      "content": "Unleash your creativity with our art supply sale!\n\n🎨 Paints and brushes - 30% off\n🎨 Canvases and papers - 25% off\n🎨 Drawing supplies - 35% off\n🎨 Craft materials - 40% off\n\nInspire your artistic side today!\n\nArtistic Supplies Co."
+    }
+  ],
+  [
+    {
+      "subject": "Lunch and Learn Session",
+      "content": "Join us for this month's Lunch and Learn:\n\nTopic: \"Effective Project Management\"\nPresenter: Sarah Johnson, PMP\nDate: March 26, 2024\nTime: 12:00 PM - 1:00 PM\nLocation: Main Conference Room\n\nLunch will be provided!\n\nProfessional Development"
+    }
+  ],
+  [
+    {
+      "subject": "Network Maintenance Window",
+      "content": "Planned network maintenance this Saturday:\n\nTime: 6 AM - 8 AM EST\nImpact: Brief internet interruptions\nDuration: Up to 15 minutes at a time\n\nAll systems will be fully operational by 8 AM.\n\nNetwork Operations"
+    }
+  ],
+  [
+    {
+      "subject": "📱 New iPhone 15 - Pre-order Now!",
+      "content": "The revolutionary iPhone 15 is here!\n\n📱 Advanced camera system\n📱 All-day battery life  \n📱 Lightning-fast A17 chip\n📱 Available in 5 colors\n\nPre-order today, ships September 22nd\nTrade-in your old phone for up to $800 credit!\n\nMobile Store Express"
+    }
+  ],
+  [
+    {
+      "subject": "Contract Renewal Notice",
+      "content": "Your service contract with CloudTech Solutions expires in 30 days.\n\nContract #: CT-2024-7789\nExpiry date: April 15, 2024\nRenewal options attached\n\nPlease contact us to discuss renewal.\n\nCloudTech Account Manager"
+    }
+  ],
+  [
+    {
+      "subject": "Employee Survey Results",
+      "content": "Thank you for participating in our employee satisfaction survey.\n\nResponse rate: 87%\nOverall satisfaction: 4.2/5\nTop improvement areas:\n- Work-life balance\n- Career development\n\nDetailed results will be shared next week.\n\nHR Analytics Team"
+    }
+  ],
+  [
+    {
+      "subject": "☕ Coffee Shop Grand Opening - Free Coffee!",
+      "content": "New coffee shop opening next to our office!\n\n☕ Grand opening special: Free coffee all day Monday\n☕ 20% employee discount ongoing  \n☕ Fresh pastries and sandwiches\n☕ Loyalty program available\n\nJoin us for the ribbon cutting at 8 AM!\n\nBrewmaster Coffee House"
+    }
+  ],
+  [
+    {
+      "subject": "Backup System Test",
+      "content": "Monthly backup system test completed successfully.\n\nResults:\n- All databases backed up: ✓\n- File systems backed up: ✓\n- Restore test performed: ✓\n- Backup integrity verified: ✓\n\nNext test: April 15th\n\nBackup Administrator"
+    }
+  ],
+  [
+    {
+      "subject": "Client Feedback Survey",
+      "content": "We received excellent feedback from our latest client project!\n\nOverall rating: 5/5 stars\nClient comments: \"Exceptional service and quality\"\nProject delivered on time and under budget\n\nGreat job team!\n\n- Client Relations"
+    },
+    {
+      "subject": "Re: Client Feedback Survey",
+      "content": "Fantastic news! This will help us with the upcoming proposal for their next project.\n\n- Sales Director"
+    }
+  ],
+  [
+    {
+      "subject": "🏠 Home Insurance - Protect What Matters!",
+      "content": "Comprehensive home insurance at competitive rates!\n\n🏠 Property damage coverage\n🏠 Personal belongings protection\n🏠 Liability coverage included\n🏠 24/7 claim support\n\nGet a free quote in 5 minutes!\n\nSecure Home Insurance"
+    }
+  ],
+  [
+    {
+      "subject": "Server Disk Space Warning",
+      "content": "Disk space warning on production server:\n\nServer: prod-db-01\nDisk usage: 85%\nThreshold: 80%\nRecommended action: Archive old logs\n\nPlease address before reaching 90%.\n\nSystem Monitoring"
+    }
+  ],
+  [
+    {
+      "subject": "Training Certificate Received",
+      "content": "Congratulations! Your training certificate has been processed.\n\nCourse: Advanced Excel Techniques\nCompletion date: March 15, 2024\nCertificate ID: AET-2024-5678\n\nCertificate available in employee portal.\n\nTraining Department"
+    }
+  ],
+  [
+    {
+      "subject": "📚 Online Learning Platform - Unlimited Courses!",
+      "content": "Expand your skills with unlimited access to online courses!\n\n📚 10,000+ courses available\n📚 Expert instructors\n📚 Certificates of completion\n📚 Mobile app included\n\nFirst month free - start learning today!\n\nLearnHub Platform"
+    }
+  ],
+  [
+    {
+      "subject": "Office Renovation Update",
+      "content": "Office renovation project update:\n\nPhase 1 (Reception area): Complete\nPhase 2 (Break rooms): 60% complete\nPhase 3 (Meeting rooms): Starting next week\n\nExpected completion: April 30th\n\nFacilities Management"
+    }
+  ],
+  [
+    {
+      "subject": "Email Server Migration",
+      "content": "Email server migration scheduled for this weekend:\n\nDate: March 23-24, 2024\nDowntime: Saturday 11 PM - Sunday 6 AM\nImpact: Email services unavailable\n\nNo action required from users.\n\nIT Infrastructure Team"
+    },
+    {
+      "subject": "Re: Email Server Migration",
+      "content": "Will we lose any emails during the migration?\n\n- Concerned Employee"
+    },
+    {
+      "subject": "Re: Email Server Migration",
+      "content": "No emails will be lost. All data will be migrated completely. Any emails received during the downtime will be queued and delivered once services resume.\n\n- IT Team"
+    }
+  ],
+  [
+    {
+      "subject": "🎁 Holiday Gift Guide - Perfect Presents Await!",
+      "content": "Find the perfect gift for everyone on your list!\n\n🎁 Electronics and gadgets\n🎁 Fashion and accessories\n🎁 Home and kitchen items\n🎁 Books and games\n\nFree gift wrapping with purchase!\n\nHoliday Gift Central"
+    }
+  ],
+  [
+    {
+      "subject": "Quarterly All-Hands Meeting",
+      "content": "Join us for our Q1 All-Hands meeting:\n\nDate: March 29, 2024\nTime: 3:00 PM - 4:30 PM\nLocation: Main auditorium\nAgenda: Q1 results, Q2 goals, team updates\n\nAttendance is mandatory.\n\n- Executive Team"
+    }
+  ],
+  [
+    {
+      "subject": "Password Policy Update",
+      "content": "Important security update: New password policy effective April 1st.\n\nNew requirements:\n- Minimum 12 characters\n- Must include symbols\n- Cannot reuse last 5 passwords\n- Expires every 90 days\n\nUpdate your password before April 1st.\n\nCybersecurity Team"
+    }
+  ],
+  [
+    {
+      "subject": "🌟 Premium Car Wash - Make Your Car Shine!",
+      "content": "Professional car detailing services at your workplace!\n\n🚗 Exterior wash and wax\n🚗 Interior cleaning and vacuum\n🚗 Tire shine and wheel cleaning\n🚗 Rain protection coating\n\nBooking available Tuesdays and Thursdays\nEmployee discount: 25% off\n\nMobile Car Wash Pro"
+    }
+  ],
+  [
+    {
+      "subject": "Customer Service Award",
+      "content": "Congratulations to our customer service team for winning the \"Excellence in Customer Support\" award!\n\nThis recognition is well-deserved after achieving:\n- 98% customer satisfaction rating\n- Average response time under 2 hours\n- Zero escalated complaints last quarter\n\nCelebration lunch tomorrow at noon!\n\n- CEO"
+    }
+  ],
+  [
+    {
+      "subject": "Software License Audit",
+      "content": "Annual software license audit begins next week.\n\nRequired actions:\n- Inventory all installed software\n- Verify license compliance\n- Remove unauthorized software\n- Report to compliance team by April 5th\n\nCompliance Officer"
+    }
+  ],
+  [
+    {
+      "subject": "🍕 Pizza Making Class - Learn from the Pros!",
+      "content": "Master the art of authentic Italian pizza making!\n\n🍕 Hands-on cooking experience\n🍕 Professional chef instructor\n🍕 All ingredients provided\n🍕 Take home your creations\n\nClasses every Saturday at 2 PM\nBook now: CulinaryArts.com\n\nItalian Cooking Academy"
+    }
+  ],
+  [
+    {
+      "subject": "Vendor Performance Review",
+      "content": "Q1 vendor performance review results:\n\nTop performers:\n- TechSupplies Inc. (A+ rating)\n- CleanCorp Services (A rating)\n- Office Solutions Ltd. (A- rating)\n\nImprovements needed:\n- FastDelivery Co. (C+ rating)\n\nProcurement Team"
+    },
+    {
+      "subject": "Re: Vendor Performance Review",
+      "content": "Should we consider alternative suppliers for FastDelivery Co.?\n\n- Operations Manager"
+    },
+    {
+      "subject": "Re: Vendor Performance Review",
+      "content": "Yes, let's get quotes from 2-3 alternative delivery companies and compare their service levels.\n\n- Procurement Manager"
+    }
+  ],
+  [
+    {
+      "subject": "WiFi Network Upgrade",
+      "content": "WiFi network upgrade completed successfully!\n\nImprovements:\n- 3x faster speeds\n- Better coverage in all areas\n- New guest network available\n- Enhanced security protocols\n\nNetwork name remains the same, no password change needed.\n\nIT Networking Team"
+    }
+  ],
+  [
+    {
+      "subject": "📱 Smart Watch Fitness Challenge - Join Now!",
+      "content": "Get fit with our latest smartwatch!\n\n⌚ 30-day fitness tracking\n⌚ Heart rate monitoring\n⌚ Sleep analysis\n⌚ Waterproof design\n\nSpecial launch price: $199 (reg. $299)\nFree fitness app subscription included!\n\nTech Fitness Store"
+    }
+  ],
+  [
+    {
+      "subject": "Holiday Schedule Announcement",
+      "content": "Upcoming holiday schedule:\n\nGood Friday: April 7th (Office closed)\nEaster Monday: April 10th (Office closed)\nMemorial Day: May 29th (Office closed)\n\nPlease plan your projects accordingly.\n\nHuman Resources"
+    }
+  ],
+  [
+    {
+      "subject": "Data Center Migration",
+      "content": "Data center migration planning meeting:\n\nDate: March 27, 2024\nTime: 10:00 AM\nAttendees: IT leadership, department heads\nLocation: Executive conference room\n\nAgenda and prep materials attached.\n\nCTO Office"
+    }
+  ],
+  [
+    {
+      "subject": "🏖️ Summer Vacation Deals - Book Early & Save!",
+      "content": "Early bird summer vacation specials!\n\n🏖️ Caribbean cruises from $599\n🏖️ European tours from $1,299  \n🏖️ All-inclusive resorts from $899\n🏖️ Family packages available\n\nBook by March 31st for best prices!\n\nSummer Travel Agency"
+    }
+  ],
+  [
+    {
+      "subject": "Quality Assurance Report",
+      "content": "Monthly QA report summary:\n\nBug detection rate: 95%\nTest coverage: 87%\nCritical bugs found: 3 (all fixed)\nRegression tests: All passed\n\nOverall quality rating: Excellent\n\nQA Team Lead"
+    }
+  ],
+  [
+    {
+      "subject": "Employee Wellness Program",
+      "content": "New wellness program launching April 1st!\n\nProgram includes:\n- On-site yoga classes\n- Stress management workshops\n- Healthy cooking seminars\n- Mental health resources\n\nSign up at wellness.company.com\n\nWellness Committee"
+    },
+    {
+      "subject": "Re: Employee Wellness Program",
+      "content": "This sounds great! Are the yoga classes suitable for beginners?\n\n- Emily"
+    }
+  ],
+  [
+    {
+      "subject": "🎮 Gaming Console Bundle - Ultimate Entertainment!",
+      "content": "Complete gaming experience in one package!\n\n🎮 Latest gaming console\n🎮 2 wireless controllers\n🎮 5 popular game titles\n🎮 Premium headset included\n\nLimited time bundle price: $499\nFree setup and installation!\n\nGameZone Electronics"
+    }
+  ],
+  [
+    {
+      "subject": "Quarterly All-Hands Meeting",
+      "content": "Hi everyone,\n\nOur Q4 all-hands is scheduled for Thursday at 3 PM in the main auditorium. We'll cover company performance, roadmap, and take live questions.\n\nSee you there!\n- Leadership Team"
+    },
+    {
+      "subject": "Re: Quarterly All-Hands Meeting",
+      "content": "Will this be recorded for those of us in other timezones?\n\n- Priya"
+    },
+    {
+      "subject": "Re: Quarterly All-Hands Meeting",
+      "content": "Yes, a recording and slides will be shared afterwards.\n\n- Leadership Team"
+    }
+  ],
+  [
+    {
+      "subject": "Office WiFi Upgrade This Weekend",
+      "content": "Facilities will be upgrading the office WiFi this Saturday. Expect intermittent connectivity between 8 AM and noon.\n\nThe new network will offer significantly faster speeds.\n\nIT Operations"
+    }
+  ],
+  [
+    {
+      "subject": "Coffee Machine Broken Again",
+      "content": "The espresso machine on the 3rd floor is out of order again. Anyone know who to contact?\n\n- Dan"
+    },
+    {
+      "subject": "Re: Coffee Machine Broken Again",
+      "content": "I've logged a ticket with facilities. In the meantime the 2nd floor one still works.\n\n- Megan"
+    },
+    {
+      "subject": "Re: Coffee Machine Broken Again",
+      "content": "Crisis averted. Thanks Megan!\n\n- Dan"
+    }
+  ],
+  [
+    {
+      "subject": "Reminder: Submit Your Timesheets",
+      "content": "This is a friendly reminder to submit your timesheets by end of day Friday. Late submissions delay payroll processing.\n\nThanks,\nFinance"
+    }
+  ],
+  [
+    {
+      "subject": "Lunch & Learn: Intro to Kubernetes",
+      "content": "Join us next Wednesday for a lunch & learn on Kubernetes basics. Pizza provided!\n\nNo prior experience needed. Bring your laptop if you'd like to follow along.\n\n- Platform Team"
+    },
+    {
+      "subject": "Re: Lunch & Learn: Intro to Kubernetes",
+      "content": "Count me in. Will there be a follow-up session on Helm?\n\n- Carlos"
+    }
+  ],
+  [
+    {
+      "subject": "Parking Garage Maintenance",
+      "content": "The underground parking garage will be closed for resurfacing next Monday and Tuesday. Please use the street lot or public transit those days.\n\nFacilities Management"
+    }
+  ],
+  [
+    {
+      "subject": "New Slack Channels for Projects",
+      "content": "We've created dedicated Slack channels for each active project to reduce noise in #general. Please join the ones relevant to you.\n\n- Ops"
+    }
+  ],
+  [
+    {
+      "subject": "Feedback Requested: New Expense Tool",
+      "content": "We're piloting a new expense reporting tool and would love your feedback. Please try submitting one report this month and fill out the short survey.\n\n- Finance"
+    },
+    {
+      "subject": "Re: Feedback Requested: New Expense Tool",
+      "content": "Much easier than the old system! Receipt scanning actually works now.\n\n- Tom"
+    }
+  ],
+  [
+    {
+      "subject": "🎉 Congratulations to the Engineering Team",
+      "content": "A huge congratulations to engineering for shipping the 2.0 release ahead of schedule! Drinks are on the house Friday evening.\n\n- The Founders"
+    }
+  ],
+  [
+    {
+      "subject": "Fire Drill Scheduled",
+      "content": "A mandatory fire drill will take place tomorrow at 10:30 AM. Please follow your floor warden's instructions and assemble at the designated point.\n\nHealth & Safety"
+    }
+  ],
+  [
+    {
+      "subject": "📦 Your Order Has Shipped!",
+      "content": "Good news! Your recent order #48213 has shipped and is on its way.\n\nEstimated delivery: 2-3 business days\nTracking: TRK9987654321\n\nThanks for shopping with us!\nNorthStar Supplies"
+    }
+  ],
+  [
+    {
+      "subject": "Flash Sale - 40% Off Everything",
+      "content": "⚡ 48 hours only! ⚡\n\nEverything in store is 40% off. Use code FLASH40 at checkout.\n\nDon't miss out - sale ends Sunday midnight!\n\nUrbanThreads"
+    }
+  ],
+  [
+    {
+      "subject": "Your Subscription Is About to Renew",
+      "content": "Hi there,\n\nYour annual subscription renews on the 15th. No action needed - we'll charge your card on file.\n\nWant to change your plan? Visit your account settings.\n\nCloudNotes Team"
+    }
+  ],
+  [
+    {
+      "subject": "Book Club: This Month's Pick",
+      "content": "This month we're reading 'The Pragmatic Programmer'. We'll meet in the break room on the last Thursday to discuss.\n\nHappy reading!\n- Book Club"
+    }
+  ],
+  [
+    {
+      "subject": "Desk Move Notification",
+      "content": "As part of the floor reorganization, your desk will be relocated next week. Please pack personal items into the provided boxes by Friday.\n\nFacilities"
+    }
+  ],
+  [
+    {
+      "subject": "Volunteer Day Sign-Up",
+      "content": "Our annual company volunteer day is coming up! This year we're partnering with the local food bank.\n\nSign up by Friday to reserve your spot.\n\n- Community Team"
+    },
+    {
+      "subject": "Re: Volunteer Day Sign-Up",
+      "content": "Signed up! Can we bring family members along?\n\n- Aisha"
+    },
+    {
+      "subject": "Re: Volunteer Day Sign-Up",
+      "content": "Absolutely, family is welcome. Just add them on the form.\n\n- Community Team"
+    }
+  ],
+  [
+    {
+      "subject": "Password Policy Update",
+      "content": "Effective next month, passwords must be at least 14 characters and rotated every 90 days. We recommend using the company password manager.\n\nSecurity Team"
+    }
+  ],
+  [
+    {
+      "subject": "New Hire Introduction: Welcome Jordan!",
+      "content": "Please join me in welcoming Jordan Lee, who joins us as a Senior Product Designer. Jordan comes to us from a background in fintech and loves rock climbing.\n\nSay hi when you see them around!\n- People Ops"
+    }
+  ]
+]

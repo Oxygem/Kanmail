@@ -3,7 +3,9 @@ package imapinterface
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -19,7 +21,10 @@ type fakeFolderData struct {
 	uidNext     imap.UID
 	exists      uint32
 	recent      uint32
-	messages    *exsync.Map[imap.UID, *fakeMessage]
+	// Guards message flag mutation and the counters above; connections in the
+	// pool share the store so operate on folders concurrently.
+	mu       sync.Mutex
+	messages *exsync.Map[imap.UID, *fakeMessage]
 }
 
 type fakeMessage struct {
@@ -31,34 +36,51 @@ type fakeMessage struct {
 	content  string
 }
 
+// cloneFakeMessage copies a message for insertion into another folder under a new
+// UID. The envelope is shared as it's read-only after creation.
+func cloneFakeMessage(msg *fakeMessage, newUID imap.UID) *fakeMessage {
+	clone := *msg
+	clone.uid = newUID
+	clone.flags = slices.Clone(msg.flags)
+	return &clone
+}
+
 type fakeIMAPStore struct {
 	folders      *exsync.Map[string, *fakeFolderData]
 	fakeThreads  [][]fakeEmail
 	localAddress imap.Address
 }
 
-var fakeStore fakeIMAPStore
+var (
+	fakeStores     = map[string]*fakeIMAPStore{}
+	fakeStoresLock sync.Mutex
+)
 
 func init() {
-	fakeIMAPEnv := constants.ENV_DEBUG_FAKE_IMAP
-
-	if fakeIMAPEnv != "" {
-		fThreads := fakeThreads
-		switch fakeIMAPEnv {
-		case "support":
-			fThreads = fakeSupportTicketThreads
-		case "sales":
-			fThreads = fakeSalesExecutiveThreads
-		}
-
-		// If we're going to use fake imap, initialize the global store
-		fakeStore = fakeIMAPStore{
-			folders:      exsync.NewMap[string, *fakeFolderData](),
-			fakeThreads:  fThreads,
-			localAddress: makeIMAPAddress(),
-		}
-		fakeStore.createAllFoldersFromThreads()
+	if constants.ENV_DEBUG_FAKE_IMAP != "" {
+		// Load the thread pool once up front; per-account stores draw from it.
+		fakeThreadPool = buildFakeThreadPool()
 	}
+}
+
+// getOrCreateFakeStore returns the store for an account, allocating it a disjoint
+// slice of the shared thread pool on first access so accounts don't share emails.
+func getOrCreateFakeStore(accountKey string) *fakeIMAPStore {
+	fakeStoresLock.Lock()
+	defer fakeStoresLock.Unlock()
+
+	if store, ok := fakeStores[accountKey]; ok {
+		return store
+	}
+
+	store := &fakeIMAPStore{
+		folders:      exsync.NewMap[string, *fakeFolderData](),
+		fakeThreads:  allocateAccountThreads(),
+		localAddress: makeIMAPAddress(),
+	}
+	store.createAllFoldersFromThreads()
+	fakeStores[accountKey] = store
+	return store
 }
 
 func (s *fakeIMAPStore) createFolderData(folderName string) {
@@ -106,16 +128,16 @@ func (s *fakeIMAPStore) createFolderData(folderName string) {
 	copyCount = min(copyCount, len(sourceUIDs))
 
 	var newUID imap.UID = 1
+	sourceFolder.mu.Lock()
 	for i := 0; i < copyCount; i++ {
 		sourceUID := sourceUIDs[i]
 		sourceMsg := sourceMessages[sourceUID]
 
-		// Update the UID and add to new folder
-		sourceMsg.uid = newUID
-		folderData.messages.Set(newUID, sourceMsg)
+		folderData.messages.Set(newUID, cloneFakeMessage(sourceMsg, newUID))
 		folderData.exists++
 		newUID++
 	}
+	sourceFolder.mu.Unlock()
 
 	folderData.uidNext = newUID
 	s.folders.Set(folderName, folderData)
@@ -200,7 +222,7 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 
 			// Create envelope with InReplyTo for reply messages
 			envelope := &imap.Envelope{
-				Subject:   email.subject,
+				Subject:   email.Subject,
 				MessageID: messageID,
 				From:      from,
 				To:        to,
@@ -215,10 +237,10 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 			msg := &fakeMessage{
 				uid:      uid,
 				flags:    []imap.Flag{},
-				size:     uint32(len(email.content) + len(email.subject) + 500),
+				size:     uint32(len(email.Content) + len(email.Subject) + 500),
 				date:     msgDate,
 				envelope: envelope,
-				content:  email.content,
+				content:  email.Content,
 			}
 
 			// Set flags based on folder and message characteristics
@@ -255,6 +277,44 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 		folder.uidNext = uidCounter
 		s.folders.Set(folder.name, folder)
 	}
+}
+
+// moveOrCopyMessages clones messages matching uidSet from src into dest under
+// fresh UIDs, removing them from src when remove is set. Folders are locked one
+// at a time to avoid lock ordering issues.
+func (s *fakeIMAPStore) moveOrCopyMessages(src, dest *fakeFolderData, uidSet imap.UIDSet, remove bool) (srcUIDs, destUIDs imap.UIDSet) {
+	src.mu.Lock()
+	var matched []imap.UID
+	for uid := range src.messages.CopyData() {
+		if uidSet.Contains(uid) {
+			matched = append(matched, uid)
+		}
+	}
+	slices.Sort(matched)
+
+	messages := make([]*fakeMessage, 0, len(matched))
+	for _, uid := range matched {
+		msg, _ := src.messages.Get(uid)
+		messages = append(messages, msg)
+		if remove {
+			src.messages.Delete(uid)
+			src.exists--
+		}
+	}
+	src.mu.Unlock()
+
+	dest.mu.Lock()
+	for i, msg := range messages {
+		newUID := dest.uidNext
+		dest.uidNext++
+		dest.messages.Set(newUID, cloneFakeMessage(msg, newUID))
+		dest.exists++
+		srcUIDs.AddNum(matched[i])
+		destUIDs.AddNum(newUID)
+	}
+	dest.mu.Unlock()
+
+	return srcUIDs, destUIDs
 }
 
 func makeIMAPAddress() imap.Address {

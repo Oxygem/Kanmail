@@ -1,0 +1,818 @@
+[
+  [
+    {
+      "subject": "Login Issues - Account Locked",
+      "content": "Hi Support,\n\nI'm unable to log into my account. It says my account is locked. Can you help me unlock it?\n\nUser ID: john.doe@company.com\n\nThanks,\nJohn"
+    },
+    {
+      "subject": "Re: Login Issues - Account Locked",
+      "content": "Hi John,\n\nI've unlocked your account. Please try logging in again and let me know if you have any issues.\n\nBest regards,\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Password Reset Request",
+      "content": "Hello,\n\nI need to reset my password for my account. The reset email isn't coming through.\n\nEmail: sarah.smith@example.com\n\nPlease help."
+    }
+  ],
+  [
+    {
+      "subject": "Billing Question - Duplicate Charge",
+      "content": "Hi,\n\nI see two charges on my credit card for the same amount. One should be removed.\n\nCharge amounts: $29.99 each\nDate: March 15, 2024\n\nPlease investigate."
+    },
+    {
+      "subject": "Re: Billing Question - Duplicate Charge",
+      "content": "Hello,\n\nI've reviewed your account and found the duplicate charge. I've initiated a refund for $29.99. It should appear on your statement within 3-5 business days.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Feature Request - Dark Mode",
+      "content": "Hi Support,\n\nWould it be possible to add a dark mode to the application? It would really help with eye strain during late night work sessions.\n\nThanks for considering!"
+    },
+    {
+      "subject": "Re: Feature Request - Dark Mode",
+      "content": "Thank you for the suggestion! I've forwarded this to our development team for consideration in upcoming releases.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "App Crashing on iPhone",
+      "content": "The app keeps crashing on my iPhone 14. It happens when I try to upload photos.\n\niOS version: 17.3.1\nApp version: 2.4.1\n\nPlease help!"
+    },
+    {
+      "subject": "Re: App Crashing on iPhone",
+      "content": "Thank you for reporting this. Can you try force-closing the app and restarting it? Also, please ensure you have the latest version from the App Store.\n\nSupport Team"
+    },
+    {
+      "subject": "Re: App Crashing on iPhone",
+      "content": "I tried that but it's still crashing. The app is up to date."
+    },
+    {
+      "subject": "Re: App Crashing on iPhone",
+      "content": "I've escalated this to our technical team. They'll investigate the iOS compatibility issue. We'll update you within 24 hours.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Cannot Download Invoice",
+      "content": "I'm trying to download my invoice from last month but the download button isn't working. Can you send it to me directly?\n\nAccount: premium_user_2024"
+    }
+  ],
+  [
+    {
+      "subject": "Subscription Cancellation",
+      "content": "Hi,\n\nI need to cancel my subscription. I can't find the option in my account settings.\n\nPlease help me cancel it."
+    },
+    {
+      "subject": "Re: Subscription Cancellation",
+      "content": "I can help you with that. I've cancelled your subscription. It will remain active until the end of your current billing period.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Data Export Request",
+      "content": "Hello,\n\nI need to export all my data from your platform. How can I do this?\n\nThanks"
+    },
+    {
+      "subject": "Re: Data Export Request",
+      "content": "You can request a data export from your account settings under 'Privacy & Data'. The export will be ready within 48 hours.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Account Upgrade Issue",
+      "content": "I'm trying to upgrade to the Pro plan but the payment keeps failing. My card is valid and has funds.\n\nError: Payment processing failed"
+    },
+    {
+      "subject": "Re: Account Upgrade Issue",
+      "content": "This might be due to international payment restrictions. Can you try a different payment method or contact your bank?\n\nSupport Team"
+    },
+    {
+      "subject": "Re: Account Upgrade Issue",
+      "content": "I tried PayPal and it worked! Thanks for the suggestion."
+    }
+  ],
+  [
+    {
+      "subject": "Missing Email Notifications",
+      "content": "I'm not receiving email notifications anymore. I checked my spam folder too.\n\nEmail: notifications@myemail.com"
+    }
+  ],
+  [
+    {
+      "subject": "Website Loading Slowly",
+      "content": "Your website is loading very slowly for me. Is there a server issue?\n\nLocation: New York\nInternet: Fiber 100Mbps"
+    },
+    {
+      "subject": "Re: Website Loading Slowly",
+      "content": "We're experiencing some performance issues in the US East region. Our team is working on it. Expected resolution within 2 hours.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "API Rate Limit Exceeded",
+      "content": "I'm getting rate limit errors on the API even though I'm under my quota.\n\nAPI Key: dev_12345...\nEndpoint: /api/v1/users"
+    },
+    {
+      "subject": "Re: API Rate Limit Exceeded",
+      "content": "I see the issue. There was a bug in our rate limiting system. I've reset your limits and applied a fix. Please try again.\n\nAPI Support Team"
+    }
+  ],
+  [
+    {
+      "subject": "Integration Not Working",
+      "content": "The Slack integration stopped working yesterday. No messages are coming through.\n\nWorkspace: mycompany.slack.com"
+    },
+    {
+      "subject": "Re: Integration Not Working",
+      "content": "Slack updated their API requirements. You'll need to reconnect the integration in your settings to continue receiving messages.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Refund Request",
+      "content": "I was charged for a service I didn't use. Can I get a refund?\n\nCharge: $49.99 on March 10th\nReason: Accidental purchase"
+    },
+    {
+      "subject": "Re: Refund Request",
+      "content": "I've processed a full refund for $49.99. It should appear on your statement within 5-7 business days.\n\nBilling Support"
+    }
+  ],
+  [
+    {
+      "subject": "Account Security Concern",
+      "content": "I received an email about a login from China, but I'm in the US. My account might be compromised."
+    },
+    {
+      "subject": "Re: Account Security Concern",
+      "content": "I've immediately secured your account and forced a logout on all devices. Please change your password and enable 2FA.\n\nSecurity Team"
+    },
+    {
+      "subject": "Re: Account Security Concern",
+      "content": "Done! I've changed my password and enabled 2FA. Is my account safe now?"
+    },
+    {
+      "subject": "Re: Account Security Concern",
+      "content": "Yes, your account is now secure. We'll continue monitoring for any suspicious activity.\n\nSecurity Team"
+    }
+  ],
+  [
+    {
+      "subject": "File Upload Error",
+      "content": "I'm getting an error when trying to upload files larger than 5MB.\n\nError: File size exceeds limit\nFile type: PDF"
+    }
+  ],
+  [
+    {
+      "subject": "Mobile App Update Issues",
+      "content": "After the latest app update, I can't access my saved documents.\n\nDevice: Samsung Galaxy S23\nApp version: 3.1.0"
+    },
+    {
+      "subject": "Re: Mobile App Update Issues",
+      "content": "This is a known issue with version 3.1.0. We're releasing a hotfix tomorrow. Your documents are safe and will reappear after the update.\n\nMobile Support"
+    }
+  ],
+  [
+    {
+      "subject": "Print Function Not Working",
+      "content": "The print button in the web interface doesn't do anything. No print dialog opens.\n\nBrowser: Chrome 122\nOS: Windows 11"
+    },
+    {
+      "subject": "Re: Print Function Not Working",
+      "content": "Please try disabling your ad blocker for our site, as it might be blocking the print dialog.\n\nTech Support"
+    }
+  ],
+  [
+    {
+      "subject": "Collaboration Feature Bug",
+      "content": "When I share a document with colleagues, they can't see the latest changes.\n\nDocument: Project_Plan_2024.docx"
+    },
+    {
+      "subject": "Re: Collaboration Feature Bug",
+      "content": "There was a sync issue. I've manually refreshed the document. Your colleagues should now see all updates.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Database Connection Error",
+      "content": "Getting 'Database connection failed' error when trying to generate reports.\n\nTime: Around 2 PM EST\nReport type: Monthly sales"
+    }
+  ],
+  [
+    {
+      "subject": "License Key Invalid",
+      "content": "My license key is showing as invalid even though it's within the valid period.\n\nKey: ABCD-1234-EFGH-5678\nExpiry: December 2024"
+    },
+    {
+      "subject": "Re: License Key Invalid",
+      "content": "I've refreshed your license status in our system. Please restart the application and try again.\n\nLicense Support"
+    }
+  ],
+  [
+    {
+      "subject": "Export Feature Missing Data",
+      "content": "When I export my data to CSV, some fields are missing. Specifically the 'Category' column.\n\nDate range: January - March 2024"
+    },
+    {
+      "subject": "Re: Export Feature Missing Data",
+      "content": "I found the issue. The Category field was added recently and wasn't included in the export function. This will be fixed in next week's update.\n\nDevelopment Team"
+    }
+  ],
+  [
+    {
+      "subject": "Search Function Not Working",
+      "content": "The search bar returns no results even for items I know exist.\n\nSearch term: 'project alpha'\nExpected results: 15+ items"
+    }
+  ],
+  [
+    {
+      "subject": "Email Template Error",
+      "content": "Custom email templates aren't saving properly. Changes get reverted after page refresh.\n\nTemplate: Welcome Email\nBrowser: Firefox"
+    },
+    {
+      "subject": "Re: Email Template Error",
+      "content": "This is a browser compatibility issue. Can you try using Chrome or Safari? We're working on a Firefox fix.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Two-Factor Authentication Issue",
+      "content": "My 2FA codes aren't working. I've tried multiple codes from my authenticator app.\n\nApp: Google Authenticator"
+    },
+    {
+      "subject": "Re: Two-Factor Authentication Issue",
+      "content": "The time on your device might be out of sync. Please ensure your device time is accurate and try again.\n\nSecurity Support"
+    },
+    {
+      "subject": "Re: Two-Factor Authentication Issue",
+      "content": "That fixed it! Thank you so much."
+    }
+  ],
+  [
+    {
+      "subject": "Dashboard Charts Not Loading",
+      "content": "The charts on my dashboard show as blank. All other elements load fine.\n\nDashboard: Sales Overview\nBrowser: Edge"
+    }
+  ],
+  [
+    {
+      "subject": "Notification Preferences Reset",
+      "content": "My notification preferences keep resetting to default every few days.\n\nPreferred setting: Email only, no SMS"
+    },
+    {
+      "subject": "Re: Notification Preferences Reset",
+      "content": "I've found and fixed the bug causing preference resets. Your settings should now persist properly.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Calendar Sync Issues",
+      "content": "Events aren't syncing between the app and my Google Calendar.\n\nCalendar: work@company.com\nLast sync: 3 days ago"
+    },
+    {
+      "subject": "Re: Calendar Sync Issues",
+      "content": "Google updated their calendar API. You'll need to disconnect and reconnect your calendar in the integrations section.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Bulk Import Failed",
+      "content": "Trying to import 500 contacts but the process fails at around 200.\n\nFile format: CSV\nFile size: 2MB"
+    },
+    {
+      "subject": "Re: Bulk Import Failed",
+      "content": "Large imports can timeout. Try splitting your file into smaller batches of 100 contacts each.\n\nData Team"
+    }
+  ],
+  [
+    {
+      "subject": "Video Call Quality Poor",
+      "content": "Video calls through the platform have poor quality and frequent disconnections.\n\nConnection: 50Mbps fiber\nParticipants: 4 people"
+    }
+  ],
+  [
+    {
+      "subject": "Custom Domain Setup",
+      "content": "Need help setting up my custom domain for the white-label solution.\n\nDomain: portal.mycompany.com\nPlan: Enterprise"
+    },
+    {
+      "subject": "Re: Custom Domain Setup",
+      "content": "I'll need you to add a CNAME record pointing to our servers. I'll send detailed instructions shortly.\n\nEnterprise Support"
+    }
+  ],
+  [
+    {
+      "subject": "Report Generation Timeout",
+      "content": "Large reports (>10,000 rows) are timing out and not generating.\n\nReport: Annual customer data\nTimeframe: Full year 2023"
+    },
+    {
+      "subject": "Re: Report Generation Timeout",
+      "content": "For large reports, please use the scheduled report feature. It will email you when complete.\n\nReporting Team"
+    }
+  ],
+  [
+    {
+      "subject": "SSO Integration Issue",
+      "content": "Single Sign-On isn't working with our Azure AD setup.\n\nError: Invalid SAML response\nProvider: Microsoft Azure"
+    },
+    {
+      "subject": "Re: SSO Integration Issue",
+      "content": "The SAML configuration needs updating. I'll schedule a call with your IT team to resolve this.\n\nEnterprise Support"
+    }
+  ],
+  [
+    {
+      "subject": "Data Migration Request",
+      "content": "Moving from competitor platform. Need help migrating 50,000 records.\n\nCurrent platform: OldCRM Pro\nData types: Contacts, deals, tasks"
+    }
+  ],
+  [
+    {
+      "subject": "Performance Issues",
+      "content": "The application is very slow when loading large datasets (>1000 items).\n\nDataset: Customer list\nLoad time: 30+ seconds"
+    },
+    {
+      "subject": "Re: Performance Issues",
+      "content": "We're implementing pagination for large datasets. This will be available in next month's release.\n\nPerformance Team"
+    }
+  ],
+  [
+    {
+      "subject": "Webhook Not Triggering",
+      "content": "Webhooks stopped firing yesterday. No events are being sent to our endpoint.\n\nEndpoint: https://api.oursite.com/webhook\nEvents: user.created, user.updated"
+    },
+    {
+      "subject": "Re: Webhook Not Triggering",
+      "content": "I see your endpoint is returning 500 errors. Once you fix the endpoint, webhooks will resume automatically.\n\nAPI Team"
+    }
+  ],
+  [
+    {
+      "subject": "Theme Customization Help",
+      "content": "How can I change the primary color in my custom theme?\n\nCurrent: Blue (#007bff)\nDesired: Green (#28a745)"
+    },
+    {
+      "subject": "Re: Theme Customization Help",
+      "content": "Go to Settings > Appearance > Custom CSS and add: :root { --primary-color: #28a745; }\n\nDesign Support"
+    }
+  ],
+  [
+    {
+      "subject": "Automated Backup Failed",
+      "content": "Daily backup job failed for the third day in a row.\n\nBackup time: 2 AM UTC\nError: Insufficient storage space"
+    }
+  ],
+  [
+    {
+      "subject": "User Permission Error",
+      "content": "I can't access the admin panel even though I have admin rights.\n\nRole: Super Admin\nError: Access denied"
+    },
+    {
+      "subject": "Re: User Permission Error",
+      "content": "Your admin session expired. Please log out completely and log back in to refresh your permissions.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Form Submission Error",
+      "content": "Contact forms on our website aren't submitting. Users get a generic error.\n\nForm: Contact Us\nError: Submission failed"
+    },
+    {
+      "subject": "Re: Form Submission Error",
+      "content": "The email service was temporarily down. All pending form submissions have been processed and the issue is resolved.\n\nTech Support"
+    }
+  ],
+  [
+    {
+      "subject": "Analytics Data Discrepancy",
+      "content": "Analytics dashboard shows different numbers than my Google Analytics.\n\nOur dashboard: 5,234 visitors\nGoogle Analytics: 6,891 visitors"
+    }
+  ],
+  [
+    {
+      "subject": "Plugin Compatibility Issue",
+      "content": "Third-party plugin causing conflicts with your software.\n\nPlugin: Advanced SEO Tools\nIssue: Page loading errors"
+    },
+    {
+      "subject": "Re: Plugin Compatibility Issue",
+      "content": "This plugin version is incompatible. Please update to version 2.3.1 or disable it temporarily.\n\nTech Support"
+    }
+  ],
+  [
+    {
+      "subject": "Database Query Slow",
+      "content": "Custom reports are taking 5+ minutes to load.\n\nQuery type: JOIN across 4 tables\nRecord count: ~100,000"
+    },
+    {
+      "subject": "Re: Database Query Slow",
+      "content": "We've optimized the database indices for your query type. Reports should now load in under 30 seconds.\n\nDatabase Team"
+    }
+  ],
+  [
+    {
+      "subject": "Email Deliverability Issue",
+      "content": "Emails sent through the platform are going to spam folders.\n\nEmail type: Marketing newsletters\nProvider: Gmail, Outlook"
+    }
+  ],
+  [
+    {
+      "subject": "Session Timeout Too Short",
+      "content": "I keep getting logged out every 15 minutes. Can this be extended?\n\nCurrent timeout: 15 minutes\nPreferred: 2 hours"
+    },
+    {
+      "subject": "Re: Session Timeout Too Short",
+      "content": "I've updated your account settings to extend the session timeout to 2 hours.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Multi-language Support",
+      "content": "When will Spanish language support be available?\n\nCurrent: English only\nNeeded for: Customer portal"
+    },
+    {
+      "subject": "Re: Multi-language Support",
+      "content": "Spanish support is planned for Q3 2024. French and German will follow in Q4.\n\nProduct Team"
+    }
+  ],
+  [
+    {
+      "subject": "Image Upload Compression",
+      "content": "Uploaded images are being over-compressed and look blurry.\n\nOriginal: 2MB JPEG\nCompressed: 200KB with visible artifacts"
+    }
+  ],
+  [
+    {
+      "subject": "Keyboard Shortcuts Not Working",
+      "content": "None of the keyboard shortcuts work in the web interface.\n\nBrowser: Safari 17\nOS: macOS Sonoma"
+    },
+    {
+      "subject": "Re: Keyboard Shortcuts Not Working",
+      "content": "Safari has some restrictions on keyboard events. Try enabling 'Developer' menu and check 'Disable Local File Restrictions'.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Recurring Payment Failed",
+      "content": "Monthly subscription payment failed but my card is valid.\n\nCard: Visa ending 1234\nAmount: $29.99"
+    },
+    {
+      "subject": "Re: Recurring Payment Failed",
+      "content": "Your card issuer declined the transaction. Please contact them or try a different payment method.\n\nBilling Support"
+    }
+  ],
+  [
+    {
+      "subject": "PDF Export Formatting Issue",
+      "content": "Exported PDFs have incorrect formatting and cut-off text.\n\nContent: Financial reports\nPage size: A4"
+    }
+  ],
+  [
+    {
+      "subject": "Time Zone Display Wrong",
+      "content": "All timestamps show in UTC instead of my local timezone.\n\nLocation: Pacific Time (PST)\nSetting: Should auto-detect"
+    },
+    {
+      "subject": "Re: Time Zone Display Wrong",
+      "content": "Please check your browser's location permissions for our site. The timezone detection needs location access.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Custom Field Not Saving",
+      "content": "Added a custom field 'Project Status' but values don't save.\n\nField type: Dropdown\nOptions: Active, Pending, Complete"
+    },
+    {
+      "subject": "Re: Custom Field Not Saving",
+      "content": "There was a validation rule blocking certain field names. I've fixed this and your field should work now.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Duplicate Record Detection",
+      "content": "System isn't detecting obvious duplicate records.\n\nExample: Same email, same name, different IDs\nFeature: Merge duplicates"
+    }
+  ],
+  [
+    {
+      "subject": "GDPR Data Request",
+      "content": "Customer requesting all personal data we have stored.\n\nCustomer email: gdpr.request@example.com\nRequest type: Data export"
+    },
+    {
+      "subject": "Re: GDPR Data Request",
+      "content": "I've generated the data export. Please verify the customer's identity before sending. Export expires in 7 days.\n\nCompliance Team"
+    }
+  ],
+  [
+    {
+      "subject": "Load Balancer Issues",
+      "content": "Getting intermittent 502 errors during peak hours.\n\nTime: 9 AM - 11 AM EST\nFrequency: ~10% of requests"
+    },
+    {
+      "subject": "Re: Load Balancer Issues",
+      "content": "We're scaling up server capacity to handle peak loads. This should resolve the 502 errors.\n\nInfrastructure Team"
+    }
+  ],
+  [
+    {
+      "subject": "Audit Trail Missing",
+      "content": "Some user actions aren't appearing in the audit log.\n\nMissing: File deletions from yesterday\nPresent: File uploads, edits"
+    }
+  ],
+  [
+    {
+      "subject": "Cross-browser Compatibility",
+      "content": "Interface looks broken in Internet Explorer 11.\n\nIssues: Misaligned buttons, missing styles\nWorkaround needed: Corporate policy requires IE11"
+    },
+    {
+      "subject": "Re: Cross-browser Compatibility",
+      "content": "IE11 support was deprecated in our last update. We can provide a legacy compatibility mode for enterprise customers.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "File Permissions Error",
+      "content": "Can't modify files uploaded by other team members.\n\nFile: shared_document.pdf\nError: Permission denied"
+    },
+    {
+      "subject": "Re: File Permissions Error",
+      "content": "The file owner needs to explicitly share edit permissions with you. I've sent them a notification.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Cache Issues After Update",
+      "content": "After yesterday's update, seeing old interface elements.\n\nIssue: Old buttons, outdated menu\nTried: Hard refresh, clearing browser cache"
+    }
+  ],
+  [
+    {
+      "subject": "Memory Leak in Browser",
+      "content": "Browser tab uses increasing amounts of RAM over time.\n\nBrowser: Chrome\nRAM usage: Starts 200MB, grows to 2GB+"
+    },
+    {
+      "subject": "Re: Memory Leak in Browser",
+      "content": "This is a known issue with certain browser extensions. Try disabling ad blockers and extensions one by one.\n\nTech Support"
+    }
+  ],
+  [
+    {
+      "subject": "Backup Restoration Request",
+      "content": "Accidentally deleted important data. Need restoration from yesterday's backup.\n\nData: Customer database entries\nTime deleted: This morning 9 AM"
+    },
+    {
+      "subject": "Re: Backup Restoration Request",
+      "content": "I've restored the deleted entries from yesterday's 11 PM backup. Please verify all data is present.\n\nData Recovery Team"
+    }
+  ],
+  [
+    {
+      "subject": "SSL Certificate Expiring",
+      "content": "Getting SSL certificate warnings on our custom domain.\n\nDomain: app.ourcompany.com\nExpiry: Next week"
+    }
+  ],
+  [
+    {
+      "subject": "Rate Limiting Too Strict",
+      "content": "API rate limits are too restrictive for our use case.\n\nCurrent limit: 100 requests/hour\nNeed: 500 requests/hour"
+    },
+    {
+      "subject": "Re: Rate Limiting Too Strict",
+      "content": "I've upgraded your API plan to allow 1000 requests/hour. This should meet your needs.\n\nAPI Support"
+    }
+  ],
+  [
+    {
+      "subject": "Regional Server Access",
+      "content": "Slow performance from our European office.\n\nLocation: London, UK\nResponse time: 3-5 seconds"
+    },
+    {
+      "subject": "Re: Regional Server Access",
+      "content": "We're launching European servers next month. I'll add you to the beta program for early access.\n\nInfrastructure Team"
+    }
+  ],
+  [
+    {
+      "subject": "Data Import Validation Error",
+      "content": "CSV import failing with validation errors for valid data.\n\nError: Invalid date format\nDate format used: DD/MM/YYYY"
+    }
+  ],
+  [
+    {
+      "subject": "White Label Customization",
+      "content": "Need to remove all references to your company branding for our white label deployment.\n\nRequired: Complete rebranding\nPlan: Enterprise Plus"
+    },
+    {
+      "subject": "Re: White Label Customization",
+      "content": "I'll set up a customization session with our design team. They'll handle complete rebranding within 1 week.\n\nEnterprise Support"
+    }
+  ],
+  [
+    {
+      "subject": "Scheduled Maintenance Impact",
+      "content": "Will tonight's maintenance affect our production environment?\n\nMaintenance time: 2 AM - 4 AM EST\nCritical operations: Customer onboarding"
+    },
+    {
+      "subject": "Re: Scheduled Maintenance Impact",
+      "content": "The maintenance only affects our reporting servers. All customer-facing features will remain operational.\n\nOperations Team"
+    }
+  ],
+  [
+    {
+      "subject": "Feature Flag Not Working",
+      "content": "Enabled beta feature flag but new functionality isn't visible.\n\nFlag: advanced_analytics\nAccount: premium_enterprise"
+    }
+  ],
+  [
+    {
+      "subject": "Training Session Request",
+      "content": "New team members need training on advanced features.\n\nTeam size: 8 people\nPreferred time: Next week"
+    },
+    {
+      "subject": "Re: Training Session Request",
+      "content": "I'll schedule a group training session for next Tuesday at 2 PM. Meeting invite will follow.\n\nCustomer Success"
+    }
+  ],
+  [
+    {
+      "subject": "Compliance Report Generation",
+      "content": "Need automated compliance reports for SOC 2 audit.\n\nFrequency: Monthly\nFormat: PDF with digital signature"
+    },
+    {
+      "subject": "Re: Compliance Report Generation",
+      "content": "I've set up automated monthly compliance reports. The first one will be generated at month-end.\n\nCompliance Team"
+    }
+  ],
+  [
+    {
+      "subject": "Third-party Integration Broken",
+      "content": "Zapier integration stopped working after your platform update.\n\nIntegration: Lead capture from forms\nError: Authentication failed"
+    }
+  ],
+  [
+    {
+      "subject": "Usage Analytics Request",
+      "content": "Need detailed usage analytics for cost optimization.\n\nMetrics needed: API calls, storage, bandwidth\nPeriod: Last 6 months"
+    },
+    {
+      "subject": "Re: Usage Analytics Request",
+      "content": "I've generated a comprehensive usage report and sent it to your email. It includes recommendations for optimization.\n\nAccount Management"
+    }
+  ],
+  [
+    {
+      "subject": "Emergency Access Required",
+      "content": "Locked out during critical deployment. Need immediate access restoration.\n\nUrgency: Critical\nImpact: Production deployment blocked"
+    },
+    {
+      "subject": "Re: Emergency Access Required",
+      "content": "Access restored immediately. I've also set up an emergency access protocol for future incidents.\n\nEmergency Support"
+    }
+  ],
+  [
+    {
+      "subject": "App Crashes on Startup After Update",
+      "content": "Hi Support,\n\nSince the latest update the app crashes immediately on launch. I've tried reinstalling but no luck.\n\nDevice: iPhone 14, iOS 17.2\nApp version: 4.1.0\n\nPlease advise.\n- Rachel"
+    },
+    {
+      "subject": "Re: App Crashes on Startup After Update",
+      "content": "Hi Rachel,\n\nThanks for the details. This is a known issue with 4.1.0 on iOS 17.2. We've just released 4.1.1 which fixes the crash - please update from the App Store.\n\nBest,\nSupport Team"
+    },
+    {
+      "subject": "Re: App Crashes on Startup After Update",
+      "content": "Updated and it's working perfectly now. Thank you!\n\n- Rachel"
+    }
+  ],
+  [
+    {
+      "subject": "Cannot Export Data to CSV",
+      "content": "Hello,\n\nWhen I click 'Export to CSV' nothing happens. No file downloads and no error appears.\n\nBrowser: Chrome 120\n\nCan you help?"
+    },
+    {
+      "subject": "Re: Cannot Export Data to CSV",
+      "content": "Hi,\n\nThis can happen if your browser is blocking pop-ups. Please allow pop-ups for our site and try again. If the issue persists, let us know and we'll investigate further.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Billing Charged Twice This Month",
+      "content": "I was charged twice for my subscription this month. Can you please refund the duplicate charge?\n\nAccount: mark.evans@example.com\nCharge date: the 3rd\n\nThanks,\nMark"
+    },
+    {
+      "subject": "Re: Billing Charged Twice This Month",
+      "content": "Hi Mark,\n\nApologies for the trouble. I can confirm a duplicate charge and have issued a full refund for it. It should appear within 5-7 business days.\n\nBest regards,\nBilling Support"
+    }
+  ],
+  [
+    {
+      "subject": "Feature Request: Dark Mode",
+      "content": "Would love to see a dark mode option in the app. Staring at the bright screen at night is tough on the eyes!\n\nThanks for considering."
+    },
+    {
+      "subject": "Re: Feature Request: Dark Mode",
+      "content": "Hi,\n\nThanks for the suggestion! Dark mode is actually on our roadmap for the next quarter. I've added your vote to the feature request.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Sync Not Working Across Devices",
+      "content": "My notes aren't syncing between my laptop and phone. Changes on one don't show up on the other.\n\nBoth are logged into the same account.\n\nPlease help."
+    },
+    {
+      "subject": "Re: Sync Not Working Across Devices",
+      "content": "Hi,\n\nCould you try signing out and back in on both devices? Also confirm both are on the latest version. This resolves most sync issues.\n\nSupport Team"
+    },
+    {
+      "subject": "Re: Sync Not Working Across Devices",
+      "content": "That did it - syncing works now. Thanks!"
+    },
+    {
+      "subject": "Re: Sync Not Working Across Devices",
+      "content": "Great to hear! Closing this ticket. Reach out anytime.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Received Wrong Item in Order",
+      "content": "I ordered the blue widget but received the red one. Order #77521.\n\nHow do I get the correct item?"
+    },
+    {
+      "subject": "Re: Received Wrong Item in Order",
+      "content": "Hi,\n\nSorry about the mix-up! We're shipping the correct blue widget today at no charge. You can keep the red one. A prepaid label isn't needed.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Two-Factor Authentication Locked Me Out",
+      "content": "I got a new phone and lost access to my authenticator app. Now I can't log in. How do I recover my account?\n\nEmail: lisa.wong@example.com"
+    },
+    {
+      "subject": "Re: Two-Factor Authentication Locked Me Out",
+      "content": "Hi Lisa,\n\nI've verified your identity and temporarily disabled 2FA on your account. Please log in and set it up again with your new device right away.\n\nSecurity Support"
+    }
+  ],
+  [
+    {
+      "subject": "How Do I Cancel My Subscription?",
+      "content": "I'd like to cancel my subscription. Where do I do this?\n\nThanks"
+    },
+    {
+      "subject": "Re: How Do I Cancel My Subscription?",
+      "content": "Hi,\n\nYou can cancel anytime under Settings > Billing > Cancel Subscription. You'll keep access until the end of your billing period. Sorry to see you go - let us know if there's anything we could improve!\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Error 500 When Saving Settings",
+      "content": "Every time I try to save my profile settings I get 'Error 500 - Internal Server Error'.\n\nHappening for the last hour."
+    },
+    {
+      "subject": "Re: Error 500 When Saving Settings",
+      "content": "Hi,\n\nWe experienced a brief server issue that's now resolved. Please try again - saving should work now. Apologies for the disruption.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Attachment Won't Upload",
+      "content": "I'm trying to attach a PDF but it keeps failing at 90%. The file is only 2MB.\n\nAny ideas?"
+    },
+    {
+      "subject": "Re: Attachment Won't Upload",
+      "content": "Hi,\n\nThis is usually a temporary network hiccup. Could you try a different network or browser? If it still fails, please send us the file and we'll upload it on our end.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Refund Status Inquiry",
+      "content": "I requested a refund a week ago (ticket #9921) but haven't seen it yet. Can you check the status?"
+    },
+    {
+      "subject": "Re: Refund Status Inquiry",
+      "content": "Hi,\n\nI've checked and your refund was processed on our side yesterday. Depending on your bank it may take another 3-5 business days to appear. Thanks for your patience!\n\nBilling Support"
+    }
+  ],
+  [
+    {
+      "subject": "Notifications Not Coming Through",
+      "content": "I've stopped getting push notifications entirely, even though they're enabled in the app and my phone settings."
+    },
+    {
+      "subject": "Re: Notifications Not Coming Through",
+      "content": "Hi,\n\nPlease try toggling notifications off and on again in both the app and your phone's system settings. Also ensure battery optimization isn't restricting the app in the background.\n\nSupport Team"
+    }
+  ],
+  [
+    {
+      "subject": "Account Upgrade Not Reflecting",
+      "content": "I upgraded to the Pro plan but I still don't have access to the premium features. Payment went through.\n\n- Kevin"
+    },
+    {
+      "subject": "Re: Account Upgrade Not Reflecting",
+      "content": "Hi Kevin,\n\nThanks for flagging. I've manually refreshed your account entitlements - please log out and back in, and the Pro features should now be available.\n\nSupport Team"
+    },
+    {
+      "subject": "Re: Account Upgrade Not Reflecting",
+      "content": "All the Pro features are showing now. Appreciate the quick help!\n\n- Kevin"
+    }
+  ]
+]

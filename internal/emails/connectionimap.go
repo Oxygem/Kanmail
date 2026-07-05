@@ -155,7 +155,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	if constants.ENV_DEBUG_FAKE_IMAP != "" {
 		if c.client == nil {
 			log.Info().Msg("Using fake IMAP client for debugging")
-			c.client = imapinterface.NewFakeIMAPClient()
+			c.client = imapinterface.NewFakeIMAPClient(c.conf.Username)
 		}
 		return c.client, nil
 	}

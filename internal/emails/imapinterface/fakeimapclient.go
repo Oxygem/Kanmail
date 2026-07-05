@@ -1,13 +1,16 @@
 package imapinterface
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
+	"net/mail"
 	"slices"
+	"strings"
 	"time"
 
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
 	"github.com/emersion/go-sasl"
@@ -24,6 +27,7 @@ var _ IMAPClient = (*FakeIMAPClient)(nil)
 type FakeIMAPClient struct {
 	log zerolog.Logger
 
+	store         *fakeIMAPStore
 	state         imap.ConnState
 	caps          imap.CapSet
 	currentFolder string
@@ -170,18 +174,40 @@ func (c *FakeCopyCommand) Wait() (*imap.CopyData, error) {
 	return c.data, nil
 }
 
-// FakeCopyCommand implements AppendCommand interface
+// FakeAppendCommand implements AppendCommand interface
 var _ AppendCommand = (*FakeAppendCommand)(nil)
 
 type FakeAppendCommand struct {
 	*FakeCommand
-	data *imap.AppendData
+	store  *fakeIMAPStore
+	folder string
+	buf    bytes.Buffer
+	data   *imap.AppendData
 }
 
 func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
 	if err := c.FakeCommand.Wait(); err != nil {
 		return nil, err
 	}
+	if c.data != nil {
+		return c.data, nil
+	}
+
+	folder, exists := c.store.folders.Get(c.folder)
+	if !exists {
+		return nil, fmt.Errorf("folder %s does not exist", c.folder)
+	}
+
+	msg := parseAppendedMessage(c.buf.Bytes())
+
+	folder.mu.Lock()
+	msg.uid = folder.uidNext
+	folder.uidNext++
+	folder.messages.Set(msg.uid, msg)
+	folder.exists++
+	folder.mu.Unlock()
+
+	c.data = &imap.AppendData{UID: msg.uid, UIDValidity: folder.uidValidity}
 	return c.data, nil
 }
 
@@ -190,19 +216,75 @@ func (c *FakeAppendCommand) Close() error {
 }
 
 func (c *FakeAppendCommand) Write(b []byte) (int, error) {
-	return 0, nil
+	return c.buf.Write(b)
 }
 
-// NewFakeIMAPClient creates a new fake IMAP client with sample data
-func NewFakeIMAPClient() *FakeIMAPClient {
+// parseAppendedMessage builds a fakeMessage from a raw RFC822 message, falling
+// back to a minimal message if parsing fails - fake mode should stay forgiving.
+func parseAppendedMessage(raw []byte) *fakeMessage {
+	now := time.Now()
+	msg := &fakeMessage{
+		flags:    []imap.Flag{imap.FlagSeen},
+		size:     uint32(len(raw)),
+		date:     now,
+		envelope: &imap.Envelope{Date: now},
+	}
+
+	parsed, err := mail.ReadMessage(bytes.NewReader(raw))
+	if err != nil {
+		return msg
+	}
+
+	header := parsed.Header
+	msg.envelope.Subject = header.Get("Subject")
+	msg.envelope.MessageID = header.Get("Message-Id")
+	if inReplyTo := header.Get("In-Reply-To"); inReplyTo != "" {
+		msg.envelope.InReplyTo = []string{inReplyTo}
+	}
+	if date, err := header.Date(); err == nil {
+		msg.date = date
+		msg.envelope.Date = date
+	}
+	msg.envelope.From = parseAddressList(header, "From")
+	msg.envelope.To = parseAddressList(header, "To")
+
+	if body, err := io.ReadAll(parsed.Body); err == nil {
+		msg.content = string(body)
+	}
+	return msg
+}
+
+func parseAddressList(header mail.Header, key string) []imap.Address {
+	addrs, err := header.AddressList(key)
+	if err != nil {
+		return nil
+	}
+	result := make([]imap.Address, 0, len(addrs))
+	for _, addr := range addrs {
+		mailbox, host, _ := strings.Cut(addr.Address, "@")
+		result = append(result, imap.Address{Name: addr.Name, Mailbox: mailbox, Host: host})
+	}
+	return result
+}
+
+// NewFakeIMAPClient creates a new fake IMAP client backed by the given account's
+// store, so each account sees its own distinct set of sample emails.
+func NewFakeIMAPClient(accountKey string) *FakeIMAPClient {
 	log := zerolog.Ctx(context.TODO()).With().
 		Str("component", "FakeIMAPClient").
+		Str("account", accountKey).
 		Logger()
 
 	client := &FakeIMAPClient{
+		store: getOrCreateFakeStore(accountKey),
 		state: imap.ConnStateAuthenticated,
-		caps:  imap.CapSet{},
-		log:   log,
+		caps: imap.CapSet{
+			imap.CapIMAP4rev1: {},
+			imap.CapNamespace: {},
+			imap.CapMove:      {},
+			imap.CapUIDPlus:   {},
+		},
+		log: log,
 	}
 
 	return client
@@ -250,7 +332,7 @@ func (c *FakeIMAPClient) Namespace() NamespaceCommand {
 }
 
 func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) SelectCommand {
-	folder, exists := fakeStore.folders.Get(name)
+	folder, exists := c.store.folders.Get(name)
 	if !exists {
 		cmd := &FakeSelectCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("folder %s does not exist", name)},
@@ -259,12 +341,14 @@ func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) Select
 	}
 
 	c.currentFolder = name
+	folder.mu.Lock()
 	data := &imap.SelectData{
 		UIDValidity: folder.uidValidity,
 		UIDNext:     folder.uidNext,
 		NumMessages: folder.exists,
 		Flags:       []imap.Flag{imap.FlagSeen, imap.FlagAnswered, imap.FlagDeleted, imap.FlagDraft},
 	}
+	folder.mu.Unlock()
 
 	cmd := &FakeSelectCommand{
 		FakeCommand: &FakeCommand{err: nil},
@@ -283,7 +367,7 @@ func (c *FakeIMAPClient) Unselect() Command {
 func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptions) ListCommand {
 	var data []*imap.ListData
 
-	for name := range fakeStore.folders.CopyData() {
+	for name := range c.store.folders.CopyData() {
 		data = append(data, &imap.ListData{
 			Attrs:   []imap.MailboxAttr{},
 			Mailbox: name,
@@ -298,12 +382,12 @@ func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptio
 }
 
 func (c *FakeIMAPClient) Create(name string, options *imap.CreateOptions) Command {
-	if _, exists := fakeStore.folders.Get(name); exists {
+	if _, exists := c.store.folders.Get(name); exists {
 		cmd := &FakeCommand{err: fmt.Errorf("folder %s already exists", name)}
 		return cmd
 	}
 
-	fakeStore.createFolderData(name)
+	c.store.createFolderData(name)
 
 	cmd := &FakeCommand{err: nil}
 	return cmd
@@ -317,16 +401,20 @@ func (c *FakeIMAPClient) UIDSearch(criteria *imap.SearchCriteria, options *imap.
 		return cmd
 	}
 
-	folder, exists := fakeStore.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.currentFolder)
 	if !exists {
 		panic("folder does not exist but is current")
 	}
 	var matchingUIDs []imap.UID
 
-	// Simple search implementation - return all UIDs for now
-	for uid := range folder.messages.CopyData() {
-		matchingUIDs = append(matchingUIDs, uid)
+	folder.mu.Lock()
+	for uid, msg := range folder.messages.CopyData() {
+		if matchesCriteria(uid, msg, criteria) {
+			matchingUIDs = append(matchingUIDs, uid)
+		}
 	}
+	folder.mu.Unlock()
+	slices.Sort(matchingUIDs)
 
 	data := &imap.SearchData{
 		All: imap.UIDSetNum(matchingUIDs...),
@@ -339,6 +427,114 @@ func (c *FakeIMAPClient) UIDSearch(criteria *imap.SearchCriteria, options *imap.
 	return cmd
 }
 
+// matchesCriteria evaluates the search criteria the app actually uses against a
+// message; all set fields must match (zero values are skipped).
+func matchesCriteria(uid imap.UID, msg *fakeMessage, criteria *imap.SearchCriteria) bool {
+	if criteria == nil {
+		return true
+	}
+
+	for _, uidSet := range criteria.UID {
+		// Contains handles dynamic ranges (eg 123:*), unlike Nums
+		if !uidSet.Contains(uid) {
+			return false
+		}
+	}
+
+	if !criteria.Since.IsZero() && msg.date.Before(criteria.Since) {
+		return false
+	}
+	if !criteria.Before.IsZero() && !msg.date.Before(criteria.Before) {
+		return false
+	}
+	if !criteria.SentSince.IsZero() && msg.envelope.Date.Before(criteria.SentSince) {
+		return false
+	}
+	if !criteria.SentBefore.IsZero() && !msg.envelope.Date.Before(criteria.SentBefore) {
+		return false
+	}
+
+	for _, header := range criteria.Header {
+		if !matchesHeader(msg, header) {
+			return false
+		}
+	}
+	for _, body := range criteria.Body {
+		if !containsFold(msg.content, body) {
+			return false
+		}
+	}
+	for _, text := range criteria.Text {
+		if !matchesText(msg, text) {
+			return false
+		}
+	}
+
+	for _, flag := range criteria.Flag {
+		if !containsFlag(msg.flags, flag) {
+			return false
+		}
+	}
+	for _, flag := range criteria.NotFlag {
+		if containsFlag(msg.flags, flag) {
+			return false
+		}
+	}
+
+	if criteria.Larger > 0 && int64(msg.size) <= criteria.Larger {
+		return false
+	}
+	if criteria.Smaller > 0 && int64(msg.size) >= criteria.Smaller {
+		return false
+	}
+
+	for _, not := range criteria.Not {
+		if matchesCriteria(uid, msg, &not) {
+			return false
+		}
+	}
+	for _, or := range criteria.Or {
+		if !matchesCriteria(uid, msg, &or[0]) && !matchesCriteria(uid, msg, &or[1]) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func matchesHeader(msg *fakeMessage, field imap.SearchCriteriaHeaderField) bool {
+	switch strings.ToLower(field.Key) {
+	case "message-id":
+		return containsFold(msg.envelope.MessageID, field.Value)
+	case "in-reply-to":
+		return slices.ContainsFunc(msg.envelope.InReplyTo, func(id string) bool {
+			return containsFold(id, field.Value)
+		})
+	case "subject":
+		return containsFold(msg.envelope.Subject, field.Value)
+	default:
+		return false
+	}
+}
+
+func matchesText(msg *fakeMessage, text string) bool {
+	if containsFold(msg.content, text) || containsFold(msg.envelope.Subject, text) {
+		return true
+	}
+	for _, addrs := range [][]imap.Address{msg.envelope.From, msg.envelope.To} {
+		for _, addr := range addrs {
+			if containsFold(addr.Name, text) || containsFold(addr.Addr(), text) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func containsFold(s, substr string) bool {
+	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+}
+
 func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) FetchCommand {
 	if c.currentFolder == "" {
 		cmd := &FakeFetchCommand{
@@ -349,21 +545,34 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 
 	c.log.Debug().Str("current_folder", c.currentFolder).Msg("Fetch email headers")
 
-	folder, exists := fakeStore.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.currentFolder)
 	if !exists {
 		panic("folder does not exist but is current")
 	}
-	var messages []*imapclient.FetchMessageBuffer
 
-	// Convert NumSet to UIDs and fetch matching messages
-	// For fake implementation, just use all messages in folder for now
-	uids, _ := numSet.(imap.UIDSet).Nums()
-	for _, uid := range uids {
-		msg, exists := folder.messages.Get(uid)
-		if !exists {
-			continue
-			// panic("email does not exist")
+	uidSet, ok := numSet.(imap.UIDSet)
+	if !ok {
+		cmd := &FakeFetchCommand{
+			FakeCommand: &FakeCommand{err: fmt.Errorf("fake client only supports UID sets")},
 		}
+		return cmd
+	}
+
+	folder.mu.Lock()
+	defer folder.mu.Unlock()
+
+	allMessages := folder.messages.CopyData()
+	var uids []imap.UID
+	for uid := range allMessages {
+		if uidSet.Contains(uid) {
+			uids = append(uids, uid)
+		}
+	}
+	slices.Sort(uids)
+
+	var messages []*imapclient.FetchMessageBuffer
+	for _, uid := range uids {
+		msg := allMessages[uid]
 		parts := []imap.BodyStructure{
 			&imap.BodyStructureSinglePart{
 				Type:     "text",
@@ -378,19 +587,20 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 				Size:     uint32(msg.size),
 			},
 		}
-		if gofakeit.IntN(100)%10 == 0 {
-			// Add a fake attachment to 1/10 emails
+		if msg.uid%10 == 0 {
+			// Add a fake attachment to 1/10 emails, sized deterministically so
+			// the same email renders the same across fetches
 			parts = append(parts, &imap.BodyStructureSinglePart{
 				Type:        "image",
 				Subtype:     "png",
 				Description: "animage.png",
-				Size:        uint32(gofakeit.IntRange(16384, 16384000)),
+				Size:        16384 + uint32(msg.uid)*7919%16384000,
 			})
 		}
 
 		fetchMsg := &imapclient.FetchMessageBuffer{
 			UID:        msg.uid,
-			Flags:      msg.flags,
+			Flags:      slices.Clone(msg.flags),
 			RFC822Size: int64(msg.size),
 			Envelope:   msg.envelope,
 			BodyStructure: &imap.BodyStructureMultiPart{
@@ -427,17 +637,30 @@ func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, optio
 		return cmd
 	}
 
-	folder, exists := fakeStore.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.currentFolder)
 	if !exists {
 		panic("folder does not exist but is current")
 	}
 
-	// For fake implementation, just update all messages
-	for _, msg := range folder.messages.CopyData() {
+	uidSet, ok := numSet.(imap.UIDSet)
+	if !ok {
+		cmd := &FakeFetchCommand{
+			FakeCommand: &FakeCommand{err: fmt.Errorf("fake client only supports UID sets")},
+		}
+		return cmd
+	}
+
+	// Only update the messages included in numSet
+	folder.mu.Lock()
+	for uid, msg := range folder.messages.CopyData() {
+		if !uidSet.Contains(uid) {
+			continue
+		}
+
 		// Update flags based on operation
 		switch flags.Op {
 		case imap.StoreFlagsSet:
-			msg.flags = flags.Flags
+			msg.flags = slices.Clone(flags.Flags)
 		case imap.StoreFlagsAdd:
 			for _, flag := range flags.Flags {
 				if !containsFlag(msg.flags, flag) {
@@ -448,6 +671,7 @@ func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, optio
 			msg.flags = removeFlags(msg.flags, flags.Flags)
 		}
 	}
+	folder.mu.Unlock()
 
 	// Return empty fetch command as store doesn't return data by default
 	cmd := &FakeFetchCommand{
@@ -465,13 +689,14 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 		return cmd
 	}
 
-	folder, exists := fakeStore.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.currentFolder)
 	if !exists {
 		panic("folder does not exist but is current")
 	}
 	var expungedUIDs []imap.UID
 
 	// Remove messages marked as deleted
+	folder.mu.Lock()
 	for uid, msg := range folder.messages.CopyData() {
 		if containsFlag(msg.flags, imap.FlagDeleted) {
 			folder.messages.Delete(uid)
@@ -479,6 +704,8 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 			folder.exists--
 		}
 	}
+	folder.mu.Unlock()
+	slices.Sort(expungedUIDs)
 
 	cmd := &FakeExpungeCommand{
 		FakeCommand: &FakeCommand{err: nil},
@@ -487,20 +714,59 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 	return cmd
 }
 
+// moveOrCopyFolders resolves and validates the source/dest folders and UID set
+// shared by Move and Copy.
+func (c *FakeIMAPClient) moveOrCopyFolders(numSet imap.NumSet, dest string) (*fakeFolderData, *fakeFolderData, imap.UIDSet, error) {
+	if c.currentFolder == "" {
+		return nil, nil, nil, fmt.Errorf("no folder selected")
+	}
+	uidSet, ok := numSet.(imap.UIDSet)
+	if !ok {
+		return nil, nil, nil, fmt.Errorf("fake client only supports UID sets")
+	}
+	srcFolder, exists := c.store.folders.Get(c.currentFolder)
+	if !exists {
+		panic("folder does not exist but is current")
+	}
+	destFolder, exists := c.store.folders.Get(dest)
+	if !exists {
+		return nil, nil, nil, fmt.Errorf("folder %s does not exist", dest)
+	}
+	return srcFolder, destFolder, uidSet, nil
+}
+
 func (c *FakeIMAPClient) Move(numSet imap.NumSet, dest string) MoveCommand {
-	// Simple implementation - just return success
+	srcFolder, destFolder, uidSet, err := c.moveOrCopyFolders(numSet, dest)
+	if err != nil {
+		return &FakeMoveCommand{FakeCommand: &FakeCommand{err: err}}
+	}
+
+	srcUIDs, destUIDs := c.store.moveOrCopyMessages(srcFolder, destFolder, uidSet, true)
 	cmd := &FakeMoveCommand{
 		FakeCommand: &FakeCommand{err: nil},
-		data:        &imapclient.MoveData{},
+		data: &imapclient.MoveData{
+			UIDValidity: destFolder.uidValidity,
+			SourceUIDs:  srcUIDs,
+			DestUIDs:    destUIDs,
+		},
 	}
 	return cmd
 }
 
 func (c *FakeIMAPClient) Copy(numSet imap.NumSet, dest string) CopyCommand {
-	// Simple implementation - just return success
+	srcFolder, destFolder, uidSet, err := c.moveOrCopyFolders(numSet, dest)
+	if err != nil {
+		return &FakeCopyCommand{FakeCommand: &FakeCommand{err: err}}
+	}
+
+	srcUIDs, destUIDs := c.store.moveOrCopyMessages(srcFolder, destFolder, uidSet, false)
 	cmd := &FakeCopyCommand{
 		FakeCommand: &FakeCommand{err: nil},
-		data:        &imap.CopyData{},
+		data: &imap.CopyData{
+			UIDValidity: destFolder.uidValidity,
+			SourceUIDs:  srcUIDs,
+			DestUIDs:    destUIDs,
+		},
 	}
 	return cmd
 }
@@ -508,7 +774,8 @@ func (c *FakeIMAPClient) Copy(numSet imap.NumSet, dest string) CopyCommand {
 func (c *FakeIMAPClient) Append(name string, size int64, options *imap.AppendOptions) AppendCommand {
 	cmd := &FakeAppendCommand{
 		FakeCommand: &FakeCommand{err: nil},
-		data:        &imap.AppendData{},
+		store:       c.store,
+		folder:      name,
 	}
 	return cmd
 }
