@@ -93,6 +93,12 @@ class RequestStore extends BaseStore {
     this.triggerUpdate();
   };
 
+  clearRequestErrors = () => {
+    console.debug("[requestStore] Clearing request errors...");
+    this.props.requestErrors = [];
+    this.triggerUpdate();
+  };
+
   async doFetchRequest(name: string, r: Promise<any>): Promise<any> {
     const n = this.counter;
     this.counter++;

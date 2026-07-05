@@ -79,6 +79,9 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
           {_.map(this.props.requestErrors, (error, key) => (
             <RequestError {...error} key={key} />
           ))}
+          <button onClick={() => requestStore.clearRequestErrors()}>
+            Clear all errors
+          </button>
         </div>
         <a onClick={() => AppService.RestartApp()}>
           <i className="error fa fa-exclamation-triangle"></i>{" "}
