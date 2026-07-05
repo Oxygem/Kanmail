@@ -234,6 +234,8 @@ func (a *AppService) OpenLicenseWindow(ctx context.Context) {
 		Title:   "Kanmail v2 License",
 		AppName: "license",
 		Compact: true,
+		Width:   850,
+		Height:  510,
 	})
 }
 
