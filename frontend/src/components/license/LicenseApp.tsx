@@ -1,12 +1,22 @@
 import React from "react";
+
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { subscribe } from "../../stores/base.tsx";
 import systemStore from "../../stores/system.ts";
 
+const PURCHASE_URL = "https://kanmail.io/license";
+
+const FEATURES = [
+  "One user, unlimited devices",
+  "Every past & future v2 release",
+  "Exclusive midnight & nord light themes",
+  "Experimental features",
+  "No subscription, ever",
+];
+
 interface ILicenseAppState {
   isSaving?: boolean;
-  isSaved?: boolean;
-  error?: any;
+  error?: string;
   license: string;
 }
 
@@ -21,108 +31,124 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
   }
 
   handleLicenseUpdate = (ev) => {
-    this.setState({
-      license: ev.target.value,
-    });
+    this.setState({ license: ev.target.value });
   };
 
   handleValidateLicense = (ev) => {
     ev.preventDefault();
 
-    if (this.state.isSaving) {
+    if (this.state.isSaving || !this.state.license.trim()) {
       return;
     }
 
-    this.setState({ isSaving: true });
+    this.setState({ isSaving: true, error: undefined });
 
-    AppService.ValidateLicense(this.state.license).then((isValid) => {
+    AppService.ValidateLicense(this.state.license.trim()).then((isValid) => {
       this.setState({
         isSaving: false,
-        isSaved: isValid,
-        error: isValid ? undefined : "Invalid license key",
-      })
-    }).catch(e => {
-      this.setState({ isSaving: false, error: `${e}` })
-    })
+        error: isValid ? undefined : "That license key is not valid",
+      });
+    }).catch((e) => {
+      this.setState({ isSaving: false, error: `${e}` });
+    });
   };
 
   handleRemoveLicense = (ev) => {
     ev.preventDefault();
 
     AppService.RemoveLicense().then(() => {
-      this.setState({ isSaving: false, license: "" })
-    }).catch(e => {
-      this.setState({ isSaving: false, error: `${e}` })
-    })
+      this.setState({ isSaving: false, license: "", error: undefined });
+    }).catch((e) => {
+      this.setState({ isSaving: false, error: `${e}` });
+    });
   };
 
-  renderSaveButton() {
+  handlePurchase = (ev) => {
+    ev.preventDefault();
+    AppService.OpenLink(PURCHASE_URL);
+  };
+
+  renderPurchase() {
     return (
-      <button
-        type="submit"
-        className="main-button submit"
-        onClick={this.handleValidateLicense}
-        disabled={this.state.isSaving}
-      >
-        Validate license key &rarr;
-      </button>
+      <div className="license-col purchase">
+        <div className="plan">Personal</div>
+        <div className="price"><span className="amount">$49</span></div>
+        <div className="price-note">one time — yours forever</div>
+
+        <div className="divider" />
+
+        <ul className="features">
+          {FEATURES.map((feature) => (
+            <li key={feature}>
+              <span className="dot" />
+              {feature}
+            </li>
+          ))}
+        </ul>
+
+        <button type="button" className="btn-primary" onClick={this.handlePurchase}>
+          Buy your license →
+        </button>
+      </div>
     );
   }
 
-  renderContent() {
-    if (systemStore.props.isLicensed) {
-      return (
-        <div>
-          <p>Thank you for purchasing a Kanmail license!</p>
-          <form>
-            <button
-              type="submit"
-              className="main-button cancel"
-              onClick={this.handleRemoveLicense}
-            >
+  renderActivate() {
+    const isLicensed = systemStore.props.isLicensed;
+
+    return (
+      <div className="license-col activate">
+        <h3 className="sub">{isLicensed ? "Licensed" : "Have a license key?"}</h3>
+        <p className="help-text">
+          {isLicensed
+            ? "Thank you for purchasing a Kanmail license!"
+            : "Paste it below to unlock Kanmail on this device."}
+        </p>
+
+        {this.state.error && (
+          <p className="license-error">{this.state.error}</p>
+        )}
+
+        <form onSubmit={this.handleValidateLicense}>
+          <textarea
+            className="license-key"
+            placeholder="Paste your license key here"
+            value={this.state.license}
+            onChange={this.handleLicenseUpdate}
+            rows={3}
+          />
+          <button
+            type="submit"
+            className="btn-primary"
+            disabled={this.state.isSaving}
+          >
+            {this.state.isSaving ? "Validating…" : "Validate license key →"}
+          </button>
+        </form>
+
+        {isLicensed && (
+          <form className="remove-form" onSubmit={this.handleRemoveLicense}>
+            <button type="submit" className="btn-danger">
               Remove license
             </button>
           </form>
-        </div>
-      );
-    }
-
-    return (
-      <div>
-        <p>
-          Hello Kanmail user! Kanmail is developed by a tiny team and a single
-          license key purchase goes a long way. If you use Kanmail regularly and
-          get value out of it, please consider <a onClick={() => AppService.OpenLink("https://kanmail.io/license")}>
-            purchasing a license
-          </a>
-          .
-        </p>
-        {this.state.error && <p className="message-block error">{this.state.error}</p>}
-        <form>
-          <textarea
-            placeholder="Paste license here"
-            value={this.state.license}
-            onChange={this.handleLicenseUpdate}
-            rows={1}
-          ></textarea>
-
-          {this.renderSaveButton()}
-        </form>
+        )}
       </div>
     );
   }
 
   render() {
     return (
-      <section className="no-select">
-        <header className="meta header-bar">
-          Manage License
+      <section id="license-app" className="no-select">
+        <header className="titlebar">
+          <span className="title">Manage License</span>
         </header>
 
-        <section id="license">
-          <h2>Kanmail License</h2>
-          {this.renderContent()}
-        </section>
+        <div className="km-license">
+          {this.renderPurchase()}
+          <div className="col-divider" />
+          {this.renderActivate()}
+        </div>
       </section>
     );
   }
