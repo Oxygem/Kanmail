@@ -5,6 +5,7 @@ import { encodeFolderName } from "../../util/string.js";
 import { getColumnMetaStore } from "../columns.js";
 import BaseEmails from "../emails/base.js";
 import requestStore from "../request.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import { IPaginateOptions, ISyncOptions } from "./base.ts";
 
 class SearchEmails extends BaseEmails {
@@ -43,7 +44,10 @@ class SearchEmails extends BaseEmails {
     });
 
     const finishLoading = () => columnMetaStore.setLoading(false);
-    return Promise.all(requests).then(finishLoading).catch(finishLoading);
+    return Promise.all(requests).then(finishLoading).catch((e) => {
+      finishLoading();
+      trackCaughtError("search", e);
+    });
   };
 
   onShowFolder = (folderName: string) => {

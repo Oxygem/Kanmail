@@ -30,20 +30,20 @@ func NewContactsService(log zerolog.Logger, caches *caches.Caches) *ContactsServ
 
 func (c *ContactsService) AddAlwaysShowImages(ctx context.Context, addr types.Address) error {
 	ctx = c.log.With().Str("method", "AddAlwaysShowImages").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 	defer zerolog.Ctx(ctx).Info().Any("address", addr).Msg("Set always show images")
 	return c.caches.ContactsCache.SetAlwaysShowImages(ctx, addr, true)
 }
 
 func (c *ContactsService) ShouldSenderShowImages(ctx context.Context, addr types.Address) (bool, error) {
 	ctx = c.log.With().Str("method", "ShouldSenderShowImages").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 	return c.caches.ContactsCache.GetAlwaysShowImages(ctx, addr)
 }
 
 func (c *ContactsService) SearchContacts(ctx context.Context, term string) ([]types.Address, error) {
 	ctx = c.log.With().Str("method", "SearchContacts").Str("term", term).Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 	return c.caches.ContactsCache.Search(ctx, term)
 }
 
@@ -54,7 +54,7 @@ type AvatarResp struct {
 
 func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarResp, error) {
 	ctx = c.log.With().Str("method", "GetAvatar").Str("email", email).Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 	log := zerolog.Ctx(ctx)
 
 	if exists, data, contentType, err := c.caches.AvatarCache.Get(ctx, email); err != nil {

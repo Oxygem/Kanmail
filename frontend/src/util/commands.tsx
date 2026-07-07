@@ -37,7 +37,6 @@ export function buildAddColumnPage(): CommandPage {
     onSelect: (option) => {
       const value = (option.value || option.label || "").trim();
       settingsStore.addColumn(value);
-      trackEvent("AddColumn");
     },
   };
 }
@@ -125,8 +124,7 @@ export function buildRootPage(): CommandPage {
         `app.switchWorkflow.${index}`,
         `Switch workflow: ${group.name}`,
         () => {
-          settingsStore.switchColumnGroup(index);
-          trackEvent("WorkflowSwitch");
+          settingsStore.switchColumnGroup(index, "command");
         },
       );
     });

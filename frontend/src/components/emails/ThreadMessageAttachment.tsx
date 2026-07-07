@@ -5,6 +5,7 @@ import { BodyPart } from "../../../bindings/github.com/oxygem/kanmail/internal/t
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import { IThreadMessage } from "../../stores/thread.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import { formatBytes } from "../../util/string.js";
 
 interface IThreadMessageAttachmentProps {
@@ -56,11 +57,14 @@ export default class ThreadMessageAttachment extends React.Component<
       downloading: false,
       downloaded: filename != "",
       downloadedFilename: filename || null,
-    }))).catch((ev) => (this.setState({
-      downloading: false,
-      downloaded: false,
-      downloadError: ev?.message ?? String(ev),
-    })));
+    }))).catch((ev) => {
+      this.setState({
+        downloading: false,
+        downloaded: false,
+        downloadError: ev?.message ?? String(ev),
+      });
+      trackCaughtError("DownloadAttachment", ev);
+    });
   };
 
   renderName() {

@@ -12,7 +12,9 @@ export async function trackError(
     stack?: string,
     extra?: params,
 ): Promise<void> {
-    const key = `${type}:${message}`;
+    // Include extra (e.g. accountName/folderName) in the dedup key so the same
+    // message on different accounts isn't collapsed into a single report.
+    const key = `${type}:${message}:${extra ? JSON.stringify(extra) : ""}`;
     if (recentErrors.has(key)) return;
     recentErrors.add(key);
     setTimeout(() => recentErrors.delete(key), 60_000);
@@ -23,6 +25,17 @@ export async function trackError(
         $exception_stack_trace_raw: stack || "",
         $exception_source: "frontend",
         ...extra,
+    });
+}
+
+// Track an error caught in a .catch/try-catch that would otherwise be swallowed.
+// Pulls the isNetwork/accountName/folderName metadata off the wrapped backend
+// error so downstream can distinguish network failures rather than dropping them.
+export function trackCaughtError(action: string, e: any): void {
+    trackError(action, e?.message ?? String(e), e?.stack, {
+        isNetwork: Boolean(e?.cause?.isNetwork),
+        accountName: e?.cause?.accountName,
+        folderName: e?.cause?.folderName,
     });
 }
 

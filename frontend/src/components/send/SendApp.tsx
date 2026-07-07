@@ -236,6 +236,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       setTimeout(() => wails.Window.Close(), 1000);
     }).catch(e => {
       this.setState({ isSentOrSaved: false })
+      trackEvent("SendEmailFailed", {
+        error: e?.message,
+        isNetwork: Boolean(e?.cause?.isNetwork),
+      });
       throw e
     })
   };

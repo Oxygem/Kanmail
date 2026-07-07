@@ -2,7 +2,6 @@ import React from "react";
 import { subscribe } from "../../stores/base.tsx";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
-import { trackEvent } from "../../util/analytics.ts";
 import ColumnSelect from "./ColumnSelect.tsx";
 
 @subscribe(settingsStore)
@@ -10,7 +9,6 @@ export default class OnboardingColumnsPanel extends React.Component<Partial<ISet
   handleAdd = (name: string) => {
     settingsStore.addColumn(name);
     getEmailStore().getFolderEmails(name, {});
-    trackEvent("AddColumn");
   };
 
   render() {

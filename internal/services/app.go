@@ -61,6 +61,9 @@ func NewAppService(log zerolog.Logger, version int) *AppService {
 		log:         log.With().Str("component", "app").Logger(),
 		sendWindows: make([]*application.WebviewWindow, 0),
 		AppVersion:  version,
+
+		// Default true, matching settings defaults
+		analyticsEnabled: true,
 	}
 }
 
@@ -72,6 +75,7 @@ func (a *AppService) Bootstrap(app *application.App, caches *caches.Caches, cach
 
 func (a *AppService) SetAnalyticsEnabled(enabled bool) {
 	a.analyticsEnabled = enabled
+	util.SetAnalyticsEnabled(enabled)
 }
 
 func (a *AppService) SetDeviceID(dirname string) {
@@ -97,7 +101,7 @@ func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error
 // on the same lock so they wait naturally if opened during an upgrade run.
 func (a *AppService) RunUpgrades(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "RunUpgrades").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -125,7 +129,7 @@ type OpenSendWindowOptions struct {
 
 func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowOptions) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -156,7 +160,7 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 
 func (a *AppService) OpenMetaWindow(ctx context.Context) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -211,7 +215,7 @@ func (a *AppService) OpenDebugWindow(ctx context.Context, options OpenDebugWindo
 
 func (a *AppService) OpenLicenseWindow(ctx context.Context) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -241,7 +245,7 @@ func (a *AppService) OpenLicenseWindow(ctx context.Context) {
 
 func (a *AppService) OpenSettingsWindow(ctx context.Context) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
@@ -315,7 +319,7 @@ func (a *AppService) TrackAnalytics(ctx context.Context, event string, propertie
 	}
 
 	ctx = a.log.With().Str("method", "TrackAnalytics").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	// TODO: we should put this in a queue and batch
 	return backend.SendAnalytics(ctx, a.DeviceID, event, properties)
@@ -378,7 +382,7 @@ func (a *AppService) GetCurrentVersion(ctx context.Context) string {
 // Returns bool if we have an update as well as the current version string (for UI)
 func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, error) {
 	ctx = a.log.With().Str("method", "CheckUpdate").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	u, err := a.getUpdate(ctx)
 	return u, types.WrapError(err)
@@ -386,7 +390,7 @@ func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, error) 
 
 func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 	ctx = a.log.With().Str("method", "DoUpdate").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	update, err := a.getUpdate(ctx)
 	if err != nil {
@@ -558,33 +562,33 @@ func (a *AppService) getKeyringLicenseUser() string {
 
 func (a *AppService) RemoveLicense(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	err := keyring.Delete(appDirName, a.getKeyringLicenseUser())
 	a.app.Event.Emit(string(types.LicenseChangedEvent))
-	return err
+	return types.WrapError(err)
 }
 
 func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bool, error) {
 	ctx = a.log.With().Str("method", "ValidateLicense").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	isValid, err := backend.CheckLicense(ctx, a.DeviceID, licenseKey)
 	if err != nil {
-		return false, err
+		return false, types.WrapError(err)
 	} else if !isValid {
 		return false, nil
 	}
 
 	if err := keyring.Set(appDirName, a.getKeyringLicenseUser(), licenseKey); err != nil {
 		// We failed to store the key, so even though it's valid we must tell the frontend we failed
-		return false, err
+		return false, types.WrapError(err)
 	}
 
 	// Cache the key, ignore error here as will retry
 	err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey))
 	a.app.Event.Emit(string(types.LicenseChangedEvent))
-	return true, err
+	return true, types.WrapError(err)
 }
 
 // Checks license key, called by frontend on startup + LicenseChangedEvent events
@@ -594,11 +598,11 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	}
 
 	ctx = a.log.With().Str("method", "CheckLicense").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	val, err := keyring.Get(appDirName, a.getKeyringLicenseUser())
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
-		return false, err
+		return false, types.WrapError(err)
 	} else if val == "" {
 		return false, nil
 	}
@@ -606,7 +610,7 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	hashedKey := hashLicenseKey(val)
 	checkedAt, err := a.caches.LicenseCache.Get(ctx, hashedKey)
 	if err != nil {
-		return false, err
+		return false, types.WrapError(err)
 	} else if checkedAt.After(time.Now().Add(-licenseCheckTimeout)) {
 		// If already checked in the timeout, we're good
 		return true, nil
@@ -616,10 +620,10 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, types.WrapError(err)
 	} else if isValid {
-		return true, a.caches.LicenseCache.Upsert(ctx, hashedKey)
+		return true, types.WrapError(a.caches.LicenseCache.Upsert(ctx, hashedKey))
 	}
 	err = a.caches.LicenseCache.Delete(ctx, hashedKey)
-	return false, err
+	return false, types.WrapError(err)
 }
 
 func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
@@ -628,7 +632,7 @@ func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
 	}
 
 	ctx = a.log.With().Str("method", "CheckCachedLicense").Logger().WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	val, err := keyring.Get(appDirName, a.getKeyringLicenseUser())
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {

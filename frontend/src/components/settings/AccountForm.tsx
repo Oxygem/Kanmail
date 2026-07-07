@@ -4,6 +4,7 @@ import React from "react";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
 import { openLink } from "../../window.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Address, ConnectionSettings, FolderSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
@@ -200,6 +201,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       if (error.cause && error.cause.settings) {
         this.props.updateItem(this.props.itemIndex, error.cause.settings);
       }
+      trackCaughtError("TestAccountSettings", error);
     })
   };
 

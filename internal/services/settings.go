@@ -84,7 +84,7 @@ func (s *SettingsService) GetLogFilename() string {
 
 func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 	ctx = s.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	s.settingsLock.RLock()
 	defer s.settingsLock.RUnlock()
@@ -93,9 +93,15 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 		settings := types.NewDefaultSettings()
 		if b, err := os.ReadFile(s.settingsFile); err != nil {
 			s.log.Warn().Err(err).Msg("Failed to read settings file")
+			// A missing file is normal on first run; anything else is a corrupt or
+			// unreadable settings file that we're about to silently reset to defaults.
+			if !os.IsNotExist(err) {
+				s.trackSettingsFileError("read")
+			}
 		} else {
 			if migrated, didMigrate, err := types.MigrateSettingsJSON(b); err != nil {
 				s.log.Err(err).Msg("Failed to migrate settings file")
+				s.trackSettingsFileError("migrate")
 			} else if didMigrate {
 				b = migrated
 				if err := os.WriteFile(s.settingsFile, migrated, 0644); err != nil {
@@ -106,6 +112,7 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 			}
 			if err := json.Unmarshal(b, &settings); err != nil {
 				s.log.Err(err).Msg("Failed to unmarshal settings file")
+				s.trackSettingsFileError("unmarshal")
 			}
 			settings.ApplyDefaults()
 		}
@@ -130,13 +137,24 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 	return outSettings
 }
 
+// trackSettingsFileError reports a corrupt/unreadable settings file to analytics.
+// Fire-and-forget on a detached context so a slow backend cannot block settings
+// reads while the lock is held. The stage records which phase failed.
+func (s *SettingsService) trackSettingsFileError(stage string) {
+	go func() {
+		_ = s.appService.TrackAnalytics(context.Background(), "SettingsFileError", map[string]any{
+			"stage": stage,
+		})
+	}()
+}
+
 func (s *SettingsService) addOnPutSettingsCallbacks(f func(context.Context) error) {
 	s.onPutSettingsCallbacks = append(s.onPutSettingsCallbacks, f)
 }
 
 func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settings) error {
 	ctx = s.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	s.settingsLock.Lock()
 	defer s.settingsLock.Unlock()

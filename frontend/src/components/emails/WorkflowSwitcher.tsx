@@ -5,7 +5,7 @@ import { ColumnGroup } from "../../../bindings/github.com/oxygem/kanmail/interna
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
-import { trackEvent } from "../../util/analytics.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
 import ManageWorkflowsModal from "./ManageWorkflowsModal.tsx";
 
@@ -68,8 +68,7 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
       return;
     }
     ev.preventDefault();
-    settingsStore.switchColumnGroup(idx);
-    trackEvent("WorkflowShortcutSwitch");
+    settingsStore.switchColumnGroup(idx, "shortcut");
   };
 
   columnsSubtitle(group: ColumnGroup): string {
@@ -95,8 +94,7 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
   };
 
   switchTo = (index: number) => {
-    settingsStore.switchColumnGroup(index);
-    trackEvent("WorkflowSwitch");
+    settingsStore.switchColumnGroup(index, "dropdown");
     this.close();
   };
 
@@ -112,18 +110,20 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
     }
     settingsStore
       .createColumnGroup(name)
-      .then(() => {
-        trackEvent("WorkflowCreate");
-        this.close();
-      })
-      .catch((e) => console.error("Failed to create workflow", e));
+      .then(() => this.close())
+      .catch((e) => {
+        console.error("Failed to create workflow", e);
+        trackCaughtError("WorkflowCreateFailed", e);
+      });
   };
 
   duplicateCurrent = () => {
     settingsStore
       .duplicateColumnGroup(settingsStore.props.currentColumnGroupIndex)
-      .then(() => trackEvent("WorkflowDuplicate"))
-      .catch((e) => console.error("Failed to duplicate workflow", e));
+      .catch((e) => {
+        console.error("Failed to duplicate workflow", e);
+        trackCaughtError("WorkflowDuplicateFailed", e);
+      });
     this.close();
   };
 

@@ -122,6 +122,7 @@ func ensureResponseServer(ctx context.Context) error {
 		server := &http.Server{Handler: http.HandlerFunc(handleOAuthResponse)}
 
 		go func() {
+			defer util.LogAndPanic(ctx)
 			if err := server.Serve(listener); err != http.ErrServerClosed {
 				// Panic is appropriate here because if the server dies while oauth flow in effect
 				// the alternative is a hanging app with no explanation.

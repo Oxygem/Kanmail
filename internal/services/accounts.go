@@ -90,7 +90,7 @@ func (a *AccountsService) TestAccountSettings(
 	settings types.AccountSettings,
 ) (types.AccountSettings, error) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	tmpAccount := emails.NewAccount(settings, a.caches)
 
@@ -121,7 +121,7 @@ func (a *AccountsService) AutoconfigureNewAccount(
 	options AutoconfigureOptions,
 ) (types.AccountSettings, error) {
 	ctx = a.log.WithContext(ctx)
-	defer util.LogPanic(ctx)
+	defer util.LogAndPanic(ctx)
 
 	if options.Domain == "" {
 		bits := strings.Split(username, "@")

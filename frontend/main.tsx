@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/react";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -57,7 +56,6 @@ const bootApp = (
         noApp!.parentNode!.removeChild(noApp!);
 
         ReactDOM.render(
-            // <Sentry.ErrorBoundary fallback={showErrorInformation}>
             <ErrorBoundary>
                 <section className={classNames.join(" ")} >
                     <TheTooltip />

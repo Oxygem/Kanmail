@@ -8,6 +8,7 @@ import { INBOX } from "../../constants.ts";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import BaseEmails from "../../stores/emails/base.js";
 import requestStore from "../../stores/request.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import settingsStore from "../../stores/settings.ts";
 import { encodeFolderName, formatAddress } from "../../util/string.js";
 import type { IPaginateOptions, ISyncOptions, Thread } from "./base.jsx";
@@ -58,7 +59,10 @@ class MainEmails extends BaseEmails {
         : DockService.SetBadge(incomplete ? "·" : String(unreadCount));
     promise
       .then(() => console.debug("[mainEmailStore] dock badge updated", unreadCount))
-      .catch((err) => console.warn("[mainEmailStore] dock badge update failed", err));
+      .catch((err) => {
+        console.warn("[mainEmailStore] dock badge update failed", err);
+        trackCaughtError("DockBadge", err);
+      });
   }
 
   // Called every time we re-render a column, aim is to ensure we're looking at the latest emails

@@ -80,17 +80,16 @@ func WrapFolderError(accountName AccountName, folderName FolderName, err error) 
 }
 
 type AccountSettingsError struct {
-	Err      error           `json:"error"`
-	Settings AccountSettings `json:"settings"`
-}
-
-func (e AccountSettingsError) Error() string {
-	return e.Err.Error()
+	InternalError `json:",inline"`
+	Settings      AccountSettings `json:"settings"`
 }
 
 func WrapAccountSettingsError(settings AccountSettings, err error) error {
+	if err == nil {
+		return nil
+	}
 	return AccountSettingsError{
-		Settings: settings,
-		Err:      err,
+		InternalError: makeInternalError(err),
+		Settings:      settings,
 	}
 }

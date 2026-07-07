@@ -3,6 +3,7 @@ import React from "react";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { subscribe } from "../../stores/base.tsx";
 import systemStore from "../../stores/system.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 
 const PURCHASE_URL = "https://kanmail.io/license";
 
@@ -50,6 +51,7 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
       });
     }).catch((e) => {
       this.setState({ isSaving: false, error: `${e}` });
+      trackCaughtError("ValidateLicense", e);
     });
   };
 
@@ -60,6 +62,7 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
       this.setState({ isSaving: false, license: "", error: undefined });
     }).catch((e) => {
       this.setState({ isSaving: false, error: `${e}` });
+      trackCaughtError("RemoveLicense", e);
     });
   };
 

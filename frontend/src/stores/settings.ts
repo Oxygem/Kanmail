@@ -3,6 +3,7 @@ import { EmailsService, SettingsService } from "../../bindings/github.com/oxygem
 import { AccountSettings, ColumnGroup, EventName, FolderName, Settings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events } from "../../wails/runtime.js";
 import { setupThemes } from "../theme.ts";
+import { trackEvent } from "../util/analytics.ts";
 import { arrayMove } from "../util/array.ts";
 import { BaseStore } from "./base.tsx";
 
@@ -66,10 +67,11 @@ class SettingsStore extends BaseStore {
 		}
 	}
 
-	async switchColumnGroup(index: number) {
+	async switchColumnGroup(index: number, source: string = "unknown") {
 		this.savePrevProps();
 		this.props.currentColumnGroupIndex = index;
 		await this.putSettings();
+		trackEvent("WorkflowSwitch", { source });
 	}
 
 	async createColumnGroup(name: string, columns?: string[]) {
@@ -84,6 +86,7 @@ class SettingsStore extends BaseStore {
 		}));
 		this.props.currentColumnGroupIndex = this.props.columnGroups.length - 1;
 		await this.putSettings();
+		trackEvent("WorkflowCreate");
 	}
 
 	async renameColumnGroup(index: number, newName: string) {
@@ -95,6 +98,7 @@ class SettingsStore extends BaseStore {
 		this.savePrevProps();
 		this.props.columnGroups[index]!.name = trimmed;
 		await this.putSettings();
+		trackEvent("WorkflowRename");
 	}
 
 	async duplicateColumnGroup(index: number) {
@@ -109,6 +113,7 @@ class SettingsStore extends BaseStore {
 		}));
 		this.props.currentColumnGroupIndex = index + 1;
 		await this.putSettings();
+		trackEvent("WorkflowDuplicate");
 	}
 
 	async deleteColumnGroup(index: number) {
@@ -124,6 +129,7 @@ class SettingsStore extends BaseStore {
 			this.props.currentColumnGroupIndex = Math.min(current, this.props.columnGroups.length - 1);
 		}
 		await this.putSettings();
+		trackEvent("WorkflowDelete");
 	}
 
 	async reorderColumnGroups(fromIndex: number, toIndex: number) {
@@ -132,6 +138,7 @@ class SettingsStore extends BaseStore {
 		arrayMove(this.props.columnGroups, fromIndex, toIndex);
 		this.props.currentColumnGroupIndex = this.props.columnGroups.indexOf(current!);
 		await this.putSettings();
+		trackEvent("WorkflowReorder");
 	}
 
 	async setColumn(name: string, idx) {
@@ -143,7 +150,8 @@ class SettingsStore extends BaseStore {
 	async addColumn(name: string) {
 		this.savePrevProps();
 		this.getCurrentColumns().push(name);
-		await this.putSettings();;
+		await this.putSettings();
+		trackEvent("AddColumn");
 	}
 
 	async removeColumn(name: string) {
