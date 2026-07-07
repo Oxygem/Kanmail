@@ -8,7 +8,7 @@ import Tooltip from "../../components/Tooltip.tsx";
 import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import keyboard from "../../keyboard.ts";
 import { getColumnStore } from "../../stores/columns.ts";
-import controlStore from "../../stores/control.js";
+import commandStore from "../../stores/command.ts";
 import { Thread } from "../../stores/emails/base.ts";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
@@ -21,11 +21,10 @@ import {
   formatDate,
   hexToRgb,
 } from "../../util/string.js";
+import { buildMovePage } from "../../util/commands.tsx";
 import {
-  buildMoveFolderOptions,
   getMoveDataFromThreadComponent,
   getThreadColumnMessageIds,
-  moveOrCopyThread,
 } from "../../util/threads.js";
 import { EmailColumn } from "./EmailColumn.tsx";
 
@@ -269,7 +268,7 @@ export default class EmailColumnThread extends React.Component<
       this.isBusy() ||
       this.state.hover ||
       threadStore.isOpen ||
-      controlStore.props.open
+      commandStore.props.open
     ) {
       return;
     }
@@ -282,7 +281,7 @@ export default class EmailColumnThread extends React.Component<
       return;
     }
 
-    if (this.isBusy() || threadStore.isOpen || controlStore.props.open) {
+    if (this.isBusy() || threadStore.isOpen || commandStore.props.open) {
       return;
     }
 
@@ -386,28 +385,7 @@ export default class EmailColumnThread extends React.Component<
       console.debug("Thread locked, not moving!");
     }
 
-    const subject = this.props.thread[0].subject;
-    const moveData = getMoveDataFromThreadComponent(this);
-
-    // TODO: what's this for? remove...
-    // controlStore.open("move", subject, moveData);
-
-    const controlInputHandler = (value) => {
-      if (!value) {
-        return;
-      }
-
-      moveOrCopyThread(moveData, value.value, keyboard.setMovingCurrentThread);
-    };
-
-    controlStore.open(controlInputHandler, {
-      selectOptions: buildMoveFolderOptions(this.props.columnId),
-      header: (
-        <span>
-          Move <strong>{subject}</strong>...
-        </span>
-      ),
-    });
+    commandStore.open(buildMovePage(this));
   };
 
   handleClickReply = (ev) => {

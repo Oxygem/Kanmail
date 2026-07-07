@@ -1,6 +1,7 @@
 /*
-    Control input overlay (command / move palette) — styled like the manage
-    workflows modal: a bordered token card with shadow. Themed via var(--*).
+    Command bar overlay (command / move / copy / add-column palette) — styled
+    like the manage workflows modal: a bordered token card with shadow.
+    Themed via var(--*).
 */
 
 section#control-background {
@@ -33,8 +34,17 @@ section#control {
     color: var(--muted);
   }
 
-  /* react-select (move/command options) */
+  /* react-select (move/command options) — the container/menu/menu-list chain
+     must shrink with the card, otherwise the menu-list keeps its full scroll
+     viewport while the card clips it and the last options are unreachable. */
+  > #control-input {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   div.react-select__control {
+    flex: none;
     margin: 0;
     border: none;
     background: transparent;
@@ -67,11 +77,24 @@ section#control {
     border-radius: 0;
     box-shadow: none;
     background: transparent;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
 
   div.react-select__menu-list {
     padding: 6px;
     max-height: 320px;
+    min-height: 0;
+  }
+
+  div.react-select__group-heading {
+    padding: 6px 14px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
 
   div.react-select__option {
@@ -89,19 +112,5 @@ section#control {
       background: var(--grad-soft);
       color: var(--brand-pink);
     }
-  }
-
-  /* plain text input fallback (no select options) */
-  form {
-    margin: 0;
-  }
-
-  input {
-    margin: 0;
-    font-size: @bigTextSize;
-    padding: 12px 20px;
-    border: none;
-    background: transparent;
-    color: var(--ink);
   }
 }

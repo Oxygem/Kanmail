@@ -1,5 +1,12 @@
 package types
 
+import (
+	"bytes"
+	"encoding/json"
+	"maps"
+	"slices"
+)
+
 type AccountName string
 type FolderName string
 
@@ -120,24 +127,25 @@ type SystemSettings struct {
 	KeyboardShortcuts map[string][]KeyboardBinding `json:"keyboardShortcuts,omitempty"`
 }
 
+type ColumnGroup struct {
+	Name    string       `json:"name"`
+	Columns []FolderName `json:"columns"`
+}
+
 type Settings struct {
 	Accounts       []AccountSettings `json:"accounts"`
 	SidebarFolders []FolderName      `json:"sidebarFolders"`
 	Signatures     []Signature       `json:"signatures"`
 	System         SystemSettings    `json:"system"`
 
-	ColumnGroups       map[string][]FolderName `json:"columnGroups"`
-	CurrentColumnGroup string                  `json:"currentColumnGroup"`
-	CurrentAccount     string                  `json:"currentAccount"`
+	ColumnGroups            []ColumnGroup `json:"columnGroups"`
+	CurrentColumnGroupIndex int           `json:"currentColumnGroupIndex"`
+	CurrentAccount          string        `json:"currentAccount"`
 }
 
 func NewDefaultSettings() Settings {
 	s := Settings{}
 	s.ApplyDefaults()
-
-	s.ColumnGroups = map[string][]FolderName{
-		"": []FolderName{"inbox"},
-	}
 
 	s.System.LoadContactIcons = true
 	s.System.ShareAnalytics = true
@@ -161,4 +169,70 @@ func (s *Settings) ApplyDefaults() {
 	if s.System.SyncInterval == 0 {
 		s.System.SyncInterval = 30000
 	}
+
+	if len(s.ColumnGroups) == 0 {
+		s.ColumnGroups = []ColumnGroup{{Name: "Default", Columns: []FolderName{"inbox"}}}
+	}
+	if s.CurrentColumnGroupIndex < 0 || s.CurrentColumnGroupIndex >= len(s.ColumnGroups) {
+		s.CurrentColumnGroupIndex = 0
+	}
+}
+
+// MigrateSettingsJSON upgrades a legacy settings file where columnGroups was a
+// name -> columns map (with "" as the default group) and currentColumnGroup was
+// a name. Returns the rewritten JSON and whether a migration was performed.
+func MigrateSettingsJSON(b []byte) ([]byte, bool, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return b, false, err
+	}
+
+	groupsRaw := bytes.TrimSpace(raw["columnGroups"])
+	if len(groupsRaw) == 0 || groupsRaw[0] != '{' {
+		return b, false, nil
+	}
+
+	var oldGroups map[string][]FolderName
+	if err := json.Unmarshal(groupsRaw, &oldGroups); err != nil {
+		return b, false, err
+	}
+
+	// Go always marshalled the map with sorted keys, so sorted order is the
+	// order the file already had. "" sorts first, so the old default group
+	// lands at index 0 as "Default".
+	names := slices.Sorted(maps.Keys(oldGroups))
+
+	newGroups := make([]ColumnGroup, 0, len(names))
+	for _, name := range names {
+		outName := name
+		if outName == "" {
+			outName = "Default"
+		}
+		newGroups = append(newGroups, ColumnGroup{Name: outName, Columns: oldGroups[name]})
+	}
+
+	currentIndex := 0
+	if currentRaw, ok := raw["currentColumnGroup"]; ok {
+		var currentName string
+		if err := json.Unmarshal(currentRaw, &currentName); err == nil {
+			if i := slices.Index(names, currentName); i >= 0 {
+				currentIndex = i
+			}
+		}
+	}
+	delete(raw, "currentColumnGroup")
+
+	var err error
+	if raw["columnGroups"], err = json.Marshal(newGroups); err != nil {
+		return b, false, err
+	}
+	if raw["currentColumnGroupIndex"], err = json.Marshal(currentIndex); err != nil {
+		return b, false, err
+	}
+
+	out, err := json.Marshal(raw)
+	if err != nil {
+		return b, false, err
+	}
+	return out, true, nil
 }

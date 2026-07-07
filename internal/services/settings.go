@@ -93,8 +93,21 @@ func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
 		settings := types.NewDefaultSettings()
 		if b, err := os.ReadFile(s.settingsFile); err != nil {
 			s.log.Warn().Err(err).Msg("Failed to read settings file")
-		} else if err := json.Unmarshal(b, &settings); err != nil {
-			s.log.Err(err).Msg("Failed to unmarshal settings file")
+		} else {
+			if migrated, didMigrate, err := types.MigrateSettingsJSON(b); err != nil {
+				s.log.Err(err).Msg("Failed to migrate settings file")
+			} else if didMigrate {
+				b = migrated
+				if err := os.WriteFile(s.settingsFile, migrated, 0644); err != nil {
+					s.log.Err(err).Msg("Failed to persist migrated settings file")
+				} else {
+					s.log.Info().Msg("Migrated columnGroups settings to ordered list")
+				}
+			}
+			if err := json.Unmarshal(b, &settings); err != nil {
+				s.log.Err(err).Msg("Failed to unmarshal settings file")
+			}
+			settings.ApplyDefaults()
 		}
 		s.settings = &settings
 	}

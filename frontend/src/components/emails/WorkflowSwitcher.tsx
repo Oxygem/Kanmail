@@ -1,6 +1,7 @@
 import _ from "lodash";
 import React from "react";
 
+import { ColumnGroup } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
@@ -54,7 +55,7 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
     }
   };
 
-  // Cmd/Ctrl + 1-9 switches to the Nth named workflow (the default is excluded).
+  // Cmd/Ctrl + 1-9 switches to the Nth workflow.
   handleKeydown = (ev: KeyboardEvent) => {
     if (!(ev.metaKey || ev.ctrlKey) || ev.altKey || ev.shiftKey) {
       return;
@@ -62,22 +63,17 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
     if (!/^[1-9]$/.test(ev.key) || keyboard.isSuspended()) {
       return;
     }
-    const named = _.filter(settingsStore.getColumnGroupNames(), (n) => n !== "");
     const idx = parseInt(ev.key, 10) - 1;
-    if (idx >= named.length) {
+    if (idx >= settingsStore.props.columnGroups.length) {
       return;
     }
     ev.preventDefault();
-    settingsStore.switchColumnGroup(named[idx]);
+    settingsStore.switchColumnGroup(idx);
     trackEvent("WorkflowShortcutSwitch");
   };
 
-  displayName(name: string): string {
-    return name === "" ? "Default" : name;
-  }
-
-  columnsSubtitle(name: string): string {
-    return _.map(settingsStore.getColumnGroupColumns(name), capitalizeFirstLetter).join(" · ");
+  columnsSubtitle(group: ColumnGroup): string {
+    return _.map(group.columns, capitalizeFirstLetter).join(" · ");
   }
 
   toggleOpen = () => {
@@ -98,8 +94,8 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
     this.setState({ open: false, creating: false, newName: "" });
   };
 
-  switchTo = (name: string) => {
-    settingsStore.switchColumnGroup(name);
+  switchTo = (index: number) => {
+    settingsStore.switchColumnGroup(index);
     trackEvent("WorkflowSwitch");
     this.close();
   };
@@ -123,6 +119,14 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
       .catch((e) => console.error("Failed to create workflow", e));
   };
 
+  duplicateCurrent = () => {
+    settingsStore
+      .duplicateColumnGroup(settingsStore.props.currentColumnGroupIndex)
+      .then(() => trackEvent("WorkflowDuplicate"))
+      .catch((e) => console.error("Failed to duplicate workflow", e));
+    this.close();
+  };
+
   openManage = () => {
     this.release();
     this.setState({ open: false, creating: false, manageOpen: true });
@@ -130,18 +134,18 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
 
   closeManage = () => this.setState({ manageOpen: false });
 
-  renderItem(name: string, shortcut: number | null, current: string) {
-    const isCurrent = name === current;
+  renderItem(group: ColumnGroup, index: number, shortcut: number | null) {
+    const isCurrent = index === settingsStore.props.currentColumnGroupIndex;
     return (
       <a
-        key={name || "__default__"}
+        key={index}
         className={`wf-item ${isCurrent ? "current" : ""}`}
-        onClick={() => this.switchTo(name)}
+        onClick={() => this.switchTo(index)}
       >
         <i className="fa fa-columns wf-icon"></i>
         <div className="wf-text">
-          <div className="wf-name">{this.displayName(name)}</div>
-          <div className="wf-sub">{this.columnsSubtitle(name)}</div>
+          <div className="wf-name">{group.name}</div>
+          <div className="wf-sub">{this.columnsSubtitle(group)}</div>
         </div>
         {isCurrent ? (
           <i className="fa fa-check wf-check"></i>
@@ -153,19 +157,14 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
   }
 
   renderDropdown() {
-    const names = settingsStore.getColumnGroupNames();
-    const current = settingsStore.props.currentColumnGroup;
     const style = this.state.pos
       ? { top: this.state.pos.top, left: this.state.pos.left }
       : undefined;
 
-    // The default ("") group has no keyboard shortcut; named workflows are
-    // numbered ⌘1..N in order.
-    let namedCount = 0;
-    const items = _.map(names, (name) => {
-      const shortcut = name === "" ? null : (namedCount += 1);
-      return this.renderItem(name, shortcut, current);
-    });
+    // Workflows are numbered ⌘1..9 in order.
+    const items = _.map(settingsStore.props.columnGroups, (group, i) =>
+      this.renderItem(group, i, i < 9 ? i + 1 : null),
+    );
 
     return (
       <>
@@ -197,6 +196,9 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
               <i className="fa fa-plus"></i> New workflow
             </a>
           )}
+          <a className="wf-action" onClick={this.duplicateCurrent}>
+            <i className="fa fa-clone"></i> Duplicate this workflow
+          </a>
           <a className="wf-action" onClick={this.openManage}>
             <i className="fa fa-sliders"></i> Manage workflows…
           </a>
@@ -206,7 +208,7 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
   }
 
   render() {
-    const current = settingsStore.props.currentColumnGroup;
+    const current = settingsStore.props.columnGroups[settingsStore.props.currentColumnGroupIndex];
 
     return (
       <div className="workflow-switcher">
@@ -216,7 +218,7 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
           onClick={this.toggleOpen}
         >
           <i className="fa fa-columns wf-button-icon"></i>
-          <span className="wf-button-name">{this.displayName(current)}</span>
+          <span className="wf-button-name">{current?.name}</span>
           <i className="fa fa-chevron-down wf-caret"></i>
         </button>
         {this.state.open && this.renderDropdown()}

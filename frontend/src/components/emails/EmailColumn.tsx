@@ -39,8 +39,6 @@ interface IEmailColumnProps extends IColumnProps {
   currentAccount: string;
 
   system: any;
-  currentColumnGroup: string;
-  columnGroups: any;
 
   isOver: boolean;
   canDrop: boolean;

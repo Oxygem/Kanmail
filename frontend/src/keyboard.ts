@@ -1,16 +1,17 @@
 import _ from "lodash";
 
 import { AppService } from "../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import type EmailColumnThread from "./components/emails/EmailColumnThread.tsx";
 import type EmailsApp from "./components/emails/EmailsApp.tsx";
-import EmailColumnThread from "./components/emails/EmailColumnThread.tsx";
 import cheatsheetStore from "./stores/cheatsheet.ts";
-import controlStore from "./stores/control.ts";
+import commandStore from "./stores/command.ts";
 import requestStore from "./stores/request.ts";
 import searchStore from "./stores/search.ts";
 import settingsStore from "./stores/settings.ts";
 import threadStore from "./stores/thread.ts";
 import tooltipStore from "./stores/tooltip.ts";
 import { trackEvent } from "./util/analytics.ts";
+import { openCommandBar } from "./util/commands.tsx";
 import { ensureInView, isPointInElement } from "./util/element.ts";
 import {
   getNextColumnThreadComponent,
@@ -125,14 +126,22 @@ class Keyboard {
   }
 
   private handleWindowMouseMove = (ev: MouseEvent) => {
+    // After a scroll the browser re-syncs hover state by dispatching a fake
+    // mousemove at the unchanged cursor position (e.g. keyboard nav scrolling
+    // the focused thread into view). That isn't the user moving the mouse, so
+    // it must not deactivate keyboard mode.
+    if (this.isCursorStationary(ev.clientX, ev.clientY)) {
+      return;
+    }
+
     this.lastCursorX = ev.clientX;
     this.lastCursorY = ev.clientY;
 
     // Moving the mouse deactivates keyboard mode: if the focused thread isn't
     // under the cursor, clear it (when it is, hover/mouseleave takes over).
-    // Skipped while a thread or control overlay is open, where mouse hover is
+    // Skipped while a thread or the command bar is open, where mouse hover is
     // intentionally ignored.
-    if (threadStore.isOpen || controlStore.props.open) {
+    if (threadStore.isOpen || commandStore.props.open) {
       return;
     }
     if (this.currentComponent) {
@@ -284,16 +293,16 @@ class Keyboard {
   selectNextColumnThread = () =>
     this.selectThread(
       getNextColumnThreadComponent(this.currentComponent),
-      false,
+      "nearest",
     );
 
   selectPreviousColumnThread = () =>
     this.selectThread(
       getPreviousColumnThreadComponent(this.currentComponent),
-      false,
+      "nearest",
     );
 
-  // Used by ControlInput when a move completes.
+  // Used by the command bar when a move completes.
   setMovingCurrentThread = () => {
     const component = this.currentComponent;
     if (!component) return;
@@ -401,8 +410,8 @@ keyboard.register({
       searchStore.close();
       return;
     }
-    if (controlStore.props.open) {
-      controlStore.close();
+    if (commandStore.props.open) {
+      commandStore.pop();
       return;
     }
     if (!keyboard.isSuspended() && threadStore.isOpen) {
@@ -421,6 +430,17 @@ keyboard.register({
     trackEvent("KeyboardOpenSend");
     AppService.OpenSendWindow({});
   },
+});
+
+keyboard.register({
+  id: "app.commandBar",
+  description: "Open command palette",
+  scope: "global",
+  defaults: [
+    { key: "k", meta: true },
+    { key: "k", ctrl: true },
+  ],
+  handler: () => openCommandBar(),
 });
 
 keyboard.register({

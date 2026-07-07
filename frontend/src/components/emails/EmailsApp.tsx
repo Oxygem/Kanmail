@@ -16,7 +16,7 @@ import { collectVisibleThreadComponents } from "../../util/threads.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
-import ControlInput from "./ControlInput.jsx";
+import CommandBar from "./CommandBar.tsx";
 import EmailColumn from "./EmailColumn.tsx";
 import HeaderErrors from "../HeaderErrors.tsx";
 import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
@@ -239,7 +239,7 @@ export default class EmailsApp extends React.Component<ISettings> {
         {this.renderColumnsSection()}
         <Thread />
         {/* @ts-ignore */}
-        <ControlInput />
+        <CommandBar />
         {/* @ts-ignore */}
         <Cheatsheet />
       </section>

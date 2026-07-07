@@ -28,7 +28,6 @@ import {
 } from "../../util/send.ts";
 import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
-import ControlInput from "../emails/ControlInput.tsx";
 import SquireEditor, { SquireEditorApi, SquireFormatStates } from "./SquireEditor.tsx";
 
 interface addressOption {
@@ -376,9 +375,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       <section
         id="new-email"
       >
-        {/* @ts-ignore */}
-        <ControlInput />
-
         <header
           className="new-email titlebar"
           onClick={stopEventPropagation}

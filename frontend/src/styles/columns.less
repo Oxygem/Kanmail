@@ -297,48 +297,29 @@ section#columns {
     padding: 12px 11px;
     display: flex;
 
-    form {
+    .tooltip-wrapper {
       flex: 1;
-      margin: 0;
-      position: relative;
       display: flex;
+    }
 
-      a {
-        flex: 1;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        padding-top: 16px;
-        border: 1.5px dashed var(--ring);
-        border-radius: var(--r-lg);
-        color: var(--faint);
+    a {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px dashed var(--ring);
+      border-radius: var(--r-lg);
+      color: var(--faint);
+      transition: border-color 100ms, color 100ms, background-color 100ms;
 
-        &:hover {
-          border-color: var(--brand-pink);
-          color: var(--brand-pink);
-        }
-
-        &.active {
-          border-color: var(--brand-pink);
-          color: var(--brand-pink);
-        }
-
-        i {
-          font-size: 18px;
-        }
+      &:hover {
+        border-color: var(--brand-pink);
+        color: var(--brand-pink);
+        background-color: color-mix(in srgb, var(--brand-pink) 7%, transparent);
       }
 
-      .add-column-select {
-        width: 220px;
-        position: absolute;
-        margin-left: -220px;
-        z-index: 1200;
-        top: 0;
-        height: 48px;
-
-        div.react-select__control {
-          height: 100%;
-        }
+      i {
+        font-size: 18px;
       }
     }
   }
@@ -471,6 +452,9 @@ section#columns {
     width: 100%;
     // Clear the absolutely-positioned frosted header; emails scroll beneath it.
     padding-top: @topHeight;
+    // Keep scrollIntoView targets below the floating header.
+    scroll-padding-top: @topHeight;
+    scroll-padding-bottom: 10px;
     min-height: 0;
     overflow-x: hidden;
 

@@ -1,6 +1,7 @@
 import _ from "lodash";
 import React from "react";
 
+import { ColumnGroup } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
@@ -12,12 +13,13 @@ interface IManageWorkflowsModalProps extends Partial<ISettings> {
 }
 
 interface IManageWorkflowsModalState {
-  renaming: string | null;
+  renamingIndex: number | null;
   renameValue: string;
   creating: boolean;
   newName: string;
-  dragName: string | null;
-  dragOverName: string | null;
+  dragIndex: number | null;
+  dragOverIndex: number | null;
+  dragArmedIndex: number | null;
 }
 
 @subscribe(settingsStore)
@@ -30,12 +32,13 @@ export default class ManageWorkflowsModal extends React.Component<
   constructor(props) {
     super(props);
     this.state = {
-      renaming: null,
+      renamingIndex: null,
       renameValue: "",
       creating: false,
       newName: "",
-      dragName: null,
-      dragOverName: null,
+      dragIndex: null,
+      dragOverIndex: null,
+      dragArmedIndex: null,
     };
   }
 
@@ -44,10 +47,12 @@ export default class ManageWorkflowsModal extends React.Component<
     // Escape ourselves.
     this.releaseKeyboard = keyboard.suspend("ManageWorkflowsModal");
     window.addEventListener("keydown", this.handleKeydown);
+    window.addEventListener("mouseup", this.disarmDrag);
   }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.handleKeydown);
+    window.removeEventListener("mouseup", this.disarmDrag);
     if (this.releaseKeyboard) {
       this.releaseKeyboard();
       this.releaseKeyboard = null;
@@ -61,38 +66,40 @@ export default class ManageWorkflowsModal extends React.Component<
     }
   };
 
-  displayName(name: string): string {
-    return name === "" ? "Default" : name;
-  }
+  disarmDrag = () => {
+    if (this.state.dragArmedIndex !== null) {
+      this.setState({ dragArmedIndex: null });
+    }
+  };
 
-  startRename = (name: string) => {
-    this.setState({ renaming: name, renameValue: name });
+  startRename = (index: number, name: string) => {
+    this.setState({ renamingIndex: index, renameValue: name });
   };
 
   submitRename = () => {
-    const { renaming, renameValue } = this.state;
-    if (renaming === null) {
+    const { renamingIndex, renameValue } = this.state;
+    if (renamingIndex === null) {
       return;
     }
     settingsStore
-      .renameColumnGroup(renaming, renameValue)
+      .renameColumnGroup(renamingIndex, renameValue)
       .then(() => trackEvent("WorkflowRename"))
       .catch((e) => console.error("Failed to rename workflow", e));
-    this.setState({ renaming: null, renameValue: "" });
+    this.setState({ renamingIndex: null, renameValue: "" });
   };
 
-  cancelRename = () => this.setState({ renaming: null, renameValue: "" });
+  cancelRename = () => this.setState({ renamingIndex: null, renameValue: "" });
 
-  handleDuplicate = (name: string) => {
+  handleDuplicate = (index: number) => {
     settingsStore
-      .duplicateColumnGroup(name)
+      .duplicateColumnGroup(index)
       .then(() => trackEvent("WorkflowDuplicate"))
       .catch((e) => console.error("Failed to duplicate workflow", e));
   };
 
-  handleDelete = (name: string) => {
+  handleDelete = (index: number) => {
     settingsStore
-      .deleteColumnGroup(name)
+      .deleteColumnGroup(index)
       .then(() => trackEvent("WorkflowDelete"))
       .catch((e) => console.error("Failed to delete workflow", e));
   };
@@ -110,35 +117,44 @@ export default class ManageWorkflowsModal extends React.Component<
     this.setState({ creating: false, newName: "" });
   };
 
-  handleDrop = (targetName: string) => {
-    const { dragName } = this.state;
-    this.setState({ dragName: null, dragOverName: null });
-    if (!dragName || dragName === targetName) {
+  handleDrop = (targetIndex: number) => {
+    const { dragIndex } = this.state;
+    this.setState({ dragIndex: null, dragOverIndex: null, dragArmedIndex: null });
+    if (dragIndex === null || dragIndex === targetIndex) {
       return;
     }
-    const names = _.filter(settingsStore.getColumnGroupNames(), (n) => n !== "");
-    const from = names.indexOf(dragName);
-    const to = names.indexOf(targetName);
-    if (from < 0 || to < 0) {
-      return;
-    }
-    const reordered = [...names];
-    reordered.splice(from, 1);
-    reordered.splice(to, 0, dragName);
     settingsStore
-      .reorderColumnGroups(reordered)
+      .reorderColumnGroups(dragIndex, targetIndex)
       .then(() => trackEvent("WorkflowReorder"))
       .catch((e) => console.error("Failed to reorder workflows", e));
   };
 
-  renderRow(name: string, current: string) {
-    const isDefault = name === "";
-    const isCurrent = name === current;
-    const columns = settingsStore.getColumnGroupColumns(name);
+  dragOverClass(index: number): string {
+    const { dragIndex, dragOverIndex } = this.state;
+    if (dragIndex === null || dragOverIndex !== index || dragIndex === index) {
+      return "";
+    }
+    return dragIndex > index ? "drag-over-above" : "drag-over-below";
+  }
 
-    if (this.state.renaming === name) {
+  renderChips(group: ColumnGroup) {
+    return (
+      <div className="wfm-chips">
+        {_.map(group.columns, (c, i) => (
+          <span className="chip" key={i}>
+            {capitalizeFirstLetter(c)}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  renderRow(group: ColumnGroup, index: number, count: number) {
+    const isCurrent = index === settingsStore.props.currentColumnGroupIndex;
+
+    if (this.state.renamingIndex === index) {
       return (
-        <div className="wfm-row" key={name || "__default__"}>
+        <div className="wfm-row" key={index}>
           <span className="wfm-handle">
             <i className="fa fa-ellipsis-v"></i>
             <i className="fa fa-ellipsis-v"></i>
@@ -159,13 +175,7 @@ export default class ManageWorkflowsModal extends React.Component<
               }}
               onBlur={this.submitRename}
             />
-            <div className="wfm-chips">
-              {_.map(columns, (c) => (
-                <span className="chip" key={c}>
-                  {capitalizeFirstLetter(c)}
-                </span>
-              ))}
-            </div>
+            {this.renderChips(group)}
           </div>
         </div>
       );
@@ -173,57 +183,74 @@ export default class ManageWorkflowsModal extends React.Component<
 
     return (
       <div
-        className={`wfm-row ${this.state.dragOverName === name ? "drag-over" : ""}`}
-        key={name || "__default__"}
-        draggable={!isDefault}
-        onDragStart={() => this.setState({ dragName: name })}
+        className={`wfm-row ${this.dragOverClass(index)}`}
+        key={index}
+        draggable={this.state.dragArmedIndex === index}
+        onDragStart={(ev) => {
+          // Keep the drag away from react-dnd's window-level HTML5 backend
+          // (EmailsApp's DragDropContext), which otherwise forces
+          // dropEffect "none" over non-react-dnd targets and blocks the drop.
+          ev.stopPropagation();
+          ev.dataTransfer.setData("text/plain", String(index));
+          ev.dataTransfer.effectAllowed = "move";
+          this.setState({ dragIndex: index });
+        }}
+        onDragEnter={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+        }}
         onDragOver={(ev) => {
           ev.preventDefault();
-          if (this.state.dragOverName !== name) {
-            this.setState({ dragOverName: name });
+          ev.stopPropagation();
+          ev.dataTransfer.dropEffect = "move";
+          if (this.state.dragOverIndex !== index) {
+            this.setState({ dragOverIndex: index });
           }
         }}
-        onDragEnd={() => this.setState({ dragName: null, dragOverName: null })}
-        onDrop={() => this.handleDrop(name)}
+        onDragEnd={() =>
+          this.setState({ dragIndex: null, dragOverIndex: null, dragArmedIndex: null })
+        }
+        onDrop={(ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this.handleDrop(index);
+        }}
       >
-        <span className={`wfm-handle ${isDefault ? "disabled" : ""}`}>
+        <span
+          className="wfm-handle"
+          title="Drag to reorder"
+          onMouseDown={() => this.setState({ dragArmedIndex: index })}
+        >
           <i className="fa fa-ellipsis-v"></i>
           <i className="fa fa-ellipsis-v"></i>
         </span>
         <div className="wfm-info">
           <div className="wfm-name-row">
-            <span className="wfm-name">{this.displayName(name)}</span>
+            <span className="wfm-name">{group.name}</span>
             {isCurrent && <span className="wfm-current">Current</span>}
           </div>
-          <div className="wfm-chips">
-            {_.map(columns, (c) => (
-              <span className="chip" key={c}>
-                {capitalizeFirstLetter(c)}
-              </span>
-            ))}
-          </div>
+          {this.renderChips(group)}
         </div>
         <div className="wfm-actions">
           <button
             className="icon-btn"
             title="Rename"
-            disabled={isDefault}
-            onClick={() => this.startRename(name)}
+            onClick={() => this.startRename(index, group.name)}
           >
             <i className="fa fa-pencil"></i>
           </button>
           <button
             className="icon-btn"
             title="Duplicate"
-            onClick={() => this.handleDuplicate(name)}
+            onClick={() => this.handleDuplicate(index)}
           >
             <i className="fa fa-clone"></i>
           </button>
           <button
             className="icon-btn"
             title="Delete"
-            disabled={isDefault}
-            onClick={() => this.handleDelete(name)}
+            disabled={count <= 1}
+            onClick={() => this.handleDelete(index)}
           >
             <i className="fa fa-trash"></i>
           </button>
@@ -233,10 +260,7 @@ export default class ManageWorkflowsModal extends React.Component<
   }
 
   render() {
-    // The default ("") group is intentionally omitted here — it's only
-    // reachable via the dropdown, not something to manage/rename/delete.
-    const names = _.filter(settingsStore.getColumnGroupNames(), (n) => n !== "");
-    const current = settingsStore.props.currentColumnGroup;
+    const groups = settingsStore.props.columnGroups;
 
     return (
       <div className="workflow-modal-overlay" onClick={this.props.onClose}>
@@ -250,7 +274,7 @@ export default class ManageWorkflowsModal extends React.Component<
           </div>
 
           <div className="wfm-list">
-            {_.map(names, (name) => this.renderRow(name, current))}
+            {_.map(groups, (group, index) => this.renderRow(group, index, groups.length))}
           </div>
 
           <div className="wfm-foot">

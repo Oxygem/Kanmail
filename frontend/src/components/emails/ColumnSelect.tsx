@@ -6,8 +6,7 @@ import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
-
-const STANDARD_ALIASES = ["sent", "archive", "important", "flagged", "drafts"];
+import { buildAddColumnOptions } from "../../util/threads.ts";
 
 interface IProps extends Partial<ISettings> {
   folderNames?: string[];
@@ -32,10 +31,7 @@ export default class ColumnSelect extends React.Component<IProps> {
   }
 
   getOptions() {
-    const current = settingsStore.getCurrentColumns();
-    const userFolders = this.props.folderNames || [];
-    const all = _.uniq([...STANDARD_ALIASES, ...userFolders]);
-    return _.without(all, ...current).map((name) => ({ value: name, label: name }));
+    return buildAddColumnOptions();
   }
 
   handleChange = (option: any) => {

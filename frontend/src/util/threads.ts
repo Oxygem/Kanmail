@@ -4,6 +4,7 @@ import EmailColumn from "../components/emails/EmailColumn.tsx";
 import EmailColumnThread from "../components/emails/EmailColumnThread.tsx";
 import { ALIAS_FOLDERS } from "../constants.ts";
 import { getColumnStore } from "../stores/columns.ts";
+import { CommandOption } from "../stores/command.ts";
 import { getEmailStore } from "../stores/emails/controller.ts";
 import filterStore from "../stores/filters.ts";
 import requestStore from "../stores/request.ts";
@@ -150,21 +151,24 @@ function getColumnThreadComponent(
           nextTargetColumn
         );
       }
+      return;
     }
 
-    const sourceColumn = sourceComponent.props.column;
-    const visibleSourceThreads = collectVisibleThreadComponents(
-      sourceColumn.threadRefs
-    );
+    // Columns scroll independently, so the same list index can be way off
+    // screen in the target column — pick the thread nearest on screen instead.
+    const sourceRect = sourceComponent.element?.getBoundingClientRect();
+    if (!sourceRect) {
+      return visibleTargetThreads[0];
+    }
+    const sourceCenter = sourceRect.top + sourceRect.height / 2;
 
-    let wantedSourceThreadRef = visibleSourceThreads.indexOf(sourceComponent);
-
-    if (wantedSourceThreadRef >= 0) {
-      if (wantedSourceThreadRef > visibleTargetThreads.length - 1) {
-        wantedSourceThreadRef = visibleTargetThreads.length - 1;
+    return _.minBy(visibleTargetThreads, (thread) => {
+      const rect = thread.element?.getBoundingClientRect();
+      if (!rect) {
+        return Infinity;
       }
-      return visibleTargetThreads[wantedSourceThreadRef];
-    }
+      return Math.abs(rect.top + rect.height / 2 - sourceCenter);
+    });
   }
 }
 
@@ -189,6 +193,15 @@ function makeFolderOption(folderName: string) {
     value: folderName,
     label: isAlias ? capitalizeFirstLetter(folderName) : folderName,
   };
+}
+
+export function buildAddColumnOptions(): CommandOption[] {
+  const current = settingsStore.getCurrentColumns();
+  const all = _.uniq([
+    ...ALIAS_FOLDERS,
+    ...(filterStore.props.folderNames || []),
+  ]);
+  return _.without(all, ...current).map(makeFolderOption);
 }
 
 /*
