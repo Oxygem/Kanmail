@@ -148,36 +148,31 @@ class SettingsStore extends BaseStore {
 	}
 
 	async addColumn(name: string) {
+		name = name.trim();
+		if (!name) {
+			return;
+		}
 		this.savePrevProps();
 		this.getCurrentColumns().push(name);
 		await this.putSettings();
 		trackEvent("AddColumn");
 	}
 
-	async removeColumn(name: string) {
-		const group = this.props.columnGroups[this.props.currentColumnGroupIndex];
-		if (!group) {
+	async removeColumn(index: number) {
+		const columns = this.getCurrentColumns();
+		if (index < 0 || index >= columns.length) {
 			return;
 		}
 		this.savePrevProps();
-		group.columns = _.without(group.columns, name as FolderName);
+		columns.splice(index, 1);
 		await this.putSettings();
 	}
 
-	async moveColumn(name: string, position: number) {
+	async moveColumn(index: number, position: number) {
 		this.savePrevProps();
 		const columns = this.getCurrentColumns();
-		const index = columns.indexOf(name);
 		arrayMove(columns, index, index + position);
 		await this.putSettings();
-	}
-
-	async moveColumnLeft(name: string) {
-		await this.moveColumn(name, -1);
-	}
-
-	async moveColumnRight(name: string) {
-		await this.moveColumn(name, 1);
 	}
 
 	async addSidebarFolder(name: string) {

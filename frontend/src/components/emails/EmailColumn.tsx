@@ -34,6 +34,7 @@ function collect(connect, monitor) {
 
 interface IEmailColumnProps extends IColumnProps {
   id: string;
+  index: number;
 
   hiddenThreadHashes: Set<string>;
   currentAccount: string;
@@ -60,6 +61,11 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
   }
 
   componentDidUpdate(prevProps) {
+    // Columns are keyed by index, so the same instance can switch folder
+    if (prevProps.id !== this.props.id) {
+      getEmailStore().onShowFolder(this.props.id);
+    }
+
     if (this.props.canDrop && !prevProps.isOver && this.props.isOver) {
       this.containerDiv.classList.add("hover");
     } else {
@@ -251,6 +257,7 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
       >
         <EmailColumnHeader
           id={this.props.id}
+          index={this.props.index}
           getNewEmails={this.getNewEmails}
           getMoreEmails={this.getMoreEmails}
         />

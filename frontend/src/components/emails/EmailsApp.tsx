@@ -3,8 +3,8 @@ import React from "react";
 import { DragDropContext } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import keyboard from "../../keyboard.ts";
 import { ALWAYS_SYNC_FOLDERS, INBOX } from "../../constants.ts";
+import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
@@ -14,11 +14,11 @@ import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { collectVisibleThreadComponents } from "../../util/threads.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
+import HeaderErrors from "../HeaderErrors.tsx";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
 import CommandBar from "./CommandBar.tsx";
 import EmailColumn from "./EmailColumn.tsx";
-import HeaderErrors from "../HeaderErrors.tsx";
 import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
 import Search from "./Search.jsx";
 import Sidebar from "./Sidebar.jsx";
@@ -173,8 +173,9 @@ export default class EmailsApp extends React.Component<ISettings> {
       columnElements.push(
         // @ts-ignore
         <EmailColumn
-          key={columnName}
+          key={i}
           id={columnName}
+          index={i}
           getPreviousColumn={getPreviousColumn}
           getNextColumn={getNextColumn}
           ref={(ref) => (this.columnRefs[i] = ref)}

@@ -1,4 +1,3 @@
-import _ from "lodash";
 import React from "react";
 import CreatableSelect from "react-select/creatable";
 
@@ -38,7 +37,6 @@ export default class ColumnSelect extends React.Component<IProps> {
     if (!option) return;
     const value = (option.value || option.label || "").trim();
     if (!value) return;
-    if (_.includes(settingsStore.getCurrentColumns(), value)) return;
     this.props.onAdd(value);
   };
 

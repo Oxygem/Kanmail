@@ -13,6 +13,7 @@ import Tooltip from "../Tooltip.tsx";
 
 interface IEmailColumnHeaderProps {
   id: string;
+  index: number;
   getNewEmails: () => void;
   getMoreEmails: () => void;
 
@@ -28,15 +29,15 @@ interface IEmailColumnHeaderProps {
 
 class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
   handleClickDelete = () => {
-    settingsStore.removeColumn(this.props.id);
+    settingsStore.removeColumn(this.props.index);
   };
 
   handleClickMoveLeft = () => {
-    settingsStore.moveColumnLeft(this.props.id);
+    settingsStore.moveColumn(this.props.index, -1);
   };
 
   handleClickMoveRight = () => {
-    settingsStore.moveColumnRight(this.props.id);
+    settingsStore.moveColumn(this.props.index, 1);
   };
 
   renderName() {
@@ -77,7 +78,7 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
     const currentColumns = settingsStore.getCurrentColumns();
 
     let moveLeftIcon: React.ReactElement | null = null;
-    if (currentColumns[0] != this.props.id) {
+    if (this.props.index > 0) {
       moveLeftIcon = (
         <Tooltip text="Move column left"><i
           className="fa fa-chevron-left"
@@ -87,7 +88,7 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
     }
 
     let moveRightIcon: React.ReactElement | null = null;
-    if (currentColumns[currentColumns.length - 1] != this.props.id) {
+    if (this.props.index < currentColumns.length - 1) {
       moveRightIcon = (
         <Tooltip text="Move column right"><i
           className="fa fa-chevron-right"
