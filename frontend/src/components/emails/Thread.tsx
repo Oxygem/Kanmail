@@ -119,7 +119,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
           key={message.messageId}
           message={message}
           scrollToOnLoad={isLast}
-          open={true}
+          open={this.state.showAllMessages || unread || isLast}
         />
       );
     });

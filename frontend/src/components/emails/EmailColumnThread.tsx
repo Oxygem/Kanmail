@@ -862,7 +862,9 @@ export default class EmailColumnThread extends React.Component<
     // Apply the custom per-sender colour via a CSS variable — the visible row
     // background is an inset, rounded ::before layer (see columns.less), not the
     // full-width box. Suppressed during the archive/trash animation.
-    const backgroundColor = this.getThreadBackgroundColor(this.state.hover || false);
+    const backgroundColor = this.getThreadBackgroundColor(
+      this.state.hover || this.state.open || false
+    );
     const style = backgroundColor && !this.state.archiving && !this.state.trashing
       ? ({ "--thread-bg": backgroundColor } as React.CSSProperties)
       : undefined;
