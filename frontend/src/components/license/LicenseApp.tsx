@@ -112,22 +112,24 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
           <p className="license-error">{this.state.error}</p>
         )}
 
-        <form onSubmit={this.handleValidateLicense}>
-          <textarea
-            className="license-key"
-            placeholder="Paste your license key here"
-            value={this.state.license}
-            onChange={this.handleLicenseUpdate}
-            rows={3}
-          />
-          <button
-            type="submit"
-            className="btn-primary"
-            disabled={this.state.isSaving}
-          >
-            {this.state.isSaving ? "Validating…" : "Validate license key →"}
-          </button>
-        </form>
+        {!isLicensed && (
+          <form onSubmit={this.handleValidateLicense}>
+            <textarea
+              className="license-key"
+              placeholder="Paste your license key here"
+              value={this.state.license}
+              onChange={this.handleLicenseUpdate}
+              rows={3}
+            />
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={this.state.isSaving}
+            >
+              {this.state.isSaving ? "Validating…" : "Validate license key →"}
+            </button>
+          </form>
+        )}
 
         {isLicensed && (
           <form className="remove-form" onSubmit={this.handleRemoveLicense}>
@@ -141,6 +143,8 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
   }
 
   render() {
+    const isLicensed = systemStore.props.isLicensed;
+
     return (
       <section id="license-app" className="no-select">
         <header className="titlebar">
@@ -148,8 +152,8 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
         </header>
 
         <div className="km-license">
-          {this.renderPurchase()}
-          <div className="col-divider" />
+          {!isLicensed && this.renderPurchase()}
+          {!isLicensed && <div className="col-divider" />}
           {this.renderActivate()}
         </div>
       </section>

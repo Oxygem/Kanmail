@@ -36,9 +36,13 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
     return (
       <div id="status-list" className={open ? "open" : ""}>
         <ul>
-          {entries.map((e) => (
-            <li key={e.id} className={e.cls}>{e.name}</li>
-          ))}
+          {entries.length === 0 ? (
+            <li className="idle">Idling...</li>
+          ) : (
+            entries.map((e) => (
+              <li key={e.id} className={e.cls}>{e.name}</li>
+            ))
+          )}
         </ul>
       </div>
     );
@@ -48,11 +52,10 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
     const fetchCount = this.props.fetchRequests.size;
     const pushCount = this.props.pushRequests.size;
     const pendingCount = this.props.pendingRequests.length;
-    const hasRequests = fetchCount + pushCount + pendingCount > 0;
 
     return (
       <div>
-        {this.renderStatusList(this.state.enabled && hasRequests)}
+        {this.renderStatusList(this.state.enabled)}
 
         <div id="footer-status">
           <span className={fetchCount > 0 ? "green" : ""}>
