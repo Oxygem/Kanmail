@@ -78,9 +78,13 @@ func main() {
 	kanmail := internal.NewKanmailApp(assets, log, version, logFilename)
 
 	if kanmail.App.Env.Info().Debug {
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		if constants.ENV_DEBUG_TRACE_LOGS != "" {
+			zerolog.SetGlobalLevel(zerolog.TraceLevel)
+		} else {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		}
 	} else {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
 	}
 
 	log.Info().
