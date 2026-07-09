@@ -156,6 +156,27 @@ section#new-email {
       margin: 0;
     }
 
+    /* Match the To/Cc recipient menu look — without this the menu falls back
+       to the bare global react-select overrides. */
+    div.react-select__menu {
+      border-radius: var(--r-md);
+      border: 1px solid var(--ring);
+      box-shadow: var(--shadow);
+      background: var(--bg);
+      overflow: hidden;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    div.react-select__option {
+      padding: 6px 10px;
+      cursor: pointer;
+
+      &--is-focused {
+        background: var(--pill);
+      }
+    }
+
     .from-pill-label {
       display: flex;
       align-items: center;

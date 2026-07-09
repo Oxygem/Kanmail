@@ -605,12 +605,16 @@ section#columns {
       }
     }
 
-    // Opened/selected card: soft gradient fills the inset background layer.
+    // Opened/selected card: the per-sender accent tint if one is set,
+    // otherwise a soft gradient fills the inset background layer.
     &.open {
       z-index: 8;
 
       &::before {
-        background: linear-gradient(100deg, rgba(227, 25, 110, 0.1), rgba(240, 140, 29, 0.07));
+        background: var(
+          --thread-bg,
+          linear-gradient(100deg, rgba(227, 25, 110, 0.1), rgba(240, 140, 29, 0.07))
+        );
       }
     }
 

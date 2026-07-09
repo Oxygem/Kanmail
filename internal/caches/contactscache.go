@@ -9,6 +9,8 @@ import (
 	"github.com/oxygem/kanmail/internal/types"
 )
 
+const searchResultLimit = 50
+
 type ContactsCache struct {
 	db       *sql.DB
 	disabled bool
@@ -30,7 +32,9 @@ func NewContactsCache(db *sql.DB) *ContactsCache {
 	stmtSearch, err := db.Prepare(`
 		SELECT email, name
 		FROM contacts
-		WHERE email LIKE ? OR name LIKE ?`)
+		WHERE email LIKE ? OR name LIKE ?
+		ORDER BY email
+		LIMIT ?`)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +78,7 @@ func (c *ContactsCache) Search(ctx context.Context, term string) ([]types.Addres
 		return nil, nil
 	}
 	searchTerm := "%" + term + "%"
-	rows, err := c.stmtSearch.QueryContext(ctx, searchTerm, searchTerm)
+	rows, err := c.stmtSearch.QueryContext(ctx, searchTerm, searchTerm, searchResultLimit)
 	if err != nil {
 		return nil, err
 	}
