@@ -36,6 +36,9 @@ export interface IEmail extends Email {
   folderUids: {
     [_: string]: number
   };
+  // Bumped whenever folderUids is mutated so consumers can detect changes with a
+  // scalar compare rather than deep-comparing the (shared, mutated-in-place) object.
+  folderUidsVersion: number;
   originalReferences: string[];
 }
 
@@ -305,6 +308,7 @@ export default class BaseEmails {
 
       // Remove any UID for this folder
       delete message.folderUids[folderName];
+      message.folderUidsVersion += 1;
 
       // If the email is in no folders, delete from global emails
       if (_.keys(message.folderUids).length === 0) {
@@ -335,9 +339,12 @@ export default class BaseEmails {
       // We've already seen this email? Simply merge it's folderUids
       const existingEmail = this.emails.get(accountMessageId);
       if (existingEmail) {
-        existingEmail.folderUids = _.merge(existingEmail.folderUids, {
-          [folderName]: email.uid,
-        });
+        // Only bump the version when the UID for this folder actually changes,
+        // so re-adding already-known emails doesn't force spurious re-renders.
+        if (existingEmail.folderUids[folderName] !== email.uid) {
+          existingEmail.folderUids[folderName] = email.uid;
+          existingEmail.folderUidsVersion += 1;
+        }
 
         email = existingEmail;
 
@@ -348,6 +355,7 @@ export default class BaseEmails {
         email.folderUids = {
           [folderName]: email.uid,
         };
+        email.folderUidsVersion = 0;
 
         // Fix references to have account name prefixed
         email.originalReferences = email.references;

@@ -25,8 +25,16 @@ export function moveOrCopyThread(
   const emailStore = getEmailStore();
 
   const accountSettings = settingsStore.getAccountSettings(accountName);
+  // Copy-from-inbox only applies when filing into a workflow column (eg a
+  // label), leaving the original in the inbox. Moving to an alias folder
+  // (archive/trash/etc) or any other folder is always a real move.
+  const targetIsWorkflowColumn =
+    _.includes(settingsStore.getAllColumns(), targetFolder) &&
+    !_.includes(ALIAS_FOLDERS, targetFolder);
   const handler =
-    accountSettings!.settings.copyFromInbox === true && oldColumn == "inbox"
+    accountSettings!.settings.copyFromInbox === true &&
+    oldColumn == "inbox" &&
+    targetIsWorkflowColumn
       ? emailStore.copyEmails
       : emailStore.moveEmails;
 

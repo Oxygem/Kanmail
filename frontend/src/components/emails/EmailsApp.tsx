@@ -3,7 +3,7 @@ import React from "react";
 import { DragDropContext } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { ALWAYS_SYNC_FOLDERS, INBOX } from "../../constants.ts";
+import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
@@ -33,14 +33,13 @@ export default class EmailsApp extends React.Component<ISettings> {
   columnRefs: (EmailColumn | null)[] = [];
 
   getFoldersToSync() {
-    return _.concat(
-      // Inbox + columns first since these are displayed
-      [INBOX],
-      settingsStore.getCurrentColumns(),
+    return _.uniq(_.concat(
+      // All columns across workflows first since these are displayed
+      settingsStore.getAllColumns(),
       // Then the most common folders and any pinned sidebar folders
-      ALWAYS_SYNC_FOLDERS,
+      ALIAS_FOLDERS,
       settingsStore.props.sidebarFolders,
-    );
+    ));
   }
 
   componentDidMount() {
@@ -65,7 +64,7 @@ export default class EmailsApp extends React.Component<ISettings> {
       1000 * 3600 * 24,
     );
 
-    // Bootstrap (init + sync) the folders we optimistically sync that aren't currently shown
+    // Run one sync immediately for hidden but relevant folders
     const hiddenFolders = _.without(
       this.getFoldersToSync(),
       ...settingsStore.getCurrentColumns(),
@@ -75,13 +74,13 @@ export default class EmailsApp extends React.Component<ISettings> {
         getColumnStore(hiddenFolders[i]);
         await mainEmailStore.onShowFolder(hiddenFolders[i]);
       }
-    }, 1000);
+    }, 100);
 
 
     // Kick off a folders load for each account
     setTimeout(() => {
       this.props.accounts.forEach(a => filterStore.getAccountFolderNames(a.name))
-    }, 2000);
+    }, 200);
 
     // Kick off new emails loop
     setTimeout(this.getNewEmailsLoop, settingsStore.props.system.syncInterval);

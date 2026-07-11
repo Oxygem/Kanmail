@@ -37,12 +37,12 @@ class ColumnMetaStore extends BaseStore {
     };
   }
 
-  setAccountMeta(accountKey, meta) {
-    this.props.counts[accountKey] = meta.count;
+  setAccountMeta(accountKey: string, meta: { count: number }) {
+    this.props.counts[accountKey] = meta;
     this.triggerUpdate();
   }
 
-  setSyncing(isSyncing) {
+  setSyncing(isSyncing: boolean) {
     if (isSyncing) {
       this.props.syncCount += 1;
     } else {
@@ -59,7 +59,7 @@ class ColumnMetaStore extends BaseStore {
     this.triggerUpdate();
   }
 
-  setLoading(isLoading) {
+  setLoading(isLoading: boolean) {
     if (isLoading) {
       this.props.loadCount += 1;
     } else {
@@ -73,7 +73,6 @@ class ColumnMetaStore extends BaseStore {
     }
 
     this.props.isLoading = isLoading;
-    console.log("ISUPDATE", this.folderName, isLoading)
     this.triggerUpdate();
   }
 }
@@ -98,8 +97,18 @@ class ColumnStore extends BaseStore {
   hiddenThreadHashes: Set<string>;
   readThreadHashes: Set<string>;
 
-  constructor(folderName) {
+  // folderUidsVersion of each message at the time threads were set, keyed by
+  // accountMessageId. Messages are mutated in place (single in-memory copy shared
+  // with the previous thread list) so we cannot compare live folderUids against
+  // previousThread[j].folderUids - they are the same object. Compare versions instead.
+  folderUidsSnapshot: { [_: string]: number };
+
+  constructor(folderName: string) {
     super();
+
+    this.hiddenThreadHashes = new Set();
+    this.readThreadHashes = new Set();
+    this.folderUidsSnapshot = {};
 
     this.folderName = folderName;
     this.props = {
@@ -134,7 +143,7 @@ class ColumnStore extends BaseStore {
     }
   }
 
-  addIncomingThread(thread) {
+  addIncomingThread(thread: Thread) {
     const incomingThread = _.clone(thread);
     incomingThread.isIncoming = true;
     incomingThread.hash = `incoming-${thread.hash}`;
@@ -143,7 +152,7 @@ class ColumnStore extends BaseStore {
     this.triggerUpdate(["incomingThreads"]);
   }
 
-  removeIncomingThread(thread) {
+  removeIncomingThread(thread: Thread) {
     const incomingHash = `incoming-${thread.hash}`;
     this.props.incomingThreads = _.filter(
       this.props.incomingThreads,
@@ -157,28 +166,27 @@ class ColumnStore extends BaseStore {
     this.readThreadHashes = new Set();
   }
 
-  readThread(thread) {
+  readThread(thread: Thread) {
     this.readThreadHashes.add(thread.hash);
   }
 
-  hasReadThread(thread) {
+  hasReadThread(thread: Thread) {
     return this.readThreadHashes.has(thread.hash);
   }
 
-  hideThread(thread) {
+  hideThread(thread: Thread) {
     this.hiddenThreadHashes.add(thread.hash);
   }
 
-  showThread(thread) {
+  showThread(thread: Thread) {
     this.hiddenThreadHashes.delete(thread.hash);
   }
 
-  hasHiddenThread(thread) {
+  hasHiddenThread(thread: Thread) {
     return this.hiddenThreadHashes.has(thread.hash);
   }
 
-  setThreads(threads, options: Partial<ISyncOptions> = {}) {
-
+  setThreads(threads: Thread[], options: Partial<ISyncOptions> = {}) {
     let changed = false;
 
     // Shortcut: update if no threads or #threads changes
@@ -195,12 +203,19 @@ class ColumnStore extends BaseStore {
         const previousThread = this.props.threads[i];
 
         if (
-          // Has the hash (from the *oldest* message) changed?
+          previousThread.length !== thread.length ||
           previousThread.hash !== thread.hash ||
-          // Or has the latest *newest* message changed
           previousThread.archived !== thread.archived ||
           previousThread.unread !== thread.unread ||
-          previousThread.starred !== thread.starred
+          previousThread.starred !== thread.starred ||
+          // Compare each message's live folderUidsVersion against the snapshot taken
+          // at the last set, not previousThread[j] which is the same mutated object.
+          _.some(
+            thread,
+            (message) =>
+              message.folderUidsVersion !==
+              this.folderUidsSnapshot[message.accountMessageId]
+          )
         ) {
           changed = true;
         }
@@ -210,7 +225,18 @@ class ColumnStore extends BaseStore {
     if (changed) {
       console.debug(`Set ${threads.length} threads in column: ${this.folderName} (forceProcess=${options.forceProcess})`);
       this.props.threads = threads;
+
+      this.folderUidsSnapshot = {};
+      _.each(threads, (thread) => {
+        _.each(thread, (message) => {
+          this.folderUidsSnapshot[message.accountMessageId] =
+            message.folderUidsVersion;
+        });
+      });
+
       this.triggerUpdate(["threads"]);
+    } else {
+      console.debug(`Skip set unchanged threads in column: ${this.folderName}`);
     }
   }
 }
@@ -218,9 +244,9 @@ class ColumnStore extends BaseStore {
 // Export the column store factory/cache
 //
 
-const columnStores = {};
+const columnStores: { [_: string]: ColumnStore } = {};
 
-export function getColumnStore(name) {
+export function getColumnStore(name: string) {
   if (!columnStores[name]) {
     console.debug(`Creating new column store: ${name}.`);
 
@@ -237,9 +263,9 @@ export function getColumnStoreKeys() {
 // Export the column meta store factory/cache
 //
 
-const columnMetaStores = {};
+const columnMetaStores: { [_: string]: ColumnMetaStore } = {};
 
-export function getColumnMetaStore(name) {
+export function getColumnMetaStore(name: string) {
   if (!columnMetaStores[name]) {
     console.debug(`Creating new column meta store: ${name}.`);
 

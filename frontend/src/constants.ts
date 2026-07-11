@@ -1,7 +1,5 @@
 export const INBOX = "inbox";
 
-export const ALWAYS_SYNC_FOLDERS = ["sent", "drafts", "archive", "trash"];
-
 export const ALIAS_FOLDERS = [
   // this defines the display order
   INBOX,

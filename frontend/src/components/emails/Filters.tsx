@@ -191,9 +191,13 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   }
 
   renderShowAllFolders() {
-    const nFolders = this.props.sidebarFolders.length;
+    const sidebarFolderNames = new Set(this.props.sidebarFolders || []);
+    const hasOtherFolders = _.some(
+      this.props.folderNames,
+      (name) => !sidebarFolderNames.has(name)
+    );
 
-    if (nFolders === 0) {
+    if (!hasOtherFolders) {
       return;
     }
 

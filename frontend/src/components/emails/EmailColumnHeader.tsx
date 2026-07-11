@@ -23,7 +23,9 @@ interface IEmailColumnHeaderProps {
 
   currentAccount?: string;
   counts?: {
-    [_: string]: number;
+    [_: string]: {
+      count: number
+    };
   };
 }
 
@@ -129,8 +131,8 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
         if (this.props.currentAccount && accountKey !== this.props.currentAccount) {
           return memo;
         }
-        memo += value;
-        if (value > 1000) {
+        memo += value.count;
+        if (value.count > 1000) {
           accountHasMany = true;
         }
         return memo;

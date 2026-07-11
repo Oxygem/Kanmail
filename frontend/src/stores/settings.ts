@@ -42,6 +42,13 @@ class SettingsStore extends BaseStore {
 		return this.prevProps.columnGroups[this.prevProps.currentColumnGroupIndex]?.columns || [];
 	}
 
+	// All columns across every workflow, not just the current one. Used to decide
+	// whether a thread is "handled" in a column somewhere even if that column
+	// isn't part of the currently displayed workflow.
+	getAllColumns(): Array<string> {
+		return _.uniq(_.flatMap(this.props.columnGroups, group => group.columns || []));
+	}
+
 	// TODO: do wrapper function?
 	savePrevProps() {
 		this.prevProps = _.cloneDeep(this.props);

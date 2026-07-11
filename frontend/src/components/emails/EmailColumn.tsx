@@ -165,15 +165,17 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
       }
 
       // If we're an alias/main column and this thread is being shown in
-      // another column, ignore.
-      const currentColumns = _.filter(
-        settingsStore.getCurrentColumns(),
+      // another column, ignore. We check columns across *all* workflows, not
+      // just the current one, so a thread filed into a column that belongs to
+      // another workflow (eg via copy-from-inbox) doesn't reappear in the inbox.
+      const otherColumns = _.filter(
+        settingsStore.getAllColumns(),
         column => !_.includes(ALIAS_FOLDERS, column),
       );
       if (
         _.includes(ALIAS_FOLDERS, this.props.id) &&
         _.some(thread.allFolderNames, (folderName) =>
-          _.includes(currentColumns, folderName)
+          _.includes(otherColumns, folderName)
         )
       ) {
         return false;
