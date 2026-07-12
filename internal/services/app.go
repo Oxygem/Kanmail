@@ -278,6 +278,18 @@ func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings type
 	a.app.Event.Emit(string(types.SettingsChangedEvent), settings)
 }
 
+// EmitFolderSync tells the frontend a watched folder changed server-side so it
+// syncs that account's folder.
+func (a *AppService) EmitFolderSync(account types.AccountName, folder types.FolderName) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	a.app.Event.Emit(string(types.FolderSyncEvent), types.FolderSync{
+		Account: string(account),
+		Folder:  string(folder),
+	})
+}
+
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) (string, error) {
 	dialog := application.Get().Dialog.SaveFile()
 	dialog.SetFilename(part.Description)

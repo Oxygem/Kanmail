@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -36,14 +37,29 @@ func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *c
 	return accountsService
 }
 
-func (a *AccountsService) ResetAccountsCache(ctx context.Context) error {
+// ResetAccountsCache drops cached accounts whose settings changed or that were
+// removed. Unchanged accounts keep their connections (pools and IDLE watchers)
+// alive - most settings changes don't touch accounts at all.
+func (a *AccountsService) ResetAccountsCache(ctx context.Context, settings types.Settings) error {
+	newSettings := make(map[types.AccountName]types.AccountSettings, len(settings.Accounts))
+	for _, accountSettings := range settings.Accounts {
+		newSettings[accountSettings.Name] = accountSettings
+	}
+
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
 
-	for _, account := range a.accounts {
+	for name, account := range a.accounts {
+		if accountSettings, ok := newSettings[name]; ok &&
+			reflect.DeepEqual(account.AccountSettings, accountSettings) {
+			continue
+		}
+		a.log.Info().
+			Str("account", string(name)).
+			Msg("Account settings changed, closing connections")
 		account.CloseConnections(ctx)
+		delete(a.accounts, name)
 	}
-	clear(a.accounts)
 	return nil
 }
 

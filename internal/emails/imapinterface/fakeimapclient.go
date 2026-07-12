@@ -9,6 +9,7 @@ import (
 	"net/mail"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/emersion/go-imap/v2"
@@ -27,10 +28,21 @@ var _ IMAPClient = (*FakeIMAPClient)(nil)
 type FakeIMAPClient struct {
 	log zerolog.Logger
 
-	store         *fakeIMAPStore
+	store   *fakeIMAPStore
+	caps    imap.CapSet
+	handler *imapclient.UnilateralDataHandler
+
+	// The real imapclient.Client is safe for concurrent use (eg a watcher
+	// closing a connection mid-IDLE), so guard our mutable state to match
+	mu            sync.Mutex
 	state         imap.ConnState
-	caps          imap.CapSet
 	currentFolder string
+}
+
+func (c *FakeIMAPClient) getCurrentFolder() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.currentFolder
 }
 
 // Simple fake command that just returns success
@@ -206,6 +218,7 @@ func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
 	folder.messages.Set(msg.uid, msg)
 	folder.exists++
 	folder.mu.Unlock()
+	folder.notify()
 
 	c.data = &imap.AppendData{UID: msg.uid, UIDValidity: folder.uidValidity}
 	return c.data, nil
@@ -270,6 +283,12 @@ func parseAddressList(header mail.Header, key string) []imap.Address {
 // NewFakeIMAPClient creates a new fake IMAP client backed by the given account's
 // store, so each account sees its own distinct set of sample emails.
 func NewFakeIMAPClient(accountKey string) *FakeIMAPClient {
+	return NewFakeIMAPClientWithHandler(accountKey, nil)
+}
+
+// NewFakeIMAPClientWithHandler additionally receives unilateral mailbox updates
+// when the selected folder changes, mirroring a real connection's dial options.
+func NewFakeIMAPClientWithHandler(accountKey string, handler *imapclient.UnilateralDataHandler) *FakeIMAPClient {
 	log := zerolog.Ctx(context.TODO()).With().
 		Str("component", "FakeIMAPClient").
 		Str("account", accountKey).
@@ -283,8 +302,10 @@ func NewFakeIMAPClient(accountKey string) *FakeIMAPClient {
 			imap.CapNamespace: {},
 			imap.CapMove:      {},
 			imap.CapUIDPlus:   {},
+			imap.CapIdle:      {},
 		},
-		log: log,
+		log:     log,
+		handler: handler,
 	}
 
 	return client
@@ -293,11 +314,27 @@ func NewFakeIMAPClient(accountKey string) *FakeIMAPClient {
 // IMAPClient interface implementation
 
 func (c *FakeIMAPClient) Close() error {
+	c.unsubscribeCurrentFolder()
+	c.mu.Lock()
+	c.currentFolder = ""
 	c.state = imap.ConnStateLogout
+	c.mu.Unlock()
 	return nil
 }
 
+func (c *FakeIMAPClient) unsubscribeCurrentFolder() {
+	current := c.getCurrentFolder()
+	if current == "" {
+		return
+	}
+	if folder, exists := c.store.folders.Get(current); exists {
+		folder.unsubscribe(c)
+	}
+}
+
 func (c *FakeIMAPClient) State() imap.ConnState {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	return c.state
 }
 
@@ -306,12 +343,16 @@ func (c *FakeIMAPClient) Noop() Command {
 }
 
 func (c *FakeIMAPClient) Login(username, password string) Command {
+	c.mu.Lock()
 	c.state = imap.ConnStateAuthenticated
+	c.mu.Unlock()
 	return &FakeCommand{err: nil}
 }
 
 func (c *FakeIMAPClient) Authenticate(sasl sasl.Client) error {
+	c.mu.Lock()
 	c.state = imap.ConnStateAuthenticated
+	c.mu.Unlock()
 	return nil
 }
 
@@ -334,13 +375,22 @@ func (c *FakeIMAPClient) Namespace() NamespaceCommand {
 func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) SelectCommand {
 	folder, exists := c.store.folders.Get(name)
 	if !exists {
+		// Match the real client: a failed SELECT surfaces as a NO status response
 		cmd := &FakeSelectCommand{
-			FakeCommand: &FakeCommand{err: fmt.Errorf("folder %s does not exist", name)},
+			FakeCommand: &FakeCommand{err: &imap.Error{
+				Type: imap.StatusResponseTypeNo,
+				Code: imap.ResponseCodeNonExistent,
+				Text: fmt.Sprintf("folder %s does not exist", name),
+			}},
 		}
 		return cmd
 	}
 
+	c.unsubscribeCurrentFolder()
+	c.mu.Lock()
 	c.currentFolder = name
+	c.mu.Unlock()
+	folder.subscribe(c)
 	folder.mu.Lock()
 	data := &imap.SelectData{
 		UIDValidity: folder.uidValidity,
@@ -359,9 +409,37 @@ func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) Select
 }
 
 func (c *FakeIMAPClient) Unselect() Command {
+	c.unsubscribeCurrentFolder()
+	c.mu.Lock()
 	c.currentFolder = ""
+	c.mu.Unlock()
 	cmd := &FakeCommand{err: nil}
 	return cmd
+}
+
+// FakeIdleCommand mimics the real IdleCommand lifecycle: Wait blocks until
+// Close. Fake change delivery happens via the folder subscription, which is
+// active whenever a folder is selected.
+type FakeIdleCommand struct {
+	once sync.Once
+	done chan struct{}
+}
+
+func (c *FakeIdleCommand) Close() error {
+	c.once.Do(func() { close(c.done) })
+	return nil
+}
+
+func (c *FakeIdleCommand) Wait() error {
+	<-c.done
+	return nil
+}
+
+func (c *FakeIMAPClient) Idle() (IdleCommand, error) {
+	if c.getCurrentFolder() == "" {
+		return nil, fmt.Errorf("no folder selected")
+	}
+	return &FakeIdleCommand{done: make(chan struct{})}, nil
 }
 
 func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptions) ListCommand {
@@ -394,14 +472,14 @@ func (c *FakeIMAPClient) Create(name string, options *imap.CreateOptions) Comman
 }
 
 func (c *FakeIMAPClient) UIDSearch(criteria *imap.SearchCriteria, options *imap.SearchOptions) SearchCommand {
-	if c.currentFolder == "" {
+	if c.getCurrentFolder() == "" {
 		cmd := &FakeSearchCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("no folder selected")},
 		}
 		return cmd
 	}
 
-	folder, exists := c.store.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.getCurrentFolder())
 	if !exists {
 		panic("folder does not exist but is current")
 	}
@@ -536,16 +614,16 @@ func containsFold(s, substr string) bool {
 }
 
 func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) FetchCommand {
-	if c.currentFolder == "" {
+	if c.getCurrentFolder() == "" {
 		cmd := &FakeFetchCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("no folder selected")},
 		}
 		return cmd
 	}
 
-	c.log.Debug().Str("current_folder", c.currentFolder).Msg("Fetch email headers")
+	c.log.Debug().Str("current_folder", c.getCurrentFolder()).Msg("Fetch email headers")
 
-	folder, exists := c.store.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.getCurrentFolder())
 	if !exists {
 		panic("folder does not exist but is current")
 	}
@@ -630,14 +708,14 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 }
 
 func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, options *imap.StoreOptions) FetchCommand {
-	if c.currentFolder == "" {
+	if c.getCurrentFolder() == "" {
 		cmd := &FakeFetchCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("no folder selected")},
 		}
 		return cmd
 	}
 
-	folder, exists := c.store.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.getCurrentFolder())
 	if !exists {
 		panic("folder does not exist but is current")
 	}
@@ -672,6 +750,7 @@ func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, optio
 		}
 	}
 	folder.mu.Unlock()
+	folder.notify()
 
 	// Return empty fetch command as store doesn't return data by default
 	cmd := &FakeFetchCommand{
@@ -682,14 +761,14 @@ func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, optio
 }
 
 func (c *FakeIMAPClient) Expunge() ExpungeCommand {
-	if c.currentFolder == "" {
+	if c.getCurrentFolder() == "" {
 		cmd := &FakeExpungeCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("no folder selected")},
 		}
 		return cmd
 	}
 
-	folder, exists := c.store.folders.Get(c.currentFolder)
+	folder, exists := c.store.folders.Get(c.getCurrentFolder())
 	if !exists {
 		panic("folder does not exist but is current")
 	}
@@ -706,6 +785,9 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 	}
 	folder.mu.Unlock()
 	slices.Sort(expungedUIDs)
+	if len(expungedUIDs) > 0 {
+		folder.notify()
+	}
 
 	cmd := &FakeExpungeCommand{
 		FakeCommand: &FakeCommand{err: nil},
@@ -717,14 +799,14 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 // moveOrCopyFolders resolves and validates the source/dest folders and UID set
 // shared by Move and Copy.
 func (c *FakeIMAPClient) moveOrCopyFolders(numSet imap.NumSet, dest string) (*fakeFolderData, *fakeFolderData, imap.UIDSet, error) {
-	if c.currentFolder == "" {
+	if c.getCurrentFolder() == "" {
 		return nil, nil, nil, fmt.Errorf("no folder selected")
 	}
 	uidSet, ok := numSet.(imap.UIDSet)
 	if !ok {
 		return nil, nil, nil, fmt.Errorf("fake client only supports UID sets")
 	}
-	srcFolder, exists := c.store.folders.Get(c.currentFolder)
+	srcFolder, exists := c.store.folders.Get(c.getCurrentFolder())
 	if !exists {
 		panic("folder does not exist but is current")
 	}

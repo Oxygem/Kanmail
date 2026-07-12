@@ -23,7 +23,8 @@ func NewIMAPConnectionPool(options ConnectionPoolOptions, conf types.ConnectionS
 	return &IMAPConnectionPool{
 		ConnectionPool: NewConnectionPool(options, func() *IMAPConnectionWrapper {
 			return &IMAPConnectionWrapper{
-				conf: conf,
+				conf:     conf,
+				notifyCh: make(chan struct{}, 1),
 			}
 		}),
 	}
@@ -135,10 +136,63 @@ func (c *IMAPConnectionPool) WithFolderBackgroundConnection(
 	})
 }
 
+// WithIdleConnection borrows a spare regular-pool connection for IDLE watching.
+// notify receives a coalesced ping whenever the server pushes unilateral data
+// while fn holds the connection; fn must stop IDLE once preempt is closed.
+// Returns errNoIdleConnection when no connection is spare right now.
+func (c *IMAPConnectionPool) WithIdleConnection(
+	ctx context.Context,
+	fn func(conn imapinterface.IMAPClient, notify, preempt <-chan struct{}) error,
+) error {
+	return c.withIdleConnection(ctx, func(wrapper *IMAPConnectionWrapper, preempt <-chan struct{}) error {
+		conn, err := wrapper.Get(ctx)
+		if err != nil {
+			return err
+		}
+		// The connection pings notifyCh on any unilateral data, watched or not.
+		// Drop anything that accumulated while it was doing other pool work -
+		// the watcher's mark comparison decides freshness, not stale pings.
+		wrapper.drainNotify()
+		return fn(conn, wrapper.notifyCh, preempt)
+	})
+}
+
 // Lazily loaded imapclient.Client - not safe for use by concurrent goroutines, use the pool!
 type IMAPConnectionWrapper struct {
 	client imapinterface.IMAPClient
 	conf   types.ConnectionSettings
+
+	// notifyCh receives a coalesced ping whenever the server pushes unilateral
+	// data on this connection; consumed (and drained) by WithIdleConnection.
+	notifyCh chan struct{}
+}
+
+func (c *IMAPConnectionWrapper) drainNotify() {
+	select {
+	case <-c.notifyCh:
+	default:
+	}
+}
+
+// unilateralHandler is installed on every dialed connection so any pooled
+// connection can serve as a watcher. Mailbox/Expunge run inline on the read loop
+// and must not block; Fetch runs on its own goroutine and must drain its data.
+func (c *IMAPConnectionWrapper) unilateralHandler() *imapclient.UnilateralDataHandler {
+	notify := func() {
+		select {
+		case c.notifyCh <- struct{}{}:
+		default:
+		}
+	}
+	return &imapclient.UnilateralDataHandler{
+		Expunge: func(seqNum uint32) { notify() },
+		Mailbox: func(data *imapclient.UnilateralDataMailbox) { notify() },
+		Fetch: func(msg *imapclient.FetchMessageData) {
+			for msg.Next() != nil {
+			}
+			notify()
+		},
+	}
 }
 
 func (c *IMAPConnectionWrapper) Close() error {
@@ -155,7 +209,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	if constants.ENV_DEBUG_FAKE_IMAP != "" {
 		if c.client == nil {
 			log.Info().Msg("Using fake IMAP client for debugging")
-			c.client = imapinterface.NewFakeIMAPClient(c.conf.Username)
+			c.client = imapinterface.NewFakeIMAPClientWithHandler(c.conf.Username, c.unilateralHandler())
 		}
 		return c.client, nil
 	}
@@ -167,9 +221,11 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 			}
 			c.client = nil
 		}
-		if c.client.State() != imap.ConnStateAuthenticated {
+		// Watch connections keep their folder selected between uses, so both
+		// authenticated and selected are healthy states.
+		if state := c.client.State(); state != imap.ConnStateAuthenticated && state != imap.ConnStateSelected {
 			// If we're connected (have a client) but not authenticated
-			log.Warn().Stringer("state", c.client.State()).Msg("Connection is in wrong state")
+			log.Warn().Stringer("state", state).Msg("Connection is in wrong state")
 			cClose()
 		} else if err := c.client.Noop().Wait(); err != nil {
 			// If we're connected/authed but cannot NOOP, retry
@@ -179,7 +235,9 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	}
 
 	if c.client == nil {
-		options := &imapclient.Options{}
+		options := &imapclient.Options{
+			UnilateralDataHandler: c.unilateralHandler(),
+		}
 		if constants.ENV_DEBUG_IMAP_IO != "" {
 			options.DebugWriter = os.Stdout
 		}

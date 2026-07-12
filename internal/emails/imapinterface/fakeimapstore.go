@@ -10,6 +10,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/emersion/go-imap/v2"
+	"github.com/emersion/go-imap/v2/imapclient"
 	"go.mau.fi/util/exsync"
 
 	"github.com/oxygem/kanmail/internal/constants"
@@ -21,10 +22,45 @@ type fakeFolderData struct {
 	uidNext     imap.UID
 	exists      uint32
 	recent      uint32
-	// Guards message flag mutation and the counters above; connections in the
-	// pool share the store so operate on folders concurrently.
+	// Guards message flag mutation, the counters above and subs; connections in
+	// the pool share the store so operate on folders concurrently.
 	mu       sync.Mutex
 	messages *exsync.Map[imap.UID, *fakeMessage]
+	subs     map[*FakeIMAPClient]struct{}
+}
+
+func (f *fakeFolderData) subscribe(c *FakeIMAPClient) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.subs == nil {
+		f.subs = map[*FakeIMAPClient]struct{}{}
+	}
+	f.subs[c] = struct{}{}
+}
+
+func (f *fakeFolderData) unsubscribe(c *FakeIMAPClient) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	delete(f.subs, c)
+}
+
+// notify delivers a unilateral mailbox update to every subscribed client with a
+// handler, mimicking what a real server pushes to IDLE-ing connections.
+func (f *fakeFolderData) notify() {
+	f.mu.Lock()
+	exists := f.exists
+	clients := make([]*FakeIMAPClient, 0, len(f.subs))
+	for c := range f.subs {
+		clients = append(clients, c)
+	}
+	f.mu.Unlock()
+
+	for _, c := range clients {
+		if c.handler != nil && c.handler.Mailbox != nil {
+			numMessages := exists
+			go c.handler.Mailbox(&imapclient.UnilateralDataMailbox{NumMessages: &numMessages})
+		}
+	}
 }
 
 type fakeMessage struct {
@@ -313,6 +349,13 @@ func (s *fakeIMAPStore) moveOrCopyMessages(src, dest *fakeFolderData, uidSet ima
 		destUIDs.AddNum(newUID)
 	}
 	dest.mu.Unlock()
+
+	if len(matched) > 0 {
+		if remove {
+			src.notify()
+		}
+		dest.notify()
+	}
 
 	return srcUIDs, destUIDs
 }

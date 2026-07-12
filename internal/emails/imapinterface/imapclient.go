@@ -32,6 +32,14 @@ func (w *IMAPClientWrapper) Unselect() Command {
 	return w.Client.Unselect()
 }
 
+func (w *IMAPClientWrapper) Idle() (IdleCommand, error) {
+	cmd, err := w.Client.Idle()
+	if err != nil {
+		return nil, err
+	}
+	return cmd, nil
+}
+
 func (w *IMAPClientWrapper) List(reference, pattern string, options *imap.ListOptions) ListCommand {
 	return w.Client.List(reference, pattern, options)
 }

@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/oxygem/kanmail/internal/caches"
+	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/emails/imapinterface"
 	"github.com/oxygem/kanmail/internal/emails/smtpinterface"
 	"github.com/oxygem/kanmail/internal/types"
@@ -25,6 +27,10 @@ type Account struct {
 
 	foldersLock sync.Mutex
 	folders     map[types.FolderName]*Folder
+
+	watchersLock   sync.Mutex
+	watchers       map[types.FolderName]*folderWatcher
+	watchersClosed bool
 }
 
 func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
@@ -45,12 +51,32 @@ func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *A
 		imap:            NewIMAPConnectionPool(imapOptions, accountSettings.IMAPSettings),
 		smtp:            NewSMTPConnectionPool(smtpOptions, accountSettings.SMTPSettings),
 		folders:         make(map[types.FolderName]*Folder),
+		watchers:        make(map[types.FolderName]*folderWatcher),
 	}
 }
 
 func (a *Account) CloseConnections(ctx context.Context) {
+	// Close watchers first so in-flight IDLEs exit cleanly (cancelled) rather
+	// than erroring when their connections are torn down underneath them.
+	a.watchersLock.Lock()
+	a.watchersClosed = true
+	for _, w := range a.watchers {
+		w.Close()
+	}
+	clear(a.watchers)
+	a.watchersLock.Unlock()
+
 	a.imap.CloseConnections(ctx)
 	a.smtp.CloseConnections(ctx)
+}
+
+// resolveFolderName maps special folder names (inbox, sent, ...) to the
+// account's configured mailbox for them.
+func (a *Account) resolveFolderName(name types.FolderName) types.FolderName {
+	if otherName := a.Folders.GetFromName(name); otherName != "" {
+		return otherName
+	}
+	return name
 }
 
 func (a *Account) GetFolder(name types.FolderName) *Folder {
@@ -58,10 +84,7 @@ func (a *Account) GetFolder(name types.FolderName) *Folder {
 	defer a.foldersLock.Unlock()
 
 	aliasName := name
-
-	if otherName := a.Folders.GetFromName(name); otherName != "" {
-		name = otherName
-	}
+	name = a.resolveFolderName(name)
 
 	if f, ok := a.folders[name]; ok {
 		return f
@@ -69,6 +92,32 @@ func (a *Account) GetFolder(name types.FolderName) *Folder {
 		a.folders[name] = NewFolder(a, name, aliasName)
 		return a.folders[name]
 	}
+}
+
+// WatchFolder blocks until the folder changes on the server, the context is
+// cancelled or the account's connections are closed. Each folder has a single
+// watcher, which borrows a pooled connection per watch and yields it whenever
+// interactive work needs it, so watching costs no extra connections.
+func (a *Account) WatchFolder(ctx context.Context, name types.FolderName) (*WatchResp, error) {
+	if constants.ENV_DEBUG_OFFLINE != "" {
+		return &WatchResp{Status: WatchStatusUnsupported}, nil
+	}
+
+	name = a.resolveFolderName(name)
+
+	a.watchersLock.Lock()
+	if a.watchersClosed {
+		a.watchersLock.Unlock()
+		return nil, errors.New("account connections closed")
+	}
+	w, ok := a.watchers[name]
+	if !ok {
+		w = newFolderWatcher(a.imap, name)
+		a.watchers[name] = w
+	}
+	a.watchersLock.Unlock()
+
+	return w.Watch(ctx)
 }
 
 func (a *Account) TestSMTPConnection(ctx context.Context) error {

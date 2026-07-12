@@ -46,7 +46,7 @@ type SettingsService struct {
 	CacheDir string
 	LogsDir  string
 
-	onPutSettingsCallbacks []func(context.Context) error
+	onPutSettingsCallbacks []func(context.Context, types.Settings) error
 }
 
 func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService) *SettingsService {
@@ -148,7 +148,7 @@ func (s *SettingsService) trackSettingsFileError(stage string) {
 	}()
 }
 
-func (s *SettingsService) addOnPutSettingsCallbacks(f func(context.Context) error) {
+func (s *SettingsService) addOnPutSettingsCallbacks(f func(context.Context, types.Settings) error) {
 	s.onPutSettingsCallbacks = append(s.onPutSettingsCallbacks, f)
 }
 
@@ -190,7 +190,7 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	s.appService.SendSettingsChangedEvent(ctx, settings)
 
 	for _, f := range s.onPutSettingsCallbacks {
-		if err := f(ctx); err != nil {
+		if err := f(ctx, settings); err != nil {
 			return fmt.Errorf("put setting callback error: %w", err)
 		}
 	}

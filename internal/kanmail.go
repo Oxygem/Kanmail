@@ -35,6 +35,8 @@ type Kanmail struct {
 	AccountsService *services.AccountsService
 	EmailsService   *services.EmailsService
 	ContactsService *services.ContactsService
+
+	WatchManager *services.FolderWatchManager
 }
 
 func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename string) *Kanmail {
@@ -47,6 +49,8 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	emailsService := services.NewEmailsService(log, accountsService, appService)
 	contactsService := services.NewContactsService(log, caches)
 	dockService := dock.New()
+
+	watchManager := services.NewFolderWatchManager(log, settingsService, accountsService, appService)
 
 	var assetsHandler http.Handler
 	if assets != nil {
@@ -73,6 +77,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 		},
 	})
 	app.OnShutdown(func() {
+		watchManager.Stop()
 		caches.Close()
 		log.Info().Msg("Closed caches")
 	})
@@ -89,6 +94,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 		AccountsService: accountsService,
 		EmailsService:   emailsService,
 		ContactsService: contactsService,
+		WatchManager:    watchManager,
 	}
 }
 
@@ -136,6 +142,9 @@ func (k *Kanmail) Run() error {
 	emailsWindow := util.MakeWindow(ctx, k.App, options)
 
 	k.App.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
+		// Open realtime (IDLE) watches on the displayed columns
+		k.WatchManager.Start(ctx)
+
 		// Initial position doesn't seem to work (macOS)?
 		emailsWindow.SetPosition(options.X, options.Y)
 

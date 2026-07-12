@@ -61,6 +61,11 @@ type AppendCommand interface {
 	Close() error
 }
 
+type IdleCommand interface {
+	Close() error
+	Wait() error
+}
+
 // IMAPClient interface defines all the IMAP methods used in the codebase
 // This allows for mocking/faking the imapclient.Client for testing purposes
 type IMAPClient interface {
@@ -80,6 +85,7 @@ type IMAPClient interface {
 	// Folder operations
 	Select(name string, options *imap.SelectOptions) SelectCommand
 	Unselect() Command
+	Idle() (IdleCommand, error)
 	List(reference, pattern string, options *imap.ListOptions) ListCommand
 	Create(name string, options *imap.CreateOptions) Command
 	Append(name string, size int64, options *imap.AppendOptions) AppendCommand

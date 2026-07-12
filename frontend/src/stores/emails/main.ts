@@ -2,7 +2,9 @@ import _ from "lodash";
 
 import { PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { EventName } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { Events } from "../../../wails/runtime.js";
 import { DockService } from "../../../bindings/github.com/wailsapp/wails/v3/pkg/services/dock/index.ts";
 import { INBOX } from "../../constants.ts";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
@@ -363,3 +365,11 @@ const mainEmailStore = new MainEmails();
 // @ts-ignore
 window.mainEmailStore = mainEmailStore;
 export default mainEmailStore;
+
+// The backend holds an IMAP IDLE watch per displayed column and emits this when
+// a folder changes server-side; sync just that account's folder in response.
+Events.On(EventName.FolderSyncEvent, (ev) => {
+  const { account, folder } = ev.data as { account: string; folder: string };
+  console.debug(`[watcher] change in ${account}/${folder}, syncing`);
+  mainEmailStore.syncFolderEmails(folder, { accountNames: [account] });
+});
