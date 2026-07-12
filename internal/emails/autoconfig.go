@@ -47,6 +47,11 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 		},
 	}
 
+	// Apply any domain specific defaults
+	if fn, ok := domainDefaultSettingHandlers[domain]; ok {
+		fn(&defaultSettings)
+	}
+
 	// First try the domain directly
 	if settings := getAutconfigForDomain(ctx, username, domain); settings != nil {
 		return *settings, nil

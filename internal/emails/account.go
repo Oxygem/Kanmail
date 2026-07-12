@@ -70,10 +70,16 @@ func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *A
 	return &Account{
 		AccountSettings: accountSettings,
 		caches:          caches,
-		imap:            NewIMAPConnectionPool(imapPoolOptions(accountSettings.IMAPSettings.Connections), accountSettings.IMAPSettings),
-		smtp:            NewSMTPConnectionPool(smtpPoolOptions(accountSettings.SMTPSettings.Connections), accountSettings.SMTPSettings),
-		folders:         make(map[types.FolderName]*Folder),
-		watchers:        make(map[types.FolderName]*folderWatcher),
+		imap: NewIMAPConnectionPool(
+			imapPoolOptions(accountSettings.IMAPSettings.Connections),
+			accountSettings.IMAPSettings,
+		),
+		smtp: NewSMTPConnectionPool(
+			smtpPoolOptions(accountSettings.SMTPSettings.Connections),
+			accountSettings.SMTPSettings,
+		),
+		folders:  make(map[types.FolderName]*Folder),
+		watchers: make(map[types.FolderName]*folderWatcher),
 	}
 }
 
