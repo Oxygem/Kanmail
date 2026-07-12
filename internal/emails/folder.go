@@ -177,15 +177,29 @@ func (f *Folder) FetchEmailPartData(ctx context.Context, parts FetchPartsMap) (f
 	return resp, err
 }
 
+// capGmailExt1 is the Gmail IMAP extension advertising X-GM-RAW/X-GM-* search keys.
+const capGmailExt1 = imap.Cap("X-GM-EXT-1")
+
+// gmailOrTextSearchCriteria uses Gmail's X-GM-RAW search syntax when the server
+// supports it (giving full Gmail query support: from:, has:attachment, etc.),
+// otherwise falls back to a standard BODY/TEXT substring search.
+func gmailOrTextSearchCriteria(conn imapinterface.IMAPClient, search string) *imap.SearchCriteria {
+	if conn.Caps().Has(capGmailExt1) {
+		return &imap.SearchCriteria{GmailRaw: search}
+	}
+	return &imap.SearchCriteria{
+		Or: [][2]imap.SearchCriteria{{
+			{Body: []string{search}},
+			{Text: []string{search}},
+		}},
+	}
+}
+
 func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]*types.Email, error) {
 	var emails []*types.Email
 	if err := f.imap.WithFolderPriorityConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		res, err := conn.UIDSearch(&imap.SearchCriteria{
-			Or: [][2]imap.SearchCriteria{{
-				{Body: []string{search}},
-				{Text: []string{search}},
-			}},
-		}, nil).Wait()
+		criteria := gmailOrTextSearchCriteria(conn, search)
+		res, err := conn.UIDSearch(criteria, nil).Wait()
 		if err != nil {
 			return err
 		}

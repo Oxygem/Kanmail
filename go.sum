@@ -53,8 +53,8 @@ github.com/mattn/go-sqlite3 v1.14.37 h1:3DOZp4cXis1cUIpCfXLtmlGolNLp2VEqhiB/PARN
 github.com/mattn/go-sqlite3 v1.14.37/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/microcosm-cc/bluemonday v1.0.27 h1:MpEUotklkwCSLeH+Qdx1VJgNqLlpY2KXwXFM08ygZfk=
 github.com/microcosm-cc/bluemonday v1.0.27/go.mod h1:jFi9vgW+H7c3V0lb6nR74Ib/DIB5OBs92Dimizgw2cA=
-github.com/oxygem/go-imap/v2 v2.0.0-20251016193044-1568d373c4d1 h1:s9VJLxNNkrf5Y7bOAHSb7Gg7Om6W/4j7nifVZZW/5dg=
-github.com/oxygem/go-imap/v2 v2.0.0-20251016193044-1568d373c4d1/go.mod h1:BZTFHsS1hmgBkFlHqbxGLXk2hnRqTItUgwjSSCsYNAk=
+github.com/oxygem/go-imap/v2 v2.0.0-20260712210554-6a90c9be8ebe h1:piNSEhK1LI1/vq4Fcrv9Tbz1XQsyObVbra2aVKzwU9w=
+github.com/oxygem/go-imap/v2 v2.0.0-20260712210554-6a90c9be8ebe/go.mod h1:dhoFe2Q0PwLrMD7oZw8ODuaD0vLYPe5uj2wcOMnvh48=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
