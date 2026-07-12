@@ -3,6 +3,7 @@ import { EmailsService, SettingsService } from "../../bindings/github.com/oxygem
 import { AccountSettings, ColumnGroup, EventName, FolderName, Settings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events } from "../../wails/runtime.js";
 import { setupThemes } from "../theme.ts";
+import { applyZoom } from "../zoom.ts";
 import { trackEvent } from "../util/analytics.ts";
 import { arrayMove } from "../util/array.ts";
 import { BaseStore } from "./base.tsx";
@@ -216,6 +217,7 @@ class SettingsStore extends BaseStore {
 		// Immediately send the result to this window before saving
 		this.triggerUpdate(propNames);
 		setupThemes(this.props);
+		applyZoom(this.props.system.zoom);
 		return SettingsService.PutSettings(this.props);
 	}
 
@@ -237,6 +239,7 @@ class SettingsStore extends BaseStore {
 
 		// Apply any theme changes (gross?)
 		setupThemes(this.props);
+		applyZoom(this.props.system.zoom);
 		return this.props;
 	}
 

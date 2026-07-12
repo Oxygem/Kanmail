@@ -19,6 +19,7 @@ import {
   getPreviousColumnThreadComponent,
   getPreviousThreadComponent,
 } from "./util/threads.ts";
+import { clampZoom, ZOOM_STEP } from "./zoom.ts";
 
 export interface Binding {
   key: string;
@@ -463,6 +464,56 @@ keyboard.register({
     requestStore.undo();
     trackEvent("KeyboardUndo");
   },
+});
+
+// Persisting via settingsStore applies the zoom (settings store calls
+// applyZoom) and broadcasts to other windows via SettingsChangedEvent.
+function changeZoom(next: number) {
+  const clamped = clampZoom(next);
+  if (clamped === clampZoom(settingsStore.props.system.zoom)) {
+    return;
+  }
+  settingsStore.props.system.zoom = clamped;
+  settingsStore.putSettings(["system"]);
+  trackEvent("KeyboardZoom");
+}
+
+// "always" scope so zoom works even over settings/search/modals. Both `=` and
+// `+` are registered for zoom-in; the keyboard's shift-stripped fallback maps
+// Cmd+Shift+= (which reports "+") onto the "+" binding.
+keyboard.register({
+  id: "app.zoomIn",
+  description: "Increase interface zoom",
+  scope: "always",
+  defaults: [
+    { key: "=", meta: true },
+    { key: "=", ctrl: true },
+    { key: "+", meta: true },
+    { key: "+", ctrl: true },
+  ],
+  handler: () => changeZoom((settingsStore.props.system.zoom || 1) + ZOOM_STEP),
+});
+
+keyboard.register({
+  id: "app.zoomOut",
+  description: "Decrease interface zoom",
+  scope: "always",
+  defaults: [
+    { key: "-", meta: true },
+    { key: "-", ctrl: true },
+  ],
+  handler: () => changeZoom((settingsStore.props.system.zoom || 1) - ZOOM_STEP),
+});
+
+keyboard.register({
+  id: "app.zoomReset",
+  description: "Reset interface zoom",
+  scope: "always",
+  defaults: [
+    { key: "0", meta: true },
+    { key: "0", ctrl: true },
+  ],
+  handler: () => changeZoom(1),
 });
 
 keyboard.register({

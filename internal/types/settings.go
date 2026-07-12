@@ -116,6 +116,10 @@ type SystemSettings struct {
 
 	ShowHelpButton bool `json:"showHelpButton"`
 
+	// UI zoom factor (1.0 = 100%). Applied client-side via CSS zoom on the
+	// document root so the whole interface, including rendered email, scales.
+	Zoom float64 `json:"zoom"`
+
 	// Experimental
 	GroupThreadsBySubject    bool `json:"groupThreadsBySubject"`
 	GroupSingleSenderThreads bool `json:"groupSingleSenderThreads"`
@@ -179,6 +183,9 @@ func (s *Settings) ApplyDefaults() {
 	}
 	if s.CurrentColumnGroupIndex < 0 || s.CurrentColumnGroupIndex >= len(s.ColumnGroups) {
 		s.CurrentColumnGroupIndex = 0
+	}
+	if s.System.Zoom == 0 {
+		s.System.Zoom = 1.0
 	}
 }
 
