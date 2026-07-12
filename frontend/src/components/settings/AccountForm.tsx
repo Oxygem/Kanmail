@@ -143,7 +143,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     target[key] = value;
 
     let hasConnectionChange = this.state.hasConnectionChange;
-    if (settingsKey === "imapSettings" || settingsKey === "smtpSettings") {
+    if (
+      (settingsKey === "imapSettings" || settingsKey === "smtpSettings") &&
+      key !== "connections"
+    ) {
       hasConnectionChange = true;
     }
 
@@ -519,7 +522,13 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 type: "checkbox",
               })}
             </div>
-            <div className="quarter"></div>
+            <div className="quarter">
+              <label htmlFor="imapSettings-connections">Connections</label>
+              {this.renderInput("imapSettings", "connections", {
+                type: "number",
+                placeholder: "5",
+              })}
+            </div>
           </div>
         </div>
 
@@ -550,6 +559,13 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
               </label>
               {this.renderInput("smtpSettings", "tls", {
                 type: "checkbox",
+              })}
+            </div>
+            <div className="quarter">
+              <label htmlFor="smtpSettings-connections">Connections</label>
+              {this.renderInput("smtpSettings", "connections", {
+                type: "number",
+                placeholder: "2",
               })}
             </div>
           </div>

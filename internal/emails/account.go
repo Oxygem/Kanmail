@@ -33,23 +33,45 @@ type Account struct {
 	watchersClosed bool
 }
 
-func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
-	imapOptions := ConnectionPoolOptions{
-		Connections:           2,
-		PriorityConnections:   2,
-		BackgroundConnections: 1,
-		NetworkErrRetries:     5,
-	}
-	smtpOptions := ConnectionPoolOptions{
-		Connections:       2,
-		NetworkErrRetries: 5,
-	}
+const (
+	defaultIMAPConnections = 5 // → 2 regular / 2 priority / 1 background
+	defaultSMTPConnections = 2
+	minIMAPConnections     = 3
+	networkErrRetries      = 5
+)
 
+// imapPoolOptions partitions a total IMAP socket budget across the regular,
+// priority and background pools. A zero budget falls back to the default.
+func imapPoolOptions(n int) ConnectionPoolOptions {
+	if n <= 0 {
+		n = defaultIMAPConnections
+	}
+	n = max(n, minIMAPConnections)
+	priority := max((n-1)/2, 1)
+	return ConnectionPoolOptions{
+		Connections:           n - 1 - priority,
+		PriorityConnections:   priority,
+		BackgroundConnections: 1,
+		NetworkErrRetries:     networkErrRetries,
+	}
+}
+
+// smtpPoolOptions sizes the SMTP pool, which only uses the regular connection
+// channel. A zero budget falls back to the default.
+func smtpPoolOptions(n int) ConnectionPoolOptions {
+	if n <= 0 {
+		n = defaultSMTPConnections
+	}
+	n = max(n, 1)
+	return ConnectionPoolOptions{Connections: n, NetworkErrRetries: networkErrRetries}
+}
+
+func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
 	return &Account{
 		AccountSettings: accountSettings,
 		caches:          caches,
-		imap:            NewIMAPConnectionPool(imapOptions, accountSettings.IMAPSettings),
-		smtp:            NewSMTPConnectionPool(smtpOptions, accountSettings.SMTPSettings),
+		imap:            NewIMAPConnectionPool(imapPoolOptions(accountSettings.IMAPSettings.Connections), accountSettings.IMAPSettings),
+		smtp:            NewSMTPConnectionPool(smtpPoolOptions(accountSettings.SMTPSettings.Connections), accountSettings.SMTPSettings),
 		folders:         make(map[types.FolderName]*Folder),
 		watchers:        make(map[types.FolderName]*folderWatcher),
 	}

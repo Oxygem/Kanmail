@@ -77,6 +77,10 @@ type ConnectionSettings struct {
 	SSL bool `json:"ssl"`
 	// Start TLS
 	StartTLS bool `json:"startTls"`
+
+	// Total connection pool budget (IMAP: partitioned across
+	// regular/priority/background; SMTP: regular pool size). Zero uses the default.
+	Connections int `json:"connections,omitempty"`
 }
 
 type Signature struct {
