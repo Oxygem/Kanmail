@@ -11,7 +11,7 @@ import systemStore from "./src/stores/system.ts";
 import "./src/style.less";
 import { setupThemes } from "./src/theme.js";
 
-import { AppService, EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import DebugApp from "./src/components/debug/DebugApp.tsx";
 import EmailsApp from "./src/components/emails/EmailsApp.tsx";
 import LicenseApp from "./src/components/license/LicenseApp.tsx";
@@ -36,18 +36,12 @@ const bootApp = (
     classNames.push("frameless");
     // }
 
-    // Run any pending data upgrades before touching anything else. The main
-    // window does the work; secondary windows block on the same backend lock
-    // and proceed once it's done.
-    AppService.RunUpgrades().then(() => Promise.all([
+    // Settings hydrate synchronously from window.KANMAIL_SETTINGS (defined by
+    // the backend-served /kanmail-settings.js script), so getSettings()
+    // resolves without IPC before first paint; everything else loads after.
+    Promise.all([
         settingsStore.getSettings(),
-        // Don't need these here, but want it populated
-        systemStore.checkCurrentVersion(),
-        systemStore.checkCachedLicense(),
-        systemStore.checkDebug(),
-        systemStore.getLogFilename(),
-        systemStore.getExecutableFilename(),
-    ])).then(([settings]) => {
+    ]).then(([settings]) => {
         setupThemes(settings);
 
         console.debug("Settings loaded, bootstrapping app to DOM...");
@@ -64,6 +58,14 @@ const bootApp = (
             </ErrorBoundary>,
             rootElement,
         );
+
+        // Populate the rest of the system state in the background; nothing on
+        // the render path depends on it.
+        systemStore.checkCachedLicense();
+        systemStore.checkCurrentVersion();
+        systemStore.checkDebug();
+        systemStore.getLogFilename();
+        systemStore.getExecutableFilename();
     });
 };
 

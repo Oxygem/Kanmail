@@ -26,6 +26,15 @@ class SettingsStore extends BaseStore {
 		super();
 		this.props = new Settings();
 		this.prevProps = new Settings();
+
+		// The backend serves /kanmail-settings.js (loaded in index.html before
+		// the bundle) which defines window.KANMAIL_SETTINGS, letting us hydrate
+		// synchronously on boot without an IPC round trip. If the script fails
+		// to load, getSettings() falls back to fetching over IPC.
+		const injected = (window as any).KANMAIL_SETTINGS;
+		if (injected) {
+			this.setSettings(Settings.createFrom(injected));
+		}
 	}
 
 	getCurrentColumns(): Array<string> {
@@ -244,6 +253,15 @@ class SettingsStore extends BaseStore {
 	}
 
 	async getSettings(): Promise<ISettings> {
+		// Hydrated synchronously from window.KANMAIL_SETTINGS in the constructor;
+		// only hit IPC when that wasn't available (dev) or on an explicit refresh.
+		if (this.hasFirstSet) {
+			return this.props;
+		}
+		return this.refreshSettings();
+	}
+
+	async refreshSettings(): Promise<ISettings> {
 		return SettingsService.GetSettings().then((settings) => {
 			this.setSettings(settings);
 			return settings;

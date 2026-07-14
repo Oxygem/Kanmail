@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"io/fs"
 	"net/http"
 	"path"
@@ -15,6 +16,8 @@ import (
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/services"
+	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/upgrades"
 	"github.com/oxygem/kanmail/internal/util"
 )
 
@@ -70,7 +73,8 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 			application.NewService(dockService),
 		},
 		Assets: application.AssetOptions{
-			Handler: assetsHandler,
+			Handler:    assetsHandler,
+			Middleware: newSettingsScriptMiddleware(settingsService.GetSettings, log),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
@@ -98,10 +102,45 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	}
 }
 
+const settingsScriptPath = "/kanmail-settings.js"
+
+// Serves /kanmail-settings.js to bootstrap frontend settings without IPC so
+// we can paint quicker.
+func newSettingsScriptMiddleware(
+	getSettings func(context.Context) types.Settings,
+	log zerolog.Logger,
+) application.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != settingsScriptPath {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			blob, err := json.Marshal(getSettings(r.Context()))
+			if err != nil {
+				log.Err(err).Msg("Failed to marshal settings for injection")
+				http.Error(w, "failed to marshal settings", http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+			w.Header().Set("Cache-Control", "no-store")
+			w.Write([]byte("window.KANMAIL_SETTINGS="))
+			w.Write(blob)
+			w.Write([]byte(";"))
+		})
+	}
+}
+
 const mainWindowName = "main"
 
 func (k *Kanmail) Run() error {
 	ctx := context.Background()
+
+	if err := upgrades.Run(ctx, k.log, k.Caches); err != nil {
+		k.log.Err(err).Msg("Failed to run data upgrades")
+	}
 
 	startApp := constants.ENV_DEBUG_START_APP
 	if startApp == "" {
