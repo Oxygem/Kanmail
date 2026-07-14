@@ -67,6 +67,15 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 		return c.client, nil
 	}
 
+	if c.client != nil {
+		if err := c.client.Noop(); err != nil {
+			// If we're connected/authed but cannot NOOP, retry
+			log.Warn().Err(err).Msg("NOOP failed, re-creating client")
+			c.client.Close()
+			c.client = nil
+		}
+	}
+
 	if c.client == nil {
 		dialFn := func(addr string, _ *tls.Config) (*smtp.Client, error) {
 			return smtp.Dial(addr)
@@ -86,21 +95,28 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 			log.Debug().Msg("Connected")
 		}
 
-		var auth sasl.Client
 		if c.conf.Password != "" {
-			auth = sasl.NewPlainClient("", c.conf.Username, c.conf.Password)
-		} else if c.conf.OAuthProvider != "" {
-			accessToken, err := oauth.GetOAuthAccessToken(ctx, c.conf.OAuthProvider, c.conf.OAuthRefreshToken)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get oauth access token: %w", err)
+			auth := sasl.NewPlainClient("", c.conf.Username, c.conf.Password)
+			if err := client.Auth(auth); err != nil {
+				return nil, fmt.Errorf("failed smtp password login: %w", err)
 			}
-			auth = oauth.MakeSASLClient(c.conf, accessToken)
+		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
+			// Attempt OAuth logins twice, allowing for any expired token to be updated
+			if err := c.doOAuthLogin(ctx, client); err != nil {
+				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
+				client.Close()
+				client, err = dialFn(addr, nil)
+				if err != nil {
+					return nil, fmt.Errorf("failed smtp redial: %w", err)
+				} else {
+					log.Debug().Msg("Connected")
+				}
+				if err := c.doOAuthLogin(ctx, client); err != nil {
+					return nil, fmt.Errorf("failed smtp oauth login (twice): %w", err)
+				}
+			}
 		} else {
 			return nil, fmt.Errorf("no authentication methods configured")
-		}
-
-		if err := client.Auth(auth); err != nil {
-			return nil, fmt.Errorf("failed smtp oauth login: %w", err)
 		}
 
 		log.Debug().Msg("Authenticated")
@@ -108,4 +124,18 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 	}
 
 	return c.client, nil
+}
+
+func (c *SMTPConnectionWrapper) doOAuthLogin(ctx context.Context, client *smtp.Client) error {
+	accessToken, err := oauth.GetOAuthAccessToken(ctx, c.conf.OAuthProvider, c.conf.OAuthRefreshToken)
+	if err != nil {
+		return fmt.Errorf("failed to get access token: %w", err)
+	}
+
+	if err := client.Auth(oauth.MakeSASLClient(c.conf, accessToken)); err != nil {
+		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken)
+		return err
+	}
+
+	return nil
 }

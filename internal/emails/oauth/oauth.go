@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 
 	"github.com/emersion/go-sasl"
 	"github.com/google/uuid"
@@ -105,9 +106,18 @@ type oauthRequest struct {
 var currentOAuthRequest *oauthRequest
 var oauthRequestLock sync.Mutex
 
+type cachedAccessToken struct {
+	accessToken string
+	expiresAt   time.Time
+}
+
 // Map of refresh token -> access token
-var oauthTokens = map[string]string{}
+var oauthTokens = map[string]cachedAccessToken{}
 var oauthTokenLock sync.Mutex
+
+// Refresh tokens slightly before the server-side expiry so we never hand out
+// a token that expires mid-login
+const accessTokenExpiryBuffer = 5 * time.Minute
 
 func getRedirectURL() string {
 	return "http://" + oauthResponseServerAddr.String()
@@ -293,10 +303,10 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	oauthTokenLock.Lock()
 	defer oauthTokenLock.Unlock()
 
-	accessToken, ok := oauthTokens[refreshToken]
-	if ok {
+	cached, ok := oauthTokens[refreshToken]
+	if ok && time.Now().Before(cached.expiresAt) {
 		zerolog.Ctx(ctx).Trace().Msg("Using cached access token")
-		return accessToken, nil
+		return cached.accessToken, nil
 	}
 
 	service := oauthServices[provider]
@@ -328,8 +338,19 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	}
 
 	zerolog.Ctx(ctx).Trace().Msg("Fetched new access token")
-	accessToken = tokenData["access_token"].(string)
-	oauthTokens[refreshToken] = accessToken
+	accessToken, ok := tokenData["access_token"].(string)
+	if !ok {
+		return "", fmt.Errorf("no access_token in oauth token response")
+	}
+
+	expiresAt := time.Now().Add(time.Hour)
+	if expiresIn, ok := tokenData["expires_in"].(float64); ok {
+		expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
+	}
+	oauthTokens[refreshToken] = cachedAccessToken{
+		accessToken: accessToken,
+		expiresAt:   expiresAt.Add(-accessTokenExpiryBuffer),
+	}
 
 	return accessToken, nil
 }
