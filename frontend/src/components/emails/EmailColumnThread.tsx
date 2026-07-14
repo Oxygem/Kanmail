@@ -438,6 +438,11 @@ export default class EmailColumnThread extends React.Component<
     const columnStore = getColumnStore(this.props.columnId);
     columnStore.hideThread(thread);
 
+    // Selection has already moved on to the next thread (selectAfterThreadAction
+    // runs before the action handlers) — snapshot it so undo can tell whether
+    // the user has navigated elsewhere since.
+    const selectedAfterAction = keyboard.currentComponent;
+
     const undoMove = (extraState = {}) => {
       // Unhide the emails via the store, reverting above
       columnStore.showThread(thread);
@@ -448,6 +453,10 @@ export default class EmailColumnThread extends React.Component<
           ...previousState,
           ...extraState,
         });
+
+        if (keyboard.currentComponent === selectedAfterAction) {
+          keyboard.selectThread(this, "nearest");
+        }
       } else {
         // Failing that, re-render the column
         columnStore.triggerUpdate();

@@ -527,6 +527,9 @@ section#columns {
     // Anchors the archive/trash collapse animation; comfortably above the
     // card's fixed natural height (~134px) so it never clips a real card.
     max-height: 160px;
+    // Lives here (not on .archiving/.trashing) so undo animates too: removing
+    // the class must slide the card back in, not snap it open.
+    transition: max-height 300ms ease, padding 300ms ease, opacity 220ms ease;
 
     // The visible row background (hover / open / per-sender tint) is an inset,
     // rounded layer rather than the full-width box. It sits behind the content
@@ -618,8 +621,12 @@ section#columns {
       }
     }
 
-    // Archiving / trashing / moving: flash a red tint, then fade out while
-    // collapsing the row to zero height (rather than leaving a blank gap).
+    // Archiving / trashing / moving: flash a tint (green for archive/move,
+    // red for trash), then fade out while collapsing the row to zero height
+    // (rather than leaving a blank gap). The tint goes on the ::before layer —
+    // the card is always in .hover state when actioned, and .hover::before
+    // would otherwise paint the pill background over a tint set on the card
+    // itself. These rules sit after .hover/.open so they win the cascade.
     &.archiving,
     &.trashing {
       max-height: 0;
@@ -629,9 +636,14 @@ section#columns {
       pointer-events: none;
       overflow: hidden;
       opacity: 0;
-      background: rgba(255, 59, 48, 0.18);
-      transition: max-height 300ms ease, padding 300ms ease, opacity 220ms ease,
-        background 120ms ease;
+    }
+
+    &.archiving::before {
+      background: rgba(52, 199, 89, 0.25);
+    }
+
+    &.trashing::before {
+      background: rgba(255, 59, 48, 0.25);
     }
 
     &.error {
