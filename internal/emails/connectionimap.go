@@ -266,6 +266,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
 			if err := c.doOAuthLogin(ctx, client); err != nil {
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
+				client.Close()
 				client, err = dialFn(addr, options)
 				if err != nil {
 					return nil, fmt.Errorf("failed imap redial: %w", err)
