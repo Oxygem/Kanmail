@@ -41,6 +41,7 @@ const bootApp = (
     // resolves without IPC before first paint; everything else loads after.
     Promise.all([
         settingsStore.getSettings(),
+        systemStore.checkCachedLicense(),
     ]).then(([settings]) => {
         setupThemes(settings);
 
@@ -61,7 +62,6 @@ const bootApp = (
 
         // Populate the rest of the system state in the background; nothing on
         // the render path depends on it.
-        systemStore.checkCachedLicense();
         systemStore.checkCurrentVersion();
         systemStore.checkDebug();
         systemStore.getLogFilename();
