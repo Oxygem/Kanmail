@@ -82,7 +82,14 @@ func (s *SettingsService) GetLogFilename() string {
 	return s.logFile
 }
 
+// GetSettings returns settings with account secrets redacted - this is the only form
+// that crosses into frontend JS (the binding, the injected settings script and change
+// events). Backend consumers needing credentials use getSettingsWithSecrets.
 func (s *SettingsService) GetSettings(ctx context.Context) types.Settings {
+	return redactSettings(s.getSettingsWithSecrets(ctx))
+}
+
+func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Settings {
 	ctx = s.log.WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
@@ -186,8 +193,18 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 		return err
 	}
 
+	// The frontend only ever holds redacted settings, so rehydrate secrets from the
+	// keyring for the in-memory copy used to build accounts and run the callbacks
+	unhiddenAccounts := make([]types.AccountSettings, len(settings.Accounts))
+	for i, account := range settings.Accounts {
+		s.unhideConnectionSettings(account.Name, &account.IMAPSettings)
+		s.unhideConnectionSettings(account.Name, &account.SMTPSettings)
+		unhiddenAccounts[i] = account
+	}
+	settings.Accounts = unhiddenAccounts
+
 	s.settings = &settings
-	s.appService.SendSettingsChangedEvent(ctx, settings)
+	s.appService.SendSettingsChangedEvent(ctx, redactSettings(settings))
 
 	for _, f := range s.onPutSettingsCallbacks {
 		if err := f(ctx, settings); err != nil {
@@ -204,7 +221,26 @@ func (s *SettingsService) getKeyringUser(subservice string, name types.AccountNa
 	return strings.Join([]string{s.appService.DeviceID, subservice, string(name)}, ".")
 }
 
+func redactSettings(settings types.Settings) types.Settings {
+	accounts := make([]types.AccountSettings, len(settings.Accounts))
+	for i, account := range settings.Accounts {
+		redactConnectionSettings(&account.IMAPSettings)
+		redactConnectionSettings(&account.SMTPSettings)
+		accounts[i] = account
+	}
+	settings.Accounts = accounts
+	return settings
+}
+
+func redactConnectionSettings(conn *types.ConnectionSettings) {
+	conn.HasCredentials = conn.Password != "" || conn.OAuthRefreshToken != ""
+	conn.Password = ""
+	conn.OAuthRefreshToken = ""
+}
+
 func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) {
+	conn.HasCredentials = false
+
 	if conn.Password != "" {
 		if err := keyring.Set(appDirName, s.getKeyringUser("email", name), conn.Password); err != nil {
 			panic(err)
@@ -221,6 +257,8 @@ func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *t
 }
 
 func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) {
+	conn.HasCredentials = false
+
 	val, err := keyring.Get(appDirName, s.getKeyringUser("email", name))
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		panic(err)

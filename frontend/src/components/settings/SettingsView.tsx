@@ -118,9 +118,13 @@ class Account extends React.Component<IAccountProps, IAccountState> {
   }
 
   render() {
+    // Secrets are redacted before settings reach the frontend - hasCredentials marks a
+    // keyring-held secret; password/oauthRefreshToken cover just-entered ones not yet saved
+    const hasConnectionCredentials = (conn) =>
+      conn && (conn.hasCredentials || conn.password || conn.oauthRefreshToken);
     const hasValidCredentials =
-      (this.props.imapSettings && (this.props.imapSettings.password || this.props.imapSettings.oauthRefreshToken))
-      && (this.props.smtpSettings && (this.props.smtpSettings.password || this.props.smtpSettings.oauthRefreshToken));
+      hasConnectionCredentials(this.props.imapSettings)
+      && hasConnectionCredentials(this.props.smtpSettings);
 
     const deleteButton = (
       <button

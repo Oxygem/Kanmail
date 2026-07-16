@@ -80,7 +80,7 @@ func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountName ty
 func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName types.AccountName) *emails.Account {
 	// Get settings *before* locking, so we don't deadlock sync/paginate reqs against settings changes,
 	// which can both happen rapidly while clicking through the folders in the sidebar.
-	settings := a.settings.GetSettings(ctx)
+	settings := a.settings.getSettingsWithSecrets(ctx)
 
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
@@ -108,7 +108,14 @@ func (a *AccountsService) TestAccountSettings(
 	ctx = a.log.WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	tmpAccount := emails.NewAccount(settings, a.caches)
+	// The frontend never holds existing secrets, so an unchanged password/token arrives
+	// empty - fill from the keyring for the test, restoring the as-sent values in the
+	// returned settings so secrets stay out of the frontend
+	testSettings := settings
+	a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.IMAPSettings)
+	a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.SMTPSettings)
+
+	tmpAccount := emails.NewAccount(testSettings, a.caches)
 
 	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
 		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check IMAP connection: %w", err))
@@ -119,7 +126,22 @@ func (a *AccountsService) TestAccountSettings(
 	}
 
 	a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
-	return tmpAccount.AccountSettings, nil
+
+	updatedSettings := tmpAccount.AccountSettings
+	updatedSettings.IMAPSettings.Password = settings.IMAPSettings.Password
+	updatedSettings.IMAPSettings.OAuthRefreshToken = settings.IMAPSettings.OAuthRefreshToken
+	updatedSettings.SMTPSettings.Password = settings.SMTPSettings.Password
+	updatedSettings.SMTPSettings.OAuthRefreshToken = settings.SMTPSettings.OAuthRefreshToken
+	return updatedSettings, nil
+}
+
+func (a *AccountsService) fillConnectionSecretsIfEmpty(
+	name types.AccountName,
+	conn *types.ConnectionSettings,
+) {
+	if conn.Password == "" && conn.OAuthRefreshToken == "" {
+		a.settings.unhideConnectionSettings(name, conn)
+	}
 }
 
 // Autoconfigure account settings given a username (email) and password combination by attempting

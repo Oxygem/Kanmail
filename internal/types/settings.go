@@ -73,6 +73,10 @@ type ConnectionSettings struct {
 	OAuthProvider     string `json:"oauthProvider,omitempty"`
 	OAuthRefreshToken string `json:"oauthRefreshToken,omitempty"`
 
+	// HasCredentials is set on redacted copies sent to the frontend, indicating a
+	// secret exists without exposing it. Always false on internal copies.
+	HasCredentials bool `json:"hasCredentials,omitempty"`
+
 	// SSL or implicit TLS
 	SSL bool `json:"ssl"`
 	// Start TLS
@@ -126,6 +130,7 @@ type SystemSettings struct {
 	// Experimental
 	GroupThreadsBySubject    bool `json:"groupThreadsBySubject"`
 	GroupSingleSenderThreads bool `json:"groupSingleSenderThreads"`
+	DisableRemoteSearch      bool `json:"disableRemoteSearch"`
 
 	// Debugging / license holder specials
 	ShowHiddenAttachments bool `json:"showHiddenAttachments"`
