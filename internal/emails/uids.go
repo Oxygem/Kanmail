@@ -70,7 +70,7 @@ func (u *uidList) UpdateFrom(
 
 	// Now iter through the new UIDs backwards (low -> high) and insert them
 	for _, uid := range slices.Backward(newUIDs.uids) {
-		if u.Insert(ctx, uid) {
+		if u.insert(ctx, uid) {
 			added = append(added, uid)
 		} else {
 			unchanged = append(unchanged, uid)
@@ -80,7 +80,14 @@ func (u *uidList) UpdateFrom(
 	return added, removed, unchanged
 }
 
+// Note: only used/exported for tests
 func (u *uidList) Insert(ctx context.Context, id imap.UID) bool {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+	return u.insert(ctx, id)
+}
+
+func (u *uidList) insert(ctx context.Context, id imap.UID) bool {
 	if u.contains(id) {
 		// Ignore dupes
 		// TODO: log?
