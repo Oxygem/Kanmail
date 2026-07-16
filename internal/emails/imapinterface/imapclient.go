@@ -64,6 +64,10 @@ func (w *IMAPClientWrapper) Expunge() ExpungeCommand {
 	return w.Client.Expunge()
 }
 
+func (w *IMAPClientWrapper) UIDExpunge(uids imap.UIDSet) ExpungeCommand {
+	return w.Client.UIDExpunge(uids)
+}
+
 func (w *IMAPClientWrapper) Move(numSet imap.NumSet, dest string) MoveCommand {
 	return w.Client.Move(numSet, dest)
 }

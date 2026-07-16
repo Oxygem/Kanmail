@@ -124,7 +124,6 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			}
 			continue
 		}
-		zerolog.Ctx(ctx).Err(err).Msg("NOTNETWORKERR")
 		return err
 	}
 	return err

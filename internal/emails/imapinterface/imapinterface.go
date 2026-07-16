@@ -95,6 +95,7 @@ type IMAPClient interface {
 	Fetch(numSet imap.NumSet, options *imap.FetchOptions) FetchCommand
 	Store(numSet imap.NumSet, flags *imap.StoreFlags, options *imap.StoreOptions) FetchCommand
 	Expunge() ExpungeCommand
+	UIDExpunge(uids imap.UIDSet) ExpungeCommand
 	Move(numSet imap.NumSet, dest string) MoveCommand
 	Copy(numSet imap.NumSet, dest string) CopyCommand
 }

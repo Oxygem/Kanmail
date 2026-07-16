@@ -761,6 +761,15 @@ func (c *FakeIMAPClient) Store(numSet imap.NumSet, flags *imap.StoreFlags, optio
 }
 
 func (c *FakeIMAPClient) Expunge() ExpungeCommand {
+	return c.expunge(nil)
+}
+
+func (c *FakeIMAPClient) UIDExpunge(uids imap.UIDSet) ExpungeCommand {
+	return c.expunge(uids)
+}
+
+// expunge removes messages marked as deleted, restricted to the given UID set if not nil
+func (c *FakeIMAPClient) expunge(uids imap.UIDSet) ExpungeCommand {
 	if c.getCurrentFolder() == "" {
 		cmd := &FakeExpungeCommand{
 			FakeCommand: &FakeCommand{err: fmt.Errorf("no folder selected")},
@@ -774,9 +783,11 @@ func (c *FakeIMAPClient) Expunge() ExpungeCommand {
 	}
 	var expungedUIDs []imap.UID
 
-	// Remove messages marked as deleted
 	folder.mu.Lock()
 	for uid, msg := range folder.messages.CopyData() {
+		if uids != nil && !uids.Contains(uid) {
+			continue
+		}
 		if containsFlag(msg.flags, imap.FlagDeleted) {
 			folder.messages.Delete(uid)
 			expungedUIDs = append(expungedUIDs, uid)
@@ -860,6 +871,11 @@ func (c *FakeIMAPClient) Append(name string, size int64, options *imap.AppendOpt
 		folder:      name,
 	}
 	return cmd
+}
+
+// AddCap advertises an extra capability, for tests exercising cap-dependent paths
+func (c *FakeIMAPClient) AddCap(cap imap.Cap) {
+	c.caps[cap] = struct{}{}
 }
 
 // Helper functions
