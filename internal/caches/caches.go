@@ -36,7 +36,7 @@ type Caches struct {
 }
 
 func NewCaches(log zerolog.Logger, path string) *Caches {
-	db, err := sql.Open("sqlite3", path+"?_foreign_keys=true&_journal_mode=WAL")
+	db, err := sql.Open("sqlite3", path+"?_foreign_keys=true&_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		panic(err)
 	}
