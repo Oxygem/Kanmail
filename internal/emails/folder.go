@@ -594,7 +594,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			} else if new && !old {
 				// Become read (!seen -> seen)
 				email.Flags = append(email.Flags, imap.FlagSeen)
-				if err := f.caches.FolderEmailCache.Replace(ctx, email); err != nil {
+				if err := f.caches.FolderEmailCache.Upsert(ctx, email); err != nil {
 					return err
 				}
 				resp.ReadUIDs = append(resp.ReadUIDs, uid)
@@ -607,6 +607,9 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 					}
 				}
 				email.Flags = newFlags
+				if err := f.caches.FolderEmailCache.Upsert(ctx, email); err != nil {
+					return err
+				}
 				resp.UnreadUIDs = append(resp.UnreadUIDs, uid)
 			}
 		}

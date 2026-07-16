@@ -19,7 +19,7 @@ type FolderEmailCache struct {
 	disabled bool
 
 	stmtStore,
-	stmtReplace,
+	stmtUpsert,
 	stmtGet,
 	stmtDelete,
 	stmtDeleteByFolder,
@@ -41,9 +41,11 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
 	}
 
-	stmtReplace, err := db.Prepare(`
-		REPLACE INTO folder_emails (account_name, folder_name, uid, message_id, data)
-		VALUES (?, ?, ?, ?, ?)`)
+	stmtUpsert, err := db.Prepare(`
+		INSERT INTO folder_emails (account_name, folder_name, uid, message_id, data)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT (account_name, folder_name, uid)
+		DO UPDATE SET message_id = excluded.message_id, data = excluded.data`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
 	}
@@ -124,7 +126,7 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 	return &FolderEmailCache{
 		db:                          db,
 		stmtStore:                   stmtStore,
-		stmtReplace:                 stmtReplace,
+		stmtUpsert:                  stmtUpsert,
 		stmtGet:                     stmtGet,
 		stmtDelete:                  stmtDelete,
 		stmtDeleteByFolder:          stmtDeleteByFolder,
@@ -202,17 +204,34 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 		}
 	}
 
+	if err := execStoreSearch(ctx, stmtStoreSearch, email); err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
-func (c *FolderEmailCache) Replace(ctx context.Context, email *types.Email) error {
+func (c *FolderEmailCache) Upsert(ctx context.Context, email *types.Email) error {
 	if c.disabled {
 		return nil
 	}
 	var data bytes.Buffer
 	if err := gob.NewEncoder(&data).Encode(email); err != nil {
 		return fmt.Errorf("failed to marshal email: %w", err)
-	} else if _, err := c.stmtReplace.ExecContext(
+	}
+
+	tx, err := c.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmtUpsert := tx.Stmt(c.stmtUpsert)
+	defer stmtUpsert.Close()
+	stmtStoreSearch := tx.Stmt(c.stmtStoreSearch)
+	defer stmtStoreSearch.Close()
+
+	if _, err := stmtUpsert.ExecContext(
 		ctx,
 		email.AccountName,
 		email.FolderName,
