@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +20,7 @@ import (
 var BACKEND_API_URL = "https://backend.kanmail.io"
 var httpClient *http.Client
 var sessionID string
+var sessionIDOnce sync.Once
 
 func init() {
 	url := os.Getenv("KANMAIL_BACKEND_API_URL")
@@ -50,13 +52,13 @@ func doBackendRequest(ctx context.Context, method, endpoint string, payload any)
 }
 
 func SendAnalytics(ctx context.Context, deviceID, event string, properties map[string]any) error {
-	if sessionID == "" {
+	sessionIDOnce.Do(func() {
 		if uuid, err := uuid.NewV7(); err != nil {
 			zerolog.Ctx(ctx).Err(err).Msg("Failed to generate new session ID")
 		} else {
 			sessionID = uuid.String()
 		}
-	}
+	})
 	properties["$device_id"] = deviceID
 	if sessionID != "" {
 		properties["$session_id"] = sessionID
