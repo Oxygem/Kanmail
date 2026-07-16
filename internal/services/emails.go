@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"mime"
-	"net/http"
 	"os"
 	"path/filepath"
 
@@ -275,7 +274,7 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 		Str("list_unsubscribe_url", email.ListUnsubscribeURL).
 		Msg("Senting unsubscribe POST")
 
-	resp, err := http.Post(email.ListUnsubscribeURL, "", nil)
+	resp, err := externalHTTPClient.Post(email.ListUnsubscribeURL, "", nil)
 	if err != nil {
 		return types.WrapFolderError(accountName, folderName, fmt.Errorf("failed to make unsubscribe POST: %w", err))
 	} else if resp.StatusCode >= 300 {

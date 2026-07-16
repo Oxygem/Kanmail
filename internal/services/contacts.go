@@ -87,7 +87,7 @@ func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarR
 	var avatar *AvatarResp
 	var data []byte
 	for _, req := range reqs {
-		resp, d, err := util.MakeHTTPRequest(ctx, http.DefaultClient, req)
+		resp, d, err := util.MakeHTTPRequest(ctx, externalHTTPClient, req)
 		if err != nil {
 			log.Warn().Err(err).Str("url", req.URL).Msg("Failed to load icon from url")
 			continue

@@ -5,13 +5,21 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"io/fs"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 	"go.mau.fi/util/random"
 )
 
 const deviceIDLength = 16
+
+// Shared client for requests to external (avatar, unsubscribe, ...) endpoints which may
+// never respond - http.DefaultClient has no timeout
+var externalHTTPClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 func generateDeviceID() string {
 	return base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(random.Bytes(deviceIDLength / 1.6))
