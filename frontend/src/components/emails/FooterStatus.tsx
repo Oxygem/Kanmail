@@ -1,27 +1,26 @@
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 
+import type { SystemSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { subscribe } from "../../stores/base.tsx";
 import requestStore, { IRequestStoreProps } from "../../stores/request.ts";
+import settingsStore from "../../stores/settings.ts";
 
-interface FooterStatusState {
-  enabled: boolean;
-}
+type FooterStatusProps = IRequestStoreProps & { system: SystemSettings };
 
-@subscribe(requestStore)
-export default class FooterStatus extends Component<IRequestStoreProps, FooterStatusState> {
+@subscribe(requestStore, settingsStore)
+export default class FooterStatus extends Component<FooterStatusProps> {
   static propTypes = {
     fetchRequests: PropTypes.array.isRequired,
     pushRequests: PropTypes.array.isRequired,
     pendingRequests: PropTypes.array.isRequired,
-  };
-
-  state: FooterStatusState = {
-    enabled: false,
+    system: PropTypes.object.isRequired,
   };
 
   toggleEnabled = () => {
-    this.setState({ enabled: !this.state.enabled });
+    settingsStore.updateSettings({
+      system: { ...settingsStore.props.system, statusBarOpen: !this.props.system.statusBarOpen },
+    });
   };
 
   renderStatusList(open: boolean) {
@@ -52,10 +51,11 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
     const fetchCount = this.props.fetchRequests.size;
     const pushCount = this.props.pushRequests.size;
     const pendingCount = this.props.pendingRequests.length;
+    const open = !!this.props.system.statusBarOpen;
 
     return (
       <div>
-        {this.renderStatusList(this.state.enabled)}
+        {this.renderStatusList(open)}
 
         <div id="footer-status">
           <span className={fetchCount > 0 ? "green" : ""}>
@@ -73,7 +73,7 @@ export default class FooterStatus extends Component<IRequestStoreProps, FooterSt
 
           <span className="toggle">
             <i
-              className={`fa fa-chevron-circle-${this.state.enabled ? "down" : "up"}`}
+              className={`fa fa-chevron-circle-${open ? "down" : "up"}`}
               onClick={this.toggleEnabled}
             ></i>
           </span>

@@ -504,6 +504,18 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         "Always show thread backgrounds (not just on hover)",
       )}
 
+      <h3 className="sub sp">Interface</h3>
+      {this.renderCheckRow(
+        this.props.system.showHelpButton,
+        () => this.updateSystem({ showHelpButton: !this.props.system.showHelpButton }),
+        "Show help button in sidebar",
+      )}
+      {this.renderCheckRow(
+        !!this.props.system.statusBarOpen,
+        () => this.updateSystem({ statusBarOpen: !this.props.system.statusBarOpen }),
+        "Expand the sync status list in the sidebar footer",
+      )}
+
       <h3 className="sub sp">Sender-specific thread colors</h3>
       <p className="help-text">
         Highlight email threads from specific senders with custom background colors.
@@ -609,11 +621,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         </div>
       </div>
 
-      {this.renderCheckRow(
-        this.props.system.showHelpButton,
-        () => this.updateSystem({ showHelpButton: !this.props.system.showHelpButton }),
-        "Show help button in sidebar",
-      )}
       {this.renderCheckRow(
         this.props.system.showHiddenAttachments,
         () => this.updateSystem({ showHiddenAttachments: !this.props.system.showHiddenAttachments }),

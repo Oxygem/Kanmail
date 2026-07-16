@@ -116,6 +116,9 @@ type SystemSettings struct {
 
 	ShowHelpButton bool `json:"showHelpButton"`
 
+	// Whether the sync status list (bottom of the sidebar footer) is expanded
+	StatusBarOpen bool `json:"statusBarOpen"`
+
 	// UI zoom factor (1.0 = 100%). Applied client-side via CSS zoom on the
 	// document root so the whole interface, including rendered email, scales.
 	Zoom float64 `json:"zoom"`
