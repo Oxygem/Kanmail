@@ -1,5 +1,6 @@
 import _ from "lodash";
 
+import { SEARCH_EXTRA_FOLDERS } from "../../constants.ts";
 import settingsStore from "../settings.ts";
 import BaseEmails from "./base.ts";
 import mainEmailStore from "./main.js";
@@ -38,7 +39,12 @@ class EmailStoreController {
   search(searchValue) {
     searchEmailStore.setSearchValue(searchValue);
 
-    _.map(settingsStore.getCurrentColumns(), (folderName) =>
+    // Also search archive/trash so results outside the visible columns show
+    // up in the special search results column.
+    const folderNames = _.uniq(
+      _.concat(settingsStore.getCurrentColumns(), SEARCH_EXTRA_FOLDERS),
+    );
+    _.map(folderNames, (folderName) =>
       searchEmailStore.getFolderEmails(folderName, { reset: true })
     );
   }

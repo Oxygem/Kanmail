@@ -1,15 +1,20 @@
 import _ from "lodash";
 
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import { encodeFolderName } from "../../util/string.js";
 import { getColumnMetaStore } from "../columns.js";
 import BaseEmails from "../emails/base.js";
 import requestStore from "../request.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
+import settingsStore from "../settings.ts";
 import { IPaginateOptions, ISyncOptions } from "./base.ts";
 
 class SearchEmails extends BaseEmails {
   searchValue: string;
+  // Bumped on every query change so in-flight requests from a superseded
+  // query can be detected and dropped rather than polluting the results
+  searchGeneration = 0;
 
   setSearchValue(value: string) {
     // Ignore if we've updated for another reason!
@@ -17,7 +22,11 @@ class SearchEmails extends BaseEmails {
       return;
     }
 
-    // Reset the email list if the search value has changed
+    this.searchGeneration += 1;
+
+    // Drop the previous query's emails but don't reprocess yet - the columns
+    // keep the previous results rendered until the new query's results arrive
+    // and rebuild them, rather than flashing empty in between
     this.reset();
     this.processEmailChanges({ forceProcess: true });
 
@@ -33,6 +42,7 @@ class SearchEmails extends BaseEmails {
   };
 
   getFolderEmails = async (folderName: string, options: Partial<IPaginateOptions> = {}) => {
+    const generation = this.searchGeneration;
     const columnMetaStore = getColumnMetaStore(folderName);
     columnMetaStore.setLoading(true);
 
@@ -43,7 +53,14 @@ class SearchEmails extends BaseEmails {
       requests.push(this.searchEmails(accountKey, folderName));
     });
 
-    const finishLoading = () => columnMetaStore.setLoading(false);
+    const finishLoading = () => {
+      columnMetaStore.setLoading(false);
+      // Force a final process so columns where the query matched nothing
+      // still drop any previous query's threads
+      if (generation === this.searchGeneration) {
+        this.processEmailChanges({ forceProcess: true });
+      }
+    };
     return Promise.all(requests).then(finishLoading).catch((e) => {
       finishLoading();
       trackCaughtError("search", e);
@@ -66,21 +83,36 @@ class SearchEmails extends BaseEmails {
   };
 
   async searchEmails(accountName: string, folderName: string): Promise<void> {
+    const generation = this.searchGeneration;
+
+    const addResults = (emails: (Email | null)[]) => {
+      if (generation !== this.searchGeneration) {
+        console.debug(`[searchEmailStore] Dropping stale results for ${accountName}/${folderName}`);
+        return;
+      }
+      if (emails.length > 0) {
+        this.addEmailsToAccountFolder(accountName, folderName, emails);
+        this.processEmailChanges({});
+      }
+    };
+
+    // Local-first: instant results from the SQLite cache render while the
+    // authoritative server search runs. Failures here are non-fatal.
+    const cachedRequest = EmailsService.SearchCachedAccountFolderEmails(
+      accountName, folderName, this.searchValue,
+    ).then(addResults).catch((e) => trackCaughtError("search-cached", e));
+
+    if (settingsStore.props.system.disableRemoteSearch) {
+      return cachedRequest;
+    }
+
     const emails = await requestStore.doFetchRequest(
       `Search & fetch emails from ${accountName}/${folderName}`,
       EmailsService.SearchAccountFolderEmails(accountName, folderName, this.searchValue),
     );
+    addResults(emails);
 
-    let changed = false;
-
-    if (emails.length > 0) {
-      this.addEmailsToAccountFolder(accountName, folderName, emails);
-      changed = true;
-    }
-
-    if (changed) {
-      this.processEmailChanges({})
-    }
+    await cachedRequest;
   }
 }
 

@@ -260,6 +260,8 @@ func parseAppendedMessage(raw []byte) *fakeMessage {
 	}
 	msg.envelope.From = parseAddressList(header, "From")
 	msg.envelope.To = parseAddressList(header, "To")
+	msg.envelope.Cc = parseAddressList(header, "Cc")
+	msg.envelope.Bcc = parseAddressList(header, "Bcc")
 
 	if body, err := io.ReadAll(parsed.Body); err == nil {
 		msg.content = string(body)
@@ -590,23 +592,30 @@ func matchesHeader(msg *fakeMessage, field imap.SearchCriteriaHeaderField) bool 
 		})
 	case "subject":
 		return containsFold(msg.envelope.Subject, field.Value)
+	case "from":
+		return matchesAddresses(msg.envelope.From, field.Value)
+	case "to":
+		return matchesAddresses(msg.envelope.To, field.Value)
+	case "cc":
+		return matchesAddresses(msg.envelope.Cc, field.Value)
+	case "bcc":
+		return matchesAddresses(msg.envelope.Bcc, field.Value)
 	default:
 		return false
 	}
+}
+
+func matchesAddresses(addrs []imap.Address, text string) bool {
+	return slices.ContainsFunc(addrs, func(addr imap.Address) bool {
+		return containsFold(addr.Name, text) || containsFold(addr.Addr(), text)
+	})
 }
 
 func matchesText(msg *fakeMessage, text string) bool {
 	if containsFold(msg.content, text) || containsFold(msg.envelope.Subject, text) {
 		return true
 	}
-	for _, addrs := range [][]imap.Address{msg.envelope.From, msg.envelope.To} {
-		for _, addr := range addrs {
-			if containsFold(addr.Name, text) || containsFold(addr.Addr(), text) {
-				return true
-			}
-		}
-	}
-	return false
+	return matchesAddresses(msg.envelope.From, text) || matchesAddresses(msg.envelope.To, text)
 }
 
 func containsFold(s, substr string) bool {

@@ -187,6 +187,29 @@ func (e *EmailsService) SearchAccountFolderEmails(
 	return emails, types.WrapAccountError(accountName, err)
 }
 
+func (e *EmailsService) SearchCachedAccountFolderEmails(
+	ctx context.Context,
+	accountName types.AccountName,
+	folderName types.FolderName,
+	search string,
+) ([]*types.Email, error) {
+	ctx = e.log.With().
+		Str("account", string(accountName)).
+		Str("method", "SearchCachedAccountFolderEmails").
+		Logger().
+		WithContext(ctx)
+	defer util.LogAndPanic(ctx)
+
+	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	if account == nil {
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+	}
+
+	folder := account.GetFolder(folderName)
+	emails, err := folder.SearchCachedEmails(ctx, search, 100)
+	return emails, types.WrapAccountError(accountName, err)
+}
+
 // Folder sync, pagination & get
 //
 

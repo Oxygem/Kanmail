@@ -69,8 +69,8 @@ interface EmailColumnThreadProps {
   threadRef: number;
   column: EmailColumn;
 
-  getPreviousColumn: () => EmailColumn;
-  getNextColumn: () => EmailColumn;
+  getPreviousColumn: () => EmailColumn | undefined;
+  getNextColumn: () => EmailColumn | undefined;
   getPreviousThread: () => EmailColumnThread;
   getNextThread: () => EmailColumnThread;
 

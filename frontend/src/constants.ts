@@ -10,6 +10,10 @@ export const ALIAS_FOLDERS = [
   "trash",
 ];
 
+// Folders searched in addition to the visible columns, shown in the special
+// search results column on the far right.
+export const SEARCH_EXTRA_FOLDERS = ["archive", "trash"];
+
 export const ALIAS_TO_ICON = {
   [INBOX]: "inbox",
   sent: "paper-plane",

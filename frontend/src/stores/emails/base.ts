@@ -2,7 +2,7 @@ import _ from "lodash";
 import ReactDOM from "react-dom";
 
 import { Flag } from "../../../bindings/github.com/emersion/go-imap/v2/index.ts";
-import { EmailRef, PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
+import { PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { ALIAS_FOLDERS } from "../../constants.ts";
@@ -184,6 +184,9 @@ export default class BaseEmails {
   onScrollFolder(folderName: string, allAccounts: boolean, accountNames?: string[]): void {
     throw new Error("Not implemented!!");
   }
+
+  async searchReferences(accountKey: string, unreferencedAccountMessageIDs: Set<string>) {}
+  async findMessageIDs(accountKey: string, messageIDs: Set<string>) {}
 
   /*
         Generic email handling/store methods.
@@ -400,51 +403,6 @@ export default class BaseEmails {
     if (unreferencedAccountMessageIDs.size > 0 && !_.includes(ALIAS_FOLDERS, folderName)) {
       this.searchReferences(accountKey, unreferencedAccountMessageIDs);
     }
-  }
-
-  async searchReferences(accountKey: string, unreferencedAccountMessageIDs: Set<string>) {
-    console.debug(`Finding ${unreferencedAccountMessageIDs.size} references to messageIDs in ${accountKey}`);
-
-    const refs: EmailRef[] = [];
-    _.each(Array.from(unreferencedAccountMessageIDs), msgid => {
-      const email = this.emails.get(msgid)!;
-      refs.push(new EmailRef({
-        reference: email.messageId,
-        sentSince: email.date,
-      }))
-    })
-
-    let emails: (Email | null)[]
-    try {
-      emails = await requestStore.doFetchRequest(
-        `Search ${refs.length} references`,
-        EmailsService.SearchAccountReferences(accountKey, refs),
-      );
-    } catch (e) {
-      requestStore.addError("Failed to find references", e);
-      return;
-    }
-
-    console.debug(`Found ${emails.length} emails with reference to messageIDs`);
-    this.handleSearchOrFindEmails(accountKey, emails);
-  }
-
-  async findMessageIDs(accountKey: string, messageIDs: Set<string>) {
-    console.debug(`Finding ${messageIDs.size} messageIDs in ${accountKey}`);
-
-    let emails: (Email | null)[]
-    try {
-      emails = await requestStore.doFetchRequest(
-        `Search ${messageIDs.size} message IDs`,
-        EmailsService.FindAccountMessageIDs(accountKey, Array.from(messageIDs)),
-      )
-    } catch (e) {
-      requestStore.addError("Failed to find messageIDs", e);
-      return;
-    }
-
-    console.debug(`Found ${emails.length} emails with messageIDs`);
-    this.handleSearchOrFindEmails(accountKey, emails);
   }
 
   handleSearchOrFindEmails(accountKey, emails: (Email | null)[]) {

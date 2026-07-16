@@ -21,6 +21,7 @@ import CommandBar from "./CommandBar.tsx";
 import EmailColumn from "./EmailColumn.tsx";
 import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
 import Search from "./Search.jsx";
+import SearchResultsColumn from "./SearchResultsColumn.tsx";
 import Sidebar from "./Sidebar.jsx";
 import Thread from "./Thread.jsx";
 import WelcomeSettings from "./WelcomeSettings.jsx";
@@ -30,7 +31,7 @@ import WorkflowSwitcher from "./WorkflowSwitcher.tsx";
 @DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component<ISettings> {
   getNewEmailsInterval: ReturnType<typeof setInterval>;
-  columnRefs: (EmailColumn | null)[] = [];
+  columnRefs: (EmailColumn | SearchResultsColumn | null)[] = [];
 
   getFoldersToSync() {
     return _.uniq(_.concat(
@@ -149,7 +150,7 @@ export default class EmailsApp extends React.Component<ISettings> {
   };
 
   renderColumns() {
-    const columnElements = [];
+    const columnElements: React.ReactElement[] = [];
     this.columnRefs = [];
 
     const getColumn = (id) => {
@@ -181,6 +182,17 @@ export default class EmailsApp extends React.Component<ISettings> {
         />
       );
     });
+
+    // Special far-right column showing search results from archive/trash,
+    // registered as the last column ref so keyboard navigation reaches it
+    columnElements.push(
+      <SearchResultsColumn
+        key="search-results"
+        getPreviousColumn={() => getColumn(columns.length - 1)}
+        getNextColumn={() => undefined}
+        ref={(ref) => (this.columnRefs[columns.length] = ref)}
+      />
+    );
 
     return columnElements;
   }

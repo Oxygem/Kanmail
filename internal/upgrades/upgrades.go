@@ -32,6 +32,7 @@ type Upgrade struct {
 // end. Never reorder, rename, or remove an existing entry.
 var All = []Upgrade{
 	{Name: "001-backfill-attachments", Run: backfillAttachments},
+	{Name: "002-backfill-search-rows", Run: backfillSearchRows},
 }
 
 // Run applies every pending upgrade in order, marking each completed on

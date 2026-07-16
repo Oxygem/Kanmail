@@ -446,6 +446,25 @@ section#columns {
     }
   }
 
+  /* ------------------------- special search column ------------------------ */
+  div.column.search-results {
+    background: var(--side-bg);
+
+    // Folder sub-headers, styled to match the sidebar's section labels
+    div.folder-group-header {
+      padding: 18px 20px 6px;
+      font-size: 10.5px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--faint);
+      font-weight: 600;
+
+      i {
+        margin-right: 6px;
+      }
+    }
+  }
+
   div.emails {
     position: relative;
     flex: 1;

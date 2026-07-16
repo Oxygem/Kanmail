@@ -7,6 +7,8 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/emersion/go-imap/v2"
@@ -29,7 +31,44 @@ type FolderEmailCache struct {
 	stmtSetAccountReference,
 	stmtDeleteAccountLookups,
 	stmtDeleteAccountReferences,
-	stmtStoreAttachment *sql.Stmt
+	stmtStoreAttachment,
+	stmtStoreSearch *sql.Stmt
+}
+
+// EmailSearchColumns are the denormalized folder_email_search values used by
+// local-first search. Text fields are lowercased.
+type EmailSearchColumns struct {
+	Subject, FromAddrs, ToAddrs, CCAddrs, Excerpt string
+	DateUnix                                      int64
+	Seen, Flagged                                 bool
+}
+
+func makeAddressesString(addressLists ...[]types.Address) string {
+	var parts []string
+	for _, addrs := range addressLists {
+		for _, addr := range addrs {
+			if addr.Name != "" {
+				parts = append(parts, addr.Name)
+			}
+			if addr.Email != "" {
+				parts = append(parts, addr.Email)
+			}
+		}
+	}
+	return strings.ToLower(strings.Join(parts, " "))
+}
+
+func MakeEmailSearchColumns(email *types.Email) EmailSearchColumns {
+	return EmailSearchColumns{
+		Subject:   strings.ToLower(email.Subject),
+		FromAddrs: makeAddressesString(email.From, email.Sender),
+		ToAddrs:   makeAddressesString(email.To),
+		CCAddrs:   makeAddressesString(email.CC, email.BCC),
+		Excerpt:   strings.ToLower(email.Excerpt),
+		DateUnix:  email.Date.Unix(),
+		Seen:      slices.Contains(email.Flags, imap.FlagSeen),
+		Flagged:   slices.Contains(email.Flags, imap.FlagFlagged),
+	}
 }
 
 func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
@@ -123,6 +162,15 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		return nil, fmt.Errorf("failed to prepare storeAttachment statement: %w", err)
 	}
 
+	stmtStoreSearch, err := db.Prepare(`
+		REPLACE INTO folder_email_search
+			(account_name, folder_name, uid,
+			 subject, from_addrs, to_addrs, cc_addrs, excerpt, date_unix, seen, flagged)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare storeSearch statement: %w", err)
+	}
+
 	return &FolderEmailCache{
 		db:                          db,
 		stmtStore:                   stmtStore,
@@ -137,7 +185,29 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 		stmtDeleteAccountLookups:    stmtDeleteAccountLookups,
 		stmtDeleteAccountReferences: stmtDeleteAccountReferences,
 		stmtStoreAttachment:         stmtStoreAttachment,
+		stmtStoreSearch:             stmtStoreSearch,
 	}, nil
+}
+
+func execStoreSearch(ctx context.Context, stmt *sql.Stmt, email *types.Email) error {
+	search := MakeEmailSearchColumns(email)
+	if _, err := stmt.ExecContext(
+		ctx,
+		email.AccountName,
+		email.FolderName,
+		email.UID,
+		search.Subject,
+		search.FromAddrs,
+		search.ToAddrs,
+		search.CCAddrs,
+		search.Excerpt,
+		search.DateUnix,
+		search.Seen,
+		search.Flagged,
+	); err != nil {
+		return fmt.Errorf("failed to store email search row: %w", err)
+	}
+	return nil
 }
 
 func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error {
@@ -161,6 +231,8 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 	defer stmtSetAccountRef.Close()
 	stmtStoreAttachment := tx.Stmt(c.stmtStoreAttachment)
 	defer stmtStoreAttachment.Close()
+	stmtStoreSearch := tx.Stmt(c.stmtStoreSearch)
+	defer stmtStoreSearch.Close()
 
 	if _, err := stmtStore.ExecContext(
 		ctx,
@@ -247,7 +319,12 @@ func (c *FolderEmailCache) Upsert(ctx context.Context, email *types.Email) error
 			err,
 		)
 	}
-	return nil
+
+	if err := execStoreSearch(ctx, stmtStoreSearch, email); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (c *FolderEmailCache) Delete(

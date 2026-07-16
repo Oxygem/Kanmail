@@ -143,7 +143,7 @@ type Email struct {
 }
 
 func (e Email) GetAddresses() []Address {
-	addrs := make([]Address, len(e.From)+len(e.To)+len(e.Sender)+len(e.CC)+len(e.BCC)+len(e.ReplyTo))
+	addrs := make([]Address, 0, len(e.From)+len(e.To)+len(e.Sender)+len(e.CC)+len(e.BCC)+len(e.ReplyTo))
 	for _, as := range [][]Address{e.From, e.To, e.Sender, e.CC, e.BCC, e.ReplyTo} {
 		addrs = append(addrs, as...)
 	}

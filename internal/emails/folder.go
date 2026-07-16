@@ -180,25 +180,35 @@ func (f *Folder) FetchEmailPartData(ctx context.Context, parts FetchPartsMap) (f
 // capGmailExt1 is the Gmail IMAP extension advertising X-GM-RAW/X-GM-* search keys.
 const capGmailExt1 = imap.Cap("X-GM-EXT-1")
 
-// gmailOrTextSearchCriteria uses Gmail's X-GM-RAW search syntax when the server
+// buildSearchCriteria uses Gmail's X-GM-RAW search syntax when the server
 // supports it (giving full Gmail query support: from:, has:attachment, etc.),
-// otherwise falls back to a standard BODY/TEXT substring search.
-func gmailOrTextSearchCriteria(conn imapinterface.IMAPClient, search string) *imap.SearchCriteria {
+// otherwise parses the same Gmail-style syntax into standard IMAP criteria.
+func buildSearchCriteria(conn imapinterface.IMAPClient, search string) *imap.SearchCriteria {
 	if conn.Caps().Has(capGmailExt1) {
 		return &imap.SearchCriteria{GmailRaw: search}
 	}
-	return &imap.SearchCriteria{
-		Or: [][2]imap.SearchCriteria{{
-			{Body: []string{search}},
-			{Text: []string{search}},
-		}},
-	}
+	return parseSearchQuery(search, time.Now())
+}
+
+// SearchCachedEmails searches the local email cache only - no network - so
+// results render instantly while the server-side SearchEmails runs. Always
+// uses the parsed criteria (even for Gmail accounts, whose server search uses
+// X-GM-RAW); criteria the cache can't answer exactly return no results.
+func (f *Folder) SearchCachedEmails(ctx context.Context, search string, limit int) ([]*types.Email, error) {
+	query := parseSearchQuery(search, time.Now())
+	emails, err := f.caches.FolderEmailCache.Search(ctx, f.AccountName, f.Name, query, limit)
+	zerolog.Ctx(ctx).Debug().
+		Err(err).
+		Int("emails", len(emails)).
+		Str("query", search).
+		Msg("Searched cached emails")
+	return emails, err
 }
 
 func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]*types.Email, error) {
 	var emails []*types.Email
 	if err := f.imap.WithFolderPriorityConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		criteria := gmailOrTextSearchCriteria(conn, search)
+		criteria := buildSearchCriteria(conn, search)
 		res, err := conn.UIDSearch(criteria, nil).Wait()
 		if err != nil {
 			return err
@@ -207,8 +217,9 @@ func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]
 		uids := res.AllUIDs()
 
 		if limit > 0 && len(uids) > limit {
-			// TODO: check - fetch latest UIDs
-			uids = uids[:limit]
+			// Keep the newest (highest UID) matches
+			slices.Sort(uids)
+			uids = uids[len(uids)-limit:]
 		}
 
 		emails, err = f.getOrFetchEmails(ctx, uids, connFunc(conn))
@@ -738,10 +749,16 @@ func (f *Folder) fetchMoreUIDs(ctx context.Context) error {
 				return nil
 			}
 
-			newUIDsStartAt := f.uidsStartAt - uidSearchPaginateThreshold
+			// Clamp to zero (= exhausted) rather than underflowing when the remaining UID
+			// range is smaller than the pagination threshold
+			var newUIDsStartAt imap.UID
+			if f.uidsStartAt > uidSearchPaginateThreshold {
+				newUIDsStartAt = f.uidsStartAt - uidSearchPaginateThreshold
+			}
 
 			uidSearchSet := imap.UIDSet{}
-			uidSearchSet.AddRange(newUIDsStartAt, f.uidsStartAt)
+			// UID 0 means * in a range, so the search itself must start at 1
+			uidSearchSet.AddRange(max(newUIDsStartAt, 1), f.uidsStartAt)
 			searchCriteria := &imap.SearchCriteria{UID: []imap.UIDSet{uidSearchSet}}
 
 			log.Debug().

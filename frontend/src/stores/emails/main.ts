@@ -1,17 +1,17 @@
 import _ from "lodash";
 
-import { PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
+import { EmailRef, PaginateOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { EventName } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import { Events } from "../../../wails/runtime.js";
+import { EventName } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { DockService } from "../../../bindings/github.com/wailsapp/wails/v3/pkg/services/dock/index.ts";
+import { Events } from "../../../wails/runtime.js";
 import { INBOX } from "../../constants.ts";
 import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import BaseEmails from "../../stores/emails/base.js";
 import requestStore from "../../stores/request.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
 import settingsStore from "../../stores/settings.ts";
+import { trackCaughtError } from "../../util/analytics.ts";
 import { encodeFolderName, formatAddress } from "../../util/string.js";
 import type { IPaginateOptions, ISyncOptions, Thread } from "./base.jsx";
 
@@ -65,6 +65,51 @@ class MainEmails extends BaseEmails {
         console.warn("[mainEmailStore] dock badge update failed", err);
         trackCaughtError("DockBadge", err);
       });
+  }
+
+  async searchReferences(accountKey: string, unreferencedAccountMessageIDs: Set<string>) {
+    console.debug(`Finding ${unreferencedAccountMessageIDs.size} references to messageIDs in ${accountKey}`);
+
+    const refs: EmailRef[] = [];
+    _.each(Array.from(unreferencedAccountMessageIDs), msgid => {
+      const email = this.emails.get(msgid)!;
+      refs.push(new EmailRef({
+        reference: email.messageId,
+        sentSince: email.date,
+      }))
+    })
+
+    let emails: (Email | null)[]
+    try {
+      emails = await requestStore.doFetchRequest(
+        `Search ${refs.length} references`,
+        EmailsService.SearchAccountReferences(accountKey, refs),
+      );
+    } catch (e) {
+      requestStore.addError("Failed to find references", e);
+      return;
+    }
+
+    console.debug(`Found ${emails.length} emails with reference to messageIDs`);
+    this.handleSearchOrFindEmails(accountKey, emails);
+  }
+
+  async findMessageIDs(accountKey: string, messageIDs: Set<string>) {
+    console.debug(`Finding ${messageIDs.size} messageIDs in ${accountKey}`);
+
+    let emails: (Email | null)[]
+    try {
+      emails = await requestStore.doFetchRequest(
+        `Search ${messageIDs.size} message IDs`,
+        EmailsService.FindAccountMessageIDs(accountKey, Array.from(messageIDs)),
+      )
+    } catch (e) {
+      requestStore.addError("Failed to find messageIDs", e);
+      return;
+    }
+
+    console.debug(`Found ${emails.length} emails with messageIDs`);
+    this.handleSearchOrFindEmails(accountKey, emails);
   }
 
   // Called every time we re-render a column, aim is to ensure we're looking at the latest emails

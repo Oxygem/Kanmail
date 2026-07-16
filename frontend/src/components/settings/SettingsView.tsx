@@ -644,6 +644,15 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         </>,
         { hint: "Requires restart" },
       )}
+      {this.renderCheckRow(
+        this.props.system.disableRemoteSearch,
+        () => this.updateSystem({ disableRemoteSearch: !this.props.system.disableRemoteSearch }),
+        <>
+          <span className="glabel">Disable remote search</span>
+          <span className="badge-exp">Experiment</span>
+        </>,
+        { hint: "Search only the local email cache, never the mail server" },
+      )}
     </>;
 
     return this.renderPanel("goodies-panel", body);
