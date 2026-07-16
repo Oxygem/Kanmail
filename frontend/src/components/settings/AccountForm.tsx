@@ -299,12 +299,12 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
   }
 
   renderUsernamePassword(settingKey) {
-    const { oauth_provider } = this.state[settingKey];
-    if (oauth_provider) {
+    const { oauthProvider } = this.state[settingKey];
+    if (oauthProvider) {
       return (
         <div className="wide">
           This account is connected via OAuth provider:{" "}
-          <strong>{oauth_provider}</strong>.
+          <strong>{oauthProvider}</strong>.
         </div>
       );
     }
