@@ -643,7 +643,8 @@ func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
 	hashedKey := hashLicenseKey(val)
 	checkedAt, err := a.caches.LicenseCache.Get(ctx, hashedKey)
 	if err != nil {
-		panic(err)
+		zerolog.Ctx(ctx).Err(err).Msg("Get license from cache failed")
+		return false
 	} else if checkedAt.After(time.Now().Add(-licenseCheckCachedTimeout)) {
 		// If checked in the longer cached timeout, we're good, this is for the UI so we don't
 		// immediately show unlicensed if backend is down or user has network issues.
