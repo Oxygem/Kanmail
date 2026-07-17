@@ -80,3 +80,5 @@ Kanmail is a desktop email client that functions like a kanban board, built with
 - Connection pools maintain 2 regular + 2 priority + 1 background IMAP connections per account
 
 - Do not include redundant or unncessary comments, code should be self-explanatory where possible
+
+- Do not attempt to launch and control the app via macOS accessibility or similar, ask the human to test 
