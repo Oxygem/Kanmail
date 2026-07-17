@@ -444,6 +444,22 @@ keyboard.register({
   handler: () => openCommandBar(),
 });
 
+// "always" scope to match native menu behaviour — settings should open even
+// when a modal or input has the keyboard suspended.
+keyboard.register({
+  id: "app.settings",
+  description: "Open settings",
+  scope: "always",
+  defaults: [
+    { key: ",", meta: true },
+    { key: ",", ctrl: true },
+  ],
+  handler: () => {
+    trackEvent("KeyboardOpenSettings");
+    AppService.OpenSettingsWindow();
+  },
+});
+
 keyboard.register({
   id: "app.search",
   description: "Focus search",
