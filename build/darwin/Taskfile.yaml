@@ -13,6 +13,16 @@ tasks:
         vars:
           PRODUCTION: '{{.PRODUCTION | default "false"}}'
     cmds:
+      - task: build:go
+        vars:
+          ARCH: '{{.ARCH}}'
+          OUTPUT: '{{.OUTPUT}}'
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
+
+  build:go:
+    summary: Compiles the Go binary for a single arch (assumes the frontend is already built)
+    internal: true
+    cmds:
       - go build {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -trimpath -buildvcs=false -ldflags="-w -s -X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="-X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{end}}'
@@ -30,17 +40,22 @@ tasks:
   build:universal:
     summary: Builds darwin universal binary (arm64 + amd64)
     deps:
-      - task: build
+      - task: common:generate:icons
+      - task: common:go:mod:tidy
+      - task: common:build:frontend
+        vars:
+          PRODUCTION: '{{.PRODUCTION | default "false"}}'
+    cmds:
+      - task: build:go
         vars:
           ARCH: amd64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-amd64"
           PRODUCTION: '{{.PRODUCTION | default "false"}}'
-      - task: build
+      - task: build:go
         vars:
           ARCH: arm64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
           PRODUCTION: '{{.PRODUCTION | default "false"}}'
-    cmds:
       - lipo -create -output "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
       - rm "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
 
