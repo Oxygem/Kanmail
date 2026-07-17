@@ -44,6 +44,7 @@ type AppService struct {
 	app              *application.App
 	caches           *caches.Caches
 	cacheDir         string
+	keyring          *util.CachedKeyring
 	analyticsEnabled bool
 
 	settingsWindow *application.WebviewWindow
@@ -55,9 +56,10 @@ type AppService struct {
 	DeviceID   string
 }
 
-func NewAppService(log zerolog.Logger, version int) *AppService {
+func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring) *AppService {
 	return &AppService{
 		log:         log.With().Str("component", "app").Logger(),
+		keyring:     keyring,
 		sendWindows: make([]*application.WebviewWindow, 0),
 		AppVersion:  version,
 
@@ -562,9 +564,11 @@ func (a *AppService) RemoveLicense(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	err := keyring.Delete(appDirName, a.getKeyringLicenseUser())
+	if err := a.keyring.Delete(appDirName, a.getKeyringLicenseUser()); err != nil {
+		return types.WrapError(err)
+	}
 	a.app.Event.Emit(string(types.LicenseChangedEvent))
-	return types.WrapError(err)
+	return nil
 }
 
 func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bool, error) {
@@ -578,15 +582,16 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 		return false, nil
 	}
 
-	if err := keyring.Set(appDirName, a.getKeyringLicenseUser(), licenseKey); err != nil {
+	if err := a.keyring.Set(appDirName, a.getKeyringLicenseUser(), licenseKey); err != nil {
 		// We failed to store the key, so even though it's valid we must tell the frontend we failed
 		return false, types.WrapError(err)
 	}
 
 	// Cache the key, ignore error here as will retry
-	err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey))
-	a.app.Event.Emit(string(types.LicenseChangedEvent))
-	return true, types.WrapError(err)
+	if err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey)); err != nil {
+		return false, types.WrapError(err)
+	}
+	return true, nil
 }
 
 // Checks license key, called by frontend on startup + LicenseChangedEvent events
@@ -598,7 +603,7 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	ctx = a.log.With().Str("method", "CheckLicense").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	val, err := keyring.Get(appDirName, a.getKeyringLicenseUser())
+	val, err := a.keyring.Get(appDirName, a.getKeyringLicenseUser())
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		return false, types.WrapError(err)
 	} else if val == "" {
@@ -632,7 +637,7 @@ func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
 	ctx = a.log.With().Str("method", "CheckCachedLicense").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	val, err := keyring.Get(appDirName, a.getKeyringLicenseUser())
+	val, err := a.keyring.Get(appDirName, a.getKeyringLicenseUser())
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		zerolog.Ctx(ctx).Err(err).Msg("Get license from keyring failed")
 		return false

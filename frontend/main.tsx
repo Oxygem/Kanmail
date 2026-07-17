@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
+import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import ErrorBoundary from "./src/components/ErrorBoundary.tsx";
 import showErrorInformation from "./src/components/ErrorInformation.tsx";
 import { TheTooltip } from "./src/components/Tooltip.tsx";
@@ -11,16 +12,6 @@ import systemStore from "./src/stores/system.ts";
 import "./src/style.less";
 import { setupThemes } from "./src/theme.js";
 
-import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import DebugApp from "./src/components/debug/DebugApp.tsx";
-import EmailsApp from "./src/components/emails/EmailsApp.tsx";
-import LicenseApp from "./src/components/license/LicenseApp.tsx";
-import MetaApp from "./src/components/meta/MetaApp.tsx";
-import SendApp from "./src/components/send/SendApp.tsx";
-import SettingsApp from "./src/components/settings/SettingsApp.tsx";
-import { safeDocumentFromHtml } from "./src/util/html.ts";
-import { formatAddress } from "./src/util/string.ts";
-
 const bootApp = (
     Component: typeof React.Component,
     rootElement: Element,
@@ -28,17 +19,6 @@ const bootApp = (
 ) => {
     console.log("Booting app", Component, rootElement);
 
-    // document.body.removeChild(document.getElementById("no-app"));
-
-    const classNames: string[] = [];
-    // const classNames = [window.KANMAIL_PLATFORM];
-    // if (window.KANMAIL_FRAMELESS) {
-    classNames.push("frameless");
-    // }
-
-    // Settings hydrate synchronously from window.KANMAIL_SETTINGS (defined by
-    // the backend-served /kanmail-settings.js script), so getSettings()
-    // resolves without IPC before first paint; everything else loads after.
     Promise.all([
         settingsStore.getSettings(),
         systemStore.checkCachedLicense(),
@@ -52,7 +32,7 @@ const bootApp = (
 
         ReactDOM.render(
             <ErrorBoundary>
-                <section className={classNames.join(" ")} >
+                <section>
                     <TheTooltip />
                     < Component {...rootProps} />
                 </section>
@@ -69,6 +49,50 @@ const bootApp = (
     });
 };
 
+const bootSendApp = async (
+    appContainer: Element,
+    urlParams: URLSearchParams,
+) => {
+    const [
+        { default: SendApp },
+        { safeDocumentFromHtml },
+        { formatAddress },
+    ] = await Promise.all([
+        import("./src/components/send/SendApp.tsx"),
+        import("./src/util/html.ts"),
+        import("./src/util/string.ts"),
+    ]);
+
+    if (!urlParams.get("mode")) {
+        bootApp(SendApp, appContainer);
+        return;
+    }
+
+    EmailsService.GetAccountFolderEmailAndContent(
+        urlParams.get("accountName")!,
+        urlParams.get("folderName")!,
+        parseInt(urlParams.get("uid")!),
+    ).then(([email, data]) => {
+        const doc = safeDocumentFromHtml(data!.data);
+        const title = `On ${email!.date} ${formatAddress(email!.from[0])} wrote:`
+        const content = `
+    <p></p>
+    ${title}:
+
+    <blockquote>${doc}</blockquote>`;
+
+        bootApp(SendApp, appContainer, {
+            message: email,
+            messageContent: content,
+            mode: urlParams.get("mode") || "reply",
+        })
+    }).catch(() => {
+        bootApp(SendApp, appContainer, {
+            messageContent: "failed to load reply to email",
+        })
+    })
+}
+
 const main = () => {
     const appContainer = document.querySelector("[data-app-root]")!;
 
@@ -77,54 +101,37 @@ const main = () => {
 
     switch (app) {
         case "emails":
-            bootApp(EmailsApp, appContainer);
+            import("./src/components/emails/EmailsApp.tsx").then(
+                ({ default: EmailsApp }) => bootApp(EmailsApp, appContainer),
+            );
             break;
         case "settings":
-            bootApp(SettingsApp, appContainer);
+            import("./src/components/settings/SettingsApp.tsx").then(
+                ({ default: SettingsApp }) => bootApp(SettingsApp, appContainer),
+            );
             break;
         case "license":
-            bootApp(LicenseApp, appContainer);
+            import("./src/components/license/LicenseApp.tsx").then(
+                ({ default: LicenseApp }) => bootApp(LicenseApp, appContainer),
+            );
             break;
         case "meta":
-            bootApp(MetaApp, appContainer);
+            import("./src/components/meta/MetaApp.tsx").then(
+                ({ default: MetaApp }) => bootApp(MetaApp, appContainer),
+            );
             break;
         case "debug":
-            const props = {
-                accountName: urlParams.get("accountName")!,
-                folderName: urlParams.get("folderName")!,
-                uid: urlParams.get("uid")!,
-            };
-            bootApp(DebugApp, appContainer, props);
+            import("./src/components/debug/DebugApp.tsx").then(
+                ({ default: DebugApp }) =>
+                    bootApp(DebugApp, appContainer, {
+                        accountName: urlParams.get("accountName")!,
+                        folderName: urlParams.get("folderName")!,
+                        uid: urlParams.get("uid")!,
+                    }),
+            );
             break;
         case "send":
-            if (urlParams.get("mode")) {
-                EmailsService.GetAccountFolderEmailAndContent(
-                    urlParams.get("accountName")!,
-                    urlParams.get("folderName")!,
-                    parseInt(urlParams.get("uid")!),
-                ).then(([email, data]) => {
-                    const doc = safeDocumentFromHtml(data!.data);
-                    const title = `On ${email!.date} ${formatAddress(email!.from[0])} wrote:`
-                    const content = `
-    <p></p>
-    ${title}:
-
-    <blockquote>${doc}</blockquote>`;
-
-                    bootApp(SendApp, appContainer, {
-                        message: email,
-                        messageContent: content,
-                        mode: urlParams.get("mode") || "reply",
-                    })
-                    return;
-                }).catch(() => {
-                    bootApp(SendApp, appContainer, {
-                        messageContent: "failed to load reply to email",
-                    })
-                })
-                break;
-            }
-            bootApp(SendApp, appContainer);
+            bootSendApp(appContainer, urlParams);
             break;
         default:
             console.warn(`unknown app: ${app}`);

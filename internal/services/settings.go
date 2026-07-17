@@ -41,6 +41,7 @@ type SettingsService struct {
 	settingsLock sync.RWMutex
 
 	appService *AppService
+	keyring    *util.CachedKeyring
 
 	AppDir   string
 	CacheDir string
@@ -49,7 +50,7 @@ type SettingsService struct {
 	onPutSettingsCallbacks []func(context.Context, types.Settings) error
 }
 
-func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService) *SettingsService {
+func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService, keyring *util.CachedKeyring) *SettingsService {
 	dirs := appdir.New(appDirName)
 
 	if err := os.MkdirAll(dirs.UserConfig(), os.ModePerm); err != nil {
@@ -71,6 +72,7 @@ func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppS
 
 		settingsFile: path.Join(dirs.UserConfig(), settingsFilename),
 		appService:   appService,
+		keyring:      keyring,
 
 		AppDir:   dirs.UserConfig(),
 		CacheDir: dirs.UserCache(),
@@ -242,14 +244,14 @@ func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *t
 	conn.HasCredentials = false
 
 	if conn.Password != "" {
-		if err := keyring.Set(appDirName, s.getKeyringUser("email", name), conn.Password); err != nil {
+		if err := s.keyring.Set(appDirName, s.getKeyringUser("email", name), conn.Password); err != nil {
 			panic(err)
 		}
 		conn.Password = ""
 	}
 
 	if conn.OAuthRefreshToken != "" {
-		if err := keyring.Set(appDirName, s.getKeyringUser("oauth", name), conn.OAuthRefreshToken); err != nil {
+		if err := s.keyring.Set(appDirName, s.getKeyringUser("oauth", name), conn.OAuthRefreshToken); err != nil {
 			panic(err)
 		}
 		conn.OAuthRefreshToken = ""
@@ -259,7 +261,7 @@ func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *t
 func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) {
 	conn.HasCredentials = false
 
-	val, err := keyring.Get(appDirName, s.getKeyringUser("email", name))
+	val, err := s.keyring.Get(appDirName, s.getKeyringUser("email", name))
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		panic(err)
 	}
@@ -267,7 +269,7 @@ func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn 
 		conn.Password = val
 	}
 
-	val, err = keyring.Get(appDirName, s.getKeyringUser("oauth", name))
+	val, err = s.keyring.Get(appDirName, s.getKeyringUser("oauth", name))
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		panic(err)
 	}
