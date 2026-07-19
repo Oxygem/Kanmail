@@ -5,7 +5,15 @@ import (
 	"sync"
 
 	"github.com/zalando/go-keyring"
+
+	"github.com/oxygem/kanmail/internal/constants"
 )
+
+func init() {
+	if constants.ENV_DEBUG_FAKE_KEYRING != "" {
+		keyring.MockInit()
+	}
+}
 
 type keyringKey struct {
 	service, user string
