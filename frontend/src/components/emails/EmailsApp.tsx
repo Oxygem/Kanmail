@@ -14,7 +14,6 @@ import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { collectVisibleThreadComponents } from "../../util/threads.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
-import HeaderErrors from "../HeaderErrors.tsx";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
 import CommandBar from "./CommandBar.tsx";
@@ -204,8 +203,7 @@ export default class EmailsApp extends React.Component<ISettings> {
         <div className="km-toolbar-divider"></div>
         {/* @ts-ignore */}
         <Search />
-        {/* @ts-ignore */}
-        <HeaderErrors />
+        <div className="header-errors-anchor"></div>
         <div className="spacer" data-tauri-drag-region></div>
         <button
           className="btn-primary"

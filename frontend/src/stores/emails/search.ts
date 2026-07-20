@@ -2,7 +2,6 @@ import _ from "lodash";
 
 import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
 import { encodeFolderName } from "../../util/string.js";
 import { getColumnMetaStore } from "../columns.js";
 import BaseEmails from "../emails/base.js";
@@ -63,7 +62,7 @@ class SearchEmails extends BaseEmails {
     };
     return Promise.all(requests).then(finishLoading).catch((e) => {
       finishLoading();
-      trackCaughtError("search", e);
+      requestStore.addError("Failed to search emails", e);
     });
   };
 
@@ -100,7 +99,7 @@ class SearchEmails extends BaseEmails {
     // authoritative server search runs. Failures here are non-fatal.
     const cachedRequest = EmailsService.SearchCachedAccountFolderEmails(
       accountName, folderName, this.searchValue,
-    ).then(addResults).catch((e) => trackCaughtError("search-cached", e));
+    ).then(addResults).catch((e) => requestStore.addError("Failed to search cached emails", e, { silent: true }));
 
     if (settingsStore.props.system.disableRemoteSearch) {
       return cachedRequest;

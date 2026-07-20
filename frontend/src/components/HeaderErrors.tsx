@@ -1,5 +1,6 @@
 import _ from "lodash";
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 
 import { SUPPORT_DOC_LINK } from "../constants.ts";
 import { openLink } from "../window.ts";
@@ -126,6 +127,34 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
       <div className="header-errors">
         {this.renderRequestErrors()}
         {this.renderNetworkErrorIcon()}
+      </div>
+    );
+  }
+}
+
+// Renders the error indicators into the window's chrome when it provides a
+// div.header-errors-anchor (emails toolbar, settings/send titlebars), falling
+// back to a floating overlay for windows without one. Subscribed to the store
+// so the anchor is re-checked as the app renders (eg onboarding has no toolbar
+// until the first account is added).
+@subscribe(requestStore)
+export class HeaderErrorsHost extends Component<IRequestStoreProps> {
+  componentDidMount() {
+    // The anchor mounts in the same commit as this component - re-render now
+    // that the window's DOM exists.
+    this.forceUpdate();
+  }
+
+  render() {
+    const anchor = document.querySelector("div.header-errors-anchor");
+    if (anchor) {
+      // @ts-ignore
+      return ReactDOM.createPortal(<HeaderErrors />, anchor);
+    }
+    return (
+      <div className="floating-errors">
+        {/* @ts-ignore */}
+        <HeaderErrors />
       </div>
     );
   }

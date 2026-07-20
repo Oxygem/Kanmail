@@ -21,70 +21,6 @@ header {
     }
   }
 
-  div.header-errors {
-    text-align: right;
-    position: absolute;
-    z-index: 1000;
-    top: 8px;
-    left: 80px;
-
-    i {
-      line-height: 16px;
-    }
-
-    div.icon-wrapper {
-      padding-right: 10px;
-      display: inline-block;
-      position: relative;
-
-      a {
-        color: white;
-      }
-    }
-
-    div.icon-contents {
-      display: none;
-      position: absolute;
-      width: 600px;
-      border: 5px solid;
-      max-height: 500px;
-      overflow-y: auto;
-      padding: 5px;
-      color: black;
-      left: 100%;
-      text-align: left;
-      pointer-events: all;
-      user-select: text;
-
-      p {
-        margin: 15px 0 10px 0;
-        padding-bottom: 10px;
-        border-bottom: 1px solid;
-        line-height: 24px;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        textarea {
-          font-size: @textSize;
-          line-height: 20px;
-          resize: none;
-          height: 100px;
-        }
-
-        button {
-          float: right;
-        }
-      }
-    }
-
-    div.icon-contents:hover,
-    div.icon-wrapper:hover div.icon-contents {
-      display: block;
-    }
-  }
-
   &.header-bar {
     font-size: 15px;
     width: 100%;
@@ -135,16 +71,6 @@ header {
     .button-set {
       button {
         margin-left: @borderRadius;
-      }
-    }
-
-    div.header-errors {
-      margin-top: 20px;
-      position: absolute;
-
-      div.icon-contents {
-        margin-left: -600px;
-        left: 0;
       }
     }
   }

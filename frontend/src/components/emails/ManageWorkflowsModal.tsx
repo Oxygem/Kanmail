@@ -5,7 +5,7 @@ import { ColumnGroup } from "../../../bindings/github.com/oxygem/kanmail/interna
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
+import requestStore from "../../stores/request.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
 
 interface IManageWorkflowsModalProps extends Partial<ISettings> {
@@ -83,10 +83,7 @@ export default class ManageWorkflowsModal extends React.Component<
     }
     settingsStore
       .renameColumnGroup(renamingIndex, renameValue)
-      .catch((e) => {
-        console.error("Failed to rename workflow", e);
-        trackCaughtError("WorkflowRenameFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to rename workflow", e));
     this.setState({ renamingIndex: null, renameValue: "" });
   };
 
@@ -95,19 +92,13 @@ export default class ManageWorkflowsModal extends React.Component<
   handleDuplicate = (index: number) => {
     settingsStore
       .duplicateColumnGroup(index)
-      .catch((e) => {
-        console.error("Failed to duplicate workflow", e);
-        trackCaughtError("WorkflowDuplicateFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to duplicate workflow", e));
   };
 
   handleDelete = (index: number) => {
     settingsStore
       .deleteColumnGroup(index)
-      .catch((e) => {
-        console.error("Failed to delete workflow", e);
-        trackCaughtError("WorkflowDeleteFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to delete workflow", e));
   };
 
   submitCreate = () => {
@@ -118,10 +109,7 @@ export default class ManageWorkflowsModal extends React.Component<
     }
     settingsStore
       .createColumnGroup(name)
-      .catch((e) => {
-        console.error("Failed to create workflow", e);
-        trackCaughtError("WorkflowCreateFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to create workflow", e));
     this.setState({ creating: false, newName: "" });
   };
 
@@ -133,10 +121,7 @@ export default class ManageWorkflowsModal extends React.Component<
     }
     settingsStore
       .reorderColumnGroups(dragIndex, targetIndex)
-      .catch((e) => {
-        console.error("Failed to reorder workflows", e);
-        trackCaughtError("WorkflowReorderFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to reorder workflows", e));
   };
 
   dragOverClass(index: number): string {

@@ -11,7 +11,6 @@ import { getColumnMetaStore, getColumnStore } from "../../stores/columns.ts";
 import BaseEmails from "../../stores/emails/base.js";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
 import { encodeFolderName, formatAddress } from "../../util/string.js";
 import type { IPaginateOptions, ISyncOptions, Thread } from "./base.jsx";
 
@@ -63,7 +62,7 @@ class MainEmails extends BaseEmails {
       .then(() => console.debug("[mainEmailStore] dock badge updated", unreadCount))
       .catch((err) => {
         console.warn("[mainEmailStore] dock badge update failed", err);
-        trackCaughtError("DockBadge", err);
+        requestStore.addError("Failed to update dock badge", err, { silent: true });
       });
   }
 

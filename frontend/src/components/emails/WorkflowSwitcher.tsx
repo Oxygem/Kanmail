@@ -5,7 +5,7 @@ import { ColumnGroup } from "../../../bindings/github.com/oxygem/kanmail/interna
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
-import { trackCaughtError } from "../../util/analytics.ts";
+import requestStore from "../../stores/request.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
 import ManageWorkflowsModal from "./ManageWorkflowsModal.tsx";
 
@@ -111,19 +111,13 @@ export default class WorkflowSwitcher extends React.Component<Partial<ISettings>
     settingsStore
       .createColumnGroup(name)
       .then(() => this.close())
-      .catch((e) => {
-        console.error("Failed to create workflow", e);
-        trackCaughtError("WorkflowCreateFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to create workflow", e));
   };
 
   duplicateCurrent = () => {
     settingsStore
       .duplicateColumnGroup(settingsStore.props.currentColumnGroupIndex)
-      .catch((e) => {
-        console.error("Failed to duplicate workflow", e);
-        trackCaughtError("WorkflowDuplicateFailed", e);
-      });
+      .catch((e) => requestStore.addError("Failed to duplicate workflow", e));
     this.close();
   };
 

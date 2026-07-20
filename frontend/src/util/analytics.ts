@@ -28,17 +28,6 @@ export async function trackError(
     });
 }
 
-// Track an error caught in a .catch/try-catch that would otherwise be swallowed.
-// Pulls the isNetwork/accountName/folderName metadata off the wrapped backend
-// error so downstream can distinguish network failures rather than dropping them.
-export function trackCaughtError(action: string, e: any): void {
-    trackError(action, e?.message ?? String(e), e?.stack, {
-        isNetwork: Boolean(e?.cause?.isNetwork),
-        accountName: e?.cause?.accountName,
-        folderName: e?.cause?.folderName,
-    });
-}
-
 export async function trackEvent(eventName: string, properties: params = {}): Promise<void> {
     console.debug("[analytics] sending event", eventName, properties);
 

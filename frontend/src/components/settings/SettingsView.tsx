@@ -688,6 +688,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         onClick={() => (this.setState({ tab: "licensed" }))}
         className={this.state.tab == "licensed" ? "active" : ""}
       >🏆 Goodies</a> : null}
+      <div className="header-errors-anchor"></div>
     </nav>;
   }
 

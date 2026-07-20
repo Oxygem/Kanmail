@@ -54,29 +54,46 @@ class RequestStore extends BaseStore {
     };
   }
 
-  addError = (action: string, err: any) => {
+  addError = (action: string, rawErr: unknown, options: { silent?: boolean } = {}) => {
+    // Global handlers can deliver anything here: undefined (cross-origin
+    // onerror, bare Promise.reject()), strings, or real Errors.
+    const err: Error =
+      rawErr instanceof Error
+        ? rawErr
+        : new Error(
+            rawErr === undefined || rawErr === null
+              ? `Unknown error (${action})`
+              : String(rawErr),
+          );
+
     const newError: RuntimeError = {
       action,
       message: err.message,
     };
     let target = this.props.requestErrors;
-    if (err.cause) {
-      if (err.cause.isNetwork) {
+    const cause = (err as any).cause;
+    if (cause) {
+      if (cause.isNetwork) {
         newError.isNetwork = true;
         target = this.props.networkErrors;
       }
-      if (err.cause.accountName) {
-        newError.accountName = err.cause.accountName;
+      if (cause.accountName) {
+        newError.accountName = cause.accountName;
       }
-      if (err.cause.folderName) {
-        newError.folderName = err.cause.folderName;
+      if (cause.folderName) {
+        newError.folderName = cause.folderName;
       }
-      if (err.cause.error) {
-        newError.error = err.cause.error;
+      if (cause.error) {
+        newError.error = cause.error;
       }
     }
-    target.unshift(newError);
-    this.triggerUpdate();
+    // Silent errors skip the UI lists (the caller shows its own feedback or
+    // the failure is non-fatal background work) but still follow the same
+    // classification & tracking policy below.
+    if (!options.silent) {
+      target.unshift(newError);
+      this.triggerUpdate();
+    }
     console.debug("[requestStore] Received error", err, newError);
 
     if (!newError.isNetwork) {
@@ -203,12 +220,19 @@ const requestStore = new RequestStore();
 window.requestStore = requestStore;
 export default requestStore;
 
-// Pass global JS errors to the requestStore
-window.onerror = (message, source, lineno, colno, e) => {
-  requestStore.addError("JS error", e);
-  return false;
-};
+// Pass global JS errors to the requestStore. Called explicitly by main.tsx for
+// every window - as an import side-effect some windows (license) never got them.
+export const installGlobalErrorHandlers = () => {
+  window.onerror = (message, source, lineno, colno, e) => {
+    // e is undefined for cross-origin script errors - synthesize one
+    requestStore.addError(
+      "JS error",
+      e ?? new Error(`${String(message)} (${source}:${lineno}:${colno})`),
+    );
+    return false;
+  };
 
-window.onunhandledrejection = (ev) => {
-  requestStore.addError("Promise rejection", ev.reason);
-}
+  window.onunhandledrejection = (ev) => {
+    requestStore.addError("Promise rejection", ev.reason);
+  };
+};

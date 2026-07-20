@@ -4,13 +4,32 @@ import ReactDOM from "react-dom";
 import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import ErrorBoundary from "./src/components/ErrorBoundary.tsx";
 import showErrorInformation from "./src/components/ErrorInformation.tsx";
+import { HeaderErrorsHost } from "./src/components/HeaderErrors.tsx";
 import { TheTooltip } from "./src/components/Tooltip.tsx";
 import "./src/fonts/fontawesome/css/font-awesome.css";
 import "./src/fonts/open-sans/css/open-sans.css";
+import { installGlobalErrorHandlers } from "./src/stores/request.ts";
 import settingsStore from "./src/stores/settings.ts";
 import systemStore from "./src/stores/system.ts";
 import "./src/style.less";
 import { setupThemes } from "./src/theme.js";
+
+const renderBootError = (rootElement: Element) => (error: any) => {
+    console.error("Boot failed", error);
+
+    const noApp = document.getElementById("no-app");
+    if (noApp) {
+        noApp.parentNode!.removeChild(noApp);
+    }
+
+    ReactDOM.render(
+        showErrorInformation({
+            error: String(error?.message ?? error),
+            componentStack: error?.stack,
+        }),
+        rootElement,
+    );
+};
 
 const bootApp = (
     Component: typeof React.Component,
@@ -34,6 +53,8 @@ const bootApp = (
             <ErrorBoundary>
                 <section>
                     <TheTooltip />
+                    {/* @ts-ignore */}
+                    <HeaderErrorsHost />
                     < Component {...rootProps} />
                 </section>
             </ErrorBoundary>,
@@ -46,7 +67,7 @@ const bootApp = (
         systemStore.checkDebug();
         systemStore.getLogFilename();
         systemStore.getExecutableFilename();
-    });
+    }).catch(renderBootError(rootElement));
 };
 
 const bootSendApp = async (
@@ -94,31 +115,35 @@ const bootSendApp = async (
 }
 
 const main = () => {
+    installGlobalErrorHandlers();
+
     const appContainer = document.querySelector("[data-app-root]")!;
 
     const urlParams = new URLSearchParams(window.location.search);
     const app = urlParams.get("app");
 
+    const bootError = renderBootError(appContainer);
+
     switch (app) {
         case "emails":
             import("./src/components/emails/EmailsApp.tsx").then(
                 ({ default: EmailsApp }) => bootApp(EmailsApp, appContainer),
-            );
+            ).catch(bootError);
             break;
         case "settings":
             import("./src/components/settings/SettingsApp.tsx").then(
                 ({ default: SettingsApp }) => bootApp(SettingsApp, appContainer),
-            );
+            ).catch(bootError);
             break;
         case "license":
             import("./src/components/license/LicenseApp.tsx").then(
                 ({ default: LicenseApp }) => bootApp(LicenseApp, appContainer),
-            );
+            ).catch(bootError);
             break;
         case "meta":
             import("./src/components/meta/MetaApp.tsx").then(
                 ({ default: MetaApp }) => bootApp(MetaApp, appContainer),
-            );
+            ).catch(bootError);
             break;
         case "debug":
             import("./src/components/debug/DebugApp.tsx").then(
@@ -128,10 +153,10 @@ const main = () => {
                         folderName: urlParams.get("folderName")!,
                         uid: urlParams.get("uid")!,
                     }),
-            );
+            ).catch(bootError);
             break;
         case "send":
-            bootSendApp(appContainer, urlParams);
+            bootSendApp(appContainer, urlParams).catch(bootError);
             break;
         default:
             console.warn(`unknown app: ${app}`);

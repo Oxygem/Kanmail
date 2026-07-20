@@ -1,0 +1,165 @@
+/*
+  Sync/UI error indicators (pill + hover popover), mounted once per window by
+  main.tsx via HeaderErrorsHost. Windows that provide a div.header-errors-anchor
+  in their chrome (emails toolbar, settings/send titlebars) get the pill inline
+  there; windows without one (license, meta, debug, onboarding) get the fixed
+  floating fallback below.
+*/
+div.header-errors {
+  flex: none;
+
+  div.icon-wrapper {
+    position: relative;
+    display: inline-block;
+
+    // Invisible bridge over the 8px gap to the popover so the hover isn't
+    // lost as the cursor travels from the icon down into the popover.
+    // Lives on the wrapper (not the popover, which clips it via overflow).
+    &:hover::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 100%;
+      width: 100%;
+      height: 8px;
+    }
+
+    > a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 12px;
+      border-radius: var(--r-md);
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      color: var(--red, #e5484d);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+
+      i.error {
+        font-size: 14px;
+        line-height: 1;
+        color: var(--red, #e5484d);
+      }
+
+      &:hover {
+        border-color: var(--red, #e5484d);
+      }
+    }
+  }
+
+  div.icon-contents {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 460px;
+    max-width: 80vw;
+    max-height: 460px;
+    overflow-y: auto;
+    z-index: 1300;
+    padding: 16px 18px;
+    border-radius: var(--r-lg);
+    background: var(--bg);
+    border: 1px solid var(--ring);
+    box-shadow: var(--shadow);
+    color: var(--ink);
+    text-align: left;
+    cursor: default;
+    user-select: text;
+
+    strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    > p {
+      margin: 0 0 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+
+      a {
+        color: var(--brand-pink);
+        cursor: pointer;
+      }
+    }
+
+    p {
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--divider);
+
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      span.meta {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+
+      textarea {
+        width: 100%;
+        height: 90px;
+        resize: none;
+        font-size: 12px;
+        line-height: 1.5;
+        padding: 8px 10px;
+        border-radius: var(--r-sm);
+        border: 1px solid var(--ring);
+        background: var(--pill);
+        color: var(--muted);
+      }
+    }
+  }
+
+  div.icon-wrapper:hover div.icon-contents,
+  div.icon-contents:hover {
+    display: block;
+  }
+}
+
+/* In-chrome anchor: an empty flex child in a window's toolbar/titlebar the
+   host portals into. Titlebars are drag regions, so the pill opts out. */
+div.header-errors-anchor {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
+/* Emails toolbar: pill sits beside search, popover opens rightwards. */
+div.km-toolbar div.header-errors div.icon-contents {
+  left: 0;
+  right: auto;
+}
+
+/* Settings tab bar: push the pill to the right edge, clear of the tabs. */
+nav.titlebar div.header-errors-anchor {
+  margin-left: auto;
+}
+
+/* Floating fallback for windows without an anchor. */
+div.floating-errors {
+  position: fixed;
+  top: 60px; // clears every window's titlebar/toolbar (tallest: @topHeight)
+  right: 12px;
+  z-index: 1300;
+  display: flex;
+  gap: 8px;
+  pointer-events: none; // HeaderErrors renders null when empty; never block clicks
+
+  div.header-errors {
+    pointer-events: auto;
+  }
+}

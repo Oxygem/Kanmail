@@ -387,6 +387,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           <span className="title">
             <i className="fa fa-pencil" /> New Message
           </span>
+          <div className="header-errors-anchor"></div>
         </header>
 
         <form
