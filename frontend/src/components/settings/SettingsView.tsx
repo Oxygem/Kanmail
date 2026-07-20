@@ -6,6 +6,7 @@ import { AccountSettings, Address, CacheStats, Settings } from "../../../binding
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import keyboard from "../../keyboard.ts";
+import filterStore from "../../stores/filters.ts";
 import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
@@ -253,6 +254,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     const items = this.props.accounts;
     items.push(newSettings);
     this.setAccounts(items);
+    this.setState({ showAccountForm: false });
   };
 
   updateAccount = (itemIndex: number, newSettings: AccountSettings) => {
@@ -693,9 +695,13 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
   }
 
   renderAccounts() {
-    let accountForm: React.JSX.Element
+    let accountForm: React.JSX.Element | null = null;
     if (this.props.isWelcomeSettings) {
-      accountForm = <NewAccountForm addItem={this.addAccount} />;
+      // Show the form until the first account is added, after that it expands
+      // via the "Add another account" welcome action button
+      if (_.isEmpty(this.props.accounts) || this.state.showAccountForm) {
+        accountForm = <NewAccountForm addItem={this.addAccount} />;
+      }
     } else if (this.state.showAccountForm) {
       accountForm = <NewAccountForm
         addItem={this.addAccount}
@@ -760,17 +766,35 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     return (
       <div className="welcome-actions">
-        <button
-          type="submit"
-          className="main-button"
-          // Apply the settings we have (held by WelcomeSettings) to the main store
-          onClick={() => {
-            trackEvent("OnboardingComplete");
-            settingsStore.updateSettings(this.props);
-          }}
-        >
-          Start using Kanmail <i className="fa fa-arrow-right" />
-        </button>
+        <div className="welcome-buttons">
+          {!this.state.showAccountForm && <button
+            className="add-account-button"
+            onClick={() => this.setState({ showAccountForm: true })}
+          >
+            <i className="fa fa-plus" /> Add another account
+          </button>}
+          <button
+            type="submit"
+            className="main-button"
+            // Apply the settings we have (held by WelcomeSettings) to the main store
+            onClick={async () => {
+              trackEvent("OnboardingComplete");
+              AppService.ResizeWindow(
+                Math.round(Math.min(window.screen.availWidth * 0.9, 1600)),
+                Math.round(Math.min(window.screen.availHeight * 0.9, 1000)),
+              );
+              await settingsStore.updateSettings(this.props);
+              // Fetch folders here once the accounts exist backend-side —
+              // EmailsApp can't detect them being added because welcome
+              // settings mutate the store accounts array in-place
+              this.props.accounts.forEach(
+                account => filterStore.getAccountFolderNames(account.name),
+              );
+            }}
+          >
+            Start using Kanmail <i className="fa fa-arrow-right" />
+          </button>
+        </div>
         {this.renderPrivacyToggles()}
       </div>
     );

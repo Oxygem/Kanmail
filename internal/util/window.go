@@ -26,6 +26,9 @@ type WindowOptions struct {
 	Compact bool
 	Values  url.Values
 
+	// When false X/Y are ignored and the window is centered on screen
+	HasPosition bool
+
 	Width,
 	Height,
 	X,
@@ -59,6 +62,11 @@ func MakeWindow(ctx context.Context, app *application.App, options WindowOptions
 		Bool("debug", isDebug).
 		Msg("Making new window")
 
+	initialPosition := application.WindowCentered
+	if options.HasPosition {
+		initialPosition = application.WindowXY
+	}
+
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title: options.Title,
 		Mac: application.MacWindow{
@@ -71,6 +79,7 @@ func MakeWindow(ctx context.Context, app *application.App, options WindowOptions
 		URL:              url,
 		Width:            options.Width,
 		Height:           options.Height,
+		InitialPosition:  initialPosition,
 		X:                options.X,
 		Y:                options.Y,
 	})

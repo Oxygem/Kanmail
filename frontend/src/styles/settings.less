@@ -695,6 +695,17 @@ section#settings-app #settings .km-settings {
         &:hover {
           filter: brightness(1.04);
         }
+
+        &:disabled {
+          background: var(--input);
+          color: var(--muted);
+          box-shadow: none;
+          cursor: default;
+
+          &:hover {
+            filter: none;
+          }
+        }
       }
 
       button.cancel {
@@ -1093,6 +1104,46 @@ section#welcome-settings {
 
   &:hover {
     filter: brightness(1.04);
+  }
+
+  &:disabled {
+    background: var(--input);
+    color: var(--muted);
+    box-shadow: none;
+    cursor: default;
+
+    &:hover {
+      filter: none;
+    }
+  }
+}
+
+// Inside form button rows the big main-button style above wins on specificity,
+// leaving submit buttons taller + vertically offset from their cancel buttons
+#settings .account-control-buttons button.main-button {
+  height: 40px;
+  margin: 0;
+  font-size: 14px;
+  border-radius: var(--r-md);
+  box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
+}
+
+#settings .welcome-actions {
+  padding-bottom: 40px;
+
+  .welcome-buttons {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    // Match the "Start using Kanmail" main-button dimensions
+    .add-account-button {
+      height: 46px;
+      padding: 0 26px;
+      margin: 8px 0 22px;
+      font-size: 16px;
+      border-radius: var(--r-lg);
+    }
   }
 }
 

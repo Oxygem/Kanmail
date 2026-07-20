@@ -117,6 +117,7 @@ export default class EmailsApp extends React.Component<ISettings> {
     const added = _.without(names, ...prevNames);
     added.forEach(name => {
       mainEmailStore.onAddAccount(name);
+      filterStore.getAccountFolderNames(name);
     });
 
     const removed = _.without(prevNames, ...names);

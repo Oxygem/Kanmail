@@ -118,6 +118,8 @@ func (k *Kanmail) Run() error {
 	options := util.WindowOptions{
 		Title:   "Kanmail v2",
 		AppName: startApp,
+		Width:   930,
+		Height:  600,
 	}
 	// Restore saved window position and size
 	savedState, err := k.Caches.WindowStateCache.Get(ctx, mainWindowName)
@@ -131,6 +133,7 @@ func (k *Kanmail) Run() error {
 			Int("height", savedState.Height).
 			Str("screen_id", savedState.ScreenID).
 			Msg("Restoring window state")
+		options.HasPosition = true
 		options.X = savedState.X
 		options.Y = savedState.Y
 		if savedState.Width > 100 && savedState.Height > 100 {
@@ -147,10 +150,16 @@ func (k *Kanmail) Run() error {
 	}
 
 	emailsWindow := util.MakeWindow(ctx, k.App, options)
+	k.AppService.SetMainWindow(emailsWindow)
 
 	k.App.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(*application.ApplicationEvent) {
 		// Open realtime (IDLE) watches on the displayed columns
 		k.WatchManager.Start(ctx)
+
+		// No saved state: leave the window where Wails centered it
+		if savedState == nil {
+			return
+		}
 
 		// Initial position doesn't seem to work (macOS)?
 		emailsWindow.SetPosition(options.X, options.Y)
@@ -159,7 +168,7 @@ func (k *Kanmail) Run() error {
 		// rearranged, monitor unplugged, screen ID changed across a cable
 		// swap), the absolute coords would otherwise land on the wrong screen.
 		// Look the saved screen up in the current layout and re-anchor.
-		if savedState == nil || savedState.ScreenID == "" {
+		if savedState.ScreenID == "" {
 			return
 		}
 		target := findRestoreScreen(k.App.Screen.GetAll(), savedState)

@@ -47,6 +47,7 @@ type AppService struct {
 	keyring          *util.CachedKeyring
 	analyticsEnabled bool
 
+	mainWindow     *application.WebviewWindow
 	settingsWindow *application.WebviewWindow
 	licenseWindow  *application.WebviewWindow
 	metaWindow     *application.WebviewWindow
@@ -72,6 +73,19 @@ func (a *AppService) Bootstrap(app *application.App, caches *caches.Caches, cach
 	a.app = app
 	a.caches = caches
 	a.cacheDir = cacheDir
+}
+
+func (a *AppService) SetMainWindow(window *application.WebviewWindow) {
+	a.mainWindow = window
+}
+
+// ResizeWindow resizes + re-centers the main window, used after onboarding
+func (a *AppService) ResizeWindow(ctx context.Context, width, height int) {
+	if a.mainWindow == nil {
+		return
+	}
+	a.mainWindow.SetSize(width, height)
+	a.mainWindow.Center()
 }
 
 func (a *AppService) SetAnalyticsEnabled(enabled bool) {

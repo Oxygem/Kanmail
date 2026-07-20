@@ -408,6 +408,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 				this.setState({
 					newAccountAddressEmail: resp.email,
 					newAccountAddressName: deriveNameFromEmail(resp.email),
+					newAccountName: settings.imapSettings.username || resp.email,
 					newAccountSettings: settings,
 					isLoadingNewAccount: false,
 				});
