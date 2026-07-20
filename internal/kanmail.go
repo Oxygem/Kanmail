@@ -80,6 +80,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	})
 	app.OnShutdown(func() {
 		watchManager.Stop()
+		util.FlushNetworkErrors(log.WithContext(context.Background()))
 		caches.Close()
 		log.Info().Msg("Closed caches")
 	})

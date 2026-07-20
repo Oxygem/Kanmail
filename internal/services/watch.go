@@ -181,6 +181,19 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 	log := zerolog.Ctx(ctx)
 
 	backoff := watchInitialBackoff
+
+	// Consecutive network failures form one episode, aggregated for telemetry
+	// when the watch recovers or fails some other way.
+	var netErrCount int
+	var lastNetErr error
+	recordEpisode := func(recovered bool) {
+		if lastNetErr != nil {
+			util.RecordNetworkError(ctx, string(key.account), lastNetErr, netErrCount, recovered)
+			lastNetErr = nil
+			netErrCount = 0
+		}
+	}
+
 	for ctx.Err() == nil {
 		account := m.accounts.GetOrCreateAccount(ctx, key.account)
 		if account == nil {
@@ -196,6 +209,12 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 			return
 		}
 		if err != nil {
+			if util.IsRetryableNetworkError(err) {
+				lastNetErr = err
+				netErrCount++
+			} else {
+				recordEpisode(false)
+			}
 			log.Warn().Err(err).Dur("backoff", backoff).Msg("Watch failed, retrying")
 			if !sleepCtx(ctx, backoff) {
 				return
@@ -203,6 +222,7 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 			backoff = min(backoff*2, watchMaxBackoff)
 			continue
 		}
+		recordEpisode(true)
 		backoff = watchInitialBackoff
 
 		switch resp.Status {

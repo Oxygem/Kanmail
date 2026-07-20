@@ -42,13 +42,14 @@ const (
 
 // imapPoolOptions partitions a total IMAP socket budget across the regular,
 // priority and background pools. A zero budget falls back to the default.
-func imapPoolOptions(n int) ConnectionPoolOptions {
+func imapPoolOptions(name types.AccountName, n int) ConnectionPoolOptions {
 	if n <= 0 {
 		n = defaultIMAPConnections
 	}
 	n = max(n, minIMAPConnections)
 	priority := max((n-1)/2, 1)
 	return ConnectionPoolOptions{
+		AccountName:           string(name),
 		Connections:           n - 1 - priority,
 		PriorityConnections:   priority,
 		BackgroundConnections: 1,
@@ -58,12 +59,16 @@ func imapPoolOptions(n int) ConnectionPoolOptions {
 
 // smtpPoolOptions sizes the SMTP pool, which only uses the regular connection
 // channel. A zero budget falls back to the default.
-func smtpPoolOptions(n int) ConnectionPoolOptions {
+func smtpPoolOptions(name types.AccountName, n int) ConnectionPoolOptions {
 	if n <= 0 {
 		n = defaultSMTPConnections
 	}
 	n = max(n, 1)
-	return ConnectionPoolOptions{Connections: n, NetworkErrRetries: networkErrRetries}
+	return ConnectionPoolOptions{
+		AccountName:       string(name),
+		Connections:       n,
+		NetworkErrRetries: networkErrRetries,
+	}
 }
 
 func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
@@ -71,11 +76,11 @@ func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *A
 		AccountSettings: accountSettings,
 		caches:          caches,
 		imap: NewIMAPConnectionPool(
-			imapPoolOptions(accountSettings.IMAPSettings.Connections),
+			imapPoolOptions(accountSettings.Name, accountSettings.IMAPSettings.Connections),
 			accountSettings.IMAPSettings,
 		),
 		smtp: NewSMTPConnectionPool(
-			smtpPoolOptions(accountSettings.SMTPSettings.Connections),
+			smtpPoolOptions(accountSettings.Name, accountSettings.SMTPSettings.Connections),
 			accountSettings.SMTPSettings,
 		),
 		folders:  make(map[types.FolderName]*Folder),

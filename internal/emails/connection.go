@@ -3,14 +3,13 @@ package emails
 import (
 	"context"
 	"errors"
-	"io"
 	"sync"
 	"time"
 
 	"github.com/rs/zerolog"
-	"go.mau.fi/util/exhttp"
 
 	"github.com/oxygem/kanmail/internal/constants"
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 // errNoIdleConnection is returned by withIdleConnection when the regular pool has
@@ -37,6 +36,7 @@ func (l *idleLease) signal() {
 
 type ConnectionPool[T connection] struct {
 	disabled       bool
+	accountName    string
 	pool           chan T
 	priorityPool   chan T
 	backgroundPool chan T
@@ -52,6 +52,7 @@ type ConnectionPool[T connection] struct {
 }
 
 type ConnectionPoolOptions struct {
+	AccountName string
 	Connections,
 	PriorityConnections,
 	BackgroundConnections,
@@ -63,6 +64,7 @@ func NewConnectionPool[T connection](
 	makeConnection func() T,
 ) *ConnectionPool[T] {
 	cpool := ConnectionPool[T]{
+		accountName:    options.AccountName,
 		pool:           make(chan T, options.Connections),
 		priorityPool:   make(chan T, options.PriorityConnections),
 		backgroundPool: make(chan T, options.BackgroundConnections),
@@ -103,15 +105,20 @@ func (c *ConnectionPool[T]) CloseConnections(ctx context.Context) {
 }
 
 func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn T) error) error {
-	var attempt int
-	var err error
+	var attempt, netErrCount int
+	var err, lastNetErr error
 	for attempt < c.retryLimit {
 		attempt++
 		err = fn(conn)
 		if err == nil {
+			if lastNetErr != nil {
+				util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount, true)
+			}
 			return nil
 		}
-		if exhttp.IsNetworkError(err) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		if util.IsRetryableNetworkError(err) {
+			lastNetErr = err
+			netErrCount++
 			delay := time.Duration(attempt) * time.Second
 			zerolog.Ctx(ctx).Warn().Err(err).
 				Int("attempt", attempt).
@@ -120,12 +127,17 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			select {
 			case <-time.After(delay):
 			case <-ctx.Done():
+				// Aborted mid-episode (usually shutdown) - not signal, skip recording
 				return ctx.Err()
 			}
 			continue
 		}
+		if lastNetErr != nil {
+			util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount, false)
+		}
 		return err
 	}
+	util.RecordNetworkError(ctx, c.accountName, err, netErrCount, false)
 	return err
 }
 
