@@ -18,7 +18,9 @@ func OpenInBrowser(url string) error {
 	switch os {
 	case "windows":
 		cmd = "cmd"
-		args = []string{"/c", "start"}
+		// cmd treats & as a command separator, truncating URL query strings
+		args = []string{"/c", "start", ""}
+		url = strings.ReplaceAll(url, "&", "^&")
 	case "darwin":
 		cmd = "open"
 	default: // "linux", "freebsd", "openbsd", "netbsd"
