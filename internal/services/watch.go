@@ -9,6 +9,7 @@ import (
 
 	"github.com/oxygem/kanmail/internal/emails"
 	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 const (
@@ -142,16 +143,41 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		m.loops[key] = cancel
-		go m.run(ctx, key)
+		go m.runGuarded(ctx, key)
 	}
 }
 
-func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
+// runGuarded wraps the loop body so a panic in the watch path takes down only
+// this watch - it is reported, then the loop restarts after a delay - instead
+// of crashing the whole app.
+func (m *FolderWatchManager) runGuarded(ctx context.Context, key watchKey) {
 	ctx = m.log.With().
 		Str("account", string(key.account)).
 		Str("folder", string(key.folder)).
 		Logger().
 		WithContext(ctx)
+
+	for ctx.Err() == nil {
+		if m.runOnce(ctx, key) {
+			return
+		}
+		if !sleepCtx(ctx, watchMaxBackoff) {
+			return
+		}
+	}
+}
+
+func (m *FolderWatchManager) runOnce(ctx context.Context, key watchKey) (finished bool) {
+	defer func() {
+		if err := recover(); err != nil {
+			util.ReportPanic(ctx, err)
+		}
+	}()
+	m.run(ctx, key)
+	return true
+}
+
+func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 	log := zerolog.Ctx(ctx)
 
 	backoff := watchInitialBackoff

@@ -179,6 +179,36 @@ func TestReconcileForgetsMissingWhenColumnRemoved(t *testing.T) {
 	expectStarted(t, started, watchKey{"one", "archive"})
 }
 
+func TestRunGuardedRecoversPanic(t *testing.T) {
+	m, _ := newTestWatchManager(t)
+	panicked := make(chan struct{})
+	m.run = func(ctx context.Context, key watchKey) {
+		close(panicked)
+		panic("boom")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		m.runGuarded(ctx, watchKey{"one", "inbox"})
+		close(done)
+	}()
+
+	// The panic must be recovered (not crash the process) and the guard must
+	// exit cleanly once cancelled while waiting to restart.
+	select {
+	case <-panicked:
+	case <-time.After(time.Second):
+		t.Fatal("loop body never ran")
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("runGuarded did not exit after cancel")
+	}
+}
+
 func TestStopCancelsAllLoops(t *testing.T) {
 	m, started := newTestWatchManager(t)
 
