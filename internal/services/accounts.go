@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -112,8 +113,12 @@ func (a *AccountsService) TestAccountSettings(
 	// empty - fill from the keyring for the test, restoring the as-sent values in the
 	// returned settings so secrets stay out of the frontend
 	testSettings := settings
-	a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.IMAPSettings)
-	a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.SMTPSettings)
+	if err := errors.Join(
+		a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.IMAPSettings),
+		a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.SMTPSettings),
+	); err != nil {
+		return settings, types.WrapAccountSettingsError(settings, err)
+	}
 
 	tmpAccount := emails.NewAccount(testSettings, a.caches)
 
@@ -138,10 +143,11 @@ func (a *AccountsService) TestAccountSettings(
 func (a *AccountsService) fillConnectionSecretsIfEmpty(
 	name types.AccountName,
 	conn *types.ConnectionSettings,
-) {
+) error {
 	if conn.Password == "" && conn.OAuthRefreshToken == "" {
-		a.settings.unhideConnectionSettings(name, conn)
+		return a.settings.unhideConnectionSettings(name, conn)
 	}
+	return nil
 }
 
 // Autoconfigure account settings given a username (email) and password combination by attempting

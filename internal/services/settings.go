@@ -128,11 +128,17 @@ func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Sett
 		s.settings = &settings
 	}
 
-	// Rewrite the accounts with secrets from keychain
+	// Rewrite the accounts with secrets from keychain. Keyring failures degrade to
+	// missing credentials (surfacing as an auth failure on the account) because this
+	// path has no error return - a transient keychain error must not crash the app.
 	unhiddenAccounts := make([]types.AccountSettings, len(s.settings.Accounts))
 	for i, account := range s.settings.Accounts {
-		s.unhideConnectionSettings(account.Name, &account.IMAPSettings)
-		s.unhideConnectionSettings(account.Name, &account.SMTPSettings)
+		if err := errors.Join(
+			s.unhideConnectionSettings(account.Name, &account.IMAPSettings),
+			s.unhideConnectionSettings(account.Name, &account.SMTPSettings),
+		); err != nil {
+			s.log.Err(err).Str("account", string(account.Name)).Msg("Failed to load account credentials from keyring")
+		}
 		unhiddenAccounts[i] = account
 	}
 
@@ -181,8 +187,12 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 		accountNames[account.Name] = struct{}{}
 
 		// Rewrite the accounts with references to secrets from keychain
-		s.hideConnectionSettings(account.Name, &account.IMAPSettings)
-		s.hideConnectionSettings(account.Name, &account.SMTPSettings)
+		if err := errors.Join(
+			s.hideConnectionSettings(account.Name, &account.IMAPSettings),
+			s.hideConnectionSettings(account.Name, &account.SMTPSettings),
+		); err != nil {
+			return fmt.Errorf("failed to store credentials for account %s: %w", account.Name, err)
+		}
 		hiddenAccounts[i] = account
 	}
 
@@ -199,8 +209,12 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	// keyring for the in-memory copy used to build accounts and run the callbacks
 	unhiddenAccounts := make([]types.AccountSettings, len(settings.Accounts))
 	for i, account := range settings.Accounts {
-		s.unhideConnectionSettings(account.Name, &account.IMAPSettings)
-		s.unhideConnectionSettings(account.Name, &account.SMTPSettings)
+		if err := errors.Join(
+			s.unhideConnectionSettings(account.Name, &account.IMAPSettings),
+			s.unhideConnectionSettings(account.Name, &account.SMTPSettings),
+		); err != nil {
+			return fmt.Errorf("failed to load credentials for account %s: %w", account.Name, err)
+		}
 		unhiddenAccounts[i] = account
 	}
 	settings.Accounts = unhiddenAccounts
@@ -240,30 +254,31 @@ func redactConnectionSettings(conn *types.ConnectionSettings) {
 	conn.OAuthRefreshToken = ""
 }
 
-func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) {
+func (s *SettingsService) hideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) error {
 	conn.HasCredentials = false
 
 	if conn.Password != "" {
 		if err := s.keyring.Set(appDirName, s.getKeyringUser("email", name), conn.Password); err != nil {
-			panic(err)
+			return fmt.Errorf("failed to store password in keyring: %w", err)
 		}
 		conn.Password = ""
 	}
 
 	if conn.OAuthRefreshToken != "" {
 		if err := s.keyring.Set(appDirName, s.getKeyringUser("oauth", name), conn.OAuthRefreshToken); err != nil {
-			panic(err)
+			return fmt.Errorf("failed to store OAuth token in keyring: %w", err)
 		}
 		conn.OAuthRefreshToken = ""
 	}
+	return nil
 }
 
-func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) {
+func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn *types.ConnectionSettings) error {
 	conn.HasCredentials = false
 
 	val, err := s.keyring.Get(appDirName, s.getKeyringUser("email", name))
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
-		panic(err)
+		return fmt.Errorf("failed to read password from keyring: %w", err)
 	}
 	if val != "" {
 		conn.Password = val
@@ -271,9 +286,10 @@ func (s *SettingsService) unhideConnectionSettings(name types.AccountName, conn 
 
 	val, err = s.keyring.Get(appDirName, s.getKeyringUser("oauth", name))
 	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
-		panic(err)
+		return fmt.Errorf("failed to read OAuth token from keyring: %w", err)
 	}
 	if val != "" {
 		conn.OAuthRefreshToken = val
 	}
+	return nil
 }
