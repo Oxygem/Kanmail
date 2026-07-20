@@ -24,12 +24,27 @@ const settingsFilename = "settings.json"
 
 // Figure out the app directory name - append KANMAIL_PROFILE if set
 var appDirName = "com.oxygem.kanmail"
+var profile string
 
 func init() {
-	profile := os.Getenv("KANMAIL_PROFILE")
+	profile = os.Getenv("KANMAIL_PROFILE")
 	if profile != "" {
 		appDirName = appDirName + "-" + profile
 	}
+}
+
+// The noop profile uses an ephemeral temp dir so nothing persists between runs
+func getAppDirs() (configDir, cacheDir, logsDir string) {
+	if profile == "noop" {
+		tempDir, err := os.MkdirTemp("", "kanmail-noop-")
+		if err != nil {
+			panic(err)
+		}
+		return path.Join(tempDir, "config"), path.Join(tempDir, "cache"), path.Join(tempDir, "logs")
+	}
+
+	dirs := appdir.New(appDirName)
+	return dirs.UserConfig(), dirs.UserCache(), dirs.UserLogs()
 }
 
 type SettingsService struct {
@@ -51,32 +66,32 @@ type SettingsService struct {
 }
 
 func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService, keyring *util.CachedKeyring) *SettingsService {
-	dirs := appdir.New(appDirName)
+	configDir, cacheDir, logsDir := getAppDirs()
 
-	if err := os.MkdirAll(dirs.UserConfig(), os.ModePerm); err != nil {
+	if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
 		panic(err)
-	} else if err := os.MkdirAll(dirs.UserCache(), os.ModePerm); err != nil {
+	} else if err := os.MkdirAll(cacheDir, os.ModePerm); err != nil {
 		panic(err)
-	} else if err := os.MkdirAll(dirs.UserLogs(), os.ModePerm); err != nil {
+	} else if err := os.MkdirAll(logsDir, os.ModePerm); err != nil {
 		panic(err)
 	}
 
-	emails.InitTLDCache(path.Join(dirs.UserCache(), "tldextract"))
-	emails.InitTempDirForFailedDecodes(path.Join(dirs.UserCache(), "failed-decodes"))
+	emails.InitTLDCache(path.Join(cacheDir, "tldextract"))
+	emails.InitTempDirForFailedDecodes(path.Join(cacheDir, "failed-decodes"))
 
-	appService.SetDeviceID(dirs.UserConfig())
+	appService.SetDeviceID(configDir)
 
 	return &SettingsService{
 		log:     log.With().Str("component", "settings").Logger(),
 		logFile: logFilename,
 
-		settingsFile: path.Join(dirs.UserConfig(), settingsFilename),
+		settingsFile: path.Join(configDir, settingsFilename),
 		appService:   appService,
 		keyring:      keyring,
 
-		AppDir:   dirs.UserConfig(),
-		CacheDir: dirs.UserCache(),
-		LogsDir:  dirs.UserLogs(),
+		AppDir:   configDir,
+		CacheDir: cacheDir,
+		LogsDir:  logsDir,
 	}
 }
 
