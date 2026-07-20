@@ -8,7 +8,7 @@ import { HeaderErrorsHost } from "./src/components/HeaderErrors.tsx";
 import { TheTooltip } from "./src/components/Tooltip.tsx";
 import "./src/fonts/fontawesome/css/font-awesome.css";
 import "./src/fonts/open-sans/css/open-sans.css";
-import { installGlobalErrorHandlers } from "./src/stores/request.ts";
+import requestStore, { installGlobalErrorHandlers } from "./src/stores/request.ts";
 import settingsStore from "./src/stores/settings.ts";
 import systemStore from "./src/stores/system.ts";
 import "./src/style.less";
@@ -16,6 +16,7 @@ import { setupThemes } from "./src/theme.js";
 
 const renderBootError = (rootElement: Element) => (error: any) => {
     console.error("Boot failed", error);
+    requestStore.addError("Boot failed", error, { silent: true });
 
     const noApp = document.getElementById("no-app");
     if (noApp) {
@@ -107,7 +108,8 @@ const bootSendApp = async (
             messageContent: content,
             mode: urlParams.get("mode") || "reply",
         })
-    }).catch(() => {
+    }).catch((e) => {
+        requestStore.addError("Failed to load reply email", e);
         bootApp(SendApp, appContainer, {
             messageContent: "failed to load reply to email",
         })
