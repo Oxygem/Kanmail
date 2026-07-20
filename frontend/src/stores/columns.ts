@@ -94,7 +94,10 @@ class ColumnStore extends BaseStore {
   folderName: string;
   props: IColumnProps;
 
-  hiddenThreadHashes: Set<string>;
+  // Threads pending a move/delete are hidden by their messages' IDs, not the
+  // thread hash - re-threading (merges, older messages syncing in) can change
+  // a thread's hash mid-undo, which would un-hide it if keyed by hash.
+  hiddenMessageIds: Set<string>;
   readThreadHashes: Set<string>;
 
   // folderUidsVersion of each message at the time threads were set, keyed by
@@ -106,7 +109,7 @@ class ColumnStore extends BaseStore {
   constructor(folderName: string) {
     super();
 
-    this.hiddenThreadHashes = new Set();
+    this.hiddenMessageIds = new Set();
     this.readThreadHashes = new Set();
     this.folderUidsSnapshot = {};
 
@@ -162,7 +165,7 @@ class ColumnStore extends BaseStore {
   }
 
   resetThreadSets() {
-    this.hiddenThreadHashes = new Set();
+    this.hiddenMessageIds = new Set();
     this.readThreadHashes = new Set();
   }
 
@@ -175,15 +178,21 @@ class ColumnStore extends BaseStore {
   }
 
   hideThread(thread: Thread) {
-    this.hiddenThreadHashes.add(thread.hash);
+    _.each(thread, (message) =>
+      this.hiddenMessageIds.add(message.accountMessageId)
+    );
   }
 
   showThread(thread: Thread) {
-    this.hiddenThreadHashes.delete(thread.hash);
+    _.each(thread, (message) =>
+      this.hiddenMessageIds.delete(message.accountMessageId)
+    );
   }
 
   hasHiddenThread(thread: Thread) {
-    return this.hiddenThreadHashes.has(thread.hash);
+    return _.some(thread, (message) =>
+      this.hiddenMessageIds.has(message.accountMessageId)
+    );
   }
 
   setThreads(threads: Thread[], options: Partial<ISyncOptions> = {}) {

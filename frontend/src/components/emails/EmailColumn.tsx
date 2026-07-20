@@ -36,7 +36,6 @@ interface IEmailColumnProps extends IColumnProps {
   id: string;
   index: number;
 
-  hiddenThreadHashes: Set<string>;
   currentAccount: string;
 
   system: any;
