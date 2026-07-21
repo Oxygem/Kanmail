@@ -1,13 +1,16 @@
 import _ from "lodash";
 import React from "react";
 
-import { SendOptions } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/models.ts";
+import {
+  SendAttachment,
+  SendOptions,
+} from "../../../bindings/github.com/oxygem/kanmail/internal/emails/models.ts";
 import {
   AppService,
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import keyboard from "../../keyboard.ts";
+import keyboard, { metaKeyLabel } from "../../keyboard.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
@@ -15,11 +18,23 @@ import { IThreadMessage } from "../../stores/thread.ts";
 import threadStore from "../../stores/thread.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
-import { getAccountContactOptions, prependIfNotPresent } from "../../util/send.ts";
+import { safeDocumentFromHtml } from "../../util/html.ts";
+import {
+  AddressOption,
+  getAccountContactOptions,
+  prependIfNotPresent,
+} from "../../util/send.ts";
 import { formatAddress } from "../../util/string.ts";
-import SquireEditor from "../send/SquireEditor.tsx";
+import Tooltip from "../Tooltip.tsx";
+import ContactSelect from "../send/ContactSelect.tsx";
+import EditorToolButtons from "../send/EditorToolButtons.tsx";
+import SquireEditor, {
+  SquireEditorApi,
+  SquireFormatStates,
+  defaultFormatStates,
+} from "../send/SquireEditor.tsx";
 
-type Mode = "reply" | "reply-all";
+export type Mode = "reply" | "reply-all" | "forward";
 
 interface IQuickReplyProps {
   latestMessage: IThreadMessage;
@@ -29,12 +44,17 @@ interface IQuickReplyState {
   expanded: boolean;
   mode: Mode;
   html: string;
+  to: AddressOption[];
+  attachments: SendAttachment[];
+  isLoadingAttachments: boolean;
   isSending: boolean;
   isSentOrSaved?: boolean;
+  formatStates: SquireFormatStates;
 }
 
 export default class QuickReply extends React.Component<IQuickReplyProps, IQuickReplyState> {
   private releaseKeyboard: (() => void) | null = null;
+  private editorApi: SquireEditorApi | null = null;
 
   constructor(props: IQuickReplyProps) {
     super(props);
@@ -42,8 +62,16 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       expanded: false,
       mode: "reply",
       html: "",
+      to: [],
+      attachments: [],
+      isLoadingAttachments: false,
       isSending: false,
+      formatStates: defaultFormatStates,
     };
+  }
+
+  componentDidMount() {
+    keyboard.quickReply = this;
   }
 
   componentDidUpdate(_prevProps: IQuickReplyProps, prevState: IQuickReplyState) {
@@ -55,12 +83,16 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   }
 
   componentWillUnmount() {
+    if (keyboard.quickReply === this) {
+      keyboard.quickReply = null;
+    }
     this.resumeKeyboard();
   }
 
   suspendKeyboard() {
     if (!this.releaseKeyboard) {
       this.releaseKeyboard = keyboard.suspend("QuickReply");
+      document.addEventListener("keydown", this.handleKeyDown);
     }
   }
 
@@ -68,6 +100,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     if (this.releaseKeyboard) {
       this.releaseKeyboard();
       this.releaseKeyboard = null;
+      document.removeEventListener("keydown", this.handleKeyDown);
     }
   }
 
@@ -83,30 +116,87 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   }
 
   handleExpand = (mode: Mode = "reply") => {
+    if (mode === "forward") {
+      const { latestMessage } = this.props;
+      const doc = safeDocumentFromHtml(latestMessage.body);
+      const title = `On ${latestMessage.date} ${formatAddress(latestMessage.from[0])} wrote:`;
+      const quoted = `<p></p>${title}<blockquote>${doc}</blockquote>`;
+      const hasParts = Boolean(latestMessage.parts && latestMessage.parts.length > 0);
+
+      this.setState({
+        expanded: true,
+        mode,
+        html: quoted,
+        to: [],
+        attachments: [],
+        isLoadingAttachments: hasParts,
+      });
+
+      if (hasParts) {
+        EmailsService.CreateForwardAttachments(
+          latestMessage.accountName,
+          latestMessage.folderName,
+          latestMessage.uid,
+          latestMessage.parts,
+        ).then(attachments => {
+          if (this.state.expanded && this.state.mode === "forward") {
+            this.setState({ attachments, isLoadingAttachments: false });
+          }
+        }).catch(e => {
+          this.setState({ isLoadingAttachments: false });
+          requestStore.addError("Failed to load forwarded attachments", e);
+        });
+      }
+      return;
+    }
+
     const hasCc = this.props.latestMessage.cc && this.props.latestMessage.cc.length > 0;
     this.setState({ expanded: true, mode: mode === "reply-all" && !hasCc ? "reply" : mode });
   };
 
   handleForward = () => {
-    const { latestMessage } = this.props;
-    AppService.OpenSendWindow({
-      mode: "forward",
-      accountName: latestMessage.accountName,
-      folderName: latestMessage.folderName,
-      uid: latestMessage.uid,
-    });
+    this.handleExpand("forward");
   };
 
   handleCancel = () => {
     this.setState({
       expanded: false,
+      mode: "reply",
       html: "",
+      to: [],
+      attachments: [],
+      isLoadingAttachments: false,
       isSentOrSaved: undefined,
     });
   };
 
   handleSetMode = (mode: Mode) => {
     this.setState({ mode });
+  };
+
+  handleKeyDown = (ev: KeyboardEvent) => {
+    if (ev.key === "Escape") {
+      // Skip if already handled, e.g. react-select closing its menu
+      if (ev.defaultPrevented) {
+        return;
+      }
+      // Cancelling resumes the global keyboard synchronously — stop the event
+      // reaching its window listener, which would also close the thread.
+      ev.stopPropagation();
+      this.handleCancel();
+    } else if (ev.key === "Enter" && (ev.metaKey || ev.ctrlKey)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this.handleSend();
+    }
+  };
+
+  handleEditorCommand = (command: string, value?: any) => {
+    this.editorApi?.command(command, value);
+  };
+
+  handlePromptEditorCommand = (command: string, promptText: string) => {
+    this.editorApi?.promptCommand(command, promptText);
   };
 
   handlePopOut = () => {
@@ -135,20 +225,33 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       return;
     }
 
-    const to = latestMessage.replyTo && latestMessage.replyTo.length > 0
-      ? latestMessage.replyTo
-      : latestMessage.from;
+    const isForward = this.state.mode === "forward";
+
+    let to: Address[];
+    if (isForward) {
+      if (this.state.isLoadingAttachments) {
+        return;
+      }
+      to = _.map(this.state.to, option => option.value);
+      if (to.length === 0) {
+        return;
+      }
+    } else {
+      to = latestMessage.replyTo && latestMessage.replyTo.length > 0
+        ? latestMessage.replyTo
+        : latestMessage.from;
+    }
 
     const cc = this.state.mode === "reply-all" ? latestMessage.cc : [];
 
     const sendOptions: SendOptions = {
-      subject: prependIfNotPresent(latestMessage.subject, "Re"),
+      subject: prependIfNotPresent(latestMessage.subject, isForward ? "Fwd" : "Re"),
       html: this.state.html,
       text: "",
       from,
       to,
       cc,
-      attachments: [],
+      attachments: isForward ? this.state.attachments : [],
       replyingTo: latestMessage,
     };
 
@@ -162,6 +265,10 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         isSending: false,
         isSentOrSaved: true,
         html: "",
+        to: [],
+        attachments: [],
+        isLoadingAttachments: false,
+        mode: "reply",
         expanded: false,
       });
 
@@ -191,35 +298,78 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   renderCollapsed() {
     const { latestMessage } = this.props;
     const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
+    const deleteOnTrash = keyboard.currentComponent
+      ? keyboard.currentComponent.isDeleteOnTrash()
+      : Boolean(settingsStore.getAccountSettings(latestMessage.accountName)?.settings.deleteOnTrash);
 
     return (
       <div className="reply-dock" onClick={stopEventPropagation}>
-        <button
-          type="button"
-          className="btn-primary lg"
-          onClick={() => this.handleExpand("reply")}
-        >
-          <i className="fa fa-reply"></i> Reply
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={() => this.handleExpand("reply-all")}
-          disabled={!hasCc}
-          title={hasCc ? "" : "No CC recipients to reply to"}
-        >
-          <i className="fa fa-reply-all"></i> Reply all
-        </button>
-        <button
-          type="button"
-          className="btn-ghost"
-          onClick={this.handleForward}
-        >
-          <i className="fa fa-share"></i> Forward
-        </button>
+        <Tooltip position="top" text={<span>Reply (<i className="fa fa-keyboard-o" /> r)</span>}>
+          <button
+            type="button"
+            className="btn-primary lg"
+            onClick={() => this.handleExpand("reply")}
+          >
+            <i className="fa fa-reply"></i> Reply
+          </button>
+        </Tooltip>
+        {hasCc && (
+          <Tooltip
+            position="top"
+            text={<span>Reply all (<i className="fa fa-keyboard-o" /> a)</span>}
+          >
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={() => this.handleExpand("reply-all")}
+            >
+              <i className="fa fa-reply-all"></i> Reply all
+            </button>
+          </Tooltip>
+        )}
+        <Tooltip position="top" text={<span>Forward (<i className="fa fa-keyboard-o" /> f)</span>}>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={this.handleForward}
+          >
+            <i className="fa fa-share"></i> Forward
+          </button>
+        </Tooltip>
         <span className="spacer"></span>
-        <span className="dock-meta" onClick={this.handlePopOut}>
-          <i className="fa fa-external-link"></i> Pop out
+        <span className="dock-actions">
+          <Tooltip position="top" text={<span>Move (<i className="fa fa-keyboard-o" /> m)</span>}>
+            <button
+              type="button"
+              className="icon-ghost"
+              onClick={(ev) => keyboard.startMoveCurrentThread(ev)}
+            >
+              <i className="fa fa-folder-open" />
+            </button>
+          </Tooltip>
+          <Tooltip position="top" text={<span>Archive (<i className="fa fa-keyboard-o" /> enter)</span>}>
+            <button
+              type="button"
+              className="icon-ghost"
+              onClick={(ev) => keyboard.archiveCurrentThread(ev)}
+            >
+              <i className="fa fa-archive" />
+            </button>
+          </Tooltip>
+          <Tooltip
+            position="top"
+            text={<span>
+              {deleteOnTrash ? "Delete permanently" : "Trash"} (<i className="fa fa-keyboard-o" /> backspace)
+            </span>}
+          >
+            <button
+              type="button"
+              className="icon-ghost danger"
+              onClick={(ev) => keyboard.trashCurrentThread(ev)}
+            >
+              <i className="fa fa-trash" />
+            </button>
+          </Tooltip>
         </span>
       </div>
     );
@@ -237,6 +387,22 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
   renderRecipientSummary() {
     const { latestMessage } = this.props;
+
+    if (this.state.mode === "forward") {
+      return (
+        <div className="recipients forward-to">
+          <span className="label">To</span>
+          <div className="recip">
+            <ContactSelect
+              id="quick-forward-to"
+              value={this.state.to}
+              onChange={(to) => this.setState({ to })}
+            />
+          </div>
+        </div>
+      );
+    }
+
     const replyTo = latestMessage.replyTo && latestMessage.replyTo.length > 0
       ? latestMessage.replyTo
       : latestMessage.from;
@@ -258,9 +424,86 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     );
   }
 
-  renderExpanded() {
+  renderModeToggle() {
     const { latestMessage } = this.props;
+
+    if (this.state.mode === "forward") {
+      return (
+        <div className="mode-toggle">
+          <button type="button" className="active" disabled>
+            <i className="fa fa-share"></i> Forward
+          </button>
+        </div>
+      );
+    }
+
     const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
+
+    return (
+      <div className="mode-toggle">
+        <button
+          type="button"
+          className={this.state.mode === "reply" ? "active" : ""}
+          onClick={() => this.handleSetMode("reply")}
+        >
+          <i className="fa fa-reply"></i> Reply
+        </button>
+        {hasCc && (
+          <button
+            type="button"
+            className={this.state.mode === "reply-all" ? "active" : ""}
+            onClick={() => this.handleSetMode("reply-all")}
+          >
+            <i className="fa fa-reply-all"></i> Reply all
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  renderForwardAttachments() {
+    if (this.state.mode !== "forward") {
+      return null;
+    }
+
+    if (this.state.isLoadingAttachments) {
+      return (
+        <div className="quick-reply-attachments">
+          <div className="attachment loading">
+            <i className="fa fa-spin fa-refresh" />
+            <span>Loading attachments&hellip;</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (this.state.attachments.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="quick-reply-attachments">
+        {_.map(this.state.attachments, (attachment, i) => (
+          <div
+            key={attachment.path}
+            className="attachment"
+            title="Remove attachment"
+            onClick={() => {
+              const attachments = [...this.state.attachments];
+              attachments.splice(i, 1);
+              this.setState({ attachments });
+            }}
+          >
+            <i className="fa fa-file-o" />
+            <span>{attachment.filename}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  renderExpanded() {
+    const isForward = this.state.mode === "forward";
     const sendClasses = ["submit"];
     if (this.state.isSending) sendClasses.push("disabled");
     if (this.state.isSentOrSaved === false) sendClasses.push("error");
@@ -268,24 +511,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     return (
       <div className="quick-reply expanded" onClick={stopEventPropagation}>
         <div className="quick-reply-header">
-          <div className="mode-toggle">
-            <button
-              type="button"
-              className={this.state.mode === "reply" ? "active" : ""}
-              onClick={() => this.handleSetMode("reply")}
-            >
-              <i className="fa fa-reply"></i> Reply
-            </button>
-            <button
-              type="button"
-              className={this.state.mode === "reply-all" ? "active" : ""}
-              onClick={() => this.handleSetMode("reply-all")}
-              disabled={!hasCc}
-              title={hasCc ? "" : "No CC recipients to reply to"}
-            >
-              <i className="fa fa-reply-all"></i> Reply all
-            </button>
-          </div>
+          {this.renderModeToggle()}
           <a className="pop-out" onClick={this.handlePopOut} title="Open in full editor">
             <i className="fa fa-external-link"></i> Pop out
           </a>
@@ -294,27 +520,53 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         {this.renderRecipientSummary()}
 
         <SquireEditor
-          initialContent=""
+          key={isForward ? "forward" : "reply"}
+          initialContent={isForward ? this.state.html : ""}
+          autoFocus
+          onReady={(api) => { this.editorApi = api; }}
+          onFormatStateChange={(states) => this.setState({ formatStates: states })}
           onUpdate={(data) => this.setState({ html: data })}
         />
 
+        {this.renderForwardAttachments()}
+
         <div className="quick-reply-actions">
-          <button
-            type="button"
-            className="cancel"
-            onClick={this.handleCancel}
-            disabled={this.state.isSending}
+          <Tooltip
+            position="top"
+            text={<span>Send (<i className="fa fa-keyboard-o" /> {metaKeyLabel}+enter)</span>}
           >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={sendClasses.join(" ")}
-            onClick={this.handleSend}
-            disabled={this.state.isSending}
+            <button
+              type="button"
+              className={sendClasses.join(" ")}
+              onClick={this.handleSend}
+              disabled={
+                this.state.isSending
+                || (isForward && (this.state.to.length === 0 || this.state.isLoadingAttachments))
+              }
+            >
+              {this.renderSendButtonContent()}
+            </button>
+          </Tooltip>
+          <div className="vrule" />
+          <EditorToolButtons
+            formatStates={this.state.formatStates}
+            onCommand={this.handleEditorCommand}
+            onPromptCommand={this.handlePromptEditorCommand}
+          />
+          <span className="spacer" />
+          <Tooltip
+            position="top"
+            text={<span>Cancel (<i className="fa fa-keyboard-o" /> esc)</span>}
           >
-            {this.renderSendButtonContent()}
-          </button>
+            <button
+              type="button"
+              className="cancel"
+              onClick={this.handleCancel}
+              disabled={this.state.isSending}
+            >
+              Cancel
+            </button>
+          </Tooltip>
         </div>
       </div>
     );

@@ -201,106 +201,6 @@ section#new-email {
     }
   }
 
-  /* To / Cc react-select restyled into recipient pills */
-  .recip {
-    /* The react-select container is a flex child here; let it grow to fill the
-       row (up to the Cc affordance) instead of collapsing to its content. */
-    > div {
-      flex: 1;
-      min-width: 0;
-    }
-
-    div.react-select__control {
-      background: transparent;
-      border: 0;
-      box-shadow: none;
-      min-height: 0;
-      padding: 0;
-      cursor: text;
-    }
-
-    div.react-select__value-container {
-      gap: 7px;
-      padding: 0;
-      flex-wrap: wrap;
-    }
-
-    div.react-select__multi-value {
-      background: var(--pill);
-      border: 1px solid var(--ring);
-      border-radius: 99px;
-      margin: 2px 0;
-      padding: 2px 5px 2px 3px;
-      align-items: center;
-    }
-
-    div.react-select__multi-value__label {
-      padding: 0;
-      margin: 0;
-      color: var(--ink);
-    }
-
-    div.react-select__multi-value__remove {
-      color: var(--faint);
-      border-radius: 99px;
-      padding: 0 2px;
-
-      &:hover {
-        background: transparent;
-        color: var(--brand-pink);
-      }
-    }
-
-    .recip-label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-
-      .av {
-        width: 20px;
-        height: 20px;
-        border-radius: 99px;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: 700;
-        flex: none;
-      }
-      .em {
-        font-size: 12.5px;
-        color: var(--ink);
-      }
-    }
-
-    div.react-select__menu {
-      border-radius: var(--r-md);
-      border: 1px solid var(--ring);
-      box-shadow: var(--shadow);
-      background: var(--bg);
-      overflow: hidden;
-    }
-
-    div.react-select__option {
-      padding: 6px 10px;
-      cursor: pointer;
-
-      &--is-focused {
-        background: var(--pill);
-      }
-    }
-
-    div.react-select__placeholder {
-      color: var(--faint);
-    }
-
-    div.react-select__input-container,
-    div.react-select__input {
-      color: var(--ink);
-      margin: 0;
-    }
-  }
 
   /* ----------------------------- body ---------------------------------- */
   div.compose-body.form-content {
@@ -381,6 +281,14 @@ section#new-email {
           font-size: 11px;
         }
       }
+
+      &.loading {
+        cursor: default;
+
+        span {
+          color: var(--muted);
+        }
+      }
     }
   }
 
@@ -454,13 +362,21 @@ section#new-email {
         color: var(--brand-pink);
       }
 
-      &.danger {
-        color: var(--faint);
+    }
 
-        &:hover {
-          color: var(--brand-pink);
-          background: var(--pill);
-        }
+    .btn-cancel {
+      height: 36px;
+      padding: 0 16px;
+      font-size: @textSize;
+      font-weight: 600;
+      border-radius: var(--r-md);
+      background: var(--bg);
+      border: 1px solid var(--ring);
+      color: var(--ink);
+      cursor: pointer;
+
+      &:hover {
+        background: var(--pill);
       }
     }
   }
@@ -503,5 +419,109 @@ section#new-email {
         color: var(--muted);
       }
     }
+  }
+}
+
+/* To / Cc react-select restyled into recipient pills. Root-scoped as it is
+   shared between the compose window and the quick-reply forward To row. */
+.recip {
+  /* The react-select container is a flex child here; let it grow to fill the
+     row (up to the Cc affordance) instead of collapsing to its content. */
+  > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Doubled class outweighs the theme react-select overrides, which are
+     body.theme-* scoped (equal specificity) and imported later. */
+  div.react-select__control.react-select__control {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    min-height: 0;
+    padding: 0;
+    cursor: text;
+  }
+
+  div.react-select__value-container {
+    gap: 7px;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+
+  div.react-select__multi-value {
+    background: var(--pill);
+    border: 1px solid var(--ring);
+    border-radius: 99px;
+    margin: 2px 0;
+    padding: 2px 5px 2px 3px;
+    align-items: center;
+  }
+
+  div.react-select__multi-value__label {
+    padding: 0;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  div.react-select__multi-value__remove {
+    color: var(--faint);
+    border-radius: 99px;
+    padding: 0 2px;
+
+    &:hover {
+      background: transparent;
+      color: var(--brand-pink);
+    }
+  }
+
+  .recip-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    .av {
+      width: 20px;
+      height: 20px;
+      border-radius: 99px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex: none;
+    }
+    .em {
+      font-size: 12.5px;
+      color: var(--ink);
+    }
+  }
+
+  div.react-select__menu {
+    border-radius: var(--r-md);
+    border: 1px solid var(--ring);
+    box-shadow: var(--shadow);
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  div.react-select__option {
+    padding: 6px 10px;
+    cursor: pointer;
+
+    &--is-focused {
+      background: var(--pill);
+    }
+  }
+
+  div.react-select__placeholder {
+    color: var(--faint);
+  }
+
+  div.react-select__input-container,
+  div.react-select__input {
+    color: var(--ink);
+    margin: 0;
   }
 }

@@ -7,6 +7,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/rs/zerolog"
@@ -395,6 +396,71 @@ func (e *EmailsService) DownloadAccountFolderEmailPartData(
 	data := partData[uid].Bytes
 	err = os.WriteFile(path, data, os.ModePerm)
 	return path, types.WrapFolderError(accountName, folderName, err)
+}
+
+// Download attachment parts of an email to temp files so they can be included
+// as send attachments when forwarding. Each part gets its own directory as the
+// on-disk filename becomes the attachment filename when sending.
+func (e *EmailsService) CreateForwardAttachments(
+	ctx context.Context,
+	accountName types.AccountName,
+	folderName types.FolderName,
+	uid imap.UID,
+	parts []types.BodyPart,
+) ([]emails.SendAttachment, error) {
+	ctx = e.log.With().
+		Str("account", string(accountName)).
+		Str("folder", string(folderName)).
+		Str("method", "CreateForwardAttachments").
+		Int("parts", len(parts)).
+		Logger().
+		WithContext(ctx)
+	defer util.LogAndPanic(ctx)
+
+	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	if account == nil {
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+	}
+
+	folder := account.GetFolder(folderName)
+
+	dir, err := os.MkdirTemp("", "kanmail-forward-")
+	if err != nil {
+		return nil, err
+	}
+
+	attachments := make([]emails.SendAttachment, 0, len(parts))
+	for i, part := range parts {
+		partData, err := folder.FetchEmailPartData(ctx, emails.FetchPartsMap{uid: part})
+		if err != nil {
+			return nil, types.WrapFolderError(accountName, folderName, err)
+		} else if len(partData) == 0 {
+			return nil, types.WrapFolderError(accountName, folderName, errors.New("part not found"))
+		}
+
+		filename := filepath.Base(part.Description)
+		if filename == "" || filename == "." {
+			filename = fmt.Sprintf("attachment-%s", part.PartStr)
+		}
+
+		partDir := filepath.Join(dir, strconv.Itoa(i))
+		if err := os.MkdirAll(partDir, os.ModePerm); err != nil {
+			return nil, err
+		}
+
+		path := filepath.Join(partDir, filename)
+		if err := os.WriteFile(path, partData[uid].Bytes, os.ModePerm); err != nil {
+			return nil, err
+		}
+
+		attachments = append(attachments, emails.SendAttachment{
+			Path:        path,
+			Filename:    filename,
+			ContentType: part.Type,
+		})
+	}
+
+	return attachments, nil
 }
 
 // Folder batch / UID commands

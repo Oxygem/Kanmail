@@ -543,19 +543,36 @@ section#thread {
       }
     }
 
-    .dock-meta {
+    .tooltip-wrapper {
+      display: inline-flex;
+    }
+
+    .dock-actions {
       display: flex;
       align-items: center;
-      gap: 7px;
-      height: 36px;
-      padding: 0 14px;
-      color: var(--muted);
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
+      gap: 6px;
 
-      &:hover {
-        color: var(--ink);
+      button.icon-ghost {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--r-md);
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--muted);
+        cursor: pointer;
+
+        &:hover {
+          background: var(--bg);
+          border-color: var(--ring);
+          color: var(--ink);
+        }
+
+        &.danger:hover {
+          color: @red;
+        }
       }
     }
   }
@@ -656,6 +673,66 @@ section#thread {
         white-space: nowrap;
         color: var(--ink);
       }
+
+      &.forward-to {
+        align-items: center;
+
+        div.recip {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+        }
+      }
+    }
+
+    div.quick-reply-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 26px;
+      border-top: 1px solid var(--divider);
+      .no-select;
+
+      div.attachment {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-size: @smallTextSize;
+        color: var(--ink);
+        background: var(--pill);
+        border: 1px solid var(--ring);
+        border-radius: 99px;
+        cursor: pointer;
+
+        i {
+          color: var(--muted);
+        }
+
+        &:hover {
+          border-color: @red;
+          color: @red;
+
+          i {
+            color: @red;
+          }
+        }
+
+        &.loading {
+          cursor: default;
+          color: var(--muted);
+
+          &:hover {
+            border-color: var(--ring);
+            color: var(--muted);
+
+            i {
+              color: var(--muted);
+            }
+          }
+        }
+      }
     }
 
     .squire-editor-container {
@@ -663,27 +740,6 @@ section#thread {
       flex-direction: column;
       flex: 1;
       min-height: 0;
-
-      div.toolbar {
-        position: static;
-        padding: 6px 22px;
-        border-bottom: 1px solid var(--divider);
-        display: flex;
-        gap: 2px;
-
-        button {
-          font-size: @textSize;
-          padding: 4px 8px;
-          border-radius: var(--r-sm);
-          line-height: 18px;
-          color: var(--muted);
-
-          &:hover {
-            background: var(--pill);
-            color: var(--ink);
-          }
-        }
-      }
 
       .squire-editor {
         min-height: 120px;
@@ -699,14 +755,26 @@ section#thread {
 
     div.quick-reply-actions {
       display: flex;
-      justify-content: flex-end;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       padding: 12px 26px;
       border-top: 1px solid var(--divider);
       .no-select;
 
-      button {
+      .spacer {
+        flex: 1;
+      }
+
+      .vrule {
+        width: 1px;
+        height: 22px;
+        background: var(--divider);
+        margin: 0 6px;
+        flex: none;
+      }
+
+      button.cancel,
+      button.submit {
         height: 36px;
         padding: 0 16px;
         font-size: @textSize;
@@ -718,29 +786,58 @@ section#thread {
         i {
           margin-right: 6px;
         }
+      }
 
-        &.cancel {
-          background: var(--bg);
-          border: 1px solid var(--ring);
+      button.cancel {
+        background: var(--bg);
+        border: 1px solid var(--ring);
+        color: var(--ink);
+
+        &:hover {
+          background: var(--pill);
+        }
+      }
+
+      button.submit {
+        background: var(--grad);
+        color: #fff;
+        border: 0;
+        box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+
+        &.error {
+          background: @red;
+          box-shadow: none;
+        }
+
+        &.disabled,
+        &[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .tool-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        color: var(--muted);
+        border: 0;
+        background: none;
+        cursor: pointer;
+        font-size: 15px;
+        padding: 0;
+
+        &:hover {
+          background: var(--pill);
           color: var(--ink);
         }
 
-        &.submit {
-          background: var(--grad);
-          color: #fff;
-          border: 0;
-          box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
-
-          &.error {
-            background: @red;
-            box-shadow: none;
-          }
-
-          &.disabled,
-          &[disabled] {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
+        &.active {
+          background: var(--pill);
+          color: var(--brand-pink);
         }
       }
     }

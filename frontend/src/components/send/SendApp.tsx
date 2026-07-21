@@ -1,63 +1,39 @@
 import _ from "lodash";
 import React from "react";
 import Select from "react-select";
-import AsyncCreatableSelect from "react-select/async-creatable";
 
 import {
   SendAttachment,
   SendOptions,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/emails/models.ts";
 import {
-  ContactsService,
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import {
-  Address,
-} from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import keyboard from "../../keyboard.ts";
+import keyboard, { metaKeyLabel } from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
+import requestStore from "../../stores/request.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore, { ISystem } from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
 import {
   AccountAddressOption,
+  AddressOption,
   getAccountContactOptions,
   prependIfNotPresent,
+  stringToColor,
 } from "../../util/send.ts";
 import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
+import Tooltip from "../Tooltip.tsx";
+import ContactSelect from "./ContactSelect.tsx";
+import EditorToolButtons from "./EditorToolButtons.tsx";
 import SquireEditor, { SquireEditorApi, SquireFormatStates } from "./SquireEditor.tsx";
 
-interface addressOption {
-  value: Address,
-  label: string,
-}
+type addressOption = AddressOption;
 
 type accountAddressOption = AccountAddressOption;
-
-function getFilename(path) {
-  const bits = path.split("/");
-  return bits[bits.length - 1];
-}
-
-// Deterministic accent colour for an account / recipient, derived from a string
-// so any account name or email gets a stable, theme-agnostic colour.
-function stringToColor(value: string): string {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) {
-    hash = value.charCodeAt(i) + ((hash << 5) - hash);
-    hash = hash & hash;
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 58%, 48%)`;
-}
-
-function avatarInitial(value: string): string {
-  const trimmed = (value || "").trim();
-  return trimmed ? trimmed[0].toUpperCase() : "?";
-}
 
 interface ISendAppProps extends ISettings, ISystem {
   // Message we're replying to, if any
@@ -78,6 +54,7 @@ interface ISendAppState {
 
   attachments: SendAttachment[];
 
+  isLoadingAttachments: boolean;
   isSending: boolean;
   isSaving: boolean;
   isSentOrSaved?: boolean;
@@ -119,6 +96,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       // signatureHtml: null,
       // signatureText: null,
 
+      isLoadingAttachments: false,
       isSending: false,
       isSaving: false,
 
@@ -186,14 +164,41 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
   componentDidMount() {
     this.releaseKeyboard = keyboard.suspend("SendApp");
+    document.addEventListener("keydown", this.handleKeyDown);
+
+    const { message, mode } = this.props;
+    if (mode === "forward" && message && message.parts && message.parts.length > 0) {
+      this.setState({ isLoadingAttachments: true });
+      EmailsService.CreateForwardAttachments(
+        message.accountName,
+        message.folderName,
+        message.uid,
+        message.parts,
+      ).then(attachments => {
+        this.setState({
+          attachments: _.concat(this.state.attachments, attachments),
+          isLoadingAttachments: false,
+        });
+      }).catch(e => {
+        this.setState({ isLoadingAttachments: false });
+        requestStore.addError("Failed to load forwarded attachments", e);
+      });
+    }
   }
 
   componentWillUnmount() {
+    document.removeEventListener("keydown", this.handleKeyDown);
     if (this.releaseKeyboard) {
       this.releaseKeyboard();
       this.releaseKeyboard = null;
     }
   }
+
+  handleKeyDown = (ev: KeyboardEvent) => {
+    if (ev.key === "Enter" && (ev.metaKey || ev.ctrlKey)) {
+      this.handleSendEmail(ev);
+    }
+  };
 
   handleInputChange = (field: keyof ISendAppState, ev) => {
     this.setState({
@@ -212,7 +217,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
   handleSendEmail = (ev) => {
     ev.preventDefault();
 
-    if (this.state.isSending || this.state.isSaving) {
+    if (this.state.isSending || this.state.isSaving || this.state.isLoadingAttachments) {
       return;
     }
 
@@ -263,59 +268,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     return content;
   };
 
-  renderContactsSelect(dataKey) {
-    const loadOptions = async (inputValue: string): Promise<addressOption[]> => {
-      const addrs = await ContactsService.SearchContacts(inputValue);
-      return _.map(addrs, (addr) => {
-        return {
-          value: addr,
-          label: formatAddress(addr),
-        }
-      })
-    };
-
-    const formatOptionLabel = (option: addressOption) => {
-      const email = option.value?.email || option.label || "";
-      const name = option.value?.name || "";
-      return (
-        <span className="recip-label">
-          <span className="av" style={{ background: stringToColor(email) }}>
-            {avatarInitial(name || email)}
-          </span>
-          <span className="em">{name ? `${name} <${email}>` : email}</span>
-        </span>
-      );
-    };
-
-    return (
-      <AsyncCreatableSelect
-        isMulti
-        cacheOptions
-        defaultOptions
-        loadOptions={loadOptions}
-        id={dataKey}
-        classNamePrefix="react-select"
-        placeholder=""
-        formatOptionLabel={formatOptionLabel}
-        value={this.state[dataKey]}
-        onChange={_.partial(this.handleSelectChange, dataKey)}
-        onCreateOption={(value: string) => {
-          const v = {
-            label: value,
-            value: new Address({
-              name: "",
-              email: value,
-            })
-          }
-          // @ts-ignore
-          this.setState({
-            [dataKey]: [...this.state[dataKey], v],
-          })
-        }}
-      />
-    );
-  }
-
   handleEditorCommand = (command: string, value?: any) => {
     if (this.editorApi) {
       this.editorApi.command(command, value);
@@ -345,9 +297,14 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     }
 
     return (
-      <button className="btn-primary" onClick={this.handleSendEmail}>
-        <i className={icon} /> {label}
-      </button>
+      <Tooltip
+        position="top"
+        text={<span>Send (<i className="fa fa-keyboard-o" /> {metaKeyLabel}+enter)</span>}
+      >
+        <button className="btn-primary" onClick={this.handleSendEmail}>
+          <i className={icon} /> {label}
+        </button>
+      </Tooltip>
     );
   }
 
@@ -412,7 +369,11 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             <div className="field" id="field-to">
               <span className="lbl">To</span>
               <div className="recip">
-                {this.renderContactsSelect("to")}
+                <ContactSelect
+                  id="to"
+                  value={this.state.to}
+                  onChange={(to) => this.setState({ to })}
+                />
               </div>
               {!this.state.showCc && (
                 <span className="cc">
@@ -425,7 +386,11 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
               <div className="field" id="field-cc">
                 <span className="lbl">Cc</span>
                 <div className="recip">
-                  {this.renderContactsSelect("cc")}
+                  <ContactSelect
+                    id="cc"
+                    value={this.state.cc}
+                    onChange={(cc) => this.setState({ cc })}
+                  />
                 </div>
               </div>
             )}
@@ -445,7 +410,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           <div className="compose-body form-content" onClick={stopEventPropagation}>
             <SquireEditor
               initialContent={this.getInitialEditorContent()}
-              hideToolbar
               onReady={(api) => { this.editorApi = api; }}
               onFormatStateChange={(states) => this.setState({ formatStates: states })}
               onUpdate={data => {
@@ -456,7 +420,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             />
           </div>
 
-          <div className={`form-attachments ${this.state.attachments.length === 0 ? "empty" : ""}`}>
+          <div className={`form-attachments ${
+            this.state.attachments.length === 0 && !this.state.isLoadingAttachments ? "empty" : ""
+          }`}>
+            {this.state.isLoadingAttachments && (
+              <div className="attachment loading">
+                <i className="fa fa-spin fa-refresh" />
+                <div>
+                  <span>Loading attachments&hellip;</span>
+                </div>
+              </div>
+            )}
             {_.map(this.state.attachments, (attachment, i) => (
               <div className="attachment" onClick={() => {
                 const attachments = this.state.attachments;
@@ -483,80 +457,22 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             >
               <i className="fa fa-paperclip" />
             </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.bold ? "active" : ""}`}
-              title="Bold"
-              onClick={() => this.handleEditorCommand(formatStates.bold ? "removeBold" : "bold")}
-            >
-              <i className="fa fa-bold" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.italic ? "active" : ""}`}
-              title="Italic"
-              onClick={() => this.handleEditorCommand(formatStates.italic ? "removeItalic" : "italic")}
-            >
-              <i className="fa fa-italic" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.underline ? "active" : ""}`}
-              title="Underline"
-              onClick={() => this.handleEditorCommand(formatStates.underline ? "removeUnderline" : "underline")}
-            >
-              <i className="fa fa-underline" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.quote ? "active" : ""}`}
-              title="Quote"
-              onClick={() => this.handleEditorCommand(formatStates.quote ? "decreaseQuoteLevel" : "increaseQuoteLevel")}
-            >
-              <i className="fa fa-quote-left" />
-            </button>
-            <button
-              type="button"
-              className="tool-btn"
-              title="Link"
-              onClick={() => this.handlePromptEditorCommand("makeLink", "Enter a URL:")}
-            >
-              <i className="fa fa-link" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.unorderedList ? "active" : ""}`}
-              title="Bullet list"
-              onClick={() => this.handleEditorCommand(formatStates.unorderedList ? "removeList" : "makeUnorderedList")}
-            >
-              <i className="fa fa-list-ul" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.orderedList ? "active" : ""}`}
-              title="Numbered list"
-              onClick={() => this.handleEditorCommand(formatStates.orderedList ? "removeList" : "makeOrderedList")}
-            >
-              <i className="fa fa-list-ol" />
-            </button>
-            <button
-              type="button"
-              className={`tool-btn ${formatStates.code ? "active" : ""}`}
-              title="Code"
-              onClick={() => this.handleEditorCommand(formatStates.code ? "removeCode" : "code")}
-            >
-              <i className="fa fa-code" />
-            </button>
+            <EditorToolButtons
+              formatStates={formatStates}
+              onCommand={this.handleEditorCommand}
+              onPromptCommand={this.handlePromptEditorCommand}
+            />
             <span className="spacer" />
-            <button
-              type="button"
-              className="tool-btn danger"
-              title="Discard"
-              // @ts-ignore
-              onClick={() => wails.Window.Close()}
-            >
-              <i className="fa fa-trash" />
-            </button>
+            <Tooltip position="top" text="Discard message and close">
+              <button
+                type="button"
+                className="btn-cancel"
+                // @ts-ignore
+                onClick={() => wails.Window.Close()}
+              >
+                Cancel
+              </button>
+            </Tooltip>
           </div>
         </form>
       </section>

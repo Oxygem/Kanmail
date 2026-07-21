@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Squire from "squire-rte";
 
 // @ts-ignore
@@ -20,7 +20,7 @@ export interface SquireEditorApi {
   promptCommand: (command: string, promptText: string) => void;
 }
 
-const defaultFormatStates: SquireFormatStates = {
+export const defaultFormatStates: SquireFormatStates = {
   bold: false,
   italic: false,
   underline: false,
@@ -33,22 +33,20 @@ const defaultFormatStates: SquireFormatStates = {
 const SquireEditor = ({
   initialContent,
   onUpdate,
-  // When provided, the built-in toolbar is hidden and the parent renders its own
-  // controls (e.g. the compose dock) using the exposed editor API + format states.
-  // The inline quick-reply view omits these props and keeps the built-in toolbar.
+  // The parent renders its own format controls (the compose dock / quick
+  // reply actions bar) using the exposed editor API + format states.
   onReady,
   onFormatStateChange,
-  hideToolbar,
+  autoFocus,
 }: {
   initialContent: string,
   onUpdate: (data: string) => void,
   onReady?: (api: SquireEditorApi) => void,
   onFormatStateChange?: (states: SquireFormatStates) => void,
-  hideToolbar?: boolean,
+  autoFocus?: boolean,
 }) => {
   const editorRef = useRef(null);
   const squireRef: React.MutableRefObject<null | Squire> = useRef(null);
-  const [formatStates, setFormatStates] = useState<SquireFormatStates>(defaultFormatStates);
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -74,6 +72,11 @@ const SquireEditor = ({
     editor.setHTML(initialContent)
     squireRef.current = editor;
 
+    if (autoFocus) {
+      editor.moveCursorToStart();
+      editor.focus();
+    }
+
     // Update format states on selection change
     const updateFormatStates = () => {
       const range = editor.getSelection();
@@ -88,7 +91,6 @@ const SquireEditor = ({
         unorderedList: editor.getPath().includes('UL'),
         orderedList: editor.getPath().includes('OL')
       };
-      setFormatStates(states);
       if (onFormatStateChange) {
         onFormatStateChange(states);
       }
@@ -150,60 +152,6 @@ const SquireEditor = ({
 
   return (
     <div className="squire-editor-container">
-      {!hideToolbar && (
-        <div className="toolbar">
-          <button
-            className={`toolbar-btn ${formatStates.bold ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.bold ? 'removeBold' : 'bold')}
-            title="Bold"
-          >
-            <i className="fa fa-bold"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.italic ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.italic ? 'removeItalic' : 'italic')}
-            title="Italic"
-          >
-            <i className="fa fa-italic"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.underline ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.underline ? 'removeUnderline' : 'underline')}
-            title="Underline"
-          >
-            <i className="fa fa-underline"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.quote ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.quote ? 'decreaseQuoteLevel' : 'increaseQuoteLevel')}
-            title="Quote"
-          >
-            <i className="fa fa-quote-left"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.unorderedList ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.unorderedList ? 'removeList' : 'makeUnorderedList')}
-            title="Bullet list"
-          >
-            <i className="fa fa-list-ul"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.orderedList ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.orderedList ? 'removeList' : 'makeOrderedList')}
-            title="Numbered list"
-          >
-            <i className="fa fa-list-ol"></i>
-          </button>
-          <button
-            className={`toolbar-btn ${formatStates.code ? 'active' : ''}`}
-            onClick={() => handleCommand(formatStates.code ? 'removeCode' : 'code')}
-            title="Code"
-          >
-            <i className="fa fa-code"></i>
-          </button>
-        </div>
-      )}
-
       <div
         ref={editorRef}
         className="squire-editor"
