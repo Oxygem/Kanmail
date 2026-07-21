@@ -21,10 +21,10 @@ export function moveOrCopyThread(
   // @ts-ignore
   setIsMovingFunction();
 
-  const { messageUids, oldColumn, accountName, thread } = moveData;
+  const { messageUids, oldColumn, accountID, thread } = moveData;
   const emailStore = getEmailStore();
 
-  const accountSettings = settingsStore.getAccountSettings(accountName);
+  const accountSettings = settingsStore.getAccountSettings(accountID);
   // Copy-from-inbox only applies when filing into a workflow column (eg a
   // label), leaving the original in the inbox. Moving to an alias folder
   // (archive/trash/etc) or any other folder is always a real move.
@@ -51,11 +51,11 @@ export function moveOrCopyThread(
   };
 
   const moveThread = () => {
-    handler(accountName, messageUids, oldColumn, targetFolder).then(() => {
-      emailStore.syncFolderEmails(oldColumn, { accountNames: [accountName] });
+    handler(accountID, messageUids, oldColumn, targetFolder).then(() => {
+      emailStore.syncFolderEmails(oldColumn, { accountIDs: [accountID] });
       emailStore
         .syncFolderEmails(targetFolder, {
-          accountNames: [accountName],
+          accountIDs: [accountID],
         })
         .then(() => targetColumnStore.removeIncomingThread(thread));
     });
@@ -79,7 +79,7 @@ export function getMoveDataFromThreadComponent(component) {
   const { props } = component;
 
   // Get account name from the first message in the thread
-  const { accountName } = props.thread[0];
+  const { accountID } = props.thread[0];
 
   // Get list of message UIDs *for this folder*
   const messageUids = getThreadColumnMessageIds(props.thread, props.columnId);
@@ -87,7 +87,7 @@ export function getMoveDataFromThreadComponent(component) {
   return {
     messageUids: messageUids,
     oldColumn: props.columnId,
-    accountName: accountName,
+    accountID: accountID,
     sourceThreadComponent: component,
     thread: props.thread,
   };

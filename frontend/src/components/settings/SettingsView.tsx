@@ -114,7 +114,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
   }
 
   deleteAccount = () => {
-    AccountsService.AfterDeleteAccount(this.props.name);
+    AccountsService.AfterDeleteAccount(this.props.id);
     this.props.deleteAccount(this.props.accountIndex);
   }
 
@@ -142,7 +142,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
       <div className="acct-row-wrap">
         <div className="acct-row">
           <Avatar
-            border={settingsStore.getAccountAccentColor(this.props.name)}
+            border={settingsStore.getAccountAccentColor(this.props.id)}
             address={(this.props.contacts && this.props.contacts.length > 0)
               ? this.props.contacts[0]
               : new Address({ email: hasValidCredentials ? this.props.imapSettings.username : "" })
@@ -223,16 +223,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     this.releaseKeyboard();
   }
 
-  getAccountNames = (idx: number = -1): string[] => {
-    const names: string[] = [];
-    _.each(this.props.accounts, (account, i) => {
-      if (idx === -1 || i !== idx) {
-        names.push(account.name);
-      }
-    });
-    return names;
-  }
-
   setAccounts = (items: AccountSettings[]) => {
     this.props.updateFn({
       accounts: items,
@@ -248,9 +238,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     if (!newSettings.name) {
       newSettings.name = newSettings.imapSettings.username || "new account";
     }
-    while (_.includes(this.getAccountNames(), newSettings.name)) {
-      newSettings.name = `${newSettings.name}-duplicate`;
-    }
     const items = this.props.accounts;
     items.push(newSettings);
     this.setAccounts(items);
@@ -264,9 +251,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     if (!newSettings.name) {
       newSettings.name = newSettings.imapSettings.username;
-    }
-    while (_.includes(this.getAccountNames(itemIndex), newSettings.name)) {
-      newSettings.name = `${newSettings.name}-duplicate`;
     }
 
     const items = this.props.accounts;
@@ -722,7 +706,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     const body = <>
       <div className="km-accounts">
         {this.props.accounts.map((account, i) => <Account
-          key={account.name || i}
+          key={account.id || i}
           accountIndex={i}
           deleteAccount={this.deleteAccount}
           updateAccount={this.updateAccount}
@@ -793,7 +777,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
               // EmailsApp can't detect them being added because welcome
               // settings mutate the store accounts array in-place
               this.props.accounts.forEach(
-                account => filterStore.getAccountFolderNames(account.name),
+                account => filterStore.getAccountFolderNames(account.id),
               );
             }}
           >

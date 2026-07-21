@@ -44,10 +44,10 @@ class MainEmails extends BaseEmails {
   protected onProcessedEmailChanges(folderEmails: Map<string, Thread[]>) {
     const accounts = this.getAccountKeys();
     const inboxMeta = this.meta[INBOX] || {};
-    const incomplete = _.some(accounts, (accountName) => {
-      const meta = inboxMeta[accountName];
+    const incomplete = _.some(accounts, (accountID) => {
+      const meta = inboxMeta[accountID];
       if (!meta) return true;
-      const loaded = Object.keys(this.getAccountFolder(accountName, INBOX)).length;
+      const loaded = Object.keys(this.getAccountFolder(accountID, INBOX)).length;
       return loaded < meta.count;
     });
 
@@ -120,7 +120,7 @@ class MainEmails extends BaseEmails {
       await this.getFolderEmails(folderName, {
         reset: true,
         // Always init/reset all the accounts
-        accountNames: this.getAccountKeys(),
+        accountIDs: this.getAccountKeys(),
       });
       this.initializedFolderNames.add(folderName);
       await this.syncFolderEmails(folderName);
@@ -141,23 +141,23 @@ class MainEmails extends BaseEmails {
     // than the batch side emails shown.
     const accountsToPaginate: string[] = [];
     _.each(settingsStore.props.accounts, a => {
-      if (this.getMetaForAccountFolder(a.name, folderName)?.exhausted) {
+      if (this.getMetaForAccountFolder(a.id, folderName)?.exhausted) {
         return;
       }
-      const accountFolder = this.getAccountFolder(a.name, folderName);
+      const accountFolder = this.getAccountFolder(a.id, folderName);
       if (Object.keys(accountFolder).length < settingsStore.props.system.batchSize) {
-        accountsToPaginate.push(a.name);
+        accountsToPaginate.push(a.id);
       }
     });
     if (accountsToPaginate.length > 0) {
-      await this.getFolderEmails(folderName, { accountNames: accountsToPaginate })
+      await this.getFolderEmails(folderName, { accountIDs: accountsToPaginate })
     }
   }
 
   // Called debounced as we scroll a column, aim is to ensure we keep loading more emails. Crucially
   // we also need to prevent one account clobbering the other (eg where one has many emails and the
   // other has sparse/few).
-  onScrollFolder = (folderName: string, allAccounts: boolean, accountNames?: string[]) => {
+  onScrollFolder = (folderName: string, allAccounts: boolean, accountIDs?: string[]) => {
     const columnMetaStore = getColumnMetaStore(folderName);
     if (columnMetaStore.props.isLoading) {
       console.debug(
@@ -166,9 +166,9 @@ class MainEmails extends BaseEmails {
       return;
     }
 
-    if (accountNames) {
-      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating accounts: ${accountNames}`)
-      this.getFolderEmails(folderName, { accountNames })
+    if (accountIDs) {
+      console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating accounts: ${accountIDs}`)
+      this.getFolderEmails(folderName, { accountIDs })
       return;
     }
 
@@ -177,7 +177,7 @@ class MainEmails extends BaseEmails {
       settingsStore.props.currentAccount
         ? [settingsStore.props.currentAccount]
         : this.getAccountKeys(),
-      (accountName) => !this.getMetaForAccountFolder(accountName, folderName)?.exhausted,
+      (accountID) => !this.getMetaForAccountFolder(accountID, folderName)?.exhausted,
     );
     if (unexhausted.length === 0) {
       console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, all accounts exhausted`)
@@ -186,7 +186,7 @@ class MainEmails extends BaseEmails {
 
     if (allAccounts) {
       console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating all accounts`)
-      this.getFolderEmails(folderName, { accountNames: unexhausted });
+      this.getFolderEmails(folderName, { accountIDs: unexhausted });
       return;
     }
 
@@ -196,8 +196,8 @@ class MainEmails extends BaseEmails {
     // threads instead of inserting above the scroll position.
     const frontierAccounts: string[] = [];
     let maxFrontier: number | null = null;
-    _.each(unexhausted, (accountName) => {
-      const meta = this.getMetaForAccountFolder(accountName, folderName);
+    _.each(unexhausted, (accountID) => {
+      const meta = this.getMetaForAccountFolder(accountID, folderName);
       if (!meta?.lastSentDate) {
         return; // not paginated yet, initialization is onShowFolder's job
       }
@@ -205,25 +205,25 @@ class MainEmails extends BaseEmails {
       if (maxFrontier === null || frontier > maxFrontier) {
         maxFrontier = frontier;
         frontierAccounts.length = 0;
-        frontierAccounts.push(accountName);
+        frontierAccounts.push(accountID);
       } else if (frontier === maxFrontier) {
-        frontierAccounts.push(accountName);
+        frontierAccounts.push(accountID);
       }
     });
 
     if (frontierAccounts.length > 0) {
       console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, paginating watermark accounts: ${frontierAccounts}`)
-      this.getFolderEmails(folderName, { accountNames: frontierAccounts });
+      this.getFolderEmails(folderName, { accountIDs: frontierAccounts });
     } else {
       console.debug(`[mainEmailStore] onScrollFolder: ${folderName}, no accounts to paginate`)
     }
   }
 
-  onAddAccount = (accountName: string) => {
-    console.debug(`[mainEmailStore] onAddAccount: ${accountName}, getting all initialized folders`);
+  onAddAccount = (accountID: string) => {
+    console.debug(`[mainEmailStore] onAddAccount: ${accountID}, getting all initialized folders`);
     this.initializedFolderNames.forEach(folderName => {
       this.getFolderEmails(folderName, {
-        accountNames: [accountName],
+        accountIDs: [accountID],
       });
     });
   }
@@ -236,18 +236,18 @@ class MainEmails extends BaseEmails {
     const requests: Promise<void>[] = [];
 
     // Calculate accounts to sync: explicit option, or current filter, or all of them
-    let accountNames: string[];
-    if (options.accountNames) {
-      accountNames = options.accountNames
+    let accountIDs: string[];
+    if (options.accountIDs) {
+      accountIDs = options.accountIDs
     } else if (settingsStore.props.currentAccount) {
-      accountNames = [settingsStore.props.currentAccount];
+      accountIDs = [settingsStore.props.currentAccount];
     } else {
-      accountNames = this.getAccountKeys();
+      accountIDs = this.getAccountKeys();
     }
 
     // For each account, fetch the emails
-    _.each(accountNames, (accountName) =>
-      requests.push(this.syncEmails(accountName, folderName, options))
+    _.each(accountIDs, (accountID) =>
+      requests.push(this.syncEmails(accountID, folderName, options))
     );
 
     return Promise.allSettled(requests).then(resps => {
@@ -260,27 +260,27 @@ class MainEmails extends BaseEmails {
     });
   };
 
-  async syncEmails(accountName: string, folderName: string, options: Partial<ISyncOptions> = {}) {
+  async syncEmails(accountID: string, folderName: string, options: Partial<ISyncOptions> = {}) {
     // const query = options.query || {}; TODO
 
     return requestStore.doFetchRequest(
-      `Sync: ${accountName}/${folderName}`,
-      EmailsService.SyncAccountFolderEmails(accountName, folderName),
+      `Sync: ${settingsStore.getAccountName(accountID)}/${folderName}`,
+      EmailsService.SyncAccountFolderEmails(accountID, folderName),
     ).then(data => {
       data = data!; // TODO
 
-      this.setMetaForAccountFolder(accountName, folderName, data.meta);
+      this.setMetaForAccountFolder(accountID, folderName, data.meta);
 
       let changed = false;
 
       if (data.readUids.length > 0) {
-        this.setEmailsReadByUid(accountName, folderName, data.readUids);
+        this.setEmailsReadByUid(accountID, folderName, data.readUids);
         changed = true;
       }
 
       if (data.deletedUids.length > 0) {
         this.deleteEmailsFromAccountFolder(
-          accountName,
+          accountID,
           folderName,
           data.deletedUids,
         );
@@ -289,7 +289,7 @@ class MainEmails extends BaseEmails {
 
       if (data.emails.length > 0) {
         this.addEmailsToAccountFolder(
-          accountName,
+          accountID,
           folderName,
           data.emails
         );
@@ -324,18 +324,18 @@ class MainEmails extends BaseEmails {
     const requests: Promise<void>[] = [];
 
     // Calculate accounts to sync: explicit option, or current filter, or all of them
-    let accountNames: string[];
-    if (options.accountNames) {
-      accountNames = options.accountNames
+    let accountIDs: string[];
+    if (options.accountIDs) {
+      accountIDs = options.accountIDs
     } else if (settingsStore.props.currentAccount) {
-      accountNames = [settingsStore.props.currentAccount];
+      accountIDs = [settingsStore.props.currentAccount];
     } else {
-      accountNames = this.getAccountKeys();
+      accountIDs = this.getAccountKeys();
     }
 
     // For each account, fetch the emails
-    _.each(accountNames, (accountName) =>
-      requests.push(this.getEmails(accountName, folderName, options))
+    _.each(accountIDs, (accountID) =>
+      requests.push(this.getEmails(accountID, folderName, options))
     );
 
     return Promise.allSettled(requests).then(resps => {
@@ -348,28 +348,28 @@ class MainEmails extends BaseEmails {
     });
   };
 
-  async getEmails(accountName: string, folderName: string, options: Partial<IPaginateOptions> = {}) {
+  async getEmails(accountID: string, folderName: string, options: Partial<IPaginateOptions> = {}) {
     const pOptions: PaginateOptions = new PaginateOptions(options);
     return requestStore.doFetchRequest(
-      `Paginate ${accountName}/${folderName}`,
-      EmailsService.GetAccountFolderEmails(accountName, folderName, pOptions),
+      `Paginate ${settingsStore.getAccountName(accountID)}/${folderName}`,
+      EmailsService.GetAccountFolderEmails(accountID, folderName, pOptions),
     ).then(data => {
       data = data!; // TODO
 
       // Meta-only changes (frontier date moved, account became exhausted) shift the column date
       // watermark even when no new emails are returned, so trigger a reprocess for those too.
-      const prevMeta = this.getMetaForAccountFolder(accountName, folderName);
+      const prevMeta = this.getMetaForAccountFolder(accountID, folderName);
       const metaChanged =
         !prevMeta ||
         prevMeta.exhausted !== data.meta.exhausted ||
         prevMeta.lastSentDate !== data.meta.lastSentDate;
 
-      this.setMetaForAccountFolder(accountName, folderName, data.meta);
+      this.setMetaForAccountFolder(accountID, folderName, data.meta);
 
       let changed = false;
 
       if (data.emails.length > 0) {
-        this.addEmailsToAccountFolder(accountName, folderName, data.emails);
+        this.addEmailsToAccountFolder(accountID, folderName, data.emails);
         changed = true;
       }
 
@@ -386,13 +386,13 @@ class MainEmails extends BaseEmails {
   injectSentEmail(email: Email): Thread | null {
     console.debug(`[mainEmailStore] injecting email: ${email}`);
 
-    const accountName = email.accountName;
-    this.addEmailsToAccountFolder(accountName, "sent", [email]);
+    const accountID = email.accountID;
+    this.addEmailsToAccountFolder(accountID, "sent", [email]);
 
     // processEmailChanges is debounced; _processEmailChanges runs synchronously.
     this._processEmailChanges([[{ forceProcess: true }]]);
 
-    const accountMessageId = `${accountName}-${email.messageId}`;
+    const accountMessageId = `${accountID}-${email.messageId}`;
     const sentStore = getColumnStore("sent");
     const threads = sentStore.props.threads || [];
     return _.find(
@@ -413,7 +413,7 @@ export default mainEmailStore;
 // The backend holds an IMAP IDLE watch per displayed column and emits this when
 // a folder changes server-side; sync just that account's folder in response.
 Events.On(EventName.FolderSyncEvent, (ev) => {
-  const { account, folder } = ev.data as { account: string; folder: string };
-  console.debug(`[watcher] change in ${account}/${folder}, syncing`);
-  mainEmailStore.syncFolderEmails(folder, { accountNames: [account] });
+  const { accountID, folder } = ev.data as { accountID: string; folder: string };
+  console.debug(`[watcher] change in ${accountID}/${folder}, syncing`);
+  mainEmailStore.syncFolderEmails(folder, { accountIDs: [accountID] });
 });

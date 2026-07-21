@@ -87,7 +87,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
   handleClickReply = () => {
     AppService.OpenSendWindow({
       mode: "reply",
-      accountName: this.props.message.accountName,
+      accountID: this.props.message.accountID,
       folderName: this.props.message.folderName,
       uid: this.props.message.uid,
     })
@@ -96,7 +96,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
   handleClickReplyAll = () => {
     AppService.OpenSendWindow({
       mode: "reply-all",
-      accountName: this.props.message.accountName,
+      accountID: this.props.message.accountID,
       folderName: this.props.message.folderName,
       uid: this.props.message.uid,
     })
@@ -105,7 +105,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
   handleClickForward = () => {
     AppService.OpenSendWindow({
       mode: "forward",
-      accountName: this.props.message.accountName,
+      accountID: this.props.message.accountID,
       folderName: this.props.message.folderName,
       uid: this.props.message.uid,
     })
@@ -129,7 +129,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
       return _.map(this.props.message.folderUids, (uid, folderName) => (
         <Tooltip text={`(debug) UID: ${uid}`}>
           <span className="tag" key={folderName} onClick={() => AppService.OpenDebugWindow({
-            accountName: this.props.message.accountName,
+            accountID: this.props.message.accountID,
             folderName: folderName,
             uid: uid,
           })}>
@@ -190,7 +190,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
     return <a
       onClick={(ev) => {
         if (this.props.message.listUnsubscribeOneClick) {
-          EmailsService.OneClickAccountFolderEmailUnsubscribe(this.props.message.accountName, this.props.message.folderName, this.props.message.uid).then(() => {
+          EmailsService.OneClickAccountFolderEmailUnsubscribe(this.props.message.accountID, this.props.message.folderName, this.props.message.uid).then(() => {
             this.setState({
               unsubscribed: true,
             });
@@ -263,7 +263,7 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
       body={message.body}
       parts={message.parts}
       folderName={message.folderName}
-      accountName={message.accountName}
+      accountID={message.accountID}
       uid={message.uid}
       trusted={message.trusted}
       showImages={this.state.showImages}

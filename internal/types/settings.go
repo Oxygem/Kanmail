@@ -7,6 +7,9 @@ import (
 	"slices"
 )
 
+// AccountID is the stable identity of an account, generated at creation and
+// invariant for its lifetime. AccountName is display-only and need not be unique.
+type AccountID string
 type AccountName string
 type FolderName string
 
@@ -45,6 +48,7 @@ func (f FolderSettings) GetFromName(name FolderName) FolderName {
 }
 
 type AccountSettings struct {
+	ID   AccountID   `json:"id"`
 	Name AccountName `json:"name"`
 
 	IMAPSettings ConnectionSettings `json:"imapSettings"`
@@ -156,7 +160,8 @@ type Settings struct {
 
 	ColumnGroups            []ColumnGroup `json:"columnGroups"`
 	CurrentColumnGroupIndex int           `json:"currentColumnGroupIndex"`
-	CurrentAccount          string        `json:"currentAccount"`
+	// CurrentAccount holds an AccountID ("" = all accounts)
+	CurrentAccount string `json:"currentAccount"`
 }
 
 func NewDefaultSettings() Settings {

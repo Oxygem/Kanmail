@@ -118,7 +118,7 @@ class SidebarFolderLink extends React.Component<ISidebarFolderLinkProps> {
 
 interface IFiltersProps extends ISettings {
   mainColumn: string;
-  accountName: string | null;
+  accountID: string | null;
   folderNames: string[];
 }
 
@@ -141,8 +141,8 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
     };
   }
 
-  setAccountFilter = (accountName) => {
-    settingsStore.setCurrentAccount(accountName);
+  setAccountFilter = (accountID) => {
+    settingsStore.setCurrentAccount(accountID);
     // The column date watermark depends on the account filter, rebuild threads
     getEmailStore().processEmailChanges({ forceProcess: true });
   };
@@ -251,13 +251,13 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
   renderAccounts() {
     return _.map(this.props.accounts, (account) => (
       <li
-        key={account.name}
-        className={this.props.currentAccount === account.name ? "active" : ""}
+        key={account.id}
+        className={this.props.currentAccount === account.id ? "active" : ""}
       >
-        <a onClick={_.partial(this.setAccountFilter, account.name)}>
+        <a onClick={_.partial(this.setAccountFilter, account.id)}>
           <span
             className="acct-dot"
-            style={{ background: settingsStore.getAccountAccentColor(account.name) || "var(--side-muted)" }}
+            style={{ background: settingsStore.getAccountAccentColor(account.id) || "var(--side-muted)" }}
           ></span>
           {account.name}
         </a>

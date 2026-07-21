@@ -125,7 +125,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
       const accountIndex = _.findIndex(
         this.props.accounts,
-        (account) => account.name === props.message!.accountName
+        (account) => account.id === props.message!.accountID
       );
       if (accountIndex > 0) {
         const account = props.accounts[accountIndex];
@@ -170,7 +170,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     if (mode === "forward" && message && message.parts && message.parts.length > 0) {
       this.setState({ isLoadingAttachments: true });
       EmailsService.CreateForwardAttachments(
-        message.accountName,
+        message.accountID,
         message.folderName,
         message.uid,
         message.parts,
@@ -310,8 +310,9 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
   // Renders the account dot + name + email inside the From react-select control.
   formatAccountOptionLabel = (option: accountAddressOption) => {
-    const accountName = option.value[0];
+    const accountID = option.value[0];
     const addr = option.value[1];
+    const accountName = settingsStore.getAccountSettings(accountID)?.name || accountID;
     return (
       <span className="from-pill-label">
         <span className="dot" style={{ background: stringToColor(accountName) }} />

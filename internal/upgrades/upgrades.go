@@ -28,11 +28,18 @@ type Upgrade struct {
 	Run  func(ctx context.Context, c *caches.Caches) error
 }
 
+func noopUpgrade(ctx context.Context, c *caches.Caches) error {
+	return nil
+}
+
 // All is the ordered list of registered upgrades. New upgrades append to the
 // end. Never reorder, rename, or remove an existing entry.
 var All = []Upgrade{
-	{Name: "001-backfill-attachments", Run: backfillAttachments},
-	{Name: "002-backfill-search-rows", Run: backfillSearchRows},
+	// Note: both of these upgrades are no-ops since database 006 migration wipes the relevant
+	// tables for the account name -> ID migration.
+	{Name: "001-backfill-attachments", Run: noopUpgrade},
+	{Name: "002-backfill-search-rows", Run: noopUpgrade},
+	// future upgrades...
 }
 
 // Run applies every pending upgrade in order, marking each completed on

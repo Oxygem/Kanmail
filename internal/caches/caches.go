@@ -107,7 +107,7 @@ func (c *Caches) IsDisabled() bool {
 	return c.disabled
 }
 
-func (c *Caches) DeleteByFolder(ctx context.Context, accountName types.AccountName, folderName types.FolderName) error {
+func (c *Caches) DeleteByFolder(ctx context.Context, accountID types.AccountID, folderName types.FolderName) error {
 	if c.disabled {
 		return nil
 	}
@@ -127,17 +127,17 @@ func (c *Caches) DeleteByFolder(ctx context.Context, accountName types.AccountNa
 	defer stmtDeleteParts.Close()
 
 	// Delete from folder_emails
-	if _, err := stmtDeleteByFolder.ExecContext(ctx, accountName, folderName); err != nil {
+	if _, err := stmtDeleteByFolder.ExecContext(ctx, accountID, folderName); err != nil {
 		return fmt.Errorf("failed to delete folder emails: %w", err)
 	}
 
 	// Delete from folder_uids
-	if _, err := stmtDeleteUIDs.ExecContext(ctx, accountName, folderName); err != nil {
+	if _, err := stmtDeleteUIDs.ExecContext(ctx, accountID, folderName); err != nil {
 		return fmt.Errorf("failed to delete folder UIDs: %w", err)
 	}
 
 	// Delete from folder_email_parts
-	if _, err := stmtDeleteParts.ExecContext(ctx, accountName, folderName); err != nil {
+	if _, err := stmtDeleteParts.ExecContext(ctx, accountID, folderName); err != nil {
 		return fmt.Errorf("failed to delete folder parts: %w", err)
 	}
 
@@ -147,7 +147,7 @@ func (c *Caches) DeleteByFolder(ctx context.Context, accountName types.AccountNa
 	return nil
 }
 
-func (c *Caches) DeleteByAccount(ctx context.Context, accountName types.AccountName) error {
+func (c *Caches) DeleteByAccount(ctx context.Context, accountID types.AccountID) error {
 	if c.disabled {
 		return nil
 	}
@@ -171,7 +171,7 @@ func (c *Caches) DeleteByAccount(ctx context.Context, accountName types.AccountN
 	}
 
 	for i, stmt := range stmts {
-		if _, err := stmt.ExecContext(ctx, accountName); err != nil {
+		if _, err := stmt.ExecContext(ctx, accountID); err != nil {
 			return fmt.Errorf("failed to delete account stmt: %d: %w", i, err)
 		}
 	}

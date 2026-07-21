@@ -42,7 +42,7 @@ export default class ThreadMessageAttachment extends React.Component<
     }
 
     const { part, partId } = this.props;
-    const { accountName, folderName, uid } = this.props.message;
+    const { accountID, folderName, uid } = this.props.message;
 
     this.setState({
       downloading: true,
@@ -50,8 +50,8 @@ export default class ThreadMessageAttachment extends React.Component<
     });
 
     requestStore.doFetchRequest(
-      `Fetch message part in ${accountName}/${folderName}: ${uid}/${part}`,
-      EmailsService.DownloadAccountFolderEmailPartData(accountName, folderName, uid, part),
+      `Fetch message part in ${accountID}/${folderName}: ${uid}/${part}`,
+      EmailsService.DownloadAccountFolderEmailPartData(accountID, folderName, uid, part),
     ).then((filename: string) => (this.setState({
       downloading: false,
       downloaded: filename != "",

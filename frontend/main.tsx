@@ -91,7 +91,7 @@ const bootSendApp = async (
     }
 
     EmailsService.GetAccountFolderEmailAndContent(
-        urlParams.get("accountName")!,
+        urlParams.get("accountID")!,
         urlParams.get("folderName")!,
         parseInt(urlParams.get("uid")!),
     ).then(([email, data]) => {
@@ -151,7 +151,7 @@ const main = () => {
             import("./src/components/debug/DebugApp.tsx").then(
                 ({ default: DebugApp }) =>
                     bootApp(DebugApp, appContainer, {
-                        accountName: urlParams.get("accountName")!,
+                        accountID: urlParams.get("accountID")!,
                         folderName: urlParams.get("folderName")!,
                         uid: urlParams.get("uid")!,
                     }),

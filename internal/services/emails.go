@@ -40,14 +40,14 @@ func (e *EmailsService) ClearOAuthAccessTokens(ctx context.Context) {
 
 func (e *EmailsService) CloseAccountConnections(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 ) error {
 	ctx = e.log.With().Str("method", "CloseAccountConnections").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	account.CloseConnections(ctx)
@@ -83,7 +83,7 @@ func (e *EmailsService) CreateSendAttachments(ctx context.Context) ([]emails.Sen
 
 func (e *EmailsService) SendEmail(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	options emails.SendOptions,
 ) (*types.Email, error) {
 	ctx = e.log.With().Str("method", "SendEmail").Logger().WithContext(ctx)
@@ -93,29 +93,29 @@ func (e *EmailsService) SendEmail(
 		e.app.OpenPurchaseLicenseDialog(ctx)
 	}
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	email, err := account.SendEmail(ctx, options)
-	return email, types.WrapAccountError(accountName, err)
+	return email, types.WrapAccountError(accountID, err)
 }
 
 func (e *EmailsService) GetAccountFolderNames(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 ) ([]types.FolderName, error) {
 	ctx = e.log.With().Str("method", "GetFolderNames").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	names, err := account.FetchFolderNames(ctx)
-	return names, types.WrapAccountError(accountName, err)
+	return names, types.WrapAccountError(accountID, err)
 }
 
 // Account search
@@ -123,92 +123,92 @@ func (e *EmailsService) GetAccountFolderNames(
 
 func (e *EmailsService) FindAccountMessageIDs(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	messageIDs []string,
 ) ([]*types.Email, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("method", "FindMessageIDs").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	emails, err := account.FindMessageIDs(ctx, messageIDs)
-	return emails, types.WrapAccountError(accountName, err)
+	return emails, types.WrapAccountError(accountID, err)
 }
 
 func (e *EmailsService) SearchAccountReferences(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	references []emails.EmailRef,
 ) ([]*types.Email, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("method", "SearchReferences").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	emails, err := account.SearchReferences(ctx, references)
-	return emails, types.WrapAccountError(accountName, err)
+	return emails, types.WrapAccountError(accountID, err)
 }
 
 // Folder search
 
 func (e *EmailsService) SearchAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	search string,
 ) ([]*types.Email, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("method", "SearchAccountFolderEmails").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	emails, err := folder.SearchEmails(ctx, search, 100)
-	return emails, types.WrapAccountError(accountName, err)
+	return emails, types.WrapAccountError(accountID, err)
 }
 
 func (e *EmailsService) SearchCachedAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	search string,
 ) ([]*types.Email, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("method", "SearchCachedAccountFolderEmails").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	emails, err := folder.SearchCachedEmails(ctx, search, 100)
-	return emails, types.WrapAccountError(accountName, err)
+	return emails, types.WrapAccountError(accountID, err)
 }
 
 // Folder sync, pagination & get
@@ -216,36 +216,36 @@ func (e *EmailsService) SearchCachedAccountFolderEmails(
 
 func (e *EmailsService) SyncAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 ) (*emails.SyncResp, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "SyncAccountFolderEmails").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	data, err := folder.SyncEmails(ctx)
-	return data, types.WrapFolderError(accountName, folderName, err)
+	return data, types.WrapFolderError(accountID, folderName, err)
 }
 
 // Get (paginate) more emails for this account folder
 func (e *EmailsService) GetAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	options emails.PaginateOptions,
 ) (*emails.PaginateResp, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "GetAccountFolderEmails").
 		Int("batch_size", options.BatchSize).
@@ -254,24 +254,24 @@ func (e *EmailsService) GetAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	data, err := folder.PaginateEmails(ctx, options)
-	return data, types.WrapFolderError(accountName, folderName, err)
+	return data, types.WrapFolderError(accountID, folderName, err)
 }
 
 func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "OneClickAccountFolderEmailUnsubscribe").
 		Uint32("uid", uint32(uid)).
@@ -279,19 +279,19 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	email, err := folder.FetchEmail(ctx, uid)
 	if err != nil {
-		return types.WrapFolderError(accountName, folderName, err)
+		return types.WrapFolderError(accountID, folderName, err)
 	}
 
 	if !email.ListUnsubscribeOneclick || email.ListUnsubscribeURL == "" {
-		return types.WrapFolderError(accountName, folderName, fmt.Errorf("email does not support one click unsubscribe"))
+		return types.WrapFolderError(accountID, folderName, fmt.Errorf("email does not support one click unsubscribe"))
 	}
 
 	zerolog.Ctx(ctx).Info().
@@ -300,9 +300,9 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 
 	resp, err := externalHTTPClient.Post(email.ListUnsubscribeURL, "", nil)
 	if err != nil {
-		return types.WrapFolderError(accountName, folderName, fmt.Errorf("failed to make unsubscribe POST: %w", err))
+		return types.WrapFolderError(accountID, folderName, fmt.Errorf("failed to make unsubscribe POST: %w", err))
 	} else if resp.StatusCode >= 300 {
-		return types.WrapFolderError(accountName, folderName, fmt.Errorf("invalid status from unsubscribe POST: %d", resp.StatusCode))
+		return types.WrapFolderError(accountID, folderName, fmt.Errorf("invalid status from unsubscribe POST: %d", resp.StatusCode))
 	}
 
 	return nil
@@ -310,12 +310,12 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 
 func (e *EmailsService) GetAccountFolderEmailAndContent(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 ) (*types.Email, *emails.BodyPartResp, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "GetAccountFolderEmailAndContent").
 		Uint32("uid", uint32(uid)).
@@ -323,24 +323,24 @@ func (e *EmailsService) GetAccountFolderEmailAndContent(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	email, data, err := folder.FetchEmailAndContent(ctx, uid)
-	return email, data, types.WrapFolderError(accountName, folderName, err)
+	return email, data, types.WrapFolderError(accountID, folderName, err)
 }
 
 func (e *EmailsService) GetAccountFolderEmailsContentParts(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	parts emails.FetchPartsMap,
 ) (emails.FetchPartsResp, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "GetAccountFolderEmailsContentParts").
 		Int("parts", len(parts)).
@@ -348,39 +348,39 @@ func (e *EmailsService) GetAccountFolderEmailsContentParts(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
 	data, err := folder.FetchEmailContentParts(ctx, parts)
-	return data, types.WrapFolderError(accountName, folderName, err)
+	return data, types.WrapFolderError(accountID, folderName, err)
 }
 
 func (e *EmailsService) DownloadAccountFolderEmailPartData(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 	part types.BodyPart,
 ) (string, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "DownloadAccountFolderEmailPartData").
 		Logger().
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return "", fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return "", fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	path, err := e.app.OpenSaveFileDialog(part)
 	if err != nil || path == "" {
-		return path, types.WrapFolderError(accountName, folderName, err)
+		return path, types.WrapFolderError(accountID, folderName, err)
 	}
 
 	folder := account.GetFolder(folderName)
@@ -388,14 +388,14 @@ func (e *EmailsService) DownloadAccountFolderEmailPartData(
 
 	partData, err := folder.FetchEmailPartData(ctx, parts)
 	if err != nil {
-		return "", types.WrapFolderError(accountName, folderName, err)
+		return "", types.WrapFolderError(accountID, folderName, err)
 	} else if len(partData) == 0 {
-		return "", types.WrapFolderError(accountName, folderName, errors.New("part not found"))
+		return "", types.WrapFolderError(accountID, folderName, errors.New("part not found"))
 	}
 
 	data := partData[uid].Bytes
 	err = os.WriteFile(path, data, os.ModePerm)
-	return path, types.WrapFolderError(accountName, folderName, err)
+	return path, types.WrapFolderError(accountID, folderName, err)
 }
 
 // Download attachment parts of an email to temp files so they can be included
@@ -403,13 +403,13 @@ func (e *EmailsService) DownloadAccountFolderEmailPartData(
 // on-disk filename becomes the attachment filename when sending.
 func (e *EmailsService) CreateForwardAttachments(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 	parts []types.BodyPart,
 ) ([]emails.SendAttachment, error) {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Str("method", "CreateForwardAttachments").
 		Int("parts", len(parts)).
@@ -417,9 +417,9 @@ func (e *EmailsService) CreateForwardAttachments(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	folder := account.GetFolder(folderName)
@@ -433,9 +433,9 @@ func (e *EmailsService) CreateForwardAttachments(
 	for i, part := range parts {
 		partData, err := folder.FetchEmailPartData(ctx, emails.FetchPartsMap{uid: part})
 		if err != nil {
-			return nil, types.WrapFolderError(accountName, folderName, err)
+			return nil, types.WrapFolderError(accountID, folderName, err)
 		} else if len(partData) == 0 {
-			return nil, types.WrapFolderError(accountName, folderName, errors.New("part not found"))
+			return nil, types.WrapFolderError(accountID, folderName, errors.New("part not found"))
 		}
 
 		filename := filepath.Base(part.Description)
@@ -468,12 +468,12 @@ func (e *EmailsService) CreateForwardAttachments(
 
 func (e *EmailsService) DeleteAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uids []imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Int("uids", len(uids)).
 		Str("method", "DeleteAccountFolderEmails").
@@ -481,23 +481,23 @@ func (e *EmailsService) DeleteAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	err := account.GetFolder(folderName).DeleteEmails(ctx, uids)
-	return types.WrapFolderError(accountName, folderName, err)
+	return types.WrapFolderError(accountID, folderName, err)
 }
 
 func (e *EmailsService) MoveAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	oldFolder, newFolder types.FolderName,
 	uids []imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("old_folder", string(oldFolder)).
 		Str("new_folder", string(newFolder)).
 		Int("uids", len(uids)).
@@ -506,23 +506,23 @@ func (e *EmailsService) MoveAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	err := account.GetFolder(oldFolder).MoveEmails(ctx, newFolder, uids)
-	return types.WrapFolderError(accountName, oldFolder, err)
+	return types.WrapFolderError(accountID, oldFolder, err)
 }
 
 func (e *EmailsService) CopyAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	oldFolder, newFolder types.FolderName,
 	uids []imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("old_folder", string(oldFolder)).
 		Str("new_folder", string(newFolder)).
 		Int("uids", len(uids)).
@@ -531,23 +531,23 @@ func (e *EmailsService) CopyAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	err := account.GetFolder(oldFolder).CopyEmails(ctx, newFolder, uids)
-	return types.WrapFolderError(accountName, oldFolder, err)
+	return types.WrapFolderError(accountID, oldFolder, err)
 }
 
 func (e *EmailsService) FlagAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uids []imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Int("uids", len(uids)).
 		Str("method", "FlagAccountFolderEmails").
@@ -555,23 +555,23 @@ func (e *EmailsService) FlagAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	err := account.GetFolder(folderName).FlagEmails(ctx, uids)
-	return types.WrapFolderError(accountName, folderName, err)
+	return types.WrapFolderError(accountID, folderName, err)
 }
 
 func (e *EmailsService) UnflagAccountFolderEmails(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uids []imap.UID,
 ) error {
 	ctx = e.log.With().
-		Str("account", string(accountName)).
+		Str("accountID", string(accountID)).
 		Str("folder", string(folderName)).
 		Int("uids", len(uids)).
 		Str("method", "UnflagAccountFolderEmails").
@@ -579,11 +579,11 @@ func (e *EmailsService) UnflagAccountFolderEmails(
 		WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountName)
+	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountName)
+		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
 	}
 
 	err := account.GetFolder(folderName).UnflagEmails(ctx, uids)
-	return types.WrapFolderError(accountName, folderName, err)
+	return types.WrapFolderError(accountID, folderName, err)
 }

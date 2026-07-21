@@ -80,7 +80,7 @@ export default class EmailsApp extends React.Component<ISettings> {
 
     // Kick off a folders load for each account
     setTimeout(() => {
-      this.props.accounts.forEach(a => filterStore.getAccountFolderNames(a.name))
+      this.props.accounts.forEach(a => filterStore.getAccountFolderNames(a.id))
     }, 200);
 
     // Kick off new emails loop
@@ -112,16 +112,16 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   componentDidUpdate(prevProps: ISettings) {
-    const prevNames = _.map(prevProps.accounts, a => a.name);
-    const names = _.map(this.props.accounts, a => a.name);
+    const prevIDs = _.map(prevProps.accounts, a => a.id);
+    const ids = _.map(this.props.accounts, a => a.id);
 
-    const added = _.without(names, ...prevNames);
-    added.forEach(name => {
-      mainEmailStore.onAddAccount(name);
-      filterStore.getAccountFolderNames(name);
+    const added = _.without(ids, ...prevIDs);
+    added.forEach(id => {
+      mainEmailStore.onAddAccount(id);
+      filterStore.getAccountFolderNames(id);
     });
 
-    const removed = _.without(prevNames, ...names);
+    const removed = _.without(prevIDs, ...ids);
     // TODO
   }
 

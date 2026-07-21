@@ -20,7 +20,7 @@ func newTestWatchManager(t *testing.T) (*FolderWatchManager, chan watchKey) {
 	m := &FolderWatchManager{
 		log:         zerolog.Nop(),
 		loops:       map[watchKey]context.CancelFunc{},
-		unsupported: map[types.AccountName]struct{}{},
+		unsupported: map[types.AccountID]struct{}{},
 		missing:     map[watchKey]struct{}{},
 	}
 	m.run = func(ctx context.Context, key watchKey) {
@@ -35,7 +35,7 @@ func settingsWith(columns []types.FolderName, accounts ...string) types.Settings
 		ColumnGroups: []types.ColumnGroup{{Name: "Default", Columns: columns}},
 	}
 	for _, name := range accounts {
-		s.Accounts = append(s.Accounts, types.AccountSettings{Name: types.AccountName(name)})
+		s.Accounts = append(s.Accounts, types.AccountSettings{ID: types.AccountID(name), Name: types.AccountName(name)})
 	}
 	return s
 }

@@ -27,7 +27,7 @@ type FolderUIDCache struct {
 
 func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 	stmtStoreUIDs, err := db.Prepare(`
-		INSERT OR REPLACE INTO folder_uids (account_name, folder_name, uid_validity, uids_start_at, uids)
+		INSERT OR REPLACE INTO folder_uids (account_id, folder_name, uid_validity, uids_start_at, uids)
 		VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare storeUIDs statement: %w", err)
@@ -35,21 +35,21 @@ func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 
 	stmtGetUIDs, err := db.Prepare(`
 		SELECT uid_validity, uids_start_at, uids FROM folder_uids
-		WHERE account_name = ? AND folder_name = ?`)
+		WHERE account_id = ? AND folder_name = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare getUIDs statement: %w", err)
 	}
 
 	stmtDeleteUIDs, err := db.Prepare(`
 		DELETE FROM folder_uids
-		WHERE account_name = ? AND folder_name = ?`)
+		WHERE account_id = ? AND folder_name = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteUIDs statement: %w", err)
 	}
 
 	stmtDeleteAccountUIDs, err := db.Prepare(`
 		DELETE FROM folder_uids
-		WHERE account_name = ?`)
+		WHERE account_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteAccountUIDs statement: %w", err)
 	}
@@ -72,19 +72,19 @@ func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 
 func (c *FolderUIDCache) Delete(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 ) error {
 	if c.disabled {
 		return nil
 	}
-	_, err := c.stmtDeleteUIDs.ExecContext(ctx, accountName, folderName)
+	_, err := c.stmtDeleteUIDs.ExecContext(ctx, accountID, folderName)
 	return err
 }
 
 func (c *FolderUIDCache) Store(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uidValidity uint32,
 	uidsStartAt imap.UID,
@@ -99,7 +99,7 @@ func (c *FolderUIDCache) Store(
 		return fmt.Errorf("failed to marshal UIDs: %w", err)
 	}
 
-	_, err := c.stmtStoreUIDs.ExecContext(ctx, accountName, folderName, uidValidity, uidsStartAt, data.Bytes())
+	_, err := c.stmtStoreUIDs.ExecContext(ctx, accountID, folderName, uidValidity, uidsStartAt, data.Bytes())
 	if err != nil {
 		return fmt.Errorf("failed to store folder UIDs: %w", err)
 	}
@@ -108,7 +108,7 @@ func (c *FolderUIDCache) Store(
 
 func (c *FolderUIDCache) Get(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 ) (
 	uidValidity uint32,
@@ -121,7 +121,7 @@ func (c *FolderUIDCache) Get(
 	}
 
 	var data []byte
-	err = c.stmtGetUIDs.QueryRowContext(ctx, accountName, folderName).Scan(&uidValidity, &uidsStartAt, &data)
+	err = c.stmtGetUIDs.QueryRowContext(ctx, accountID, folderName).Scan(&uidValidity, &uidsStartAt, &data)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = nil // no rows = nil response
 		return

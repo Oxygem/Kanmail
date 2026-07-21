@@ -10,6 +10,6 @@ const LicenseChangedEvent EventName = "LicenseChangedEvent"
 const FolderSyncEvent EventName = "FolderSyncEvent"
 
 type FolderSync struct {
-	Account string `json:"account"`
-	Folder  string `json:"folder"`
+	AccountID string `json:"accountID"`
+	Folder    string `json:"folder"`
 }

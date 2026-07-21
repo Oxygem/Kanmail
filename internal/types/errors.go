@@ -46,17 +46,17 @@ func WrapError(err error) error {
 
 type AccountError struct {
 	InternalError `json:",inline"`
-	AccountName   AccountName `json:"accountName"`
+	AccountID     AccountID `json:"accountID"`
 }
 
-func WrapAccountError(accountName AccountName, err error) error {
+func WrapAccountError(accountID AccountID, err error) error {
 	if err == nil {
 		return nil
 	}
 	error := makeInternalError(err)
 	return AccountError{
 		InternalError: error,
-		AccountName:   accountName,
+		AccountID:     accountID,
 	}
 }
 
@@ -65,7 +65,7 @@ type FolderError struct {
 	FolderName   FolderName `json:"folderName"`
 }
 
-func WrapFolderError(accountName AccountName, folderName FolderName, err error) error {
+func WrapFolderError(accountID AccountID, folderName FolderName, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -73,7 +73,7 @@ func WrapFolderError(accountName AccountName, folderName FolderName, err error) 
 	return FolderError{
 		AccountError: AccountError{
 			InternalError: error,
-			AccountName:   accountName,
+			AccountID:     accountID,
 		},
 		FolderName: folderName,
 	}

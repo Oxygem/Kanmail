@@ -24,8 +24,8 @@ class FilterStore extends BaseStore {
     };
   }
 
-  async getAccountFolderNames(accountName: string) {
-    const accountSettings = settingsStore.getAccountSettings(accountName);
+  async getAccountFolderNames(accountID: string) {
+    const accountSettings = settingsStore.getAccountSettings(accountID);
     const accountFolderNames = [
       accountSettings?.folders.inbox,
       accountSettings?.folders.flagged,
@@ -37,7 +37,7 @@ class FilterStore extends BaseStore {
       accountSettings?.folders.junk,
     ];
 
-    let names = await EmailsService.GetAccountFolderNames(accountName);
+    let names = await EmailsService.GetAccountFolderNames(accountID);
     names = _.filter(names, n => !_.includes(accountFolderNames, n))
     this.props.folderNames = _.uniq(_.concat(this.props.folderNames, names));
     this.triggerUpdate(["folderNames"]);

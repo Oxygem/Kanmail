@@ -123,10 +123,10 @@ func (a *AppService) ClearCacheAndRestart(ctx context.Context) {
 }
 
 type OpenSendWindowOptions struct {
-	Mode        string            `json:"mode,omitempty"`
-	AccountName types.AccountName `json:"accountName,omitempty"`
-	FolderName  types.FolderName  `json:"folderName,omitempty"`
-	UID         imap.UID          `json:"uid,omitempty"`
+	Mode       string           `json:"mode,omitempty"`
+	AccountID  types.AccountID  `json:"accountID,omitempty"`
+	FolderName types.FolderName `json:"folderName,omitempty"`
+	UID        imap.UID         `json:"uid,omitempty"`
 }
 
 func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowOptions) {
@@ -141,8 +141,8 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 	if options.Mode != "" {
 		v["mode"] = []string{options.Mode}
 	}
-	if options.AccountName != "" {
-		v["accountName"] = []string{string(options.AccountName)}
+	if options.AccountID != "" {
+		v["accountID"] = []string{string(options.AccountID)}
 	}
 	if options.FolderName != "" {
 		v["folderName"] = []string{string(options.FolderName)}
@@ -189,16 +189,16 @@ func (a *AppService) OpenMetaWindow(ctx context.Context) {
 }
 
 type OpenDebugWindowOptions struct {
-	AccountName types.AccountName `json:"accountName,omitempty"`
-	FolderName  types.FolderName  `json:"folderName,omitempty"`
-	UID         imap.UID          `json:"uid,omitempty"`
+	AccountID  types.AccountID  `json:"accountID,omitempty"`
+	FolderName types.FolderName `json:"folderName,omitempty"`
+	UID        imap.UID         `json:"uid,omitempty"`
 }
 
 func (a *AppService) OpenDebugWindow(ctx context.Context, options OpenDebugWindowOptions) {
 	v := make(url.Values, 5)
 
-	if options.AccountName != "" {
-		v["accountName"] = []string{string(options.AccountName)}
+	if options.AccountID != "" {
+		v["accountID"] = []string{string(options.AccountID)}
 	}
 	if options.FolderName != "" {
 		v["folderName"] = []string{string(options.FolderName)}
@@ -277,18 +277,21 @@ func (a *AppService) SendSettingsChangedEvent(ctx context.Context, settings type
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
+	if a.app == nil {
+		return
+	}
 	a.app.Event.Emit(string(types.SettingsChangedEvent), settings)
 }
 
 // EmitFolderSync tells the frontend a watched folder changed server-side so it
 // syncs that account's folder.
-func (a *AppService) EmitFolderSync(account types.AccountName, folder types.FolderName) {
+func (a *AppService) EmitFolderSync(account types.AccountID, folder types.FolderName) {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
 	a.app.Event.Emit(string(types.FolderSyncEvent), types.FolderSync{
-		Account: string(account),
-		Folder:  string(folder),
+		AccountID: string(account),
+		Folder:    string(folder),
 	})
 }
 

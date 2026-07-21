@@ -4,7 +4,7 @@ function isReplyOrForward(subject) {
   return match ? true : false;
 }
 
-function normalizeSubject(accountName, subject) {
+function normalizeSubject(accountID, subject) {
   if (!subject) {
     return "";
   }
@@ -16,7 +16,7 @@ function normalizeSubject(accountName, subject) {
     return false;
   }
 
-  return `${accountName}-${match[5]}`;
+  return `${accountID}-${match[5]}`;
 }
 
 function messageContainer(message) {
@@ -266,7 +266,7 @@ export function messageThreader() {
         }
 
         const subject = normalizeSubject(
-          c.message.account_name,
+          c.message.accountID,
           c.message.subject
         );
 
@@ -297,10 +297,10 @@ export function messageThreader() {
         let account;
         if (container.message) {
           subject = container.message.subject;
-          account = container.message.account_name;
+          account = container.message.accountID;
         } else {
           subject = container.children[0].message.subject;
-          account = container.children[0].message.account_name;
+          account = container.children[0].message.accountID;
         }
         subject = normalizeSubject(account, subject);
 

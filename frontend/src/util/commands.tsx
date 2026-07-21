@@ -41,8 +41,8 @@ export function buildAddColumnPage(): CommandPage {
   };
 }
 
-function setAccountFilter(accountName: string | null) {
-  settingsStore.setCurrentAccount(accountName);
+function setAccountFilter(accountID: string | null) {
+  settingsStore.setCurrentAccount(accountID);
   // The column date watermark depends on the account filter, rebuild threads
   getEmailStore().processEmailChanges({ forceProcess: true });
   trackEvent("AccountFilter");
@@ -134,14 +134,14 @@ export function buildRootPage(): CommandPage {
     });
   }
   settingsStore.props.accounts
-    .filter((account) => account.name !== settingsStore.props.currentAccount)
+    .filter((account) => account.id !== settingsStore.props.currentAccount)
     .forEach((account) => {
       addOption(
         appOptions,
-        `app.accountFilter.${account.name}`,
+        `app.accountFilter.${account.id}`,
         `Filter by account: ${account.name}`,
         () => {
-          setAccountFilter(account.name);
+          setAccountFilter(account.id);
         },
       );
     });

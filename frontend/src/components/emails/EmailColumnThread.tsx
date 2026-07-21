@@ -137,7 +137,7 @@ export default class EmailColumnThread extends React.Component<
         getEmailStore().setEmailsRead(
           _.map(
             this.props.thread,
-            (message) => `${message.accountName}-${message.messageId}`
+            (message) => `${message.accountID}-${message.messageId}`
           )
         );
         if (this.sendNotifications) {
@@ -213,8 +213,8 @@ export default class EmailColumnThread extends React.Component<
     if (this.props.columnId === "trash") {
       return true;
     }
-    const { accountName } = this.props.thread[0];
-    const accountSettings = settingsStore.getAccountSettings(accountName);
+    const { accountID } = this.props.thread[0];
+    const accountSettings = settingsStore.getAccountSettings(accountID);
     return accountSettings ? accountSettings.settings.deleteOnTrash : false;
   }
 
@@ -230,7 +230,7 @@ export default class EmailColumnThread extends React.Component<
     }
 
     // Priority 2: Account-level color
-    return settingsStore.getAccountAccentColor(latestEmail.accountName);
+    return settingsStore.getAccountAccentColor(latestEmail.accountID);
   }
 
   getThreadBackgroundColor(isHover: boolean): string | undefined {
@@ -367,7 +367,7 @@ export default class EmailColumnThread extends React.Component<
     action = action.bind(emailStore); // fucking JavaScript
 
     action(
-      this.props.thread[0].accountName,
+      this.props.thread[0].accountID,
       this.props.columnId,
       messageUids
     ).then(() => {
@@ -394,7 +394,7 @@ export default class EmailColumnThread extends React.Component<
 
     AppService.OpenSendWindow({
       mode: "reply",
-      accountName: this.props.thread[0].accountName,
+      accountID: this.props.thread[0].accountID,
       folderName: this.props.thread[0].folderName,
       uid: this.props.thread[0].uid,
     })
@@ -405,7 +405,7 @@ export default class EmailColumnThread extends React.Component<
 
     AppService.OpenSendWindow({
       mode: "reply-all",
-      accountName: this.props.thread[0].accountName,
+      accountID: this.props.thread[0].accountID,
       folderName: this.props.thread[0].folderName,
       uid: this.props.thread[0].uid,
     })
@@ -416,7 +416,7 @@ export default class EmailColumnThread extends React.Component<
 
     AppService.OpenSendWindow({
       mode: "forward",
-      accountName: this.props.thread[0].accountName,
+      accountID: this.props.thread[0].accountID,
       folderName: this.props.thread[0].folderName,
       uid: this.props.thread[0].uid,
     })
@@ -428,7 +428,7 @@ export default class EmailColumnThread extends React.Component<
     */
   handleThreadMessages = (name, previousState, folderFilter, handler: (any) => Promise<void>) => {
     const thread = this.props.thread;
-    const accountKey = thread[0].accountName;
+    const accountKey = thread[0].accountID;
 
     const allMessageFolderUids = _.pickBy(
       getThreadFolderMessageIds(thread),
@@ -931,9 +931,9 @@ export default class EmailColumnThread extends React.Component<
           <span className="acct">
             <span
               className="dot"
-              style={{ background: settingsStore.getAccountAccentColor(latestEmail.accountName) || "var(--faint)" }}
+              style={{ background: settingsStore.getAccountAccentColor(latestEmail.accountID) || "var(--faint)" }}
             />
-            {latestEmail.accountName}
+            {settingsStore.getAccountSettings(latestEmail.accountID)?.name || latestEmail.accountID}
           </span>
           {this.renderLabels()}
           <span className="buttons">

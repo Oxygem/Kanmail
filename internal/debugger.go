@@ -50,7 +50,7 @@ func RunDebugger(log zerolog.Logger) {
 				Msg("")
 
 		case "find-message-ids":
-			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountName(tokens[1]))
+			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountID(tokens[1]))
 			if account == nil {
 				log.Error().Msg("Unknown account")
 				continue
@@ -59,7 +59,7 @@ func RunDebugger(log zerolog.Logger) {
 			log.Debug().Err(err).Any("emails", emails).Msg("")
 
 		case "search-references":
-			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountName(tokens[1]))
+			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountID(tokens[1]))
 			if account == nil {
 				log.Error().Msg("Unknown account")
 				continue
@@ -80,7 +80,7 @@ func RunDebugger(log zerolog.Logger) {
 				log.Error().Msg("Invalid arguments")
 				continue
 			}
-			uidValidity, uidsStartAt, uids, err := kanmail.Caches.FolderUIDCache.Get(ctx, types.AccountName(tokens[1]), types.FolderName(tokens[2]))
+			uidValidity, uidsStartAt, uids, err := kanmail.Caches.FolderUIDCache.Get(ctx, types.AccountID(tokens[1]), types.FolderName(tokens[2]))
 			log.Debug().
 				Err(err).
 				Uint32("uid_validity", uidValidity).
@@ -93,7 +93,7 @@ func RunDebugger(log zerolog.Logger) {
 				continue
 			}
 			uid, _ := strconv.Atoi(tokens[3])
-			email, err := kanmail.Caches.FolderEmailCache.Get(ctx, types.AccountName(tokens[1]), types.FolderName(tokens[2]), imap.UID(uid))
+			email, err := kanmail.Caches.FolderEmailCache.Get(ctx, types.AccountID(tokens[1]), types.FolderName(tokens[2]), imap.UID(uid))
 			log.Debug().Err(err).Any("email", email).Msg("")
 
 		// Folder
@@ -103,7 +103,7 @@ func RunDebugger(log zerolog.Logger) {
 				continue
 			}
 			uid, _ := strconv.Atoi(tokens[3])
-			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountName(tokens[1]))
+			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountID(tokens[1]))
 			if account == nil {
 				log.Error().Msg("Unknown account")
 				continue

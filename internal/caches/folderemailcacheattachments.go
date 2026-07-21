@@ -10,10 +10,10 @@ import (
 )
 
 type Attachment struct {
-	AccountName types.AccountName `json:"accountName"`
-	FolderName  types.FolderName  `json:"folderName"`
-	UID         imap.UID          `json:"uid"`
-	PartID      string            `json:"partID"`
+	AccountID  types.AccountID  `json:"accountID"`
+	FolderName types.FolderName `json:"folderName"`
+	UID        imap.UID         `json:"uid"`
+	PartID     string           `json:"partID"`
 
 	MessageID   string `json:"messageId"`
 	ContentType string `json:"contentType"`
@@ -29,7 +29,7 @@ type Attachment struct {
 // (folder, uid) pairs to fetch bytes; we pick one via MIN().
 func (c *FolderEmailCache) ListByAccount(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 ) ([]Attachment, error) {
 	if c.disabled {
 		return nil, nil
@@ -43,12 +43,12 @@ func (c *FolderEmailCache) ListByAccount(
 		       MAX(p.data IS NOT NULL) AS is_cached
 		FROM folder_email_attachments a
 		JOIN folder_emails e
-		  USING (account_name, folder_name, uid)
+		  USING (account_id, folder_name, uid)
 		LEFT JOIN folder_email_parts p
-		  USING (account_name, folder_name, uid, part_id)
-		WHERE a.account_name = ?
+		  USING (account_id, folder_name, uid, part_id)
+		WHERE a.account_id = ?
 		GROUP BY e.message_id, a.part_id`,
-		accountName,
+		accountID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list attachments: %w", err)
@@ -58,7 +58,7 @@ func (c *FolderEmailCache) ListByAccount(
 	var out []Attachment
 	for rows.Next() {
 		var a Attachment
-		a.AccountName = accountName
+		a.AccountID = accountID
 		if err := rows.Scan(
 			&a.MessageID,
 			&a.ContentType,

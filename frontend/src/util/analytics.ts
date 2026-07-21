@@ -12,7 +12,7 @@ export async function trackError(
     stack?: string,
     extra?: params,
 ): Promise<void> {
-    // Include extra (e.g. accountName/folderName) in the dedup key so the same
+    // Include extra (e.g. accountID/folderName) in the dedup key so the same
     // message on different accounts isn't collapsed into a single report.
     const key = `${type}:${message}:${extra ? JSON.stringify(extra) : ""}`;
     if (recentErrors.has(key)) return;

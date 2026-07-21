@@ -240,7 +240,7 @@ func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*t
 	missing := make([]string, 0, len(messageIDs))
 
 	// First lookup cached emails by messageID (id -> []Email)
-	cached, err := a.caches.FolderEmailCache.GetByMessageIDs(ctx, a.Name, messageIDs)
+	cached, err := a.caches.FolderEmailCache.GetByMessageIDs(ctx, a.ID, messageIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*t
 		} else {
 			// Is there EVER a benefit to looking up messageIDs again? (as we sync we'll populate the cached)
 			// FIXME TODO
-			lastLookupAt, err := a.caches.FolderEmailCache.GetLastMessageIDLookupAt(ctx, a.Name, msgid)
+			lastLookupAt, err := a.caches.FolderEmailCache.GetLastMessageIDLookupAt(ctx, a.ID, msgid)
 			if err != nil {
 				return nil, err
 			}
@@ -291,7 +291,7 @@ func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*t
 	}
 
 	for _, msgid := range missing {
-		if err := a.caches.FolderEmailCache.SetLastMessageIDLookupNow(ctx, a.Name, msgid); err != nil {
+		if err := a.caches.FolderEmailCache.SetLastMessageIDLookupNow(ctx, a.ID, msgid); err != nil {
 			zerolog.Ctx(ctx).Err(err).Msg("Failed to set last message ID lookup")
 		}
 	}
@@ -313,7 +313,7 @@ func (a *Account) SearchReferences(ctx context.Context, references []EmailRef) (
 	for i, r := range references {
 		refStrs[i] = r.Reference
 	}
-	cached, err := a.caches.FolderEmailCache.SearchReferences(ctx, a.Name, refStrs)
+	cached, err := a.caches.FolderEmailCache.SearchReferences(ctx, a.ID, refStrs)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +344,7 @@ func (a *Account) SearchReferences(ctx context.Context, references []EmailRef) (
 	// 	} else {
 	// 		// Is there EVER a benefit to looking up messageIDs again? (as we sync we'll populate the cached)
 	// 		// FIXME TODO
-	// 		lastLookupAt, err := a.caches.FolderEmailCache.GetLastReferenceLookupAt(ctx, a.Name, ref.Reference)
+	// 		lastLookupAt, err := a.caches.FolderEmailCache.GetLastReferenceLookupAt(ctx, a.ID, ref.Reference)
 	// 		if err != nil {
 	// 			return nil, err
 	// 		}
@@ -380,7 +380,7 @@ func (a *Account) SearchReferences(ctx context.Context, references []EmailRef) (
 	// }
 
 	// for _, ref := range missing {
-	// 	if err := a.caches.FolderEmailCache.SetLastReferenceLookupNow(ctx, a.Name, ref.Reference); err != nil {
+	// 	if err := a.caches.FolderEmailCache.SetLastReferenceLookupNow(ctx, a.ID, ref.Reference); err != nil {
 	// 		zerolog.Ctx(ctx).Err(err).Msg("Failed to set last reference lookup")
 	// 	}
 	// }

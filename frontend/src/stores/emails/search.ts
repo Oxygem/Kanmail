@@ -81,16 +81,16 @@ class SearchEmails extends BaseEmails {
     console.debug(`[searchEmailStore] onScrollFolder: ${folderName} is a no-op`);
   };
 
-  async searchEmails(accountName: string, folderName: string): Promise<void> {
+  async searchEmails(accountID: string, folderName: string): Promise<void> {
     const generation = this.searchGeneration;
 
     const addResults = (emails: (Email | null)[]) => {
       if (generation !== this.searchGeneration) {
-        console.debug(`[searchEmailStore] Dropping stale results for ${accountName}/${folderName}`);
+        console.debug(`[searchEmailStore] Dropping stale results for ${accountID}/${folderName}`);
         return;
       }
       if (emails.length > 0) {
-        this.addEmailsToAccountFolder(accountName, folderName, emails);
+        this.addEmailsToAccountFolder(accountID, folderName, emails);
         this.processEmailChanges({});
       }
     };
@@ -98,7 +98,7 @@ class SearchEmails extends BaseEmails {
     // Local-first: instant results from the SQLite cache render while the
     // authoritative server search runs. Failures here are non-fatal.
     const cachedRequest = EmailsService.SearchCachedAccountFolderEmails(
-      accountName, folderName, this.searchValue,
+      accountID, folderName, this.searchValue,
     ).then(addResults).catch((e) => requestStore.addError("Failed to search cached emails", e, { silent: true }));
 
     if (settingsStore.props.system.disableRemoteSearch) {
@@ -106,8 +106,8 @@ class SearchEmails extends BaseEmails {
     }
 
     const emails = await requestStore.doFetchRequest(
-      `Search & fetch emails from ${accountName}/${folderName}`,
-      EmailsService.SearchAccountFolderEmails(accountName, folderName, this.searchValue),
+      `Search & fetch emails from ${settingsStore.getAccountName(accountID)}/${folderName}`,
+      EmailsService.SearchAccountFolderEmails(accountID, folderName, this.searchValue),
     );
     addResults(emails);
 

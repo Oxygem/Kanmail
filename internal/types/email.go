@@ -105,7 +105,7 @@ func ExtractBodyParts(bs imap.BodyStructure) (parts []BodyPart, textPart, htmlPa
 
 type Email struct {
 	// Internal meta
-	AccountName AccountName `json:"accountName"`
+	AccountID AccountID `json:"accountID"`
 
 	// Actual folder name, and alias name used by frontend
 	FolderName      FolderName `json:"-"`

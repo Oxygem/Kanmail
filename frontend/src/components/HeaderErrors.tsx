@@ -8,6 +8,7 @@ import { openLink } from "../window.ts";
 import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { subscribe } from "../stores/base.tsx";
 import requestStore, { IRequestStoreProps, RuntimeError } from "../stores/request.ts";
+import settingsStore from "../stores/settings.ts";
 
 class RequestError extends Component<RuntimeError, {
   copied: boolean;
@@ -44,7 +45,9 @@ class RequestError extends Component<RuntimeError, {
       <p>
         <span className="meta">
           {this.props.action}
-          {this.props.accountName && ": " + this.props.accountName}
+          {this.props.accountID && ": " + (
+            settingsStore.getAccountSettings(this.props.accountID)?.name || this.props.accountID
+          )}
           {this.props.folderName && "/" + this.props.folderName}
         </span>
         {/*<button onClick={this.copyDebugInformation}>{copyText}</button>*/}

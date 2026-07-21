@@ -19,7 +19,7 @@ const (
 )
 
 type watchKey struct {
-	account types.AccountName
+	account types.AccountID
 	folder  types.FolderName
 }
 
@@ -38,12 +38,12 @@ type FolderWatchManager struct {
 
 	// Seams, overridable in tests. emit reports a change to the frontend; run is
 	// the per-folder loop body reconcile spawns.
-	emit func(types.AccountName, types.FolderName)
+	emit func(types.AccountID, types.FolderName)
 	run  func(ctx context.Context, key watchKey)
 
 	mu          sync.Mutex
 	loops       map[watchKey]context.CancelFunc
-	unsupported map[types.AccountName]struct{}
+	unsupported map[types.AccountID]struct{}
 	missing     map[watchKey]struct{} // folders that don't exist on the account
 	stopped     bool
 }
@@ -60,7 +60,7 @@ func NewFolderWatchManager(
 		accounts:    accounts,
 		app:         app,
 		loops:       map[watchKey]context.CancelFunc{},
-		unsupported: map[types.AccountName]struct{}{},
+		unsupported: map[types.AccountID]struct{}{},
 		missing:     map[watchKey]struct{}{},
 	}
 	m.emit = app.EmitFolderSync
@@ -93,13 +93,13 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 	desired := map[watchKey]struct{}{}
 	for _, folder := range currentColumns(settings) {
 		for _, account := range settings.Accounts {
-			desired[watchKey{account.Name, folder}] = struct{}{}
+			desired[watchKey{account.ID, folder}] = struct{}{}
 		}
 	}
 
-	present := map[types.AccountName]struct{}{}
+	present := map[types.AccountID]struct{}{}
 	for _, account := range settings.Accounts {
-		present[account.Name] = struct{}{}
+		present[account.ID] = struct{}{}
 	}
 
 	m.mu.Lock()
@@ -152,7 +152,7 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 // of crashing the whole app.
 func (m *FolderWatchManager) runGuarded(ctx context.Context, key watchKey) {
 	ctx = m.log.With().
-		Str("account", string(key.account)).
+		Str("accountID", string(key.account)).
 		Str("folder", string(key.folder)).
 		Logger().
 		WithContext(ctx)
@@ -251,7 +251,7 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 
 // markUnsupported records that an account can't IDLE and stops its folder loops,
 // which would only reach the same conclusion.
-func (m *FolderWatchManager) markUnsupported(account types.AccountName) {
+func (m *FolderWatchManager) markUnsupported(account types.AccountID) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.unsupported[account] = struct{}{}

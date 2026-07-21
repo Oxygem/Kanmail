@@ -25,12 +25,12 @@ var searchTestDate = time.Date(2026, 7, 1, 12, 0, 0, 0, time.UTC)
 
 func makeSearchTestEmail(uid imap.UID, subject string) *types.Email {
 	return &types.Email{
-		AccountName: "acct",
-		FolderName:  "inbox",
-		UID:         uid,
-		MessageID:   fmt.Sprintf("<%d@test>", uid),
-		Subject:     subject,
-		Date:        searchTestDate.Add(time.Duration(uid) * time.Hour),
+		AccountID:  "acct",
+		FolderName: "inbox",
+		UID:        uid,
+		MessageID:  fmt.Sprintf("<%d@test>", uid),
+		Subject:    subject,
+		Date:       searchTestDate.Add(time.Duration(uid) * time.Hour),
 	}
 }
 
@@ -53,7 +53,7 @@ func searchSubjects(
 
 	emails, err := caches.FolderEmailCache.Search(
 		context.Background(),
-		types.AccountName(account),
+		types.AccountID(account),
 		types.FolderName(folder),
 		criteria,
 		100,
@@ -202,7 +202,7 @@ func TestFolderEmailSearchScoping(t *testing.T) {
 	otherFolder := makeSearchTestEmail(2, "hello archive")
 	otherFolder.FolderName = "archive"
 	otherAccount := makeSearchTestEmail(3, "hello other account")
-	otherAccount.AccountName = "acct2"
+	otherAccount.AccountID = "acct2"
 	for _, email := range []*types.Email{inboxEmail, otherFolder, otherAccount} {
 		storeSearchTestEmail(t, caches, email)
 	}

@@ -74,16 +74,16 @@ func MakeEmailSearchColumns(email *types.Email) EmailSearchColumns {
 func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 	// Prepare statements
 	stmtStore, err := db.Prepare(`
-		INSERT INTO folder_emails (account_name, folder_name, uid, message_id, data)
+		INSERT INTO folder_emails (account_id, folder_name, uid, message_id, data)
 		VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
 	}
 
 	stmtUpsert, err := db.Prepare(`
-		INSERT INTO folder_emails (account_name, folder_name, uid, message_id, data)
+		INSERT INTO folder_emails (account_id, folder_name, uid, message_id, data)
 		VALUES (?, ?, ?, ?, ?)
-		ON CONFLICT (account_name, folder_name, uid)
+		ON CONFLICT (account_id, folder_name, uid)
 		DO UPDATE SET message_id = excluded.message_id, data = excluded.data`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
@@ -91,28 +91,28 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 
 	stmtGet, err := db.Prepare(`
 		SELECT data FROM folder_emails
-		WHERE account_name = ? AND folder_name = ? AND uid = ?`)
+		WHERE account_id = ? AND folder_name = ? AND uid = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare get statement: %w", err)
 	}
 
 	stmtDelete, err := db.Prepare(`
 		DELETE FROM folder_emails
-		WHERE account_name = ? AND folder_name = ? AND uid = ?`)
+		WHERE account_id = ? AND folder_name = ? AND uid = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteByUID statement: %w", err)
 	}
 
 	stmtDeleteByFolder, err := db.Prepare(`
 		DELETE FROM folder_emails
-		WHERE account_name = ? AND folder_name = ?`)
+		WHERE account_id = ? AND folder_name = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteByFolder statement: %w", err)
 	}
 
 	stmtDeleteAccount, err := db.Prepare(`
 		DELETE FROM folder_emails
-		WHERE account_name = ?`)
+		WHERE account_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteAccount statement: %w", err)
 	}
@@ -120,13 +120,13 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 	stmtGetAccountLookup, err := db.Prepare(`
 		SELECT lookup_at
 		FROM account_lookups
-		WHERE account_name = ? AND lookup_key = ?`)
+		WHERE account_id = ? AND lookup_key = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare getMessage statement: %w", err)
 	}
 
 	stmtSetAccountLookup, err := db.Prepare(`
-		INSERT OR REPLACE INTO account_lookups (account_name, lookup_key, lookup_at)
+		INSERT OR REPLACE INTO account_lookups (account_id, lookup_key, lookup_at)
 		VALUES (?, ?, ?)`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare getMessage statement: %w", err)
@@ -134,13 +134,13 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 
 	stmtDeleteAccountLookups, err := db.Prepare(`
 		DELETE FROM account_lookups
-		WHERE account_name = ?`)
+		WHERE account_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteAccountLookups statement: %w", err)
 	}
 
 	stmtSetAccountReference, err := db.Prepare(`
-		INSERT OR REPLACE INTO account_references (account_name, to_message_id, from_message_id)
+		INSERT OR REPLACE INTO account_references (account_id, to_message_id, from_message_id)
 		VALUES (?, ?, ?)`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare setAccountReference statement: %w", err)
@@ -148,14 +148,14 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 
 	stmtDeleteAccountReferences, err := db.Prepare(`
 		DELETE FROM account_references
-		WHERE account_name = ?`)
+		WHERE account_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteAccountReferences statement: %w", err)
 	}
 
 	stmtStoreAttachment, err := db.Prepare(`
 		INSERT OR IGNORE INTO folder_email_attachments
-			(account_name, folder_name, uid, part_id,
+			(account_id, folder_name, uid, part_id,
 			 content_type, filename, size, content_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
@@ -164,7 +164,7 @@ func NewFolderEmailCache(db *sql.DB) (*FolderEmailCache, error) {
 
 	stmtStoreSearch, err := db.Prepare(`
 		REPLACE INTO folder_email_search
-			(account_name, folder_name, uid,
+			(account_id, folder_name, uid,
 			 subject, from_addrs, to_addrs, cc_addrs, excerpt, date_unix, seen, flagged)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
@@ -193,7 +193,7 @@ func execStoreSearch(ctx context.Context, stmt *sql.Stmt, email *types.Email) er
 	search := MakeEmailSearchColumns(email)
 	if _, err := stmt.ExecContext(
 		ctx,
-		email.AccountName,
+		email.AccountID,
 		email.FolderName,
 		email.UID,
 		search.Subject,
@@ -236,7 +236,7 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 
 	if _, err := stmtStore.ExecContext(
 		ctx,
-		email.AccountName,
+		email.AccountID,
 		email.FolderName,
 		email.UID,
 		email.MessageID,
@@ -244,7 +244,7 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 	); err != nil {
 		return fmt.Errorf(
 			"failed to store email %s/%s/%d: %w",
-			email.AccountName,
+			email.AccountID,
 			email.FolderName,
 			email.UID,
 			err,
@@ -252,7 +252,7 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 	}
 
 	for _, ref := range email.References {
-		if _, err := stmtSetAccountRef.Exec(email.AccountName, ref, email.MessageID); err != nil {
+		if _, err := stmtSetAccountRef.Exec(email.AccountID, ref, email.MessageID); err != nil {
 			return fmt.Errorf("failed to set account reference: %w", err)
 		}
 	}
@@ -263,7 +263,7 @@ func (c *FolderEmailCache) Store(ctx context.Context, email *types.Email) error 
 		}
 		if _, err := stmtStoreAttachment.ExecContext(
 			ctx,
-			email.AccountName,
+			email.AccountID,
 			email.FolderName,
 			email.UID,
 			part.PartStr,
@@ -305,7 +305,7 @@ func (c *FolderEmailCache) Upsert(ctx context.Context, email *types.Email) error
 
 	if _, err := stmtUpsert.ExecContext(
 		ctx,
-		email.AccountName,
+		email.AccountID,
 		email.FolderName,
 		email.UID,
 		email.MessageID,
@@ -313,7 +313,7 @@ func (c *FolderEmailCache) Upsert(ctx context.Context, email *types.Email) error
 	); err != nil {
 		return fmt.Errorf(
 			"failed to replace email %s/%s/%d: %w",
-			email.AccountName,
+			email.AccountID,
 			email.FolderName,
 			email.UID,
 			err,
@@ -329,14 +329,14 @@ func (c *FolderEmailCache) Upsert(ctx context.Context, email *types.Email) error
 
 func (c *FolderEmailCache) Delete(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 ) error {
 	if c.disabled {
 		return nil
 	}
-	_, err := c.stmtDelete.ExecContext(ctx, accountName, folderName, uid)
+	_, err := c.stmtDelete.ExecContext(ctx, accountID, folderName, uid)
 	if err != nil {
 		return fmt.Errorf("failed to delete email: %w", err)
 	}
@@ -345,7 +345,7 @@ func (c *FolderEmailCache) Delete(
 
 func (c *FolderEmailCache) Get(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 ) (*types.Email, error) {
@@ -354,7 +354,7 @@ func (c *FolderEmailCache) Get(
 	}
 
 	var data []byte
-	err := c.stmtGet.QueryRowContext(ctx, accountName, folderName, uid).Scan(&data)
+	err := c.stmtGet.QueryRowContext(ctx, accountID, folderName, uid).Scan(&data)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	} else if err != nil {
@@ -371,7 +371,7 @@ func (c *FolderEmailCache) Get(
 
 func (c *FolderEmailCache) GetByMessageIDs(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	messageIDs []string,
 ) (map[string][]*types.Email, error) {
 	if c.disabled {
@@ -384,8 +384,8 @@ func (c *FolderEmailCache) GetByMessageIDs(
 		FROM folder_emails
 		WHERE
 			message_id IN(` + inSQL + `)
-			AND account_name = ?`
-	args = append(args, accountName)
+			AND account_id = ?`
+	args = append(args, accountID)
 
 	rows, err := c.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -413,7 +413,7 @@ func (c *FolderEmailCache) GetByMessageIDs(
 
 func (c *FolderEmailCache) SearchReferences(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	references []string,
 ) (map[string][]*types.Email, error) {
 	if c.disabled {
@@ -426,8 +426,8 @@ func (c *FolderEmailCache) SearchReferences(
 		JOIN folder_emails AS e ON r.from_message_id = e.message_id
 		WHERE
 			r.to_message_id IN(` + inSQL + `)
-			AND r.account_name = ?`
-	args = append(args, accountName)
+			AND r.account_id = ?`
+	args = append(args, accountID)
 
 	rows, err := c.db.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -455,12 +455,12 @@ func (c *FolderEmailCache) SearchReferences(
 
 func (c *FolderEmailCache) GetLastMessageIDLookupAt(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	messageID string,
 ) (time.Time, error) {
 	var t time.Time
 	lookupKey := "messageid:" + messageID
-	err := c.stmtGetAccountLookup.QueryRowContext(ctx, accountName, lookupKey).Scan(&t)
+	err := c.stmtGetAccountLookup.QueryRowContext(ctx, accountID, lookupKey).Scan(&t)
 	if errors.Is(err, sql.ErrNoRows) {
 		return t, nil
 	}
@@ -469,22 +469,22 @@ func (c *FolderEmailCache) GetLastMessageIDLookupAt(
 
 func (c *FolderEmailCache) SetLastMessageIDLookupNow(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	messageID string,
 ) error {
 	lookupKey := "messageid:" + messageID
-	_, err := c.stmtSetAccountLookup.ExecContext(ctx, accountName, lookupKey, time.Now().UTC())
+	_, err := c.stmtSetAccountLookup.ExecContext(ctx, accountID, lookupKey, time.Now().UTC())
 	return err
 }
 
 func (c *FolderEmailCache) GetLastReferenceLookupAt(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	reference string,
 ) (time.Time, error) {
 	var t time.Time
 	lookupKey := "reference:" + reference
-	err := c.stmtGetAccountLookup.QueryRowContext(ctx, accountName, lookupKey).Scan(&t)
+	err := c.stmtGetAccountLookup.QueryRowContext(ctx, accountID, lookupKey).Scan(&t)
 	if errors.Is(err, sql.ErrNoRows) {
 		return t, nil
 	}
@@ -493,10 +493,10 @@ func (c *FolderEmailCache) GetLastReferenceLookupAt(
 
 func (c *FolderEmailCache) SetLastReferenceLookupNow(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	reference string,
 ) error {
 	lookupKey := "reference:" + reference
-	_, err := c.stmtSetAccountLookup.ExecContext(ctx, accountName, lookupKey, time.Now().UTC())
+	_, err := c.stmtSetAccountLookup.ExecContext(ctx, accountID, lookupKey, time.Now().UTC())
 	return err
 }

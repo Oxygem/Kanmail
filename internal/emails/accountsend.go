@@ -195,7 +195,7 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 	sentFolder := a.Folders.GetFromName("sent")
 
 	sentEmail := &types.Email{
-		AccountName:     a.Name,
+		AccountID:       a.ID,
 		FolderName:      sentFolder,
 		FolderAliasName: "sent",
 		UID:             0,

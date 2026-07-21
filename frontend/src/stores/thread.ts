@@ -182,13 +182,13 @@ class ThreadStore extends BaseStore {
     thread.forEach(email => {
       _.each(email.from, a => { threadSenders.add(a) })
 
-      const accountName = email.accountName
-      const accountThread = accountToThread.get(accountName)
+      const accountID = email.accountID
+      const accountThread = accountToThread.get(accountID)
 
       if (!accountThread) {
-        accountToThread.set(accountName, makeThread([email]))
+        accountToThread.set(accountID, makeThread([email]))
       } else {
-        accountToThread.set(accountName, makeThread(accountThread.concat(email)))
+        accountToThread.set(accountID, makeThread(accountThread.concat(email)))
       }
     })
 
@@ -215,7 +215,7 @@ class ThreadStore extends BaseStore {
     }
 
     // For each account get folder/parts pairs and for each of those create the fetch requests
-    accountToThread.forEach((aThread, accountName) => {
+    accountToThread.forEach((aThread, accountID) => {
       const folderUids = getFolderUidsForThread(aThread);
       folderUids.forEach((messageParts, folderName) => {
         const parts: FetchPartsMap = {};
@@ -233,8 +233,8 @@ class ThreadStore extends BaseStore {
         }
         requests.push(
           requestStore.doFetchRequest(
-            `Fetch ${Object.keys(uidToAccountMessageId).length} parts in ${accountName}/${folderName}`,
-            EmailsService.GetAccountFolderEmailsContentParts(accountName, folderName, parts),
+            `Fetch ${Object.keys(uidToAccountMessageId).length} parts in ${settingsStore.getAccountName(accountID)}/${folderName}`,
+            EmailsService.GetAccountFolderEmailsContentParts(accountID, folderName, parts),
           ).then(resp => {
             _.each(resp, (partResp, uid) => {
               const key = uidToAccountMessageId[uid];

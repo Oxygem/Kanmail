@@ -171,6 +171,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     ev.preventDefault();
 
     const accountSettings: AccountSettings = {
+      id: this.props.accountSettings?.id || "",
       name: this.state.name,
       imapSettings: this.state.imapSettings || new ConnectionSettings(),
       smtpSettings: this.state.smtpSettings || new ConnectionSettings(),

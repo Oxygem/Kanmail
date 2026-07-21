@@ -107,7 +107,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   getFromAddress(): Address | null {
     const account = _.find(
       settingsStore.props.accounts,
-      a => a.name === this.props.latestMessage.accountName,
+      a => a.id === this.props.latestMessage.accountID,
     );
     if (!account) {
       return null;
@@ -134,7 +134,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
       if (hasParts) {
         EmailsService.CreateForwardAttachments(
-          latestMessage.accountName,
+          latestMessage.accountID,
           latestMessage.folderName,
           latestMessage.uid,
           latestMessage.parts,
@@ -203,7 +203,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     const { latestMessage } = this.props;
     AppService.OpenSendWindow({
       mode: this.state.mode,
-      accountName: latestMessage.accountName,
+      accountID: latestMessage.accountID,
       folderName: latestMessage.folderName,
       uid: latestMessage.uid,
     });
@@ -220,7 +220,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     if (!from) {
       requestStore.addError(
         "Quick reply",
-        new Error(`No account found for ${latestMessage.accountName}`),
+        new Error(`No account found for ${latestMessage.accountID}`),
       );
       return;
     }
@@ -259,7 +259,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
     const sentBodyHtml = this.state.html;
 
-    EmailsService.SendEmail(latestMessage.accountName, sendOptions).then(sentEmail => {
+    EmailsService.SendEmail(latestMessage.accountID, sendOptions).then(sentEmail => {
       trackEvent("QuickReply");
       this.setState({
         isSending: false,
@@ -276,7 +276,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         const newThread = mainEmailStore.injectSentEmail(sentEmail);
         if (newThread) {
           const knownBodies = new Map<string, string>([
-            [`${sentEmail.accountName}-${sentEmail.messageId}`, sentBodyHtml],
+            [`${sentEmail.accountID}-${sentEmail.messageId}`, sentBodyHtml],
           ]);
           threadStore.replaceCurrentThread(newThread, knownBodies);
         } else {
@@ -284,7 +284,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         }
         // Kick a background sync so the real server-side message reconciles.
         mainEmailStore.syncFolderEmails("sent", {
-          accountNames: [latestMessage.accountName],
+          accountIDs: [latestMessage.accountID],
         }).catch(() => {});
       } else {
         threadStore.reloadThread();
@@ -300,7 +300,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
     const deleteOnTrash = keyboard.currentComponent
       ? keyboard.currentComponent.isDeleteOnTrash()
-      : Boolean(settingsStore.getAccountSettings(latestMessage.accountName)?.settings.deleteOnTrash);
+      : Boolean(settingsStore.getAccountSettings(latestMessage.accountID)?.settings.deleteOnTrash);
 
     return (
       <div className="reply-dock" onClick={stopEventPropagation}>

@@ -31,7 +31,7 @@ export function avatarInitial(value: string): string {
 export function getAccountContactOptions(account: AccountSettings): AccountAddressOption[] {
   if (account.contacts && account.contacts.length > 0) {
     return account.contacts.map(addr => ({
-      value: [account.name, addr],
+      value: [account.id, addr],
       label: formatAddress(addr),
     }));
   }
@@ -42,7 +42,7 @@ export function getAccountContactOptions(account: AccountSettings): AccountAddre
   });
 
   return [{
-    value: [account.name, addr],
+    value: [account.id, addr],
     label: formatAddress(addr),
   }];
 }

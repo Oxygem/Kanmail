@@ -19,6 +19,7 @@ func TestFolderSearchCachedEmails(t *testing.T) {
 	ctx := context.Background()
 
 	account := NewAccount(types.AccountSettings{
+		ID:      types.AccountID(t.Name()),
 		Name:    types.AccountName(t.Name()),
 		Folders: types.FolderSettings{Inbox: "INBOX"},
 	}, testCaches)
@@ -26,22 +27,22 @@ func TestFolderSearchCachedEmails(t *testing.T) {
 
 	for _, email := range []*types.Email{
 		{
-			AccountName: types.AccountName(t.Name()),
-			FolderName:  "INBOX",
-			UID:         1,
-			MessageID:   "<1@test>",
-			Subject:     "invoice from alice",
-			From:        []types.Address{{Name: "Alice", Email: "alice@example.com"}},
-			Date:        time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC),
+			AccountID:  types.AccountID(t.Name()),
+			FolderName: "INBOX",
+			UID:        1,
+			MessageID:  "<1@test>",
+			Subject:    "invoice from alice",
+			From:       []types.Address{{Name: "Alice", Email: "alice@example.com"}},
+			Date:       time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC),
 		},
 		{
-			AccountName: types.AccountName(t.Name()),
-			FolderName:  "INBOX",
-			UID:         2,
-			MessageID:   "<2@test>",
-			Subject:     "invoice from bob",
-			From:        []types.Address{{Name: "Bob", Email: "bob@example.com"}},
-			Date:        time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC),
+			AccountID:  types.AccountID(t.Name()),
+			FolderName: "INBOX",
+			UID:        2,
+			MessageID:  "<2@test>",
+			Subject:    "invoice from bob",
+			From:       []types.Address{{Name: "Bob", Email: "bob@example.com"}},
+			Date:       time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC),
 		},
 	} {
 		assert.NoError(t, testCaches.FolderEmailCache.Store(ctx, email))

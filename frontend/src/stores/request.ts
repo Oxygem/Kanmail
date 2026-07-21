@@ -10,7 +10,7 @@ export interface RuntimeError {
   action: string;
   message: string;
   isNetwork?: boolean;
-  accountName?: string;
+  accountID?: string;
   folderName?: string;
   error?: any;
   cause?: any;
@@ -77,8 +77,8 @@ class RequestStore extends BaseStore {
         newError.isNetwork = true;
         target = this.props.networkErrors;
       }
-      if (cause.accountName) {
-        newError.accountName = cause.accountName;
+      if (cause.accountID) {
+        newError.accountID = cause.accountID;
       }
       if (cause.folderName) {
         newError.folderName = cause.folderName;
@@ -98,7 +98,7 @@ class RequestStore extends BaseStore {
 
     if (!newError.isNetwork) {
       trackError(action, newError.message, err?.stack, {
-        accountName: newError.accountName,
+        accountID: newError.accountID,
         folderName: newError.folderName,
       });
     }

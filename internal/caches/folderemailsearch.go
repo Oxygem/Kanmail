@@ -36,7 +36,7 @@ var searchHeaderColumns = map[string]string{
 
 const searchAttachmentSQL = `EXISTS (
 	SELECT 1 FROM folder_email_attachments AS a
-	WHERE a.account_name = s.account_name
+	WHERE a.account_id = s.account_id
 		AND a.folder_name = s.folder_name
 		AND a.uid = s.uid)`
 
@@ -131,7 +131,7 @@ func translateSearchCriteria(criteria *imap.SearchCriteria) (string, []any, bool
 // can't be translated to SQL.
 func (c *FolderEmailCache) Search(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	criteria *imap.SearchCriteria,
 	limit int,
@@ -148,15 +148,15 @@ func (c *FolderEmailCache) Search(
 	query := `
 		SELECT e.data FROM folder_email_search AS s
 		JOIN folder_emails AS e ON
-			e.account_name = s.account_name
+			e.account_id = s.account_id
 			AND e.folder_name = s.folder_name
 			AND e.uid = s.uid
-		WHERE s.account_name = ? AND s.folder_name = ? AND (` + where + `)
+		WHERE s.account_id = ? AND s.folder_name = ? AND (` + where + `)
 		ORDER BY s.date_unix DESC
 		LIMIT ?`
 
 	args := make([]any, 0, len(whereArgs)+3)
-	args = append(args, accountName, folderName)
+	args = append(args, accountID, folderName)
 	args = append(args, whereArgs...)
 	args = append(args, limit)
 

@@ -102,14 +102,14 @@ export function makeThread(messages: IEmail[]): Thread {
 
 export interface ISyncOptions {
   forceProcess: boolean;
-  accountNames: string[];
+  accountIDs: string[];
   query: string; // TODO
 }
 
 export interface IPaginateOptions extends PaginateOptions {
   reset: boolean;
   forceProcess: boolean;
-  accountNames: string[];
+  accountIDs: string[];
 }
 
 // Global store that fetches and manages all emails loaded in the frontend.
@@ -138,7 +138,7 @@ export default class BaseEmails {
   }
 
   getAccountKeys() {
-    return _.map(settingsStore.props.accounts, (account) => account.name);
+    return _.map(settingsStore.props.accounts, (account) => account.id);
   }
 
   getAccountEmails() {
@@ -154,11 +154,11 @@ export default class BaseEmails {
     );
   }
 
-  getAccountsByName() {
+  getAccountsById() {
     return _.reduce(
       settingsStore.props.accounts,
       (memo, account) => {
-        memo[account.name] = account;
+        memo[account.id] = account;
         return memo;
       },
       {}
@@ -181,7 +181,7 @@ export default class BaseEmails {
     throw new Error("Not implemented!!");
   }
 
-  onScrollFolder(folderName: string, allAccounts: boolean, accountNames?: string[]): void {
+  onScrollFolder(folderName: string, allAccounts: boolean, accountIDs?: string[]): void {
     throw new Error("Not implemented!!");
   }
 
@@ -224,15 +224,15 @@ export default class BaseEmails {
   // Threads older than this may be missing messages from accounts that haven't
   // loaded that far yet. Null when no account has pagination meta (eg search).
   getFolderDateWatermark(folderName: string): Date | null {
-    const accountNames = settingsStore.props.currentAccount
+    const accountIDs = settingsStore.props.currentAccount
       ? [settingsStore.props.currentAccount]
       : this.getAccountKeys();
 
     let watermark: Date | null = null;
     const now = new Date();
 
-    _.each(accountNames, (accountName) => {
-      const meta = this.getMetaForAccountFolder(accountName, folderName);
+    _.each(accountIDs, (accountID) => {
+      const meta = this.getMetaForAccountFolder(accountID, folderName);
       if (!meta || meta.exhausted || !meta.lastSentDate) {
         return;
       }
@@ -250,12 +250,12 @@ export default class BaseEmails {
     return watermark;
   }
 
-  getAccountFolderKey(accountName: string, folderName: string): string {
-    return `${accountName}-${folderName}`;
+  getAccountFolderKey(accountID: string, folderName: string): string {
+    return `${accountID}-${folderName}`;
   }
 
-  getAccountFolder(accountName: string, folderName: string): { [_: string]: IEmail } {
-    const key = this.getAccountFolderKey(accountName, folderName);
+  getAccountFolder(accountID: string, folderName: string): { [_: string]: IEmail } {
+    const key = this.getAccountFolderKey(accountID, folderName);
     if (!this.accountFolderUidToEmail[key]) {
       this.accountFolderUidToEmail[key] = {};
     }
@@ -439,8 +439,8 @@ export default class BaseEmails {
 
     await requestStore.doPushRequest(
       `Moving ${messageUids.length} messages from \
-      "${accountKey}/${oldColumn}" -> \
-      "${accountKey}/${newColumn}"`,
+      "${settingsStore.getAccountName(accountKey)}/${oldColumn}" -> \
+      "${settingsStore.getAccountName(accountKey)}/${newColumn}"`,
       EmailsService.MoveAccountFolderEmails(accountKey, oldColumn, newColumn, messageUids),
     )
   };
@@ -457,8 +457,8 @@ export default class BaseEmails {
 
     await requestStore.doPushRequest(
       `Copying ${messageUids.length} messages from \
-      "${accountKey}/${oldColumn}" -> \
-      "${accountKey}/${newColumn}"`,
+      "${settingsStore.getAccountName(accountKey)}/${oldColumn}" -> \
+      "${settingsStore.getAccountName(accountKey)}/${newColumn}"`,
       EmailsService.CopyAccountFolderEmails(accountKey, oldColumn, newColumn, messageUids),
     )
   };
@@ -469,7 +469,7 @@ export default class BaseEmails {
         */
 
     await requestStore.doPushRequest(
-      `Starring ${messageUids.length} messages in ${accountKey}/${folderName}`,
+      `Starring ${messageUids.length} messages in ${settingsStore.getAccountName(accountKey)}/${folderName}`,
       EmailsService.FlagAccountFolderEmails(accountKey, folderName, messageUids),
     )
 
@@ -492,7 +492,7 @@ export default class BaseEmails {
         */
 
     await requestStore.doPushRequest(
-      `Unstarring ${messageUids.length} messages in ${accountKey}/${folderName}`,
+      `Unstarring ${messageUids.length} messages in ${settingsStore.getAccountName(accountKey)}/${folderName}`,
       EmailsService.UnflagAccountFolderEmails(accountKey, folderName, messageUids),
     )
 
@@ -513,7 +513,7 @@ export default class BaseEmails {
         */
 
     await requestStore.doPushRequest(
-      `Deleting ${messageUids.length} messages in ${accountKey}/${folderName}`,
+      `Deleting ${messageUids.length} messages in ${settingsStore.getAccountName(accountKey)}/${folderName}`,
       EmailsService.DeleteAccountFolderEmails(accountKey, folderName, messageUids)
     );
 
@@ -643,7 +643,7 @@ export default class BaseEmails {
             return;
           }
 
-          const accountKey = thread[0].accountName;
+          const accountKey = thread[0].accountID;
           const subject =
             thread[0].subject.match(/\[.*\]/) || thread[0].subject;
           const from_ = _.map(thread[0].from, (address) => address[1]);

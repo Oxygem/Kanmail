@@ -4,7 +4,7 @@ import { EmailsService } from "../../../bindings/github.com/oxygem/kanmail/inter
 import keyboard from "../../keyboard.ts";
 
 interface DebugAppState {
-  accountName: string;
+  accountID: string;
   folderName: string;
   uid: string;
   loading: boolean;
@@ -17,7 +17,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
   private releaseKeyboard: () => void;
 
   constructor(props: {
-    accountName?: string,
+    accountID?: string,
     folderName?: string,
     uid?: string,
   }) {
@@ -25,7 +25,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
     this.releaseKeyboard = keyboard.suspend("DebugApp");
 
     this.state = {
-      accountName: props.accountName || "",
+      accountID: props.accountID || "",
       folderName: props.folderName || "",
       uid: props.uid || "",
 
@@ -35,7 +35,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
       contentData: null,
     };
 
-    if (props.accountName !== "" && props.folderName !== "" && props.uid !== "") {
+    if (props.accountID !== "" && props.folderName !== "" && props.uid !== "") {
       this.loadData();
     }
   }
@@ -44,16 +44,16 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
     this.releaseKeyboard();
   }
 
-  handleInputChange = (field: keyof Pick<DebugAppState, "accountName" | "folderName" | "uid">) => (
+  handleInputChange = (field: keyof Pick<DebugAppState, "accountID" | "folderName" | "uid">) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     this.setState({ [field]: e.target.value } as any);
   };
 
   loadData = async () => {
-    const { accountName, folderName, uid } = this.state;
+    const { accountID, folderName, uid } = this.state;
 
-    if (!accountName || !folderName || !uid) {
+    if (!accountID || !folderName || !uid) {
       this.setState({ error: "All fields are required" });
       return;
     }
@@ -68,7 +68,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
 
     try {
       const [email, content] = await EmailsService.GetAccountFolderEmailAndContent(
-        accountName,
+        accountID,
         folderName,
         uidNum
       );
@@ -92,7 +92,7 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
   };
 
   render() {
-    const { accountName, folderName, uid, loading, error, emailData, contentData } = this.state;
+    const { accountID, folderName, uid, loading, error, emailData, contentData } = this.state;
 
     return (
       <section className="no-select">
@@ -108,8 +108,8 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
               </label>
               <input
                 type="text"
-                value={accountName}
-                onChange={this.handleInputChange("accountName")}
+                value={accountID}
+                onChange={this.handleInputChange("accountID")}
                 placeholder="e.g., main@example.com"
                 style={{ width: "100%", padding: "5px" }}
               />

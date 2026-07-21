@@ -11,7 +11,7 @@ interface IThreadMessageContentProps {
   body: string;
   parts: BodyPart[];
   folderName: string;
-  accountName: string;
+  accountID: string;
   uid: number;
   trusted: boolean;
   sender: string;
@@ -200,7 +200,7 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
         const contentID = "<" + imageURL.substring(4) + ">";
         const matchingPart = _.filter(this.props.parts, p => p.contentID == contentID)[0]
         if (matchingPart) {
-          EmailsService.GetAccountFolderEmailsContentParts(this.props.accountName, this.props.folderName, {
+          EmailsService.GetAccountFolderEmailsContentParts(this.props.accountID, this.props.folderName, {
             [this.props.uid]: matchingPart,
           }).then(r => {
             img.setAttribute("src", `data:${matchingPart.type};base64,${r[this.props.uid]!.data}`);

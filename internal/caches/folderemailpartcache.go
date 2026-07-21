@@ -27,7 +27,7 @@ type FolderEmailPartCache struct {
 func NewFolderEmailPartCache(db *sql.DB) (*FolderEmailPartCache, error) {
 	// Prepare statements
 	stmtStore, err := db.Prepare(`
-		INSERT INTO folder_email_parts (account_name, folder_name, uid, part_id, data)
+		INSERT INTO folder_email_parts (account_id, folder_name, uid, part_id, data)
 		VALUES (?, ?, ?, ?, ?)`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
@@ -35,28 +35,28 @@ func NewFolderEmailPartCache(db *sql.DB) (*FolderEmailPartCache, error) {
 
 	stmtGet, err := db.Prepare(`
 		SELECT data FROM folder_email_parts
-		WHERE account_name = ? AND folder_name = ? AND uid = ? AND part_id = ?`)
+		WHERE account_id = ? AND folder_name = ? AND uid = ? AND part_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare get statement: %w", err)
 	}
 
 	stmtDelete, err := db.Prepare(`
 		DELETE FROM folder_email_parts
-		WHERE account_name = ? AND folder_name = ? AND uid = ?`)
+		WHERE account_id = ? AND folder_name = ? AND uid = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare delete statement: %w", err)
 	}
 
 	stmtDeleteByFolder, err := db.Prepare(`
 		DELETE FROM folder_email_parts
-		WHERE account_name = ? AND folder_name = ?`)
+		WHERE account_id = ? AND folder_name = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteByFolder statement: %w", err)
 	}
 
 	stmtDeleteAcct, err := db.Prepare(`
 		DELETE FROM folder_email_parts
-		WHERE account_name = ?`)
+		WHERE account_id = ?`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare deleteAccount statement: %w", err)
 	}
@@ -75,7 +75,7 @@ func NewFolderEmailPartCache(db *sql.DB) (*FolderEmailPartCache, error) {
 
 func (c *FolderEmailPartCache) Store(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 	partID []int,
@@ -87,7 +87,7 @@ func (c *FolderEmailPartCache) Store(
 
 	_, err := c.stmtStore.ExecContext(
 		ctx,
-		accountName,
+		accountID,
 		folderName,
 		uid,
 		util.PartIDToString(partID),
@@ -101,7 +101,7 @@ func (c *FolderEmailPartCache) Store(
 
 func (c *FolderEmailPartCache) Get(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 	partID []int,
@@ -113,7 +113,7 @@ func (c *FolderEmailPartCache) Get(
 	var data []byte
 	err := c.stmtGet.QueryRowContext(
 		ctx,
-		accountName,
+		accountID,
 		folderName,
 		uid,
 		util.PartIDToString(partID),
@@ -130,36 +130,36 @@ func (c *FolderEmailPartCache) Get(
 
 func (c *FolderEmailPartCache) Delete(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 	uid imap.UID,
 ) error {
 	if c.disabled {
 		return nil
 	}
-	_, err := c.stmtDelete.ExecContext(ctx, accountName, folderName, uid)
+	_, err := c.stmtDelete.ExecContext(ctx, accountID, folderName, uid)
 	return err
 }
 
 func (c *FolderEmailPartCache) DeleteByFolder(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 	folderName types.FolderName,
 ) error {
 	if c.disabled {
 		return nil
 	}
-	_, err := c.stmtDeleteByFolder.ExecContext(ctx, accountName, folderName)
+	_, err := c.stmtDeleteByFolder.ExecContext(ctx, accountID, folderName)
 	return err
 }
 
 func (c *FolderEmailPartCache) DeleteAccount(
 	ctx context.Context,
-	accountName types.AccountName,
+	accountID types.AccountID,
 ) error {
 	if c.disabled {
 		return nil
 	}
-	_, err := c.stmtDeleteAcct.ExecContext(ctx, accountName)
+	_, err := c.stmtDeleteAcct.ExecContext(ctx, accountID)
 	return err
 }

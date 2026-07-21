@@ -156,7 +156,7 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
 
     const columnStore = getColumnStore(this.props.id);
     const filteredThreads = _.filter(this.props.threads, (thread) => {
-      const accountKey = thread[0].accountName;
+      const accountKey = thread[0].accountID;
 
       // If this thread isn't in the selected account, ignore
       if (this.props.currentAccount && accountKey !== this.props.currentAccount) {
@@ -287,7 +287,7 @@ export default class EmailColumnWrapper extends EmailColumn {
     // folder we want to listen for changes on.
     const WrappedEmailColumn = subscribe(
       getColumnStore(this.props.id),
-      [filterStore, ["accountName"]],
+      [filterStore, ["accountID"]],
       [settingsStore, ["columns", "system", "currentAccount"]]
     )(EmailColumn);
 

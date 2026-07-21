@@ -58,9 +58,9 @@ type Folder struct {
 	imap    *IMAPConnectionPool
 	caches  *caches.Caches
 
-	Name        types.FolderName
-	AliasName   types.FolderName
-	AccountName types.AccountName
+	Name      types.FolderName
+	AliasName types.FolderName
+	AccountID types.AccountID
 
 	lock sync.Mutex
 
@@ -81,9 +81,9 @@ func NewFolder(account *Account, name types.FolderName, aliasName types.FolderNa
 		imap:    account.imap,
 		caches:  account.caches,
 
-		AccountName: account.Name,
-		Name:        name,
-		AliasName:   aliasName,
+		AccountID: account.ID,
+		Name:      name,
+		AliasName: aliasName,
 
 		// Matches reset() - a future date means nothing has been sent yet
 		lastSentDate: time.Now().Add(24 * time.Hour),
@@ -196,7 +196,7 @@ func buildSearchCriteria(conn imapinterface.IMAPClient, search string) *imap.Sea
 // X-GM-RAW); criteria the cache can't answer exactly return no results.
 func (f *Folder) SearchCachedEmails(ctx context.Context, search string, limit int) ([]*types.Email, error) {
 	query := parseSearchQuery(search, time.Now())
-	emails, err := f.caches.FolderEmailCache.Search(ctx, f.AccountName, f.Name, query, limit)
+	emails, err := f.caches.FolderEmailCache.Search(ctx, f.AccountID, f.Name, query, limit)
 	zerolog.Ctx(ctx).Debug().
 		Err(err).
 		Int("emails", len(emails)).
@@ -492,7 +492,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 	err := f.imap.WithConnection(ctx, func(conn imapinterface.IMAPClient) error {
 		selectData, err := conn.Select(string(f.Name), nil).Wait()
 		if err != nil {
-			return fmt.Errorf("failed to select folder: %s/%s: %w", f.AccountName, f.Name, err)
+			return fmt.Errorf("failed to select folder: %s/%s: %w", f.account.Name, f.Name, err)
 		}
 		defer func() { conn.Unselect().Wait() }()
 
@@ -503,7 +503,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 				Uint32("uidvalidity_old", f.uidValidity).
 				Uint32("uidvalidity_new", selectData.UIDValidity).
 				Msg("Folder uidvalidity changed, resetting folder")
-			if err := f.caches.DeleteByFolder(ctx, f.AccountName, f.Name); err != nil {
+			if err := f.caches.DeleteByFolder(ctx, f.AccountID, f.Name); err != nil {
 				return fmt.Errorf("failed to delete folder in cache: %s: %w", f.Name, err)
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
@@ -537,7 +537,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			log.Warn().
 				Int("new_uids", len(newUIDs)).
 				Msg("Got too many new UIDs during sync, resetting folder")
-			if err := f.caches.FolderUIDCache.Delete(ctx, f.AccountName, f.Name); err != nil {
+			if err := f.caches.FolderUIDCache.Delete(ctx, f.AccountID, f.Name); err != nil {
 				return fmt.Errorf("failed to delete cached UIDs in folder: %s: %w", f.Name, err)
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
@@ -572,7 +572,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 
 			// Drop removed from the cache
 			for _, uid := range removed {
-				if err := f.caches.FolderEmailCache.Delete(ctx, f.AccountName, f.Name, uid); err != nil {
+				if err := f.caches.FolderEmailCache.Delete(ctx, f.AccountID, f.Name, uid); err != nil {
 					return fmt.Errorf("failed to delete email: %w", err)
 				}
 			}
@@ -585,7 +585,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 		}
 		for uid, flags := range flags {
 			old := false
-			email, err := f.caches.FolderEmailCache.Get(ctx, f.AccountName, f.Name, uid)
+			email, err := f.caches.FolderEmailCache.Get(ctx, f.AccountID, f.Name, uid)
 			if err != nil {
 				return err
 			} else if email == nil {
@@ -632,7 +632,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 }
 
 func (f *Folder) storeUIDs(ctx context.Context) error {
-	return f.caches.FolderUIDCache.Store(ctx, f.AccountName, f.Name, f.uidValidity, f.uidsStartAt, f.uids.All())
+	return f.caches.FolderUIDCache.Store(ctx, f.AccountID, f.Name, f.uidValidity, f.uidsStartAt, f.uids.All())
 }
 
 func (f *Folder) EnsureInitialized(ctx context.Context) error {
@@ -650,7 +650,7 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 	log := zerolog.Ctx(ctx)
 
 	// Try to load from cache
-	if uidValidity, uidsStartAt, cached, err := f.caches.FolderUIDCache.Get(ctx, f.AccountName, f.Name); err != nil {
+	if uidValidity, uidsStartAt, cached, err := f.caches.FolderUIDCache.Get(ctx, f.AccountID, f.Name); err != nil {
 		log.Err(err).Msg("Failed to check for cached UIDs")
 	} else if cached != nil {
 		f.uids = NewUIDList(cached...)
@@ -672,11 +672,11 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 			// If select fails, try creating the folder before failing
 			// TODO: check the err
 			if createErr := conn.Create(string(f.Name), nil).Wait(); createErr != nil {
-				return fmt.Errorf("failed to select folder: %s/%s: %w (JIT create failed: %w)", f.AccountName, f.Name, err, createErr)
+				return fmt.Errorf("failed to select folder: %s/%s: %w (JIT create failed: %w)", f.account.Name, f.Name, err, createErr)
 			}
 			selectData, err = conn.Select(string(f.Name), nil).Wait()
 			if err != nil {
-				return fmt.Errorf("failed to select folder: %s/%s: %w", f.AccountName, f.Name, err)
+				return fmt.Errorf("failed to select folder: %s/%s: %w", f.account.Name, f.Name, err)
 			}
 		}
 		defer func() { conn.Unselect().Wait() }()
@@ -835,7 +835,7 @@ func (f *Folder) getOrFetchEmails(
 	uncachedUIDs := make([]imap.UID, 0, len(uids))
 
 	for _, uid := range uids {
-		email, err := f.caches.FolderEmailCache.Get(ctx, f.AccountName, f.Name, uid)
+		email, err := f.caches.FolderEmailCache.Get(ctx, f.AccountID, f.Name, uid)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get email from cache: %d: %w", uid, err)
 		} else if email != nil {
@@ -870,7 +870,7 @@ func (f *Folder) getOrFetchEmails(
 					// Create a fake email to show in UI (and allow deleting/moving it)
 					fetchedEmails = append(fetchedEmails, &types.Email{
 						FolderName:      "", // must be "" to skip caching below
-						AccountName:     f.AccountName,
+						AccountID:       f.AccountID,
 						FolderAliasName: f.AliasName,
 						UID:             uid,
 						Date:            time.Now(),
@@ -1034,7 +1034,7 @@ func (f *Folder) getOrFetchEmailParts(
 	missing := make(FetchPartsMap, len(partsMap))
 
 	for uid, part := range partsMap {
-		cached, err := f.caches.FolderEmailPartCache.Get(ctx, f.AccountName, f.Name, uid, part.PartID)
+		cached, err := f.caches.FolderEmailPartCache.Get(ctx, f.AccountID, f.Name, uid, part.PartID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get email part from cache: %d/%v: %w", uid, part.PartID, err)
 		} else if cached != nil {
@@ -1067,7 +1067,7 @@ func (f *Folder) getOrFetchEmailParts(
 
 		if err := f.caches.FolderEmailPartCache.Store(
 			ctx,
-			f.AccountName,
+			f.AccountID,
 			f.Name,
 			uid,
 			partResp.PartID,

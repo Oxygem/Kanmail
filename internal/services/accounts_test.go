@@ -12,6 +12,7 @@ import (
 
 func makeAccountSettings(name string) types.AccountSettings {
 	settings := types.AccountSettings{
+		ID:   types.AccountID(name + "-id"),
 		Name: types.AccountName(name),
 		IMAPSettings: types.ConnectionSettings{
 			Username: name + "@test.local",
@@ -31,12 +32,12 @@ func TestResetAccountsCacheKeepsUnchangedAccounts(t *testing.T) {
 
 	service := &AccountsService{
 		log: zerolog.Nop(),
-		accounts: map[types.AccountName]*emails.Account{
-			"one": emails.NewAccount(one, nil),
-			"two": emails.NewAccount(two, nil),
+		accounts: map[types.AccountID]*emails.Account{
+			"one-id": emails.NewAccount(one, nil),
+			"two-id": emails.NewAccount(two, nil),
 		},
 	}
-	accountOne := service.accounts["one"]
+	accountOne := service.accounts["one-id"]
 
 	// Unrelated settings change: both accounts unchanged
 	if err := service.ResetAccountsCache(context.Background(), types.Settings{
@@ -44,7 +45,7 @@ func TestResetAccountsCacheKeepsUnchangedAccounts(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("reset failed: %v", err)
 	}
-	if len(service.accounts) != 2 || service.accounts["one"] != accountOne {
+	if len(service.accounts) != 2 || service.accounts["one-id"] != accountOne {
 		t.Fatal("unchanged accounts should be kept")
 	}
 
@@ -56,10 +57,10 @@ func TestResetAccountsCacheKeepsUnchangedAccounts(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("reset failed: %v", err)
 	}
-	if service.accounts["one"] != accountOne {
+	if service.accounts["one-id"] != accountOne {
 		t.Fatal("unchanged account should be kept")
 	}
-	if _, ok := service.accounts["two"]; ok {
+	if _, ok := service.accounts["two-id"]; ok {
 		t.Fatal("changed account should be dropped")
 	}
 

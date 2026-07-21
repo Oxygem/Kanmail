@@ -213,9 +213,9 @@ class SettingsStore extends BaseStore {
 		await this.putSettings(["sidebarFolders"]);
 	}
 
-	async setCurrentAccount(accountName: string | null) {
+	async setCurrentAccount(accountID: string | null) {
 		this.savePrevProps();
-		const value = accountName || "";
+		const value = accountID || "";
 		if (this.props.currentAccount != value) {
 			this.props.currentAccount = value;
 			await this.putSettings(["currentAccount"]);
@@ -276,15 +276,20 @@ class SettingsStore extends BaseStore {
 		await this.putSettings();
 	}
 
-	getAccountSettings(accountName: string): AccountSettings | undefined {
+	getAccountSettings(accountID: string): AccountSettings | undefined {
 		return _.find(
 			this.props.accounts,
-			(account) => account.name === accountName,
+			(account) => account.id === accountID,
 		);
 	}
 
-	getAccountAccentColor(accountName: string): string | undefined {
-		const c = this.getAccountSettings(accountName)?.settings.accentColor;
+	// Display name for an account ID, for user-facing labels
+	getAccountName(accountID: string): string {
+		return this.getAccountSettings(accountID)?.name || accountID;
+	}
+
+	getAccountAccentColor(accountID: string): string | undefined {
+		const c = this.getAccountSettings(accountID)?.settings.accentColor;
 		if (c === "transparent") {
 			return undefined;
 		}
@@ -295,8 +300,8 @@ class SettingsStore extends BaseStore {
 		await EmailsService.ClearOAuthAccessTokens();
 	}
 
-	async closeAccountConnections(accountName: string) {
-		await EmailsService.CloseAccountConnections(accountName);
+	async closeAccountConnections(accountID: string) {
+		await EmailsService.CloseAccountConnections(accountID);
 	}
 }
 

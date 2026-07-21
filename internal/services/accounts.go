@@ -22,7 +22,7 @@ type AccountsService struct {
 	settings     *SettingsService
 	caches       *caches.Caches
 	accountsLock sync.Mutex
-	accounts     map[types.AccountName]*emails.Account
+	accounts     map[types.AccountID]*emails.Account
 }
 
 func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *caches.Caches) *AccountsService {
@@ -30,7 +30,7 @@ func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *c
 		log:      log.With().Str("component", "accounts").Logger(),
 		settings: settings,
 		caches:   caches,
-		accounts: make(map[types.AccountName]*emails.Account),
+		accounts: make(map[types.AccountID]*emails.Account),
 	}
 
 	// Drop cached accounts on settings changes
@@ -42,43 +42,45 @@ func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *c
 // removed. Unchanged accounts keep their connections (pools and IDLE watchers)
 // alive - most settings changes don't touch accounts at all.
 func (a *AccountsService) ResetAccountsCache(ctx context.Context, settings types.Settings) error {
-	newSettings := make(map[types.AccountName]types.AccountSettings, len(settings.Accounts))
+	newSettings := make(map[types.AccountID]types.AccountSettings, len(settings.Accounts))
 	for _, accountSettings := range settings.Accounts {
-		newSettings[accountSettings.Name] = accountSettings
+		newSettings[accountSettings.ID] = accountSettings
 	}
 
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
 
-	for name, account := range a.accounts {
-		if accountSettings, ok := newSettings[name]; ok &&
+	for id, account := range a.accounts {
+		if accountSettings, ok := newSettings[id]; ok &&
 			reflect.DeepEqual(account.AccountSettings, accountSettings) {
 			continue
 		}
 		a.log.Info().
-			Str("account", string(name)).
+			Str("account", string(account.Name)).
 			Msg("Account settings changed, closing connections")
 		account.CloseConnections(ctx)
-		delete(a.accounts, name)
+		delete(a.accounts, id)
 	}
 	return nil
 }
 
-func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountName types.AccountName) error {
+func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountID types.AccountID) error {
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
 
 	// Remove any cached account
-	if account, ok := a.accounts[accountName]; ok {
+	if account, ok := a.accounts[accountID]; ok {
 		account.CloseConnections(ctx)
-		delete(a.accounts, accountName)
+		delete(a.accounts, accountID)
 	}
 
+	a.settings.deleteAccountSecrets(accountID)
+
 	// Delete the folder from the cache
-	return a.caches.DeleteByAccount(ctx, accountName)
+	return a.caches.DeleteByAccount(ctx, accountID)
 }
 
-func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName types.AccountName) *emails.Account {
+func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountID types.AccountID) *emails.Account {
 	// Get settings *before* locking, so we don't deadlock sync/paginate reqs against settings changes,
 	// which can both happen rapidly while clicking through the folders in the sidebar.
 	settings := a.settings.getSettingsWithSecrets(ctx)
@@ -86,14 +88,14 @@ func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountName ty
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
 
-	if account, ok := a.accounts[accountName]; ok {
+	if account, ok := a.accounts[accountID]; ok {
 		return account
 	}
 
 	for _, accountSettings := range settings.Accounts {
-		if accountSettings.Name == accountName {
+		if accountSettings.ID == accountID {
 			account := emails.NewAccount(accountSettings, a.caches)
-			a.accounts[accountName] = account
+			a.accounts[accountID] = account
 			return account
 		}
 	}
@@ -114,8 +116,8 @@ func (a *AccountsService) TestAccountSettings(
 	// returned settings so secrets stay out of the frontend
 	testSettings := settings
 	if err := errors.Join(
-		a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.IMAPSettings),
-		a.fillConnectionSecretsIfEmpty(settings.Name, &testSettings.SMTPSettings),
+		a.fillConnectionSecretsIfEmpty(settings.ID, &testSettings.IMAPSettings),
+		a.fillConnectionSecretsIfEmpty(settings.ID, &testSettings.SMTPSettings),
 	); err != nil {
 		return settings, types.WrapAccountSettingsError(settings, err)
 	}
@@ -141,11 +143,15 @@ func (a *AccountsService) TestAccountSettings(
 }
 
 func (a *AccountsService) fillConnectionSecretsIfEmpty(
-	name types.AccountName,
+	id types.AccountID,
 	conn *types.ConnectionSettings,
 ) error {
+	// New accounts have no ID yet - their secrets always arrive as-sent
+	if id == "" {
+		return nil
+	}
 	if conn.Password == "" && conn.OAuthRefreshToken == "" {
-		return a.settings.unhideConnectionSettings(name, conn)
+		return a.settings.unhideConnectionSettings(id, conn)
 	}
 	return nil
 }

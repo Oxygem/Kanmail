@@ -52,7 +52,7 @@ func imapAddrsToAddrs(imapAddrs []imap.Address) []types.Address {
 
 func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMessageBuffer) *types.Email {
 	email := types.Email{
-		AccountName: f.AccountName,
+		AccountID: f.AccountID,
 
 		FolderName:      f.Name,
 		FolderAliasName: f.AliasName,
