@@ -243,6 +243,12 @@ class ColumnStore extends BaseStore {
         });
       });
 
+      this.hiddenMessageIds.forEach((messageId) => {
+        if (!(messageId in this.folderUidsSnapshot)) {
+          this.hiddenMessageIds.delete(messageId);
+        }
+      });
+
       this.triggerUpdate(["threads"]);
     } else {
       console.debug(`Skip set unchanged threads in column: ${this.folderName}`);
