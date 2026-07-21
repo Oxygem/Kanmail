@@ -664,6 +664,11 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     return this.renderPanel("goodies-panel", body);
   }
 
+  setTab = (tab: string) => {
+    this.setState({ tab });
+    window.scrollTo(0, 0);
+  };
+
   renderTabMenu() {
     if (this.props.isWelcomeSettings) {
       return null;
@@ -671,23 +676,23 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     return <nav className="titlebar">
       <a
-        onClick={() => (this.setState({ tab: "accounts" }))}
+        onClick={() => this.setTab("accounts")}
         className={this.state.tab == "accounts" ? "active" : ""}
       >Accounts</a>
       <a
-        onClick={() => (this.setState({ tab: "appearance" }))}
+        onClick={() => this.setTab("appearance")}
         className={this.state.tab == "appearance" ? "active" : ""}
       >Appearance</a>
       <a
-        onClick={() => (this.setState({ tab: "shortcuts" }))}
+        onClick={() => this.setTab("shortcuts")}
         className={this.state.tab == "shortcuts" ? "active" : ""}
       >Shortcuts</a>
       <a
-        onClick={() => (this.setState({ tab: "system" }))}
+        onClick={() => this.setTab("system")}
         className={this.state.tab == "system" ? "active" : ""}
       >System</a>
       {systemStore.props.isLicensed ? <a
-        onClick={() => (this.setState({ tab: "licensed" }))}
+        onClick={() => this.setTab("licensed")}
         className={this.state.tab == "licensed" ? "active" : ""}
       >🏆 Goodies</a> : null}
       <div className="header-errors-anchor"></div>

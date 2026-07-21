@@ -14,6 +14,7 @@ import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { collectVisibleThreadComponents } from "../../util/threads.ts";
 import { createWindowPositionHandlers } from "../../window.ts";
+import Tooltip from "../Tooltip.tsx";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
 import CommandBar from "./CommandBar.tsx";
@@ -206,16 +207,21 @@ export default class EmailsApp extends React.Component<ISettings> {
         <Search />
         <div className="header-errors-anchor"></div>
         <div className="spacer" data-tauri-drag-region></div>
-        <button
-          className="btn-primary"
-          onClick={() => {
-            AppService.OpenSendWindow({});
-            trackEvent("ToolbarOpenSend");
-          }}
+        <Tooltip
+          text={<span>Compose (<i className="fa fa-keyboard-o" /> c)</span>}
+          position="left"
         >
-          <i className="fa fa-pencil-square-o"></i>
-          Compose
-        </button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              AppService.OpenSendWindow({});
+              trackEvent("ToolbarOpenSend");
+            }}
+          >
+            <i className="fa fa-pencil-square-o"></i>
+            Compose
+          </button>
+        </Tooltip>
       </div>
     );
   }

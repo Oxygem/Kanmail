@@ -23,6 +23,7 @@ import {
 } from "../../util/string.js";
 import { buildMovePage } from "../../util/commands.tsx";
 import {
+  collectVisibleThreadComponents,
   getMoveDataFromThreadComponent,
   getThreadColumnMessageIds,
 } from "../../util/threads.js";
@@ -438,14 +439,26 @@ export default class EmailColumnThread extends React.Component<
     const columnStore = getColumnStore(this.props.columnId);
     columnStore.hideThread(thread);
 
-    // Selection has already moved on to the next thread (selectAfterThreadAction
-    // runs before the action handlers) — snapshot it so undo can tell whether
-    // the user has navigated elsewhere since.
-    const selectedAfterAction = keyboard.currentComponent;
+    // Selection has already moved on (selectAfterThreadAction runs before the
+    // action handlers). Undo should re-select this thread unless the user has
+    // deliberately navigated elsewhere since — but the collapsing row can shift
+    // a flanking thread under the cursor and hover-steal (or clear) selection,
+    // so treat both neighbours as "still where the action left it". Hashes,
+    // not component instances, as components remount on column re-render.
+    const reselectableHashes = new Set(
+      _.compact([
+        keyboard.currentComponent?.props.thread.hash,
+        this.props.getPreviousThread()?.props.thread.hash,
+        this.props.getNextThread()?.props.thread.hash,
+      ]),
+    );
 
     const undoMove = (extraState = {}) => {
       // Unhide the emails via the store, reverting above
       columnStore.showThread(thread);
+
+      const current = keyboard.currentComponent;
+      const shouldReselect = !current || reselectableHashes.has(current.props.thread.hash);
 
       if (this.element) {
         // If we still have an element, just update the state
@@ -454,12 +467,21 @@ export default class EmailColumnThread extends React.Component<
           ...extraState,
         });
 
-        if (keyboard.currentComponent === selectedAfterAction) {
+        if (shouldReselect) {
           keyboard.selectThread(this, "nearest");
         }
       } else {
-        // Failing that, re-render the column
+        // Failing that, re-render the column and select the remounted component
         columnStore.triggerUpdate();
+        if (shouldReselect) {
+          _.defer(() => {
+            const restored = _.find(
+              collectVisibleThreadComponents(this.props.column.threadRefs),
+              (component) => component.props.thread.hash === thread.hash,
+            );
+            keyboard.selectThread(restored, "nearest");
+          });
+        }
       }
     };
 

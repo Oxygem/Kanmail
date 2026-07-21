@@ -1,3 +1,4 @@
+import _ from "lodash";
 import PropTypes from "prop-types";
 import React from "react";
 
@@ -11,41 +12,56 @@ export class TheTooltip extends React.Component<Partial<ITooltipProps>> {
       return null;
     }
 
-    const position = this.props.targetElement!.getBoundingClientRect();
-    const style: React.CSSProperties = {};
+    const target = this.props.targetElement!.getBoundingClientRect();
 
-    if (this.props.position === "default") {
-      // Default: put the tooltip just below the left side of the target
-      style.top = position.bottom + 4;
-      style.left = position.left;
-    } else {
-      // Non-default: hide tooltip so we can calculate pos using it's own w/h before showing
-      style.visibility = "hidden";
-    }
-
+    // Render hidden first so we can measure the tooltip's own size, then
+    // position from the preferred side, flipping/clamping to stay on screen.
     const onload = (ref: HTMLElement | null) => {
-      if (!ref || this.props.position === "default") {
+      if (!ref) {
         return;
       }
-      const pos = ref.getBoundingClientRect();
+      const gap = 4;
+      const tip = ref.getBoundingClientRect();
+
+      let left: number;
+      let top: number;
 
       if (this.props.position === "left") {
-        ref.style.visibility = "visible";
-        ref.style.left = position.left - pos.width - 4 + "px";
-        ref.style.top = position.top + (position.height / 2) - (pos.height / 2) + "px";
+        left = target.left - tip.width - gap;
+        top = target.top + (target.height - tip.height) / 2;
+        if (left < gap) {
+          left = target.right + gap;
+        }
       } else if (this.props.position === "right") {
-        ref.style.visibility = "visible";
-        ref.style.left = position.right + 4 + "px";
-        ref.style.top = position.top + (position.height / 2) - (pos.height / 2) + "px";
+        left = target.right + gap;
+        top = target.top + (target.height - tip.height) / 2;
+        if (left + tip.width > window.innerWidth - gap) {
+          left = target.left - tip.width - gap;
+        }
+      } else if (this.props.position === "top") {
+        left = target.left + (target.width - tip.width) / 2;
+        top = target.top - tip.height - gap;
+        if (top < gap) {
+          top = target.bottom + gap;
+        }
       } else {
-        throw new Error("unknown position: " + this.props.position)
+        // Default: just below the left side of the target
+        left = target.left;
+        top = target.bottom + gap;
+        if (top + tip.height > window.innerHeight - gap) {
+          top = target.top - tip.height - gap;
+        }
       }
+
+      ref.style.left = _.clamp(left, gap, window.innerWidth - tip.width - gap) + "px";
+      ref.style.top = _.clamp(top, gap, window.innerHeight - tip.height - gap) + "px";
+      ref.style.visibility = "visible";
     }
 
     return (
       <div
         className="tooltip"
-        style={style}
+        style={{ visibility: "hidden" }}
         ref={onload}
       >
         {this.props.text}

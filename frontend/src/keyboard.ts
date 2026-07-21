@@ -3,6 +3,8 @@ import _ from "lodash";
 import { AppService } from "../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import type EmailColumnThread from "./components/emails/EmailColumnThread.tsx";
 import type EmailsApp from "./components/emails/EmailsApp.tsx";
+import type QuickReply from "./components/emails/QuickReply.tsx";
+import type { Mode as QuickReplyMode } from "./components/emails/QuickReply.tsx";
 import cheatsheetStore from "./stores/cheatsheet.ts";
 import commandStore from "./stores/command.ts";
 import requestStore from "./stores/request.ts";
@@ -73,6 +75,9 @@ export function bindingsEqual(a: Binding, b: Binding): boolean {
   return bindingToString(a) === bindingToString(b);
 }
 
+export const isMac = window.navigator.platform.toUpperCase().includes("MAC");
+export const metaKeyLabel = isMac ? "⌘" : "ctrl";
+
 export function bindingToDisplayString(b: Binding): string {
   const labels: Record<string, string> = {
     " ": "Space",
@@ -102,6 +107,9 @@ class Keyboard {
   // The mounted EmailsApp, used to find a thread to focus when entering
   // keyboard mode with nothing selected.
   emailsApp: EmailsApp | null = null;
+
+  // The mounted QuickReply inside the open thread reader, if any.
+  quickReply: QuickReply | null = null;
 
   // id → Shortcut
   private shortcuts = new Map<string, Shortcut>();
@@ -584,12 +592,32 @@ keyboard.register({
   handler: (ev) => keyboard.startMoveCurrentThread(ev),
 });
 
+// Use the quick reply when the thread reader is open (falling back to the
+// send window when the reader has no quick reply, e.g. drafts); otherwise
+// open a send window directly.
+const openReply = (
+  ev,
+  mode: QuickReplyMode,
+  openWindow: (component: EmailColumnThread, ev) => void,
+) => {
+  const component = keyboard.currentComponent;
+  if (!component) {
+    return;
+  }
+
+  if (threadStore.isOpen && keyboard.quickReply) {
+    keyboard.quickReply.handleExpand(mode);
+  } else {
+    openWindow(component, ev);
+  }
+};
+
 keyboard.register({
   id: "thread.reply",
   description: "Reply to current thread",
   scope: "thread",
   defaults: [{ key: "r" }],
-  handler: (ev) => keyboard.currentComponent?.handleClickReply(ev),
+  handler: (ev) => openReply(ev, "reply", (c, ev) => c.handleClickReply(ev)),
 });
 
 keyboard.register({
@@ -597,7 +625,7 @@ keyboard.register({
   description: "Reply-all to current thread",
   scope: "thread",
   defaults: [{ key: "a" }],
-  handler: (ev) => keyboard.currentComponent?.handleClickReplyAll(ev),
+  handler: (ev) => openReply(ev, "reply-all", (c, ev) => c.handleClickReplyAll(ev)),
 });
 
 keyboard.register({
@@ -605,7 +633,7 @@ keyboard.register({
   description: "Forward current thread",
   scope: "thread",
   defaults: [{ key: "f" }],
-  handler: (ev) => keyboard.currentComponent?.handleClickForward(ev),
+  handler: (ev) => openReply(ev, "forward", (c, ev) => c.handleClickForward(ev)),
 });
 
 keyboard.register({
