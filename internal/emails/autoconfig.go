@@ -8,8 +8,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/joeguo/tldextract"
 	"github.com/rs/zerolog"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/oxygem/kanmail/internal/types"
 )
@@ -18,16 +18,6 @@ const (
 	autoconfURL = "https://autoconfig.%s/mail/config-v1.1.xml?emailaddress=%s"
 	ispdbURL    = "https://ispdb.kanmail.io/%s/v1.1/config.xml"
 )
-
-var tldCache *tldextract.TLDExtract
-
-func InitTLDCache(path string) {
-	c, err := tldextract.New(path, false)
-	if err != nil {
-		panic(err)
-	}
-	tldCache = c
-}
 
 func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string) (types.AccountSettings, error) {
 	// Make some sensible defaults, the client will fallback to these if we fail to autoconf
@@ -78,8 +68,9 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 }
 
 func getAutconfigForDomain(ctx context.Context, username, domain string) *types.AccountSettings {
-	domainBits := tldCache.Extract(domain)
-	domain = domainBits.Root + "." + domainBits.Tld
+	if rootDomain, err := publicsuffix.EffectiveTLDPlusOne(domain); err == nil {
+		domain = rootDomain
+	}
 
 	ispdbURL := fmt.Sprintf(ispdbURL, domain)
 	if settings, err := getAutoconfFromURL(ctx, ispdbURL); settings != nil {

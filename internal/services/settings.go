@@ -76,7 +76,6 @@ func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppS
 		panic(err)
 	}
 
-	emails.InitTLDCache(path.Join(cacheDir, "tldextract"))
 	emails.InitTempDirForFailedDecodes(path.Join(cacheDir, "failed-decodes"))
 
 	appService.SetDeviceID(configDir)
