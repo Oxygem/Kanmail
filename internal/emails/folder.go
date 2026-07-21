@@ -35,6 +35,25 @@ var htmlStripper = bluemonday.StrictPolicy()
 // https://www.getresponse.com/blog/supported-html-tags-in-email-clients
 var htmlCleaner = bluemonday.UGCPolicy().RequireParseableURLs(false)
 
+// Cleans full-HTML documents (typically marketing emails) for display in the
+// untrusted iframe: strips all script vectors (script/event handlers/javascript:
+// URLs) while keeping the presentational markup these emails rely on
+var fullHTMLCleaner = newFullHTMLCleaner()
+
+func newFullHTMLCleaner() *bluemonday.Policy {
+	p := bluemonday.UGCPolicy()
+	p.AllowDataURIImages()
+	p.AllowURLSchemes("cid")
+	p.AllowAttrs("style").Globally()
+	p.AllowAttrs(
+		"width", "height", "align", "valign", "bgcolor", "background",
+		"border", "cellpadding", "cellspacing",
+	).Globally()
+	p.AllowElements("center", "font")
+	p.AllowAttrs("color", "face", "size").OnElements("font")
+	return p
+}
+
 // Convert text/plain -> safe markdown HTML
 var markdownConverter = goldmark.New(
 	goldmark.WithExtensions(extension.Linkify, extension.TaskList),

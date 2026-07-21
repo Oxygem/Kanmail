@@ -215,9 +215,10 @@ func (f *Folder) makeBodyPartResp(ctx context.Context, in bodyPartResp) *BodyPar
 	switch in.Type {
 	case "text/html":
 		if isFullHTML(decoded) {
-			// If full HTML doc, pass as-is
-			out.Data = string(decoded)
-			log.Debug().Msg("Not converting full HTML document (untrusted)")
+			// Full HTML doc: strip script vectors but keep untrusted so the
+			// frontend renders it in the isolated iframe
+			out.Data = string(fullHTMLCleaner.SanitizeBytes(decoded))
+			log.Debug().Msg("Sanitized full HTML document (untrusted)")
 		} else {
 			// Otherwise sanitize it and flag trusted
 			out.Data = string(htmlCleaner.SanitizeBytes(decoded))

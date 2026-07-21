@@ -315,19 +315,27 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
       };
       this.frameElement.addEventListener("load", this.frameLoadHandler);
 
-      const doc = this.doc;
+      // CSP blocks any script execution from the email content itself: only
+      // our own iframe scripts (darkreader) may run, styles are limited to our
+      // own plus inline, and forms/navigation are disabled entirely
+      const origin = window.location.origin;
+      const csp = [
+        "default-src 'none'",
+        `script-src ${origin}`,
+        `style-src ${origin} 'unsafe-inline'`,
+        "img-src data: about: http: https:",
+        `font-src ${origin} data: http: https:`,
+        `connect-src ${origin}`,
+        "form-action 'none'",
+        "base-uri 'none'",
+      ].join("; ");
 
-      const s = document.createElement("script");
-      s.src = "/iframe/darkreader.min.js";
-      doc.appendChild(s);
-
-      const l = document.createElement("link");
-      l.rel = "stylesheet"
-      l.type = "text/css"
-      l.href = "/iframe/inject.css";
-      doc.appendChild(l)
-
-      this.frameElement.srcdoc = doc.innerHTML;
+      this.frameElement.srcdoc = "<!DOCTYPE html><html><head>"
+        + '<meta charset="utf-8">'
+        + `<meta http-equiv="Content-Security-Policy" content="${csp}">`
+        + '<link rel="stylesheet" type="text/css" href="/iframe/inject.css">'
+        + '<script src="/iframe/darkreader.min.js"></script>'
+        + `</head><body>${this.doc.innerHTML}</body></html>`;
     }
   }
 
