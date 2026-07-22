@@ -6,7 +6,6 @@ import { AccountSettings, Address, CacheStats, Settings } from "../../../binding
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import keyboard from "../../keyboard.ts";
-import filterStore from "../../stores/filters.ts";
 import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
@@ -104,7 +103,7 @@ interface IAccountState {
 }
 
 class Account extends React.Component<IAccountProps, IAccountState> {
-  constructor(props) {
+  constructor(props: IAccountProps) {
     super(props);
 
     this.state = {
@@ -121,7 +120,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
   render() {
     // Secrets are redacted before settings reach the frontend - hasCredentials marks a
     // keyring-held secret; password/oauthRefreshToken cover just-entered ones not yet saved
-    const hasConnectionCredentials = (conn) =>
+    const hasConnectionCredentials = (conn: any) =>
       conn && (conn.hasCredentials || conn.password || conn.oauthRefreshToken);
     const hasValidCredentials =
       hasConnectionCredentials(this.props.imapSettings)
@@ -773,12 +772,6 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
                 Math.round(Math.min(window.screen.availHeight * 0.9, 1000)),
               );
               await settingsStore.updateSettings(this.props);
-              // Fetch folders here once the accounts exist backend-side —
-              // EmailsApp can't detect them being added because welcome
-              // settings mutate the store accounts array in-place
-              this.props.accounts.forEach(
-                account => filterStore.getAccountFolderNames(account.id),
-              );
             }}
           >
             Start using Kanmail <i className="fa fa-arrow-right" />

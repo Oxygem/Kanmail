@@ -3,9 +3,9 @@ import { EmailsService, SettingsService } from "../../bindings/github.com/oxygem
 import { AccountSettings, ColumnGroup, EventName, FolderName, Settings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events } from "../../wails/runtime.js";
 import { setupThemes } from "../theme.ts";
-import { applyZoom } from "../zoom.ts";
 import { trackEvent } from "../util/analytics.ts";
 import { arrayMove } from "../util/array.ts";
+import { applyZoom } from "../zoom.ts";
 import { BaseStore } from "./base.tsx";
 
 export interface ISettings extends Settings {
@@ -223,8 +223,12 @@ class SettingsStore extends BaseStore {
 	}
 
 	async putSettings(propNames?: string[]) {
-		// Immediately send the result to this window before saving
-		this.triggerUpdate(propNames);
+		// If all accounts have IDs we can optimistically send the result to this window before
+		// saving to make the app feel snappier. If we have un-ID-ed accounts we need to wait for
+		// the backend to assign those.
+		if (!_.some(this.props.accounts, account => account.id === "")) {
+			this.triggerUpdate(propNames);
+		}
 		setupThemes(this.props);
 		applyZoom(this.props.system.zoom);
 		return SettingsService.PutSettings(this.props);
