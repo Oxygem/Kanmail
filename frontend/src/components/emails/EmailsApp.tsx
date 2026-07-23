@@ -53,7 +53,8 @@ export default class EmailsApp extends React.Component<ISettings> {
     // Create resize/move window position saver handlers
     createWindowPositionHandlers();
 
-    // Kick off license + update checks
+    // Kick off version + license + update checks
+    systemStore.checkCurrentVersion();
     systemStore.checkLicense();
     systemStore.checkUpdate();
     // Recheck every 24h

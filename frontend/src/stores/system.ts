@@ -42,7 +42,12 @@ class SystemStore extends BaseStore {
     }
 
     async checkCurrentVersion(): Promise<void> {
-        this.props.currentVersion = await AppService.GetCurrentVersion();
+        const currentVersion = await AppService.GetCurrentVersion();
+        if (currentVersion === this.props.currentVersion) {
+            return;
+        }
+        this.props.currentVersion = currentVersion;
+        this.triggerUpdate(["currentVersion"]);
     }
 
     async checkDebug(): Promise<void> {
