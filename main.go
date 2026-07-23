@@ -84,7 +84,7 @@ func main() {
 			zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		}
 	} else {
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
 	log.Info().
