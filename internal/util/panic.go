@@ -40,8 +40,11 @@ func ReportPanic(ctx context.Context, err any) {
 	if analyticsEnabled && deviceID != "" {
 		trackCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		_ = backend.SendAnalytics(trackCtx, deviceID, "$exception", map[string]any{
-			"$exception_type":            "go_panic",
-			"$exception_message":         fmt.Sprintf("%v", err),
+			"$exception_list": []map[string]any{{
+				"type":      "go_panic",
+				"value":     fmt.Sprintf("%v", err),
+				"mechanism": map[string]any{"handled": true, "synthetic": false},
+			}},
 			"$exception_stack_trace_raw": string(debug.Stack()),
 			"$exception_source":          "backend",
 		})

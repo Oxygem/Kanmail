@@ -20,8 +20,11 @@ export async function trackError(
     setTimeout(() => recentErrors.delete(key), 60_000);
 
     await trackEvent("$exception", {
-        $exception_type: type,
-        $exception_message: message,
+        $exception_list: [{
+            type,
+            value: message,
+            mechanism: { handled: true, synthetic: false },
+        }],
         $exception_stack_trace_raw: stack || "",
         $exception_source: "frontend",
         ...extra,
