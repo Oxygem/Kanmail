@@ -21,6 +21,11 @@ var BACKEND_API_URL = "https://backend.kanmail.io"
 var httpClient *http.Client
 var sessionID string
 var sessionIDOnce sync.Once
+var appVersion string
+
+func SetAppVersion(version string) {
+	appVersion = version
+}
 
 func init() {
 	url := os.Getenv("KANMAIL_BACKEND_API_URL")
@@ -62,6 +67,9 @@ func SendAnalytics(ctx context.Context, deviceID, event string, properties map[s
 	properties["$device_id"] = deviceID
 	if sessionID != "" {
 		properties["$session_id"] = sessionID
+	}
+	if appVersion != "" {
+		properties["$app_version"] = appVersion
 	}
 
 	payload := map[string]any{

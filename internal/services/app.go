@@ -58,6 +58,9 @@ type AppService struct {
 }
 
 func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring) *AppService {
+	if version > 0 {
+		backend.SetAppVersion(fmt.Sprintf("2.%d", version))
+	}
 	return &AppService{
 		log:         log.With().Str("component", "app").Logger(),
 		keyring:     keyring,
