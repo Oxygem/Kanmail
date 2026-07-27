@@ -92,6 +92,10 @@ type Folder struct {
 	// Date of the lowest email sent to frontend, used to prevent spurious forward lookups for
 	// unreferenced message IDs.
 	lastSentDate time.Time
+
+	// The mailbox doesn't exist on the server, so the folder stands in as an
+	// empty one rather than erroring
+	missing bool
 }
 
 func NewFolder(account *Account, name types.FolderName, aliasName types.FolderName) *Folder {
@@ -116,28 +120,79 @@ func (f *Folder) reset() {
 	f.uidsStartAt = 0
 	f.lastSentUID = imap.UID(0)
 	f.lastSentDate = time.Now().Add(24 * time.Hour)
+	f.missing = false
+}
+
+// markMissing turns the folder into an empty stand-in for a mailbox that isn't
+// on the server, so reads behave as an empty folder instead of erroring. Must be
+// called with the lock held.
+func (f *Folder) markMissing(ctx context.Context) {
+	f.uids = NewUIDList()
+	f.uidsStartAt = 0
+	f.lastSentUID = imap.UID(0)
+	f.lastSentDate = time.Now().Add(24 * time.Hour)
+	f.missing = true
+
+	// Drop the cached UID list, it's what makes ensureInitialized skip the select
+	// probe on the next launch. Cached emails are unreachable without it, so they
+	// stay put - if the folder comes back we avoid re-downloading everything.
+	if err := f.caches.FolderUIDCache.Delete(ctx, f.AccountID, f.Name); err != nil {
+		zerolog.Ctx(ctx).Err(err).Msg("Failed to delete cached UIDs for missing folder")
+	}
 }
 
 func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) (imap.UID, error) {
 	var assignedUID imap.UID
 	err := f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
-		size := int64(b.Len())
-		appendCmd := conn.Append(string(f.Name), size, nil)
-		if _, err := appendCmd.Write(b.Bytes()); err != nil {
-			return fmt.Errorf("failed to write message: %w", err)
-		} else if err := appendCmd.Close(); err != nil {
-			return fmt.Errorf("failed to close message: %w", err)
-		}
-		data, err := appendCmd.Wait()
-		if err != nil {
-			return fmt.Errorf("APPEND command failed: %w", err)
-		}
-		if data != nil {
-			assignedUID = data.UID
-		}
-		return nil
+		return f.createDestinationAndRetry(ctx, conn, f, func() error {
+			uid, err := appendMessage(conn, string(f.Name), b.Bytes())
+			assignedUID = uid
+			return err
+		})
 	})
 	return assignedUID, err
+}
+
+func appendMessage(conn imapinterface.IMAPClient, mailbox string, raw []byte) (imap.UID, error) {
+	appendCmd := conn.Append(mailbox, int64(len(raw)), nil)
+	if _, err := appendCmd.Write(raw); err != nil {
+		return 0, fmt.Errorf("failed to write message: %w", err)
+	} else if err := appendCmd.Close(); err != nil {
+		return 0, fmt.Errorf("failed to close message: %w", err)
+	}
+	data, err := appendCmd.Wait()
+	if err != nil {
+		return 0, fmt.Errorf("APPEND command failed: %w", err)
+	}
+	if data != nil {
+		return data.UID, nil
+	}
+	return 0, nil
+}
+
+// createDestinationAndRetry runs fn, creating the destination mailbox and
+// retrying once when the server reports it doesn't exist. Mailboxes are only
+// created here, when mail is actually written into them.
+func (f *Folder) createDestinationAndRetry(
+	ctx context.Context,
+	conn imapinterface.IMAPClient,
+	dest *Folder,
+	fn func() error,
+) error {
+	err := fn()
+	if err == nil || !mailboxMissing(ctx, conn, dest.Name, err) {
+		return err
+	}
+
+	log := zerolog.Ctx(ctx)
+	log.Info().Str("folder", string(dest.Name)).Msg("Creating missing destination folder")
+	if createErr := conn.Create(string(dest.Name), nil).Wait(); createErr != nil {
+		// Could just be another client (or another move) getting there first,
+		// the retry below decides whether this actually mattered
+		log.Warn().Err(createErr).Str("folder", string(dest.Name)).Msg("Failed to create folder")
+	}
+
+	return fn()
 }
 
 // Fetch & search (does not alter folder state, no lock)
@@ -226,7 +281,7 @@ func (f *Folder) SearchCachedEmails(ctx context.Context, search string, limit in
 
 func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]*types.Email, error) {
 	var emails []*types.Email
-	if err := f.imap.WithFolderPriorityConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	if err := f.searchWithConnection(ctx, f.imap.WithFolderPriorityConnection, func(conn imapinterface.IMAPClient) error {
 		criteria := buildSearchCriteria(conn, search)
 		res, err := conn.UIDSearch(criteria, nil).Wait()
 		if err != nil {
@@ -250,6 +305,22 @@ func (f *Folder) SearchEmails(ctx context.Context, search string, limit int) ([]
 	return emails, nil
 }
 
+// searchWithConnection runs a search against the folder, quietly doing nothing
+// when the mailbox isn't on the server - searches are speculative lookups (often
+// across folders that only exist on some accounts), a missing one has no results.
+func (f *Folder) searchWithConnection(
+	ctx context.Context,
+	connFn func(context.Context, types.FolderName, func(conn imapinterface.IMAPClient) error) error,
+	fn func(conn imapinterface.IMAPClient) error,
+) error {
+	err := connFn(ctx, f.Name, fn)
+	if isMissingMailboxErr(err) {
+		zerolog.Ctx(ctx).Debug().Str("folder", string(f.Name)).Msg("Skipped search in missing folder")
+		return nil
+	}
+	return err
+}
+
 func (f *Folder) SearchMessageIDs(ctx context.Context, messageIDs []string) (map[string]*types.Email, []string, error) {
 	log := zerolog.Ctx(ctx)
 	log.Debug().
@@ -257,7 +328,7 @@ func (f *Folder) SearchMessageIDs(ctx context.Context, messageIDs []string) (map
 		Msg("Searching for messageIDs")
 
 	results := make(map[string]*types.Email, len(messageIDs))
-	err := f.imap.WithFolderBackgroundConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	err := f.searchWithConnection(ctx, f.imap.WithFolderBackgroundConnection, func(conn imapinterface.IMAPClient) error {
 		// Because imap we have to search each message ID one by one
 		uidToMsgID := make(map[imap.UID]string, len(messageIDs))
 		for _, msgid := range messageIDs {
@@ -345,7 +416,7 @@ func (f *Folder) SearchReferences(ctx context.Context, references []EmailRef) (m
 	}
 
 	var emails []*types.Email
-	if err := f.imap.WithFolderBackgroundConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	if err := f.searchWithConnection(ctx, f.imap.WithFolderBackgroundConnection, func(conn imapinterface.IMAPClient) error {
 		uids := make([]imap.UID, 0, len(inDateRefs))
 		for _, ref := range inDateRefs {
 			log.Trace().
@@ -423,6 +494,7 @@ func (f *Folder) paginateMeta() PaginateRespMeta {
 		// nothing remains below lastSentUID. When nothing has been sent yet
 		// lastSentUID-1 wraps to maxuint32, matching PaginateEmails.
 		Exhausted: f.uidsStartAt == 0 && len(f.uids.PaginateFrom(f.lastSentUID-1, 1)) == 0,
+		Missing:   f.missing,
 	}
 }
 
@@ -509,11 +581,38 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 	var resp SyncResp
 
 	err := f.imap.WithConnection(ctx, func(conn imapinterface.IMAPClient) error {
-		selectData, err := conn.Select(string(f.Name), nil).Wait()
+		selectData, missing, err := selectFolder(ctx, conn, f.Name)
 		if err != nil {
 			return fmt.Errorf("failed to select folder: %s/%s: %w", f.account.Name, f.Name, err)
 		}
+
+		// A mailbox that isn't there stands in as an empty folder - tell the
+		// frontend to drop anything we sent it, then keep quietly probing so the
+		// folder comes back to life if it's (re)created.
+		if missing {
+			if !f.missing {
+				log.Warn().Msg("Folder no longer exists, treating as empty")
+				resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
+				f.markMissing(ctx)
+			}
+			resp.Meta = f.paginateMeta()
+			return nil
+		}
 		defer func() { conn.Unselect().Wait() }()
+
+		if f.missing {
+			log.Info().Msg("Folder exists again, resetting folder")
+			// Only nuke the cache if the mailbox identity changed, otherwise the
+			// cached emails are still good
+			if f.uidValidity != selectData.UIDValidity {
+				if err := f.caches.DeleteByFolder(ctx, f.AccountID, f.Name); err != nil {
+					return fmt.Errorf("failed to delete folder in cache: %s: %w", f.Name, err)
+				}
+			}
+			f.reset()
+			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
+			return nil
+		}
 
 		// If UIDVALIDITY has changed from our cached version we must drop everything we know about
 		// the folder and re-fetch it from the server.
@@ -654,12 +753,6 @@ func (f *Folder) storeUIDs(ctx context.Context) error {
 	return f.caches.FolderUIDCache.Store(ctx, f.AccountID, f.Name, f.uidValidity, f.uidsStartAt, f.uids.All())
 }
 
-func (f *Folder) EnsureInitialized(ctx context.Context) error {
-	f.lock.Lock()
-	defer f.lock.Unlock()
-	return f.ensureInitialized(ctx)
-}
-
 // Used to lazily initialize the folder by pulling the UID list from cache or fetching it from the
 // network if we have no cache. No lock, *not* gorotuine/thread safe.
 func (f *Folder) ensureInitialized(ctx context.Context) error {
@@ -685,21 +778,19 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 
 	return f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
 		// Select the folder, populate UIDNEXT + UIDVALIDITY
-		selectData, err := conn.Select(string(f.Name), nil).Wait()
+		selectData, missing, err := selectFolder(ctx, conn, f.Name)
 		if err != nil {
-			log.Debug().Str("folder", string(f.Name)).Msg("Creating folder before initialization")
-			// If select fails, try creating the folder before failing
-			// TODO: check the err
-			if createErr := conn.Create(string(f.Name), nil).Wait(); createErr != nil {
-				return fmt.Errorf("failed to select folder: %s/%s: %w (JIT create failed: %w)", f.account.Name, f.Name, err, createErr)
-			}
-			selectData, err = conn.Select(string(f.Name), nil).Wait()
-			if err != nil {
-				return fmt.Errorf("failed to select folder: %s/%s: %w", f.account.Name, f.Name, err)
-			}
+			return fmt.Errorf("failed to select folder: %s/%s: %w", f.account.Name, f.Name, err)
+		} else if missing {
+			// Folders are only created when mail is written into them, so an
+			// absent mailbox stands in as an empty one rather than erroring
+			log.Warn().Str("folder", string(f.Name)).Msg("Folder does not exist, treating as empty")
+			f.markMissing(ctx)
+			return nil
 		}
 		defer func() { conn.Unselect().Wait() }()
 
+		f.missing = false
 		f.uidValidity = selectData.UIDValidity
 		log.Info().
 			Uint32("uidnext", uint32(selectData.UIDNext)).
@@ -760,7 +851,7 @@ func (f *Folder) fetchMoreUIDs(ctx context.Context) error {
 		return nil
 	}
 
-	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	err := f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		for {
 			if f.uidsStartAt == 0 {
 				log.Warn().
@@ -810,6 +901,14 @@ func (f *Folder) fetchMoreUIDs(ctx context.Context) error {
 			return nil
 		}
 	})
+
+	// The folder disappeared mid-pagination, stand in as empty
+	if isMissingMailboxErr(err) {
+		log.Warn().Err(err).Msg("Folder does not exist, treating as empty")
+		f.markMissing(ctx)
+		return nil
+	}
+	return err
 }
 
 // Shared private fetch helpers
@@ -875,6 +974,11 @@ func (f *Folder) getOrFetchEmails(
 		fetchedEmails, err = f.fetchEmailHeadersWithConnection(ctx, conn, uncachedUIDs)
 		return err
 	}); err != nil {
+		if isMissingMailboxErr(err) {
+			// Nothing to fetch UID by UID, the mailbox itself has gone
+			log.Warn().Msg("Failed to fetch email headers, folder does not exist")
+			return emails, nil
+		}
 		// When any email in the batch failed parsing the whole batch is dropped, see examples:
 		// https://github.com/emersion/go-imap/issues/701
 		// https://github.com/emersion/go-imap/issues/678

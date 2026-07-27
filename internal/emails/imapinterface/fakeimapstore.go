@@ -119,9 +119,20 @@ func getOrCreateFakeStore(accountKey string) *fakeIMAPStore {
 	return store
 }
 
-func (s *fakeIMAPStore) createFolderData(folderName string) {
-	// Create new folder structure
-	folderData := &fakeFolderData{
+// CreateFakeFolder creates an empty folder in an account's fake store, for
+// tests that need a mailbox to exist without any messages in it.
+func CreateFakeFolder(accountKey, name string) {
+	getOrCreateFakeStore(accountKey).createEmptyFolderData(name)
+}
+
+// DeleteFakeFolder removes a folder from an account's fake store, simulating a
+// mailbox deleted by another client.
+func DeleteFakeFolder(accountKey, name string) {
+	getOrCreateFakeStore(accountKey).folders.Delete(name)
+}
+
+func newFakeFolderData(folderName string) *fakeFolderData {
+	return &fakeFolderData{
 		name:        folderName,
 		uidValidity: 1234567890,
 		uidNext:     1,
@@ -129,54 +140,10 @@ func (s *fakeIMAPStore) createFolderData(folderName string) {
 		recent:      0,
 		messages:    exsync.NewMap[imap.UID, *fakeMessage](),
 	}
+}
 
-	// Get all existing folders to choose from
-	existingFolders := s.folders.CopyData()
-	if len(existingFolders) == 0 {
-		// No existing folders, create empty folder
-		s.folders.Set(folderName, folderData)
-		return
-	}
-
-	// Pick a random existing folder
-	folderNames := []string{"inbox", "archive", "trash"}
-	randomFolderName := folderNames[rand.Intn(len(folderNames))]
-	sourceFolder := existingFolders[randomFolderName]
-
-	// Get all messages from the source folder
-	sourceMessages := sourceFolder.messages.CopyData()
-	if len(sourceMessages) == 0 {
-		panic("inbox is empty")
-	}
-
-	// Pick a small percentage (10-20%) of random messages from source folder
-	numMessages := len(sourceMessages)
-	copyCount := max(1, numMessages/3+rand.Intn(max(1, numMessages/2))) // 10-20% of messages, minimum 1
-
-	// Get all UIDs from source messages
-	sourceUIDs := make([]imap.UID, 0, numMessages)
-	for uid := range sourceMessages {
-		sourceUIDs = append(sourceUIDs, uid)
-	}
-
-	// Shuffle and pick random messages
-	rand.Shuffle(len(sourceUIDs), func(i, j int) { sourceUIDs[i], sourceUIDs[j] = sourceUIDs[j], sourceUIDs[i] })
-	copyCount = min(copyCount, len(sourceUIDs))
-
-	var newUID imap.UID = 1
-	sourceFolder.mu.Lock()
-	for i := 0; i < copyCount; i++ {
-		sourceUID := sourceUIDs[i]
-		sourceMsg := sourceMessages[sourceUID]
-
-		folderData.messages.Set(newUID, cloneFakeMessage(sourceMsg, newUID))
-		folderData.exists++
-		newUID++
-	}
-	sourceFolder.mu.Unlock()
-
-	folderData.uidNext = newUID
-	s.folders.Set(folderName, folderData)
+func (s *fakeIMAPStore) createEmptyFolderData(folderName string) {
+	s.folders.Set(folderName, newFakeFolderData(folderName))
 }
 
 // createAllFoldersFromThreads uses the realistic fake email threads to populate all folders

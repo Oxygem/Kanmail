@@ -207,7 +207,7 @@ func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
 
 	folder, exists := c.store.folders.Get(c.folder)
 	if !exists {
-		return nil, fmt.Errorf("folder %s does not exist", c.folder)
+		return nil, missingMailboxErr(c.folder)
 	}
 
 	msg := parseAppendedMessage(c.buf.Bytes())
@@ -374,6 +374,16 @@ func (c *FakeIMAPClient) Namespace() NamespaceCommand {
 	}
 }
 
+// missingMailboxErr matches a real server rejecting a write to a mailbox that
+// isn't there, which clients are expected to handle by creating it.
+func missingMailboxErr(name string) *imap.Error {
+	return &imap.Error{
+		Type: imap.StatusResponseTypeNo,
+		Code: imap.ResponseCodeTryCreate,
+		Text: fmt.Sprintf("folder %s does not exist", name),
+	}
+}
+
 func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) SelectCommand {
 	folder, exists := c.store.folders.Get(name)
 	if !exists {
@@ -463,14 +473,17 @@ func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptio
 
 func (c *FakeIMAPClient) Create(name string, options *imap.CreateOptions) Command {
 	if _, exists := c.store.folders.Get(name); exists {
-		cmd := &FakeCommand{err: fmt.Errorf("folder %s already exists", name)}
-		return cmd
+		return &FakeCommand{err: &imap.Error{
+			Type: imap.StatusResponseTypeNo,
+			Code: imap.ResponseCodeAlreadyExists,
+			Text: fmt.Sprintf("folder %s already exists", name),
+		}}
 	}
 
-	c.store.createFolderData(name)
+	// As per a real server: a created mailbox starts empty
+	c.store.createEmptyFolderData(name)
 
-	cmd := &FakeCommand{err: nil}
-	return cmd
+	return &FakeCommand{err: nil}
 }
 
 func (c *FakeIMAPClient) UIDSearch(criteria *imap.SearchCriteria, options *imap.SearchOptions) SearchCommand {
@@ -832,7 +845,7 @@ func (c *FakeIMAPClient) moveOrCopyFolders(numSet imap.NumSet, dest string) (*fa
 	}
 	destFolder, exists := c.store.folders.Get(dest)
 	if !exists {
-		return nil, nil, nil, fmt.Errorf("folder %s does not exist", dest)
+		return nil, nil, nil, missingMailboxErr(dest)
 	}
 	return srcFolder, destFolder, uidSet, nil
 }

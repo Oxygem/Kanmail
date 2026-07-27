@@ -11,6 +11,7 @@ import (
 
 	"github.com/oxygem/kanmail/internal/emails/imapinterface"
 	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 type WatchStatus string
@@ -124,8 +125,11 @@ func (w *folderWatcher) watchOnConn(
 
 	selectData, err := conn.Select(string(w.folderName), nil).Wait()
 	if err != nil {
-		var imapErr *imap.Error
-		if errors.As(err, &imapErr) && imapErr.Type == imap.StatusResponseTypeNo {
+		// A NO here is ambiguous (missing vs temporarily unusable), but either
+		// way the answer is the same: back off and re-probe later. Recognisably
+		// transient ones are returned as errors so the manager retries on its
+		// normal backoff rather than the much slower no-folder one.
+		if isNoStatusErr(err) && !util.IsRetryableIMAPError(err) {
 			return &WatchResp{Status: WatchStatusNoFolder}, nil
 		}
 		return nil, fmt.Errorf("failed to select watch folder: %w", err)

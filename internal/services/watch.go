@@ -16,6 +16,7 @@ const (
 	watchInitialBackoff   = 5 * time.Second
 	watchMaxBackoff       = 60 * time.Second
 	watchUnavailableRetry = 5 * time.Second
+	watchNoFolderRetry    = 5 * time.Minute
 )
 
 type watchKey struct {
@@ -44,7 +45,6 @@ type FolderWatchManager struct {
 	mu          sync.Mutex
 	loops       map[watchKey]context.CancelFunc
 	unsupported map[types.AccountID]struct{}
-	missing     map[watchKey]struct{} // folders that don't exist on the account
 	stopped     bool
 }
 
@@ -61,7 +61,6 @@ func NewFolderWatchManager(
 		app:         app,
 		loops:       map[watchKey]context.CancelFunc{},
 		unsupported: map[types.AccountID]struct{}{},
-		missing:     map[watchKey]struct{}{},
 	}
 	m.emit = app.EmitFolderSync
 	m.run = m.runLoop
@@ -108,17 +107,11 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 		return
 	}
 
-	// Forget IDLE-unsupported markers for accounts no longer present, and
-	// missing-folder markers for keys no longer displayed, so both are
+	// Forget IDLE-unsupported markers for accounts no longer present so they're
 	// re-probed if they come back.
 	for account := range m.unsupported {
 		if _, ok := present[account]; !ok {
 			delete(m.unsupported, account)
-		}
-	}
-	for key := range m.missing {
-		if _, ok := desired[key]; !ok {
-			delete(m.missing, key)
 		}
 	}
 
@@ -136,9 +129,6 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 			continue
 		}
 		if _, unsupported := m.unsupported[key.account]; unsupported {
-			continue
-		}
-		if _, missing := m.missing[key]; missing {
 			continue
 		}
 		ctx, cancel := context.WithCancel(context.Background())
@@ -182,7 +172,7 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 
 	backoff := watchInitialBackoff
 
-	// Consecutive network failures form one episode, aggregated for telemetry
+	// Consecutive transient failures form one episode, aggregated for telemetry
 	// when the watch recovers or fails some other way.
 	var netErrCount int
 	var lastNetErr error
@@ -209,7 +199,7 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 			return
 		}
 		if err != nil {
-			if util.IsRetryableNetworkError(err) {
+			if util.IsRetryableError(err) {
 				lastNetErr = err
 				netErrCount++
 			} else {
@@ -234,9 +224,12 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 			m.markUnsupported(key.account)
 			return
 		case emails.WatchStatusNoFolder:
-			log.Info().Msg("Folder does not exist on account, stopping watch")
-			m.markMissing(key)
-			return
+			// The folder may yet appear - moving mail into a column creates it -
+			// so keep probing, just rarely. The interval sync covers it meanwhile.
+			log.Debug().Msg("Folder does not exist on account, backing off")
+			if !sleepCtx(ctx, watchNoFolderRetry) {
+				return
+			}
 		case emails.WatchStatusUnavailable:
 			// No spare pooled connection to idle on right now; the interval sync
 			// covers the folder until one frees up.
@@ -260,19 +253,6 @@ func (m *FolderWatchManager) markUnsupported(account types.AccountID) {
 			cancel()
 			delete(m.loops, key)
 		}
-	}
-}
-
-// markMissing records that the folder doesn't exist on the account and drops
-// its loop. The marker is forgotten (and the folder re-probed) once reconcile
-// sees the key leave the desired set.
-func (m *FolderWatchManager) markMissing(key watchKey) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.missing[key] = struct{}{}
-	if cancel, ok := m.loops[key]; ok {
-		cancel()
-		delete(m.loops, key)
 	}
 }
 

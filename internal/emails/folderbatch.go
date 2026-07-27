@@ -10,30 +10,26 @@ import (
 )
 
 func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
-	// Translate any alias folder name -> real name, then initialize
+	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
-	otherFolderName = otherFolder.Name
-	if err := otherFolder.EnsureInitialized(ctx); err != nil {
-		return err
-	}
 
 	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		_, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolderName)).Wait()
-		return err
+		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
+			_, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolder.Name)).Wait()
+			return err
+		})
 	})
 }
 
 func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
-	// Translate any alias folder name -> real name, then initialize
+	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
-	otherFolderName = otherFolder.Name
-	if err := otherFolder.EnsureInitialized(ctx); err != nil {
-		return err
-	}
 
 	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		_, err := conn.Copy(imap.UIDSetNum(uids...), string(otherFolderName)).Wait()
-		return err
+		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
+			_, err := conn.Copy(imap.UIDSetNum(uids...), string(otherFolder.Name)).Wait()
+			return err
+		})
 	})
 }
 

@@ -7,16 +7,58 @@ import (
 	"io"
 	"net"
 	"slices"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/emersion/go-imap/v2"
 	"github.com/rs/zerolog"
 	"go.mau.fi/util/exhttp"
 
 	"github.com/oxygem/kanmail/internal/backend"
 )
 
+// transientIMAPCodes are NO response codes that mean "not right now" rather than
+// "never": the server is unavailable, hit an internal bug, or the mailbox is
+// momentarily locked by another session.
+var transientIMAPCodes = []imap.ResponseCode{
+	imap.ResponseCodeUnavailable,
+	imap.ResponseCodeServerBug,
+	imap.ResponseCodeInUse,
+}
+
+// transientIMAPTexts cover servers that report a transient failure with no
+// response code at all - Gmail's "NO System Error (Failure)" being the common
+// one. Only consulted when there's no code to go on, so a permanent code like
+// AUTHENTICATIONFAILED is never overridden by its wording.
+var transientIMAPTexts = []string{
+	"system error",
+	"temporary failure",
+	"temporarily unavailable",
+	"server busy",
+	"try again later",
+}
+
+// IsRetryableIMAPError reports whether err is a NO response the server is likely
+// to answer differently on a second attempt. A NO means the command was rejected
+// outright, so unlike a network error there's no risk it half-applied. BAD is
+// excluded: that's a protocol error, ie our bug, and will fail identically.
+func IsRetryableIMAPError(err error) bool {
+	var imapErr *imap.Error
+	if !errors.As(err, &imapErr) || imapErr.Type != imap.StatusResponseTypeNo {
+		return false
+	}
+	if imapErr.Code != "" {
+		return slices.Contains(transientIMAPCodes, imapErr.Code)
+	}
+	text := strings.ToLower(imapErr.Text)
+	return slices.ContainsFunc(transientIMAPTexts, func(fragment string) bool {
+		return strings.Contains(text, fragment)
+	})
+}
+
+// Network error sampling
 const (
 	networkErrorMaxSamples = 3
 	networkErrorFlushEvery = time.Hour
@@ -51,15 +93,24 @@ func IsRetryableNetworkError(err error) bool {
 	return exhttp.IsNetworkError(err) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF)
 }
 
+// IsRetryableError reports whether err is transient for any reason - the network
+// blipped, or the server itself said it couldn't do this right now.
+func IsRetryableError(err error) bool {
+	return IsRetryableNetworkError(err) || IsRetryableIMAPError(err)
+}
+
 // classifyNetworkError sorts an error into a coarse class used only for
 // bucketing - samples carry the full message, so an imprecise match degrades
 // grouping, never data.
 func classifyNetworkError(err error) string {
+	var imapErr *imap.Error
 	var dnsErr *net.DNSError
 	var certErr *tls.CertificateVerificationError
 	var recordErr tls.RecordHeaderError
 	var netErr net.Error
 	switch {
+	case errors.As(err, &imapErr):
+		return "imap"
 	case errors.As(err, &dnsErr):
 		return "dns"
 	case errors.As(err, &certErr), errors.As(err, &recordErr):

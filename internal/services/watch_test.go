@@ -21,7 +21,6 @@ func newTestWatchManager(t *testing.T) (*FolderWatchManager, chan watchKey) {
 		log:         zerolog.Nop(),
 		loops:       map[watchKey]context.CancelFunc{},
 		unsupported: map[types.AccountID]struct{}{},
-		missing:     map[watchKey]struct{}{},
 	}
 	m.run = func(ctx context.Context, key watchKey) {
 		started <- key
@@ -149,34 +148,6 @@ func TestReconcileForgetsUnsupportedWhenAccountRemoved(t *testing.T) {
 	// Re-adding one now re-probes it (a loop starts).
 	m.reconcile(settingsWith([]types.FolderName{"inbox"}, "one", "two"))
 	expectStarted(t, started, watchKey{"one", "inbox"})
-}
-
-func TestReconcileSkipsMissingFolders(t *testing.T) {
-	m, started := newTestWatchManager(t)
-
-	m.markMissing(watchKey{"one", "archive"})
-	m.reconcile(settingsWith([]types.FolderName{"inbox", "archive"}, "one"))
-
-	// Only inbox should start; archive is known missing on the account.
-	expectStarted(t, started, watchKey{"one", "inbox"})
-	select {
-	case key := <-started:
-		t.Fatalf("missing folder should not start: %+v", key)
-	case <-time.After(100 * time.Millisecond):
-	}
-}
-
-func TestReconcileForgetsMissingWhenColumnRemoved(t *testing.T) {
-	m, started := newTestWatchManager(t)
-
-	m.markMissing(watchKey{"one", "archive"})
-	// Column absent -> its missing marker is forgotten.
-	m.reconcile(settingsWith([]types.FolderName{"inbox"}, "one"))
-	expectStarted(t, started, watchKey{"one", "inbox"})
-
-	// Re-adding the column now re-probes the folder (a loop starts).
-	m.reconcile(settingsWith([]types.FolderName{"inbox", "archive"}, "one"))
-	expectStarted(t, started, watchKey{"one", "archive"})
 }
 
 func TestRunGuardedRecoversPanic(t *testing.T) {

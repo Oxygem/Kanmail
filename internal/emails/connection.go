@@ -116,14 +116,14 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			}
 			return nil
 		}
-		if util.IsRetryableNetworkError(err) {
+		if util.IsRetryableError(err) {
 			lastNetErr = err
 			netErrCount++
 			delay := time.Duration(attempt) * time.Second
 			zerolog.Ctx(ctx).Warn().Err(err).
 				Int("attempt", attempt).
 				Dur("delay", delay).
-				Msg("Retrying network error")
+				Msg("Retrying transient error")
 			select {
 			case <-time.After(delay):
 			case <-ctx.Done():

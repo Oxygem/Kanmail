@@ -20,6 +20,9 @@ type PaginateRespMeta struct {
 	LastSentDate time.Time `json:"lastSentDate"`
 	// True when there are no more emails to paginate
 	Exhausted bool `json:"exhausted"`
+	// True when the folder does not exist on this account, in which case it
+	// behaves as an empty folder rather than erroring
+	Missing bool `json:"missing"`
 }
 
 type PaginateResp struct {
