@@ -9,7 +9,7 @@ import {
   AppService,
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard, { metaKeyLabel } from "../../keyboard.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
 import requestStore from "../../stores/request.ts";
@@ -21,7 +21,10 @@ import { stopEventPropagation } from "../../util/element.ts";
 import { safeDocumentFromHtml } from "../../util/html.ts";
 import {
   AddressOption,
+  ReplyRecipients,
+  buildReplyRecipients,
   getAccountContactOptions,
+  hasReplyAllRecipients,
   prependIfNotPresent,
 } from "../../util/send.ts";
 import { formatAddress } from "../../util/string.ts";
@@ -104,15 +107,31 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     }
   }
 
-  getFromAddress(): Address | null {
-    const account = _.find(
+  getAccount(): AccountSettings | undefined {
+    return _.find(
       settingsStore.props.accounts,
       a => a.id === this.props.latestMessage.accountID,
     );
+  }
+
+  getFromAddress(): Address | null {
+    const account = this.getAccount();
     if (!account) {
       return null;
     }
     return getAccountContactOptions(account)[0].value[1];
+  }
+
+  getReplyRecipients(): ReplyRecipients {
+    return buildReplyRecipients(
+      this.props.latestMessage,
+      this.state.mode === "reply-all",
+      this.getAccount(),
+    );
+  }
+
+  canReplyAll(): boolean {
+    return hasReplyAllRecipients(this.props.latestMessage, this.getAccount());
   }
 
   handleExpand = (mode: Mode = "reply") => {
@@ -150,8 +169,8 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       return;
     }
 
-    const hasCc = this.props.latestMessage.cc && this.props.latestMessage.cc.length > 0;
-    this.setState({ expanded: true, mode: mode === "reply-all" && !hasCc ? "reply" : mode });
+    const canReplyAll = this.canReplyAll();
+    this.setState({ expanded: true, mode: mode === "reply-all" && !canReplyAll ? "reply" : mode });
   };
 
   handleForward = () => {
@@ -228,6 +247,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     const isForward = this.state.mode === "forward";
 
     let to: Address[];
+    let cc: Address[] = [];
     if (isForward) {
       if (this.state.isLoadingAttachments) {
         return;
@@ -237,12 +257,8 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         return;
       }
     } else {
-      to = latestMessage.replyTo && latestMessage.replyTo.length > 0
-        ? latestMessage.replyTo
-        : latestMessage.from;
+      ({ to, cc } = this.getReplyRecipients());
     }
-
-    const cc = this.state.mode === "reply-all" ? latestMessage.cc : [];
 
     const sendOptions: SendOptions = {
       subject: prependIfNotPresent(latestMessage.subject, isForward ? "Fwd" : "Re"),
@@ -297,7 +313,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
   renderCollapsed() {
     const { latestMessage } = this.props;
-    const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
+    const canReplyAll = this.canReplyAll();
     const deleteOnTrash = keyboard.currentComponent
       ? keyboard.currentComponent.isDeleteOnTrash()
       : Boolean(settingsStore.getAccountSettings(latestMessage.accountID)?.settings.deleteOnTrash);
@@ -313,7 +329,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
             <i className="fa fa-reply"></i> Reply
           </button>
         </Tooltip>
-        {hasCc && (
+        {canReplyAll && (
           <Tooltip
             position="top"
             text={<span>Reply all (<i className="fa fa-keyboard-o" /> a)</span>}
@@ -386,8 +402,6 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   }
 
   renderRecipientSummary() {
-    const { latestMessage } = this.props;
-
     if (this.state.mode === "forward") {
       return (
         <div className="recipients forward-to">
@@ -403,14 +417,9 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       );
     }
 
-    const replyTo = latestMessage.replyTo && latestMessage.replyTo.length > 0
-      ? latestMessage.replyTo
-      : latestMessage.from;
-    const toLabel = (replyTo || []).map(a => formatAddress(a)).join(", ");
-    const ccLabel = this.state.mode === "reply-all"
-      && latestMessage.cc && latestMessage.cc.length > 0
-      ? latestMessage.cc.map(a => formatAddress(a)).join(", ")
-      : null;
+    const { to, cc } = this.getReplyRecipients();
+    const toLabel = to.map(a => formatAddress(a)).join(", ");
+    const ccLabel = cc.length > 0 ? cc.map(a => formatAddress(a)).join(", ") : null;
 
     return (
       <div className="recipients">
@@ -425,8 +434,6 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   }
 
   renderModeToggle() {
-    const { latestMessage } = this.props;
-
     if (this.state.mode === "forward") {
       return (
         <div className="mode-toggle">
@@ -437,8 +444,6 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       );
     }
 
-    const hasCc = latestMessage.cc && latestMessage.cc.length > 0;
-
     return (
       <div className="mode-toggle">
         <button
@@ -448,7 +453,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         >
           <i className="fa fa-reply"></i> Reply
         </button>
-        {hasCc && (
+        {this.canReplyAll() && (
           <button
             type="button"
             className={this.state.mode === "reply-all" ? "active" : ""}

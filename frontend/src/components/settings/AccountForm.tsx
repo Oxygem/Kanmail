@@ -198,13 +198,13 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       }
 
     }).catch(error => {
+      // Never hand the settings back to the parent here - they're untested and
+      // saving/adding an account whose connection just failed loses the user's
+      // previous settings. The form keeps what was entered so it can be fixed.
       this.setState({
         error: error.message,
         isSaving: false,
       });
-      if (error.cause && error.cause.settings) {
-        this.props.updateItem(this.props.itemIndex, error.cause.settings);
-      }
       requestStore.addError("Failed to test account settings", error, { silent: true });
     })
   };

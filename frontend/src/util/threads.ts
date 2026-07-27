@@ -51,14 +51,24 @@ export function moveOrCopyThread(
   };
 
   const moveThread = () => {
-    handler(accountID, messageUids, oldColumn, targetFolder).then(() => {
-      emailStore.syncFolderEmails(oldColumn, { accountIDs: [accountID] });
-      emailStore
-        .syncFolderEmails(targetFolder, {
-          accountIDs: [accountID],
-        })
-        .then(() => targetColumnStore.removeIncomingThread(thread));
-    });
+    handler(accountID, messageUids, oldColumn, targetFolder)
+      .then(() => {
+        emailStore.syncFolderEmails(oldColumn, { accountIDs: [accountID] });
+        emailStore
+          .syncFolderEmails(targetFolder, {
+            accountIDs: [accountID],
+          })
+          .then(() => targetColumnStore.removeIncomingThread(thread));
+      })
+      .catch((e) => {
+        // Nothing moved server side, so roll the UI back rather than leaving the
+        // thread hidden in the source column and stuck incoming in the target
+        undoMove();
+        requestStore.addError(
+          `Failed to move to ${capitalizeFirstLetter(targetFolder)}`,
+          e
+        );
+      });
   };
 
   requestStore.addUndoable(

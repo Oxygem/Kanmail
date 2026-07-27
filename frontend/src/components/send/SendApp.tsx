@@ -20,11 +20,12 @@ import { stopEventPropagation } from "../../util/element.ts";
 import {
   AccountAddressOption,
   AddressOption,
+  buildReplyRecipients,
   getAccountContactOptions,
   prependIfNotPresent,
   stringToColor,
+  toAddressOptions,
 } from "../../util/send.ts";
-import { formatAddress } from "../../util/string.js";
 import { makeDragElement } from "../../window.ts";
 import Tooltip from "../Tooltip.tsx";
 import ContactSelect from "./ContactSelect.tsx";
@@ -113,7 +114,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     };
 
     if (props.message) {
-      console.log("MODE", props);
       // Figure out subject
       let subject = props.message.subject;
       if (props.mode === "forward") {
@@ -123,35 +123,22 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       }
       state.subject = subject;
 
-      const accountIndex = _.findIndex(
-        this.props.accounts,
+      const account = _.find(
+        props.accounts,
         (account) => account.id === props.message!.accountID
       );
-      if (accountIndex > 0) {
-        const account = props.accounts[accountIndex];
+      if (account) {
         state.accountContact = getAccountContactOptions(account)[0];
       }
 
       if (props.mode !== "forward") {
-        const to: addressOption[] = [];
-        _.each(props.message.replyTo, address => {
-          to.push({
-            value: address,
-            label: formatAddress(address),
-          })
-        })
-        state.to = to;
-      }
-
-      if (props.mode === "reply-all") {
-        const cc: addressOption[] = [];
-        _.each(props.message.cc, address => {
-          cc.push({
-            value: address,
-            label: formatAddress(address),
-          })
-        })
-        state.cc = cc
+        const { to, cc } = buildReplyRecipients(
+          props.message,
+          props.mode === "reply-all",
+          account,
+        );
+        state.to = toAddressOptions(to);
+        state.cc = toAddressOptions(cc);
         if (cc.length > 0) {
           state.showCc = true;
         }
@@ -221,7 +208,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       return;
     }
 
-    this.setState({ isSending: true });
+    this.setState({ isSending: true, isSentOrSaved: undefined });
 
     const sendOptions: SendOptions = {
       subject: this.state.subject,
@@ -240,12 +227,14 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       // @ts-ignore
       setTimeout(() => wails.Window.Close(), 1000);
     }).catch(e => {
-      this.setState({ isSentOrSaved: false })
+      // Reset isSending so the user can fix the problem and retry, rather than
+      // being stuck with Cancel (which discards the message) as the only exit
+      this.setState({ isSending: false, isSentOrSaved: false })
       trackEvent("SendEmailFailed", {
         error: e?.message,
         isNetwork: Boolean(e?.cause?.isNetwork),
       });
-      throw e
+      requestStore.addError("Failed to send email", e);
     })
   };
 
