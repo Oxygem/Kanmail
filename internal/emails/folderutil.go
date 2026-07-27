@@ -146,6 +146,26 @@ func isFullHTML(b []byte) bool {
 	return false
 }
 
+// Mail base64 is line wrapped, so DecodedLen (which counts the CRLFs the decoder skips) is
+// only an upper bound and the output must be trimmed to the bytes actually written. Padding
+// is normal here, but some senders omit it, which StdEncoding rejects - hence the raw retry.
+func decodeBase64(in []byte) ([]byte, error) {
+	d := make([]byte, base64.StdEncoding.DecodedLen(len(in)))
+	n, err := base64.StdEncoding.Decode(d, in)
+	if err == nil {
+		return d[:n], nil
+	}
+
+	unpadded := bytes.TrimRight(in, "=\r\n\t ")
+	raw := make([]byte, base64.RawStdEncoding.DecodedLen(len(unpadded)))
+	if rawN, rawErr := base64.RawStdEncoding.Decode(raw, unpadded); rawErr == nil {
+		return raw[:rawN], nil
+	}
+
+	// Both failed: return the partial decode from the padded attempt
+	return d[:n], err
+}
+
 func (f *Folder) decodePart(ctx context.Context, in bodyPartResp) []byte {
 	var d []byte
 	var err error
@@ -156,8 +176,7 @@ func (f *Folder) decodePart(ctx context.Context, in bodyPartResp) []byte {
 		// ASCII, good as-is
 		d = in.Bytes
 	case "BASE64":
-		d = make([]byte, base64.RawStdEncoding.DecodedLen(len(in.Bytes)))
-		_, err = base64.RawStdEncoding.Decode(d, bytes.TrimRight(in.Bytes, "="))
+		d, err = decodeBase64(in.Bytes)
 	case "QUOTED-PRINTABLE":
 		d, err = io.ReadAll(quotedprintable.NewReader(bytes.NewReader(in.Bytes)))
 	default:
