@@ -301,7 +301,10 @@ func (a *AppService) EmitFolderSync(account types.AccountID, folder types.Folder
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) (string, error) {
 	dialog := application.Get().Dialog.SaveFile()
 	dialog.SetFilename(part.Description)
-	dialog.SetDirectory("Downloads")
+
+	if home, err := os.UserHomeDir(); err == nil {
+		dialog.SetDirectory(filepath.Join(home, "Downloads"))
+	}
 
 	return dialog.PromptForSingleSelection()
 }
