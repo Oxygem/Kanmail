@@ -1,5 +1,3 @@
-import { EventName } from "../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import { Events } from "../wails/runtime.js";
 import { ISettings } from "./stores/settings.js";
 import systemStore from "./stores/system.js";
 
@@ -24,7 +22,7 @@ let currentSettings: ISettings | null = null;
 let darkModeMedia: MediaQueryList | null = null;
 let listenersAttached = false;
 
-function applyThemes() {
+export function applyThemes() {
   if (!currentSettings || !darkModeMedia) {
     return;
   }
@@ -56,7 +54,6 @@ export function setupThemes(settings: ISettings) {
     } else {
       console.warn("Missing darkModeMedia.addEventListener, cannot sync with system theme");
     }
-    Events.On(EventName.LicenseChangedEvent, applyThemes);
     listenersAttached = true;
   }
 }

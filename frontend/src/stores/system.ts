@@ -2,6 +2,7 @@ import { Version } from "../../bindings/github.com/oxygem/kanmail/internal/backe
 import { AppService, SettingsService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events, System } from "../../wails/runtime.js";
+import { applyThemes } from "../theme.ts";
 import { BaseStore } from "./base.tsx";
 
 export interface ISystem {
@@ -61,6 +62,8 @@ class SystemStore extends BaseStore {
         }
         this.props.isLicensed = hasLicense;
         this.triggerUpdate(["isLicensed"]);
+        // Locked themes depend on the license, so re-apply now we know
+        applyThemes();
     }
 
     async checkUpdate(): Promise<void> {

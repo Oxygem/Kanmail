@@ -583,6 +583,16 @@ func (a *AppService) getKeyringLicenseUser() string {
 	return a.DeviceID + "." + "licensekey"
 }
 
+func (a *AppService) emitLicenseChangedEvent() {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	if a.app == nil {
+		return
+	}
+	a.app.Event.Emit(string(types.LicenseChangedEvent))
+}
+
 func (a *AppService) RemoveLicense(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
@@ -590,7 +600,7 @@ func (a *AppService) RemoveLicense(ctx context.Context) error {
 	if err := a.keyring.Delete(appDirName, a.getKeyringLicenseUser()); err != nil {
 		return types.WrapError(err)
 	}
-	a.app.Event.Emit(string(types.LicenseChangedEvent))
+	a.emitLicenseChangedEvent()
 	return nil
 }
 
@@ -614,6 +624,8 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 	if err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey)); err != nil {
 		return false, types.WrapError(err)
 	}
+
+	a.emitLicenseChangedEvent()
 	return true, nil
 }
 
