@@ -26,9 +26,13 @@ type FolderEmailPartCache struct {
 
 func NewFolderEmailPartCache(db *sql.DB) (*FolderEmailPartCache, error) {
 	// Prepare statements
+	// Parts are immutable for a given UID, but concurrent fetches of the same
+	// part can race between the cache check and this write, so upsert
 	stmtStore, err := db.Prepare(`
 		INSERT INTO folder_email_parts (account_id, folder_name, uid, part_id, data)
-		VALUES (?, ?, ?, ?, ?)`)
+		VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT (account_id, folder_name, uid, part_id)
+		DO UPDATE SET data = excluded.data`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare store statement: %w", err)
 	}
@@ -123,6 +127,12 @@ func (c *FolderEmailPartCache) Get(
 		return nil, nil
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to fetch email part: %w", err)
+	}
+
+	if data == nil {
+		// The part exists but is empty (servers return NIL for empty/missing
+		// sections) - return non-nil so callers see a hit, not a miss
+		data = []byte{}
 	}
 
 	return data, nil
