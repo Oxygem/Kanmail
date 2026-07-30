@@ -37,14 +37,15 @@ type FolderWatchManager struct {
 	accounts *AccountsService
 	app      *AppService
 
-	// Seams, overridable in tests. emit reports a change to the frontend; run is
-	// the per-folder loop body reconcile spawns.
-	emit func(types.AccountID, types.FolderName)
-	run  func(ctx context.Context, key watchKey)
+	// Swappable for testing purposes
+	emit          func(types.AccountID, types.FolderName)
+	emitAuthError func(types.AccountID, string)
+	run           func(ctx context.Context, key watchKey)
 
 	mu          sync.Mutex
 	loops       map[watchKey]context.CancelFunc
 	unsupported map[types.AccountID]struct{}
+	authFailed  map[types.AccountID]struct{}
 	stopped     bool
 }
 
@@ -61,8 +62,12 @@ func NewFolderWatchManager(
 		app:         app,
 		loops:       map[watchKey]context.CancelFunc{},
 		unsupported: map[types.AccountID]struct{}{},
+		authFailed:  map[types.AccountID]struct{}{},
+
+		emit:          app.EmitFolderSync,
+		emitAuthError: app.EmitAccountAuthError,
 	}
-	m.emit = app.EmitFolderSync
+	// Set the default loop
 	m.run = m.runLoop
 	// Reconcile whenever columns or accounts change.
 	settings.addOnPutSettingsCallbacks(func(ctx context.Context, s types.Settings) error {
@@ -114,6 +119,9 @@ func (m *FolderWatchManager) reconcile(settings types.Settings) {
 			delete(m.unsupported, account)
 		}
 	}
+
+	// Always clear failed auth markers on any settings change (we'll just re-flag)
+	clear(m.authFailed)
 
 	// Stop + delete loops no longer desired, note we don't bother waiting for completion
 	for key, cancel := range m.loops {
@@ -200,6 +208,12 @@ func (m *FolderWatchManager) runLoop(ctx context.Context, key watchKey) {
 			return
 		}
 		if err != nil {
+			if util.IsReauthRequired(err) {
+				recordEpisode()
+				log.Error().Err(err).Msg("Account credentials rejected, stopping watches")
+				m.markAuthFailed(key.account, err)
+				return
+			}
 			if util.IsRetryableError(err) {
 				lastNetErr = err
 				netErrCount++
@@ -250,6 +264,27 @@ func (m *FolderWatchManager) markUnsupported(account types.AccountID) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.unsupported[account] = struct{}{}
+	m.stopAccountLoops(account)
+}
+
+// markAuthFailed stops an account's folder loops and tells the frontend to
+// prompt for a reconnect.
+func (m *FolderWatchManager) markAuthFailed(account types.AccountID, err error) {
+	m.mu.Lock()
+	_, reported := m.authFailed[account]
+	m.authFailed[account] = struct{}{}
+	m.stopAccountLoops(account)
+	emit := m.emitAuthError
+	m.mu.Unlock()
+
+	if !reported && emit != nil {
+		emit(account, err.Error())
+	}
+}
+
+// stopAccountLoops cancels and forgets every loop for an account. Callers hold
+// the lock.
+func (m *FolderWatchManager) stopAccountLoops(account types.AccountID) {
 	for key, cancel := range m.loops {
 		if key.account == account {
 			cancel()

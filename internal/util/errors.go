@@ -18,6 +18,14 @@ import (
 	"github.com/oxygem/kanmail/internal/backend"
 )
 
+// ErrReauthRequired marks a failure only the user can clear by re-running the
+// provider's sign-in flow.
+var ErrReauthRequired = errors.New("account requires re-authentication")
+
+func IsReauthRequired(err error) bool {
+	return errors.Is(err, ErrReauthRequired)
+}
+
 // transientIMAPCodes are NO response codes that mean "not right now" rather than
 // "never": the server is unavailable, hit an internal bug, or the mailbox is
 // momentarily locked by another session.

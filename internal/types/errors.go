@@ -10,8 +10,9 @@ import (
 )
 
 type InternalError struct {
-	Err       error `json:"error"`
-	IsNetwork bool  `json:"isNetwork"`
+	Err            error `json:"error"`
+	IsNetwork      bool  `json:"isNetwork"`
+	RequiresReauth bool  `json:"requiresReauth"`
 }
 
 func (e InternalError) Error() string {
@@ -28,8 +29,9 @@ func makeInternalError(err error) InternalError {
 	}
 
 	return InternalError{
-		Err:       err,
-		IsNetwork: isNetwork,
+		Err:            err,
+		IsNetwork:      isNetwork,
+		RequiresReauth: util.IsReauthRequired(err),
 	}
 }
 

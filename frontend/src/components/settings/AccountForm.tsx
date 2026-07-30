@@ -5,6 +5,7 @@ import ColorPicker from "../../components/ColorPicker.tsx";
 import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
 import { openLink } from "../../window.ts";
 import requestStore from "../../stores/request.ts";
+import { trackEvent } from "../../util/analytics.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Address, ConnectionSettings, FolderSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
@@ -55,6 +56,9 @@ interface IAccountFormProps {
   isAddingNewAccount?: boolean;
   error?: any;
   accountId?: any;
+  // Opens the form straight onto a tab, so a reconnect prompt can land on the
+  // one holding the sign-in details rather than on Appearance
+  initialTab?: string;
 
   itemIndex: number;
   updateItem: (n: number, s: AccountSettings) => void;
@@ -71,6 +75,11 @@ interface IAccountFormState {
 
   hasConnectionChange: boolean;
 
+  // OAuth reconnect (existing accounts whose grant was revoked/expired)
+  oauthRequestId: string | null;
+  oauthRequestUrl: string | null;
+  isReconnecting: boolean;
+
   accountId: number;
 
   name: string;
@@ -85,13 +94,17 @@ interface IAccountFormState {
 
 const getInitialState = (props: IAccountFormProps): IAccountFormState => {
   const state: IAccountFormState = {
-    editingTab: props.isAddingNewAccount ? "imap" : "appearance",
+    editingTab: props.initialTab || (props.isAddingNewAccount ? "imap" : "appearance"),
 
     error: props.error,
 
     isSaving: false,
 
     hasConnectionChange: false,
+
+    oauthRequestId: null,
+    oauthRequestUrl: null,
+    isReconnecting: false,
 
     accountId: props.accountId,
 
@@ -117,12 +130,19 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
 
 
 export default class AccountForm extends React.Component<IAccountFormProps, IAccountFormState> {
+  oauthPoll: ReturnType<typeof setInterval> | null = null;
+
   constructor(props: IAccountFormProps) {
     super(props);
     this.state = getInitialState(props);
   }
 
+  componentWillUnmount() {
+    this.stopOauthPoll();
+  }
+
   resetState = () => {
+    this.stopOauthPoll();
     const state = getInitialState(this.props);
     this.setState(state);
   };
@@ -131,6 +151,90 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     ev.preventDefault();
 
     this.resetState();
+  };
+
+  stopOauthPoll = () => {
+    if (this.oauthPoll) {
+      clearInterval(this.oauthPoll);
+      this.oauthPoll = null;
+    }
+  };
+
+  getOauthProvider(): string {
+    return this.state.imapSettings?.oauthProvider
+      || this.state.smtpSettings?.oauthProvider
+      || "";
+  }
+
+  // Re-runs the provider's sign-in flow for an account already set up, swapping
+  // in the refresh token it returns. This is the only way back from a grant
+  // revoked or expired at the provider's end - the stored one can't be repaired.
+  handleReconnectOAuth = (ev) => {
+    ev.preventDefault();
+
+    if (this.state.isReconnecting) {
+      return;
+    }
+
+    const provider = this.getOauthProvider();
+    if (!provider) {
+      return;
+    }
+
+    this.setState({ isReconnecting: true, error: "" });
+    trackEvent("ReconnectAccountStarted", { provider });
+
+    AccountsService.StartOAuthRequest(provider).then((request) => {
+      if (!request) {
+        throw new Error("no oauth request returned");
+      }
+      this.setState({
+        oauthRequestId: request.uid,
+        oauthRequestUrl: request.url,
+      });
+      this.stopOauthPoll();
+      this.oauthPoll = setInterval(this.checkOauthResponse, 250);
+    }).catch((error) => {
+      this.setState({ isReconnecting: false, error: error.message });
+      requestStore.addError("Failed to start OAuth request", error, { silent: true });
+    });
+  };
+
+  checkOauthResponse = () => {
+    if (!this.state.oauthRequestId) {
+      return;
+    }
+
+    AccountsService.GetOAuthResponse(this.state.oauthRequestId).then((resp) => {
+      if (!resp) {
+        return;
+      }
+      this.stopOauthPoll();
+
+      // Signing in as somebody else would silently repoint this account at a
+      // different mailbox, leaving its cached mail attributed to the wrong one.
+      const username = this.state.imapSettings?.username;
+      if (username && resp.email && resp.email.toLowerCase() !== username.toLowerCase()) {
+        this.setState({
+          isReconnecting: false,
+          error: `Signed in as ${resp.email}, but this account is ${username} - `
+            + "please sign in with the same address.",
+        });
+        trackEvent("ReconnectAccountWrongAddress", { provider: this.getOauthProvider() });
+        return;
+      }
+
+      const { imapSettings, smtpSettings } = this.state;
+      if (imapSettings) imapSettings.oauthRefreshToken = resp.refreshToken;
+      if (smtpSettings) smtpSettings.oauthRefreshToken = resp.refreshToken;
+
+      this.setState({
+        imapSettings,
+        smtpSettings,
+        hasConnectionChange: true,
+        isReconnecting: false,
+      }, this.submitSettings);
+    });
   };
 
   handleUpdate = (settingsKey: string, key: string, ev) => {
@@ -170,6 +274,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
   handleTestConnection = (ev) => {
     ev.preventDefault();
 
+    this.submitSettings();
+  };
+
+  submitSettings = () => {
     const accountSettings: AccountSettings = {
       id: this.props.accountSettings?.id || "",
       name: this.state.name,
@@ -303,9 +411,33 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     const { oauthProvider } = this.state[settingKey];
     if (oauthProvider) {
       return (
-        <div className="wide">
-          This account is connected via OAuth provider:{" "}
-          <strong>{oauthProvider}</strong>.
+        <div className="wide oauth-connection">
+          <p>
+            This account is connected via OAuth provider:{" "}
+            <strong>{oauthProvider}</strong>.
+          </p>
+          {this.state.isReconnecting
+            ? <p className="meta">
+              <i className="fa fa-refresh fa-spin" /> Waiting for confirmation in
+              your browser&hellip;
+              {this.state.oauthRequestUrl && <>
+                {" "}Nothing happening? Open this URL yourself:
+                <pre className="wrap">{this.state.oauthRequestUrl}</pre>
+              </>}
+            </p>
+            : <>
+              <button
+                type="button"
+                className="submit"
+                onClick={this.handleReconnectOAuth}
+              >
+                Reconnect
+              </button>
+              <p className="meta">
+                Sign in again if {oauthProvider} has revoked or expired
+                Kanmail&apos;s access to this account.
+              </p>
+            </>}
         </div>
       );
     }

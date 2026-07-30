@@ -48,6 +48,20 @@ div.header-errors {
         border-color: var(--red, #e5484d);
       }
     }
+
+    // Needs-reconnecting is an action for the user, not a fault to report -
+    // amber keeps it distinct from the red sync/network failures beside it.
+    > a.reauth {
+      color: var(--amber, #f5a524);
+
+      i {
+        color: var(--amber, #f5a524);
+      }
+
+      &:hover {
+        border-color: var(--amber, #f5a524);
+      }
+    }
   }
 
   div.icon-contents {

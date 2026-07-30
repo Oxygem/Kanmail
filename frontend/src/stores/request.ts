@@ -1,5 +1,6 @@
 import _ from "lodash";
 
+import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { EventName } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Call, Events } from "../../wails/runtime.js";
 import { trackError } from "../util/analytics.ts";
@@ -10,6 +11,7 @@ export interface RuntimeError {
   action: string;
   message: string;
   isNetwork?: boolean;
+  requiresReauth?: boolean;
   accountID?: string;
   folderName?: string;
   error?: any;
@@ -28,9 +30,9 @@ export interface IRequestStoreProps {
   fetchRequests: Map<number, string>;
   pushRequests: Map<number, string>;
   pendingRequests: PendingRequest[];
-  // TODO
   requestErrors: RuntimeError[];
   networkErrors: RuntimeError[];
+  accountAuthErrors: Map<string, RuntimeError>;
 }
 
 class RequestStore extends BaseStore {
@@ -51,6 +53,8 @@ class RequestStore extends BaseStore {
       requestErrors: [],
       // Network error "log" (ie dodgy network, not "errors")
       networkErrors: [],
+      // Accounts needing re-authentication
+      accountAuthErrors: new Map(),
     };
   }
 
@@ -61,10 +65,10 @@ class RequestStore extends BaseStore {
       rawErr instanceof Error
         ? rawErr
         : new Error(
-            rawErr === undefined || rawErr === null
-              ? `Unknown error (${action})`
-              : String(rawErr),
-          );
+          rawErr === undefined || rawErr === null
+            ? `Unknown error (${action})`
+            : String(rawErr),
+        );
 
     const newError: RuntimeError = {
       action,
@@ -86,7 +90,20 @@ class RequestStore extends BaseStore {
       if (cause.error) {
         newError.error = cause.error;
       }
+      if (cause.requiresReauth) {
+        newError.requiresReauth = true;
+      }
     }
+
+    if (newError.requiresReauth && newError.accountID) {
+      console.debug("[requestStore] Account needs reconnecting", newError);
+      this.addAuthError(newError.accountID, newError.message, {
+        ...options,
+        report: true,
+      });
+      return;
+    }
+
     // Silent errors skip the UI lists (the caller shows its own feedback or
     // the failure is non-fatal background work) but still follow the same
     // classification & tracking policy below.
@@ -103,6 +120,44 @@ class RequestStore extends BaseStore {
       });
     }
   }
+
+  addAuthError = (
+    accountID: string,
+    message: string,
+    options: { silent?: boolean; report?: boolean } = {},
+  ) => {
+    if (this.props.accountAuthErrors.has(accountID)) {
+      return;
+    }
+    trackError("AccountReauthRequired", message, undefined, { accountID });
+    if (options.silent) {
+      return;
+    }
+    this.props.accountAuthErrors.set(accountID, {
+      action: "Account needs reconnecting",
+      message,
+      accountID,
+      requiresReauth: true,
+    });
+    this.triggerUpdate();
+
+    // A failed request only fails in the window that made it - hand it to the
+    // backend so the other windows (and any opened later) hear about it too.
+    if (options.report) {
+      AppService.EmitAccountAuthError(accountID, message).catch((e) => {
+        console.error("[requestStore] Failed to report auth error", e);
+      });
+    }
+  };
+
+  clearAuthErrors = () => {
+    if (!this.props.accountAuthErrors.size) {
+      return;
+    }
+    console.debug("[requestStore] Clearing account auth errors...");
+    this.props.accountAuthErrors.clear();
+    this.triggerUpdate();
+  };
 
   clearNetworkErrors = () => {
     console.debug("[requestStore] Clearing network errors...");
@@ -219,6 +274,28 @@ const requestStore = new RequestStore();
 // @ts-ignore
 window.requestStore = requestStore;
 export default requestStore;
+
+Events.On(EventName.AccountAuthErrorEvent, (ev) => {
+  const { accountID, message } = ev.data as { accountID: string; message: string };
+  requestStore.addAuthError(accountID, message);
+});
+
+// Backfill any account auth errors at window start
+AppService.GetAccountAuthErrors().then((errors) => {
+  _.each(errors, (message, accountID) => {
+    requestStore.addAuthError(accountID, message || "");
+  });
+}).catch((e) => {
+  console.error("[requestStore] Failed to load account auth errors", e);
+});
+
+// Any settings save may be the reconnect that fixes an account - and it's the
+// settings window that performs it, so the prompt here can't clear itself.
+// Drop them all and let the next sync re-report whatever is still broken,
+// mirroring how the backend clears its own watch markers.
+Events.On(EventName.SettingsChangedEvent, () => {
+  requestStore.clearAuthErrors();
+});
 
 // Pass global JS errors to the requestStore. Called explicitly by main.tsx for
 // every window - as an import side-effect some windows (license) never got them.

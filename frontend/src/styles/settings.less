@@ -559,6 +559,51 @@ section#settings-app #settings .km-settings {
     margin: 4px 0 20px;
   }
 
+  /* OAuth accounts have no username/password fields - they get the provider
+     name and the reconnect action in their place. */
+  .oauth-connection {
+    padding-top: 18px;
+
+    p {
+      font-size: 13px;
+      color: var(--sub);
+      margin: 0 0 12px;
+
+      &.meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 10px 0 0;
+      }
+    }
+
+    button.submit {
+      height: 34px;
+      padding: 0 16px;
+      border-radius: var(--r-md);
+      background: var(--grad);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border: 0;
+
+      &:hover {
+        filter: brightness(1.04);
+      }
+    }
+
+    pre.wrap {
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 8px 0 0;
+      padding: 8px 10px;
+      border-radius: var(--r-sm);
+      background: var(--pill);
+      border: 1px solid var(--ring);
+      font-size: 11px;
+      color: var(--muted);
+    }
+  }
+
   > div:last-child,
   > .wide:last-child {
     padding-bottom: 20px;

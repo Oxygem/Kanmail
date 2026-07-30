@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -21,6 +22,7 @@ func newTestWatchManager(t *testing.T) (*FolderWatchManager, chan watchKey) {
 		log:         zerolog.Nop(),
 		loops:       map[watchKey]context.CancelFunc{},
 		unsupported: map[types.AccountID]struct{}{},
+		authFailed:  map[types.AccountID]struct{}{},
 	}
 	m.run = func(ctx context.Context, key watchKey) {
 		started <- key
@@ -147,6 +149,67 @@ func TestReconcileForgetsUnsupportedWhenAccountRemoved(t *testing.T) {
 
 	// Re-adding one now re-probes it (a loop starts).
 	m.reconcile(settingsWith([]types.FolderName{"inbox"}, "one", "two"))
+	expectStarted(t, started, watchKey{"one", "inbox"})
+}
+
+func TestMarkAuthFailedStopsAccountAndPromptsOnce(t *testing.T) {
+	m, started := newTestWatchManager(t)
+	prompts := make(chan types.AccountID, 4)
+	m.emitAuthError = func(account types.AccountID, _ string) { prompts <- account }
+
+	m.reconcile(settingsWith([]types.FolderName{"inbox", "archive"}, "one", "two"))
+	expectStarted(t, started,
+		watchKey{"one", "inbox"}, watchKey{"one", "archive"},
+		watchKey{"two", "inbox"}, watchKey{"two", "archive"},
+	)
+
+	// Every folder on the account shares the rejected credentials, so all of
+	// them stop - and sibling loops racing to the same conclusion must not each
+	// prompt the user.
+	m.markAuthFailed("one", errors.New("revoked"))
+	m.markAuthFailed("one", errors.New("revoked"))
+
+	keys := activeKeys(m)
+	if len(keys) != 2 {
+		t.Fatalf("expected only account two watching, got %+v", keys)
+	}
+	for key := range keys {
+		if key.account == "one" {
+			t.Fatalf("account one should have no loops, got %+v", key)
+		}
+	}
+
+	select {
+	case account := <-prompts:
+		if account != "one" {
+			t.Fatalf("prompted for %q, want one", account)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("expected a reconnect prompt")
+	}
+	select {
+	case account := <-prompts:
+		t.Fatalf("expected a single prompt, got a second for %q", account)
+	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestReconcileRestartsAuthFailedAccounts(t *testing.T) {
+	m, started := newTestWatchManager(t)
+	m.emitAuthError = func(types.AccountID, string) {}
+
+	settings := settingsWith([]types.FolderName{"inbox"}, "one")
+	m.reconcile(settings)
+	expectStarted(t, started, watchKey{"one", "inbox"})
+
+	m.markAuthFailed("one", errors.New("revoked"))
+	if got := len(activeKeys(m)); got != 0 {
+		t.Fatalf("expected no loops after auth failure, got %d", got)
+	}
+
+	// Reconciling is how a reconnect reaches us - the watch must come back
+	// rather than stay dead for the rest of the session.
+	m.reconcile(settings)
 	expectStarted(t, started, watchKey{"one", "inbox"})
 }
 

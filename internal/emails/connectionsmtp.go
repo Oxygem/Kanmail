@@ -13,6 +13,7 @@ import (
 	"github.com/oxygem/kanmail/internal/emails/oauth"
 	"github.com/oxygem/kanmail/internal/emails/smtpinterface"
 	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 type SMTPConnectionPool struct {
@@ -103,6 +104,10 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
 			if err := c.doOAuthLogin(ctx, client); err != nil {
+				if util.IsReauthRequired(err) {
+					client.Close()
+					return nil, err
+				}
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
 				client.Close()
 				client, err = dialFn(addr, nil)

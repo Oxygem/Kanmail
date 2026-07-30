@@ -13,3 +13,10 @@ type FolderSync struct {
 	AccountID string `json:"accountID"`
 	Folder    string `json:"folder"`
 }
+
+const AccountAuthErrorEvent EventName = "AccountAuthErrorEvent"
+
+type AccountAuthError struct {
+	AccountID string `json:"accountID"`
+	Message   string `json:"message"`
+}

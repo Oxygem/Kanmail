@@ -6,6 +6,8 @@ import { AccountSettings, Address, CacheStats, Settings } from "../../../binding
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import keyboard from "../../keyboard.ts";
+import { subscribe } from "../../stores/base.tsx";
+import requestStore, { RuntimeError } from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
@@ -95,13 +97,17 @@ interface IAccountProps extends AccountSettings {
   updateAccount: (n: number, a: AccountSettings) => void;
   deleteAccount: (n: number) => void;
   moveAccount: (i: number, p: number) => void;
+  // Injected by the store subscription below
+  authErrors?: Map<string, RuntimeError>;
 }
 
 interface IAccountState {
   isEditing: boolean;
   isDeleting: boolean;
+  editTab?: string;
 }
 
+@subscribe([requestStore, ["authErrors"]])
 class Account extends React.Component<IAccountProps, IAccountState> {
   constructor(props: IAccountProps) {
     super(props);
@@ -125,6 +131,9 @@ class Account extends React.Component<IAccountProps, IAccountState> {
     const hasValidCredentials =
       hasConnectionCredentials(this.props.imapSettings)
       && hasConnectionCredentials(this.props.smtpSettings);
+    // Credentials we still hold but the provider has since disowned - present
+    // and well-formed, so hasValidCredentials can't see it
+    const needsReconnect = Boolean(this.props.authErrors?.has(this.props.id));
 
     const deleteButton = (
       <button
@@ -149,10 +158,20 @@ class Account extends React.Component<IAccountProps, IAccountState> {
           />
           <div className="grow">
             <div className="nm">{this.props.name}</div>
-            {hasValidCredentials
-              ? <div className="em">{this.props.imapSettings.username}</div>
-              : <div className="em error">Credentials invalid, please remove and re-setup.</div>}
+            {!hasValidCredentials
+              ? <div className="em error">Credentials invalid, please remove and re-setup.</div>
+              : needsReconnect
+                ? <div className="em error">Sign-in expired, please reconnect.</div>
+                : <div className="em">{this.props.imapSettings.username}</div>}
           </div>
+          {hasValidCredentials && needsReconnect && <button
+            className="btn-soft"
+            onClick={() => this.setState({
+              isEditing: true,
+              isDeleting: false,
+              editTab: this.props.imapSettings?.oauthProvider ? "imap" : "appearance",
+            })}
+          >Reconnect</button>}
           {hasValidCredentials && <button
             className="icon-btn"
             title="Move up"
@@ -174,7 +193,8 @@ class Account extends React.Component<IAccountProps, IAccountState> {
             accountSettings={this.props}
             itemIndex={this.props.accountIndex}
             updateItem={this.props.updateAccount}
-            closeForm={() => this.setState({ isEditing: false })}
+            initialTab={this.state.editTab}
+            closeForm={() => this.setState({ isEditing: false, editTab: undefined })}
           />
         </div>}
       </div>

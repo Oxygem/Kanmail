@@ -66,6 +66,45 @@ class RequestError extends Component<RuntimeError, {
 
 @subscribe(requestStore)
 export default class HeaderErrors extends Component<IRequestStoreProps> {
+  renderAuthErrors() {
+    if (!this.props.accountAuthErrors.size) {
+      return null;
+    }
+
+    const errors = Array.from(this.props.accountAuthErrors.values());
+
+    return (
+      <div className="icon-wrapper">
+        <div className="icon-contents">
+          <strong>
+            {errors.length > 1
+              ? `${errors.length} accounts need reconnecting`
+              : "An account needs reconnecting"}
+          </strong>
+          <p>
+            Kanmail's access was revoked or has expired, so it can no longer
+            sign in. Reconnect the account in settings to restore it.
+          </p>
+          {_.map(errors, (error) => (
+            <p key={error.accountID}>
+              <span className="meta">
+                {settingsStore.getAccountSettings(error.accountID!)?.name
+                  || error.accountID}
+              </span>
+              {error.message}
+            </p>
+          ))}
+          <button onClick={() => AppService.OpenSettingsWindow()}>
+            Open settings
+          </button>
+        </div>
+        <a className="reauth" onClick={() => AppService.OpenSettingsWindow()}>
+          <i className="fa fa-unlink"></i> {errors.length}
+        </a>
+      </div>
+    );
+  }
+
   renderRequestErrors() {
     if (!this.props.requestErrors.length) {
       return null;
@@ -122,12 +161,17 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
   }
 
   render() {
-    if (!this.props.requestErrors.length && !this.props.networkErrors.length) {
+    if (
+      !this.props.requestErrors.length
+      && !this.props.networkErrors.length
+      && !this.props.accountAuthErrors.size
+    ) {
       return null;
     }
 
     return (
       <div className="header-errors">
+        {this.renderAuthErrors()}
         {this.renderRequestErrors()}
         {this.renderNetworkErrorIcon()}
       </div>

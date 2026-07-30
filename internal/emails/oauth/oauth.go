@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -52,12 +53,52 @@ var oauthCompleteTemplate = []byte(`
 
 var ErrUnknownOAuthService = errors.New("no such oauth service")
 
+// terminalTokenErrorCodes are token endpoint error codes that mean the grant we
+// hold is gone for good - the user revoked Kanmail's access, changed their
+// password, or let the refresh token lapse. Everything else (a 5xx, a rate
+// limit, a transport failure) may work on the next attempt.
+var terminalTokenErrorCodes = map[string]bool{
+	"invalid_grant":        true,
+	"consent_required":     true,
+	"interaction_required": true,
+}
+
+// TokenError is an error response from a provider's token endpoint (RFC 6749
+// section 5.2). The provider's own code is the only thing that distinguishes a
+// dead grant from a transient failure, so it is kept rather than flattened into
+// the HTTP status.
+type TokenError struct {
+	Provider    string `json:"provider"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
+	StatusCode  int    `json:"statusCode"`
+}
+
+func (e *TokenError) Error() string {
+	code := e.Code
+	if code == "" {
+		code = fmt.Sprintf("HTTP %d", e.StatusCode)
+	}
+	msg := fmt.Sprintf("%s oauth token error: %s", e.Provider, code)
+	if e.Description != "" {
+		msg += ": " + e.Description
+	}
+	return msg
+}
+
+func (e *TokenError) Unwrap() error {
+	if terminalTokenErrorCodes[e.Code] {
+		return util.ErrReauthRequired
+	}
+	return nil
+}
+
 var oauthServices = map[string]oauthService{
 	"gmail": {
 		authEndpoint:        "https://accounts.google.com/o/oauth2/auth",
 		tokenEndpoint:       "https://accounts.google.com/o/oauth2/token",
 		profileEndpoint:     "https://www.googleapis.com/userinfo/v2/me",
-		scope:               "https://mail.google.com https://www.googleapis.com/auth/userinfo.email",
+		scope:               "https://mail.google.com/ https://www.googleapis.com/auth/userinfo.email",
 		clientID:            constants.OAUTH_GMAIL_CLIENT_ID,
 		clientSecret:        constants.OAUTH_GMAIL_CLIENT_SECRET,
 		includeClientSecret: true,
@@ -90,6 +131,33 @@ func MakeSASLClient(conf types.ConnectionSettings, accessToken string) sasl.Clie
 var oauthHTTPClient = &http.Client{}
 var oauthResponseServerAddr net.Addr
 
+// requestToken posts to a provider's token endpoint, turning an OAuth2 error
+// response into a *TokenError so callers can tell "come back later" apart from
+// "this grant is dead". Transport and body-read failures pass through as-is -
+// there's no response to classify.
+func requestToken(ctx context.Context, provider string, req *util.HTTPRequest) (map[string]any, error) {
+	resp, body, err := util.MakeHTTPRequest(ctx, oauthHTTPClient, req)
+
+	var data map[string]any
+	if len(body) > 0 {
+		// A provider answering with anything but JSON has nothing to say beyond
+		// the status code, which the TokenError below carries regardless.
+		_ = json.Unmarshal(body, &data)
+	}
+
+	if err == nil {
+		return data, nil
+	}
+	if resp == nil || resp.StatusCode == http.StatusOK {
+		return data, err
+	}
+
+	tokenErr := &TokenError{Provider: provider, StatusCode: resp.StatusCode}
+	tokenErr.Code, _ = data["error"].(string)
+	tokenErr.Description, _ = data["error_description"].(string)
+	return data, tokenErr
+}
+
 type OAuthResponse struct {
 	Email        string `json:"email"`
 	Scope        string `json:"scope"`
@@ -113,6 +181,13 @@ type cachedAccessToken struct {
 
 // Map of refresh token -> access token
 var oauthTokens = map[string]cachedAccessToken{}
+
+// Refresh tokens the provider has rejected outright. Without this every
+// connection attempt - and there are several per account, continuously - asks
+// the token endpoint a question whose answer cannot change until the user
+// re-authorises, which mints a different refresh token anyway.
+var invalidRefreshTokens = map[string]error{}
+
 var oauthTokenLock sync.Mutex
 
 // Refresh tokens slightly before the server-side expiry so we never hand out
@@ -198,21 +273,28 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		req.JSON = v
 	}
 
-	tokenData, err := util.MakeHTTPRequestJSON(
-		r.Context(),
-		oauthHTTPClient,
-		req,
-	)
+	tokenData, err := requestToken(r.Context(), currentOAuthRequest.provider, req)
 	if err != nil {
-		log.Error().Any("data", tokenData).Msg("Unexpected oauth error")
+		log.Error().Err(err).Any("data", tokenData).Msg("Unexpected oauth error")
 		http.Error(w, fmt.Sprintf("Unexpected error: %s", err), http.StatusInternalServerError)
 		return
 	}
 
+	// Checked, not asserted: a response missing any of these would otherwise
+	// panic inside the HTTP handler, which net/http recovers by resetting the
+	// connection - leaving the frontend waiting on a confirmation that never
+	// arrives, with nothing logged to say why.
 	var resp OAuthResponse
-	resp.Scope = tokenData["scope"].(string)
-	resp.AccessToken = tokenData["access_token"].(string)
-	resp.RefreshToken = tokenData["refresh_token"].(string)
+	resp.Scope, _ = tokenData["scope"].(string)
+	resp.AccessToken, _ = tokenData["access_token"].(string)
+	resp.RefreshToken, _ = tokenData["refresh_token"].(string)
+	if resp.AccessToken == "" || resp.RefreshToken == "" {
+		log.Error().Bool("hasAccessToken", resp.AccessToken != "").
+			Bool("hasRefreshToken", resp.RefreshToken != "").
+			Msg("Incomplete oauth token response")
+		http.Error(w, "Incomplete token response", http.StatusBadGateway)
+		return
+	}
 
 	headers := http.Header{"Authorization": []string{"Bearer " + resp.AccessToken}}
 	profileData, err := util.MakeHTTPRequestJSON(
@@ -240,6 +322,11 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No email returned from profile request", http.StatusBadRequest)
 		return
 	}
+
+	// A provider re-issuing a refresh token we'd already written off (rather
+	// than minting a fresh one) would otherwise be rejected out of hand by the
+	// cache below, making the reconnect the user just completed look broken.
+	clearInvalidRefreshToken(resp.RefreshToken)
 
 	currentOAuthRequest.response = &resp
 	log.Info().
@@ -272,6 +359,8 @@ func GetOAuthRequestURL(ctx context.Context, provider string) (string, string, e
 	v.Set("client_id", service.clientID)
 	v.Set("scope", service.scope)
 	v.Set("response_type", "code")
+	v.Set("access_type", "offline")
+	v.Set("prompt", "consent")
 	v.Set("redirect_uri", getRedirectURL())
 
 	url := service.authEndpoint + "?" + v.Encode()
@@ -303,6 +392,10 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	oauthTokenLock.Lock()
 	defer oauthTokenLock.Unlock()
 
+	if err, ok := invalidRefreshTokens[refreshToken]; ok {
+		return "", err
+	}
+
 	cached, ok := oauthTokens[refreshToken]
 	if ok && time.Now().Before(cached.expiresAt) {
 		zerolog.Ctx(ctx).Trace().Msg("Using cached access token")
@@ -324,16 +417,18 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 		v.Set("scope", service.emailTokenScope)
 	}
 
-	tokenData, err := util.MakeHTTPRequestJSON(
-		ctx,
-		oauthHTTPClient,
-		&util.HTTPRequest{
-			URL:    service.tokenEndpoint,
-			Method: http.MethodPost,
-			Form:   v,
-		},
-	)
+	tokenData, err := requestToken(ctx, provider, &util.HTTPRequest{
+		URL:    service.tokenEndpoint,
+		Method: http.MethodPost,
+		Form:   v,
+	})
 	if err != nil {
+		if util.IsReauthRequired(err) {
+			invalidRefreshTokens[refreshToken] = err
+			delete(oauthTokens, refreshToken)
+			zerolog.Ctx(ctx).Error().Err(err).Str("provider", provider).
+				Msg("OAuth refresh token rejected, account needs re-authenticating")
+		}
 		return "", err
 	}
 
@@ -361,8 +456,18 @@ func ClearOAuthAccessToken(refreshToken string) {
 	oauthTokenLock.Unlock()
 }
 
+func clearInvalidRefreshToken(refreshToken string) {
+	oauthTokenLock.Lock()
+	delete(invalidRefreshTokens, refreshToken)
+	oauthTokenLock.Unlock()
+}
+
+// ClearOAuthAccessTokens drops every cached token, including the record of
+// which refresh tokens the provider rejected, so a grant restored at the
+// provider's end gets another chance without restarting the app.
 func ClearOAuthAccessTokens() {
 	oauthTokenLock.Lock()
 	clear(oauthTokens)
+	clear(invalidRefreshTokens)
 	oauthTokenLock.Unlock()
 }

@@ -243,6 +243,8 @@ func (s *SettingsService) PutSettings(ctx context.Context, settings types.Settin
 	settings.Accounts = unhiddenAccounts
 
 	s.settings = &settings
+
+	s.appService.clearAccountAuthErrors()
 	s.appService.SendSettingsChangedEvent(ctx, redactSettings(settings))
 
 	for _, f := range s.onPutSettingsCallbacks {

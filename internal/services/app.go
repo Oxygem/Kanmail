@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -46,12 +47,15 @@ type AppService struct {
 	cacheDir         string
 	keyring          *util.CachedKeyring
 	analyticsEnabled bool
+	startedAt        time.Time
 
 	mainWindow     *application.WebviewWindow
 	settingsWindow *application.WebviewWindow
 	licenseWindow  *application.WebviewWindow
 	metaWindow     *application.WebviewWindow
 	sendWindows    []*application.WebviewWindow
+
+	accountsNeedingReauth map[types.AccountID]string
 
 	AppVersion int
 	DeviceID   string
@@ -62,10 +66,12 @@ func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring)
 		backend.SetAppVersion(fmt.Sprintf("2.%d", version))
 	}
 	return &AppService{
-		log:         log.With().Str("component", "app").Logger(),
-		keyring:     keyring,
-		sendWindows: make([]*application.WebviewWindow, 0),
-		AppVersion:  version,
+		log:                   log.With().Str("component", "app").Logger(),
+		keyring:               keyring,
+		sendWindows:           make([]*application.WebviewWindow, 0),
+		accountsNeedingReauth: map[types.AccountID]string{},
+		AppVersion:            version,
+		startedAt:             time.Now(),
 
 		// Default true, matching settings defaults
 		analyticsEnabled: true,
@@ -296,6 +302,44 @@ func (a *AppService) EmitFolderSync(account types.AccountID, folder types.Folder
 		AccountID: string(account),
 		Folder:    string(folder),
 	})
+}
+
+// EmitAccountAuthError records that an account's credentials were rejected
+// outright and tells every window, so they can prompt the user to reconnect it.
+func (a *AppService) EmitAccountAuthError(account types.AccountID, message string) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	if _, known := a.accountsNeedingReauth[account]; known {
+		return
+	}
+	a.accountsNeedingReauth[account] = message
+
+	if a.app == nil {
+		return
+	}
+	a.app.Event.Emit(string(types.AccountAuthErrorEvent), types.AccountAuthError{
+		AccountID: string(account),
+		Message:   message,
+	})
+}
+
+// GetAccountAuthErrors returns the accounts currently needing a reconnect,
+// mapped to why. Windows call this on load to catch up on events that fired
+// before they existed.
+func (a *AppService) GetAccountAuthErrors() map[types.AccountID]string {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	return maps.Clone(a.accountsNeedingReauth)
+}
+
+// clearAccountAuthErrors forgets every reconnect prompt on settings changes
+func (a *AppService) clearAccountAuthErrors() {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	clear(a.accountsNeedingReauth)
 }
 
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) (string, error) {
