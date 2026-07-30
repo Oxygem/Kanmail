@@ -169,6 +169,19 @@ func (c *ConnectionPool[T]) withPriorityConnection(ctx context.Context, fn func(
 }
 
 func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) error) error {
+	return c.acquire(func(conn T) error {
+		return c.retryLoop(ctx, conn, fn)
+	})
+}
+
+// withConnectionOnce runs fn a single time, skipping the retry loop. Use it for
+// operations that cannot be safely replayed: a transient error raised after the
+// server already accepted the command performs it twice.
+func (c *ConnectionPool[T]) withConnectionOnce(fn func(conn T) error) error {
+	return c.acquire(fn)
+}
+
+func (c *ConnectionPool[T]) acquire(run func(conn T) error) error {
 	if c.disabled {
 		return errors.New("connection unavailable")
 	}
@@ -176,7 +189,7 @@ func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) 
 	select {
 	case conn := <-c.pool:
 		defer func() { c.pool <- conn }()
-		return c.retryLoop(ctx, conn, fn)
+		return run(conn)
 	default:
 	}
 
@@ -185,7 +198,7 @@ func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) 
 
 	conn := <-c.pool
 	defer func() { c.pool <- conn }()
-	return c.retryLoop(ctx, conn, fn)
+	return run(conn)
 }
 
 // beginWait marks that an interactive acquirer is now waiting on the regular

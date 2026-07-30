@@ -43,6 +43,22 @@ func (c *SMTPConnectionPool) WithConnection(
 	})
 }
 
+// WithConnectionOnce runs fn without retries - see withConnectionOnce. Sending
+// is not replayable: an error after the server accepted DATA means the message
+// is already on its way, and retrying delivers it again.
+func (c *SMTPConnectionPool) WithConnectionOnce(
+	ctx context.Context,
+	fn func(conn smtpinterface.SMTPClient) error,
+) error {
+	return c.withConnectionOnce(func(wrapper *SMTPConnectionWrapper) error {
+		if conn, err := wrapper.Get(ctx); err != nil {
+			return err
+		} else {
+			return fn(conn)
+		}
+	})
+}
+
 // Lazily loaded smtp.Client - not safe for use by concurrent goroutines, use the pool!
 type SMTPConnectionWrapper struct {
 	client smtpinterface.SMTPClient

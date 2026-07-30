@@ -181,8 +181,8 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 
 	log.Debug().Msg("Sending email")
 
-	if err := a.smtp.WithConnection(ctx, func(conn smtpinterface.SMTPClient) error {
-		if err := conn.SendMail("", toAddrs, bytes.NewReader(b.Bytes())); err != nil {
+	if err := a.smtp.WithConnectionOnce(ctx, func(conn smtpinterface.SMTPClient) error {
+		if err := conn.SendMail(options.From.Email, toAddrs, bytes.NewReader(b.Bytes())); err != nil {
 			return fmt.Errorf("failed to send email: %w", err)
 		}
 		log.Info().Msg("Sent email")
