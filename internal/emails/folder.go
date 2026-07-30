@@ -969,6 +969,7 @@ func (f *Folder) getOrFetchEmails(
 	}
 
 	var fetchedEmails []*types.Email
+	var fallbackErr error
 
 	if err := connFn(ctx, f.Name, func(conn imapinterface.IMAPClient) (err error) {
 		fetchedEmails, err = f.fetchEmailHeadersWithConnection(ctx, conn, uncachedUIDs)
@@ -984,7 +985,7 @@ func (f *Folder) getOrFetchEmails(
 		// https://github.com/emersion/go-imap/issues/678
 		log.Error().Msg("Failed to batch fetch email headers, trying UID by UID")
 		for _, uid := range uncachedUIDs {
-			connFn(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+			err := connFn(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 				singleEmail, err := f.fetchEmailHeadersWithConnection(ctx, conn, []imap.UID{uid})
 				if err != nil {
 					log.Err(err).
@@ -1009,6 +1010,19 @@ func (f *Folder) getOrFetchEmails(
 				}
 				return nil
 			})
+			if err == nil {
+				continue
+			}
+			if isMissingMailboxErr(err) {
+				log.Warn().Msg("Failed to fetch email headers, folder does not exist")
+				break
+			}
+			// The callback above always returns nil, so this is the connection itself
+			// failing - neither an email nor a placeholder was produced for this UID.
+			// The error must reach the caller, otherwise pagination advances past these
+			// UIDs and they are silently never shown again.
+			fallbackErr = fmt.Errorf("failed to fetch email header: %d: %w", uid, err)
+			break
 		}
 	}
 
@@ -1026,6 +1040,11 @@ func (f *Folder) getOrFetchEmails(
 				log.Err(err).Msg("Failed to store contact in cache")
 			}
 		}
+	}
+
+	// Cache anything that did come back before bailing, so a retry is cheap
+	if fallbackErr != nil {
+		return nil, fallbackErr
 	}
 
 	return append(emails, fetchedEmails...), nil
