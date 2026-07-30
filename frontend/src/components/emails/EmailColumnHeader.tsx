@@ -165,16 +165,25 @@ class EmailColumnHeader extends React.Component<IEmailColumnHeaderProps> {
   }
 }
 
+// Cache of headers, same as EmailColumn
+const wrappedEmailColumnHeaders: Record<string, any> = {};
+
+function getWrappedEmailColumnHeader(id: string) {
+  if (!wrappedEmailColumnHeaders[id]) {
+    wrappedEmailColumnHeaders[id] = subscribe(
+      getColumnMetaStore(id),
+      [settingsStore, ["currentAccount"]],
+      [searchStore, ["isSearching"]]
+    )(EmailColumnHeader);
+  }
+  return wrappedEmailColumnHeaders[id];
+}
+
 export default class EmailColumnHeaderWrapper extends EmailColumnHeader {
   wrappedEmailColumn: any;
 
   render() {
-    const WrappedEmailColumnHeader = subscribe(
-      getColumnMetaStore(this.props.id),
-      [settingsStore, ["currentAccount"]],
-      [searchStore, ["isSearching"]]
-    )(EmailColumnHeader);
-
+    const WrappedEmailColumnHeader = getWrappedEmailColumnHeader(this.props.id);
     return <WrappedEmailColumnHeader {...this.props} {...this.state} />;
   }
 }

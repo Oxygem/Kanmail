@@ -275,6 +275,22 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
   }
 }
 
+// Cache of wrapped email columns to avoid subscribe() inside render()
+const wrappedEmailColumns: Record<string, any> = {};
+
+function getWrappedEmailColumn(id: string) {
+  if (!wrappedEmailColumns[id]) {
+    // Connect the EmailColumn to the store by passing in the path of the
+    // folder we want to listen for changes on.
+    wrappedEmailColumns[id] = subscribe(
+      getColumnStore(id),
+      [filterStore, ["accountID"]],
+      [settingsStore, ["columns", "system", "currentAccount"]]
+    )(EmailColumn);
+  }
+  return wrappedEmailColumns[id];
+}
+
 export default class EmailColumnWrapper extends EmailColumn {
   wrappedEmailColumn: any;
 
@@ -283,14 +299,7 @@ export default class EmailColumnWrapper extends EmailColumn {
   }
 
   render() {
-    // Connect the EmailColumn to the store by passing in the path of the
-    // folder we want to listen for changes on.
-    const WrappedEmailColumn = subscribe(
-      getColumnStore(this.props.id),
-      [filterStore, ["accountID"]],
-      [settingsStore, ["columns", "system", "currentAccount"]]
-    )(EmailColumn);
-
+    const WrappedEmailColumn = getWrappedEmailColumn(this.props.id);
     return (
       <WrappedEmailColumn
         {...this.props}
