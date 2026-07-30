@@ -31,9 +31,9 @@ const (
 var htmlStripper = bluemonday.StrictPolicy()
 
 // Cleans partial-HTML content for display
-// disable URL parsing so cid:xyz img.src attributes work
+// allow cid:xyz img.src attributes
 // https://www.getresponse.com/blog/supported-html-tags-in-email-clients
-var htmlCleaner = bluemonday.UGCPolicy().RequireParseableURLs(false)
+var htmlCleaner = bluemonday.UGCPolicy().AllowURLSchemes("cid")
 
 // Cleans full-HTML documents (typically marketing emails) for display in the
 // untrusted iframe: strips all script vectors (script/event handlers/javascript:
@@ -52,6 +52,27 @@ func newFullHTMLCleaner() *bluemonday.Policy {
 	p.AllowElements("center", "font")
 	p.AllowAttrs("color", "face", "size").OnElements("font")
 	return p
+}
+
+// makeErrorExcerpt reduces an error to letters, numbers and single spaces.
+// Excerpts are rendered as HTML by the frontend, and errors here carry text
+// straight from the IMAP server, which never goes through the HTML cleaners.
+func makeErrorExcerpt(err error) string {
+	var out strings.Builder
+	var lastWasSpace bool
+
+	for _, r := range err.Error() {
+		switch {
+		case unicode.IsLetter(r) || unicode.IsNumber(r):
+			out.WriteRune(r)
+			lastWasSpace = false
+		case unicode.IsSpace(r) && !lastWasSpace && out.Len() > 0:
+			out.WriteRune(' ')
+			lastWasSpace = true
+		}
+	}
+
+	return strings.TrimSpace(out.String())
 }
 
 // Convert text/plain -> safe markdown HTML
@@ -999,7 +1020,7 @@ func (f *Folder) getOrFetchEmails(
 						UID:             uid,
 						Date:            time.Now(),
 						Subject:         "Failed to parse email header",
-						Excerpt:         err.Error(),
+						Excerpt:         makeErrorExcerpt(err),
 					})
 				} else if len(singleEmail) == 0 {
 					log.Error().
