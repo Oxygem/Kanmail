@@ -54,7 +54,7 @@ type SettingsService struct {
 	logFile      string
 
 	settings     *types.Settings
-	settingsLock sync.RWMutex
+	settingsLock sync.Mutex
 
 	appService *AppService
 	keyring    *util.CachedKeyring
@@ -110,8 +110,8 @@ func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Sett
 	ctx = s.log.WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	s.settingsLock.RLock()
-	defer s.settingsLock.RUnlock()
+	s.settingsLock.Lock()
+	defer s.settingsLock.Unlock()
 
 	if s.settings == nil {
 		settings := types.NewDefaultSettings()
@@ -128,7 +128,7 @@ func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Sett
 				s.trackSettingsFileError("migrate")
 			} else if didMigrate {
 				b = migrated
-				if err := os.WriteFile(s.settingsFile, migrated, 0644); err != nil {
+				if err := writeFileAtomic(s.settingsFile, migrated); err != nil {
 					s.log.Err(err).Msg("Failed to persist migrated settings file")
 				} else {
 					s.log.Info().Msg("Migrated columnGroups settings to ordered list")
@@ -273,7 +273,44 @@ func (s *SettingsService) writeSettingsFile(settings types.Settings) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(s.settingsFile, b, 0644)
+	return writeFileAtomic(s.settingsFile, b)
+}
+
+func writeFileAtomic(filename string, b []byte) error {
+	dir := path.Dir(filename)
+
+	f, err := os.CreateTemp(dir, path.Base(filename)+".tmp-*")
+	if err != nil {
+		return err
+	}
+	tmpName := f.Name()
+	defer os.Remove(tmpName) // no-op once the rename below succeeds
+
+	if _, err := f.Write(b); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	if err := os.Chmod(tmpName, 0644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpName, filename); err != nil {
+		return err
+	}
+
+	// Fsync the directory so the rename itself is durable - without this the
+	// file can still be missing entirely after a crash
+	if d, err := os.Open(dir); err == nil {
+		defer d.Close()
+		return d.Sync()
+	}
+	return nil
 }
 
 func redactSettings(settings types.Settings) types.Settings {
