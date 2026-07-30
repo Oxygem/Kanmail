@@ -541,6 +541,12 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 		currentPath = strings.TrimSuffix(currentPath, "/Contents/MacOS/Kanmail")
 		newPath = path.Join(a.cacheDir, "Kanmail.app")
 
+		// ditto merges into an existing bundle rather than replacing it, so remove any leftovers
+		// from any previously failed update.
+		if err := os.RemoveAll(newPath); err != nil {
+			return nil, fmt.Errorf("failed to remove previous update: %w", err)
+		}
+
 		// Extract .zip -> .app and then un-quarantine
 		if err := exec.Command("ditto", "-xk", downloadPath, a.cacheDir).Run(); err != nil {
 			return nil, fmt.Errorf("ditto error: %w", err)
@@ -587,6 +593,11 @@ func (a *AppService) applyUpdate(currentPath, newPath string) error {
 	if err := os.Rename(currentPath, oldPath); err != nil {
 		return fmt.Errorf("failed to move current path: %w", err)
 	} else if err := os.Rename(newPath, currentPath); err != nil {
+		if rollbackErr := os.Rename(oldPath, currentPath); rollbackErr != nil {
+			a.log.Err(rollbackErr).
+				Str("old_path", oldPath).
+				Msg("Failed to roll back update, no app at install path")
+		}
 		return fmt.Errorf("failed to move new to current path: %w", err)
 	}
 
