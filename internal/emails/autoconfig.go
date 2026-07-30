@@ -158,6 +158,8 @@ func parseAutoconf(data autoconfData) types.AccountSettings {
 		settings.IMAPSettings.Host = server.Hostname
 		settings.IMAPSettings.Port = server.Port
 		settings.IMAPSettings.SSL = server.SocketType == "SSL"
+		settings.IMAPSettings.StartTLS = server.SocketType == "STARTTLS"
+		break
 	}
 
 	for _, server := range data.EmailProvider.OutgoingServer {
@@ -169,6 +171,7 @@ func parseAutoconf(data autoconfData) types.AccountSettings {
 		settings.SMTPSettings.Port = server.Port
 		settings.SMTPSettings.SSL = server.SocketType == "SSL"
 		settings.SMTPSettings.StartTLS = server.SocketType == "STARTTLS"
+		break
 	}
 
 	return settings
