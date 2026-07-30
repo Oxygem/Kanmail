@@ -39,6 +39,9 @@ const licenseCheckTimeout = 24 * time.Hour
 // 7 days timeout on checking licenses as show in UI
 const licenseCheckCachedTimeout = 7 * 24 * time.Hour
 
+// Cap how long shutdown waits on the exit analytics event
+const appExitTrackTimeout = 5 * time.Second
+
 type AppService struct {
 	log              zerolog.Logger
 	lock             sync.Mutex
@@ -390,6 +393,19 @@ func (a *AppService) TrackAnalytics(ctx context.Context, event string, propertie
 
 	// TODO: we should put this in a queue and batch
 	return backend.SendAnalytics(ctx, a.DeviceID, event, properties)
+}
+
+// TrackAppExit reports the app shutting down, blocking (with a timeout) so the
+// event is sent before the process goes away.
+func (a *AppService) TrackAppExit(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, appExitTrackTimeout)
+	defer cancel()
+
+	if err := a.TrackAnalytics(ctx, "AppExit", map[string]any{
+		"sessionSeconds": int(time.Since(a.startedAt).Seconds()),
+	}); err != nil {
+		a.log.Warn().Err(err).Msg("Failed to send app exit event")
+	}
 }
 
 // Updates

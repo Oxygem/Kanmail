@@ -80,9 +80,13 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 	})
 	app.OnShutdown(func() {
 		watchManager.Stop()
-		util.FlushNetworkErrors(log.WithContext(context.Background()))
 		caches.Close()
 		log.Info().Msg("Closed caches")
+
+		var wg sync.WaitGroup
+		wg.Go(func() { appService.TrackAppExit(log.WithContext(context.Background())) })
+		wg.Go(func() { util.FlushNetworkErrors(log.WithContext(context.Background())) })
+		wg.Wait()
 	})
 
 	// Bootstrap (ie satisfy circular dependencies)
