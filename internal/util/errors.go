@@ -73,8 +73,7 @@ type networkErrorBucket struct {
 	Account   string    `json:"account"`
 	Class     string    `json:"class"`
 	Count     int       `json:"count"`
-	Recovered int       `json:"recovered"`
-	Exhausted int       `json:"exhausted"`
+	Episodes  int       `json:"episodes"`
 	Samples   []string  `json:"samples"`
 	FirstSeen time.Time `json:"firstSeen"`
 	LastSeen  time.Time `json:"lastSeen"`
@@ -128,13 +127,15 @@ func classifyNetworkError(err error) string {
 	}
 }
 
-// RecordNetworkError aggregates an episode of network errors (err being the
-// most recent, occurrences how many the episode saw) for the periodic summary,
-// rather than reporting each one - network errors are noisy and repetitive, so
-// we keep counts plus a few distinct sample messages per (account, class).
-// TLS failures are the exception: they indicate misconfiguration or
-// interception, so the first per account is reported immediately.
-func RecordNetworkError(ctx context.Context, account string, err error, occurrences int, recovered bool) {
+// RecordNetworkError aggregates a failed episode of network errors (err being
+// the most recent, occurrences how many the episode saw) for the periodic
+// summary, rather than reporting each one - network errors are noisy and
+// repetitive, so we keep counts plus a few distinct sample messages per
+// (account, class). Episodes the retries recovered from aren't recorded at all:
+// the work succeeded, so there's nothing to act on. TLS failures are the
+// exception: they indicate misconfiguration or interception, so the first per
+// account is reported immediately.
+func RecordNetworkError(ctx context.Context, account string, err error, occurrences int) {
 	if err == nil || occurrences <= 0 {
 		return
 	}
@@ -150,11 +151,7 @@ func RecordNetworkError(ctx context.Context, account string, err error, occurren
 		networkErrors[key] = bucket
 	}
 	bucket.Count += occurrences
-	if recovered {
-		bucket.Recovered++
-	} else {
-		bucket.Exhausted++
-	}
+	bucket.Episodes++
 	bucket.LastSeen = now
 	if len(bucket.Samples) < networkErrorMaxSamples && !slices.Contains(bucket.Samples, msg) {
 		bucket.Samples = append(bucket.Samples, msg)

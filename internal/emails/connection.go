@@ -111,9 +111,6 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 		attempt++
 		err = fn(conn)
 		if err == nil {
-			if lastNetErr != nil {
-				util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount, true)
-			}
 			return nil
 		}
 		if util.IsRetryableError(err) {
@@ -133,11 +130,11 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			continue
 		}
 		if lastNetErr != nil {
-			util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount, false)
+			util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount)
 		}
 		return err
 	}
-	util.RecordNetworkError(ctx, c.accountName, err, netErrCount, false)
+	util.RecordNetworkError(ctx, c.accountName, err, netErrCount)
 	return err
 }
 
