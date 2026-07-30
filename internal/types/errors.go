@@ -3,10 +3,10 @@ package types
 import (
 	"context"
 	"errors"
-	"io"
 
 	"github.com/rs/zerolog"
-	"go.mau.fi/util/exhttp"
+
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 type InternalError struct {
@@ -19,11 +19,7 @@ func (e InternalError) Error() string {
 }
 
 func makeInternalError(err error) InternalError {
-	isNetwork := false
-
-	if exhttp.IsNetworkError(err) || errors.Is(err, io.ErrUnexpectedEOF) {
-		isNetwork = true
-	}
+	isNetwork := util.IsRetryableNetworkError(err)
 
 	errStack := err
 	for errStack != nil {

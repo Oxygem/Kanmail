@@ -14,7 +14,6 @@ import (
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/rs/zerolog"
-	"go.mau.fi/util/exhttp"
 
 	"github.com/oxygem/kanmail/internal/backend"
 )
@@ -86,10 +85,51 @@ var (
 	networkErrorFlusherOnce  sync.Once
 )
 
+// wsaErrnos maps Windows socket errnos onto the POSIX names Go invents for
+// Windows. The two sets are distinct values with no errors.Is bridge between
+// them, so a wsarecv "existing connection was forcibly closed by the remote
+// host" never matches syscall.ECONNRESET on its own. The values are unique to
+// Windows sockets, so the lookup simply misses everywhere else.
+var wsaErrnos = map[syscall.Errno]syscall.Errno{
+	10050: syscall.ENETDOWN,
+	10051: syscall.ENETUNREACH,
+	10052: syscall.ENETRESET,
+	10053: syscall.ECONNABORTED,
+	10054: syscall.ECONNRESET,
+	10055: syscall.ENOBUFS,
+	10058: syscall.ESHUTDOWN,
+	10060: syscall.ETIMEDOUT,
+	10061: syscall.ECONNREFUSED,
+	10064: syscall.EHOSTDOWN,
+	10065: syscall.EHOSTUNREACH,
+}
+
+// socketErrno extracts the errno behind err, normalised to its POSIX name.
+func socketErrno(err error) (syscall.Errno, bool) {
+	var errno syscall.Errno
+	if !errors.As(err, &errno) {
+		return 0, false
+	}
+	if posix, ok := wsaErrnos[errno]; ok {
+		return posix, true
+	}
+	return errno, true
+}
+
 // IsRetryableNetworkError reports whether err looks like a transient network
-// failure worth retrying (and aggregating) rather than surfacing directly.
+// failure worth retrying (and aggregating) rather than surfacing directly. Any
+// net.Error qualifies: the socket surfaces every read/write failure as one, and
+// none of them say anything about the command we sent - only about the pipe it
+// went down.
 func IsRetryableNetworkError(err error) bool {
-	return exhttp.IsNetworkError(err) || errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF)
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		return true
+	}
+	var netErr net.Error
+	return errors.As(err, &netErr)
 }
 
 // IsRetryableError reports whether err is transient for any reason - the network
@@ -107,6 +147,7 @@ func classifyNetworkError(err error) string {
 	var certErr *tls.CertificateVerificationError
 	var recordErr tls.RecordHeaderError
 	var netErr net.Error
+	errno, hasErrno := socketErrno(err)
 	switch {
 	case errors.As(err, &imapErr):
 		return "imap"
@@ -114,13 +155,13 @@ func classifyNetworkError(err error) string {
 		return "dns"
 	case errors.As(err, &certErr), errors.As(err, &recordErr):
 		return "tls"
-	case errors.Is(err, syscall.ECONNRESET):
+	case hasErrno && errno == syscall.ECONNRESET:
 		return "reset"
-	case errors.Is(err, syscall.ECONNREFUSED):
+	case hasErrno && errno == syscall.ECONNREFUSED:
 		return "refused"
 	case errors.Is(err, io.EOF), errors.Is(err, io.ErrUnexpectedEOF):
 		return "eof"
-	case errors.As(err, &netErr) && netErr.Timeout():
+	case hasErrno && errno == syscall.ETIMEDOUT, errors.As(err, &netErr) && netErr.Timeout():
 		return "timeout"
 	default:
 		return "other"
