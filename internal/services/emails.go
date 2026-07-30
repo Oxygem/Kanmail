@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/rs/zerolog"
@@ -298,10 +299,18 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 		Str("list_unsubscribe_url", email.ListUnsubscribeURL).
 		Msg("Senting unsubscribe POST")
 
-	resp, err := externalHTTPClient.Post(email.ListUnsubscribeURL, "", nil)
+	// See RFC 8058
+	resp, err := externalHTTPClient.Post(
+		email.ListUnsubscribeURL,
+		"application/x-www-form-urlencoded",
+		strings.NewReader("List-Unsubscribe=One-Click"),
+	)
 	if err != nil {
 		return types.WrapFolderError(accountID, folderName, fmt.Errorf("failed to make unsubscribe POST: %w", err))
-	} else if resp.StatusCode >= 300 {
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
 		return types.WrapFolderError(accountID, folderName, fmt.Errorf("invalid status from unsubscribe POST: %d", resp.StatusCode))
 	}
 
