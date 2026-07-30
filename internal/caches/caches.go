@@ -35,10 +35,33 @@ type Caches struct {
 	WindowStateCache *WindowStateCache
 }
 
+// NewCaches opens the cache database, rebuilding it from scratch if the file is corrupted somehow,
+// nothing in the cache is required for Kanmail to function.
 func NewCaches(log zerolog.Logger, path string) *Caches {
+	caches, err := openCaches(log, path)
+	if err == nil {
+		return caches
+	}
+
+	log.Err(err).Str("path", path).Msg("Cache database unusable, rebuilding it")
+
+	for _, p := range []string{path, path + "-wal", path + "-shm"} {
+		if err := os.Remove(p); err != nil && !os.IsNotExist(err) {
+			panic(fmt.Errorf("failed to delete unusable cache database: %s: %w", p, err))
+		}
+	}
+
+	caches, err = openCaches(log, path)
+	if err != nil {
+		panic(fmt.Errorf("failed to rebuild cache database: %w", err))
+	}
+	return caches
+}
+
+func openCaches(log zerolog.Logger, path string) (*Caches, error) {
 	db, err := sql.Open("sqlite3", path+"?_foreign_keys=true&_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
 	caches := &Caches{
@@ -48,7 +71,8 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 	}
 
 	if err := caches.runMigrations(); err != nil {
-		panic(err)
+		db.Close()
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	caches.ContactsCache = NewContactsCache(db)
@@ -58,17 +82,20 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 
 	caches.FolderUIDCache, err = NewFolderUIDCache(db)
 	if err != nil {
-		panic(err)
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare folder UID cache: %w", err)
 	}
 
 	caches.FolderEmailCache, err = NewFolderEmailCache(db)
 	if err != nil {
-		panic(err)
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare folder email cache: %w", err)
 	}
 
 	caches.FolderEmailPartCache, err = NewFolderEmailPartCache(db)
 	if err != nil {
-		panic(err)
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare folder email part cache: %w", err)
 	}
 
 	if constants.ENV_DEBUG_CACHES_DISABLE != "" {
@@ -79,7 +106,7 @@ func NewCaches(log zerolog.Logger, path string) *Caches {
 		caches.FolderEmailPartCache.disabled = true
 	}
 
-	return caches
+	return caches, nil
 }
 
 func (c *Caches) Close() error {
