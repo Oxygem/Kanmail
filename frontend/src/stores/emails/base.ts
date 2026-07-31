@@ -555,6 +555,30 @@ export default class BaseEmails {
     });
   }
 
+  setEmailsUnreadByUid(accountKey, folderName, messageUids) {
+    const accountFolder = this.getAccountFolder(accountKey, folderName);
+    const accountMessageIds = _.compact(
+      _.map(messageUids, (uid) => accountFolder[uid]?.accountMessageId)
+    );
+    this.setEmailsUnread(accountMessageIds);
+  }
+
+  setEmailsUnread(accountMessageIds) {
+    /*
+            Set emails as unread in the store only and don't push updates.
+        */
+
+    console.debug(`Marking ${accountMessageIds.length} emails as unread`);
+
+    _.each(accountMessageIds, (messageId) => {
+      const email = this.emails.get(messageId);
+
+      if (email && !isEmailUnread(email)) {
+        email.flags = _.without(email.flags, Flag.FlagSeen);
+      }
+    });
+  }
+
   // TODO: process for ONE column!
   // basically: grab all emails in the column
   // for each grab all referenced

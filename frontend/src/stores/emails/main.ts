@@ -278,6 +278,11 @@ class MainEmails extends BaseEmails {
         changed = true;
       }
 
+      if (data.unreadUids.length > 0) {
+        this.setEmailsUnreadByUid(accountID, folderName, data.unreadUids);
+        changed = true;
+      }
+
       if (data.deletedUids.length > 0) {
         this.deleteEmailsFromAccountFolder(
           accountID,
