@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"net"
 	"net/http"
 	"net/url"
@@ -34,7 +35,9 @@ type oauthService struct {
 	UseLegacyXOAuth2    bool
 }
 
-var oauthCompleteTemplate = []byte(`
+// The provider redirects the browser back to us whether the user signed in,
+// cancelled or hit a problem, and this page is all the feedback they get there
+const oauthPageTemplate = `
 <html>
   <head>
     <title>Kanmail Authentication</title>
@@ -42,14 +45,17 @@ var oauthCompleteTemplate = []byte(`
   <body style="background: white; font-family: Sans-Serif">
     <div style="width: 600px; margin: 50px auto">
       <h1>Kanmail</h1>
-      <p>
-        Authentication complete, please close this window &amp; return to the
-        Kanmail app.
-      </p>
+      <p>%s</p>
     </div>
   </body>
 </html>
-`)
+`
+
+func writeOAuthPage(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(status)
+	fmt.Fprintf(w, oauthPageTemplate, html.EscapeString(message))
+}
 
 var ErrUnknownOAuthService = errors.New("no such oauth service")
 
@@ -165,6 +171,12 @@ type OAuthResponse struct {
 	Scope        string `json:"scope"`
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
+
+	// Set when the flow ended without a token - the user backed out at the
+	// provider (Cancelled) or the exchange was rejected (Error). Either way the
+	// frontend has to stop waiting for a confirmation that isn't coming.
+	Cancelled bool   `json:"cancelled,omitempty"`
+	Error     string `json:"error,omitempty"`
 }
 
 type oauthRequest struct {
@@ -260,6 +272,22 @@ func ensureResponseServer(ctx context.Context) error {
 	return nil
 }
 
+// completeOAuthRequest hands the outcome of the flow to the waiting frontend and
+// tells the browser what happened. Every path out of the handler below goes
+// through here: one that only writes a page leaves the app sat waiting for a
+// confirmation that will never arrive.
+func completeOAuthRequest(w http.ResponseWriter, status int, resp *OAuthResponse, message string) {
+	currentOAuthRequest.response = resp
+	writeOAuthPage(w, status, message)
+}
+
+func failOAuthRequest(w http.ResponseWriter, status int, reason string) {
+	completeOAuthRequest(w, status, &OAuthResponse{Error: reason}, fmt.Sprintf(
+		"Sign in failed: %s. Please close this window & return to the Kanmail app to try again.",
+		reason,
+	))
+}
+
 func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "Path not found", http.StatusNotFound)
@@ -270,12 +298,14 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	defer oauthRequestLock.Unlock()
 
 	if currentOAuthRequest == nil {
-		http.Error(w, "No such request", http.StatusNotFound)
+		writeOAuthPage(w, http.StatusNotFound,
+			"There's no sign in waiting for a response - please start again from the Kanmail app.")
 		return
 	}
 
 	if currentOAuthRequest.response != nil {
-		http.Error(w, "Response handled already", http.StatusConflict)
+		writeOAuthPage(w, http.StatusConflict,
+			"This sign in has already completed, please close this window & return to the Kanmail app.")
 		return
 	}
 
@@ -283,9 +313,35 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		Str("provider", currentOAuthRequest.provider).
 		Logger()
 
+	// Providers redirect back here with an error and no code when the user hits
+	// cancel or declines any of the access asked for
+	query := r.URL.Query()
+	if errCode := query.Get("error"); errCode != "" || query.Get("code") == "" {
+		log.Warn().
+			Str("error", errCode).
+			Str("description", query.Get("error_description")).
+			Msg("OAuth flow did not complete")
+
+		// access_denied is what both providers send for the cancel button, and
+		// a bare redirect with nothing at all means the same thing
+		if errCode == "" || errCode == "access_denied" {
+			completeOAuthRequest(w, http.StatusOK, &OAuthResponse{Cancelled: true},
+				"Sign in was cancelled, please close this window & return to the Kanmail app.")
+			return
+		}
+
+		reason := errCode
+		if description := query.Get("error_description"); description != "" {
+			reason = fmt.Sprintf("%s: %s", errCode, description)
+		}
+		failOAuthRequest(w, http.StatusOK, reason)
+		return
+	}
+
 	service, ok := oauthServices[currentOAuthRequest.provider]
 	if !ok {
-		http.Error(w, fmt.Sprintf("No such provider: %s", currentOAuthRequest.provider), http.StatusBadRequest)
+		failOAuthRequest(w, http.StatusBadRequest,
+			fmt.Sprintf("no such provider: %s", currentOAuthRequest.provider))
 		return
 	}
 
@@ -296,7 +352,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 
 	v := url.Values{}
 	v.Set("client_id", service.clientID)
-	v.Set("code", r.URL.Query().Get("code"))
+	v.Set("code", query.Get("code"))
 	v.Set("grant_type", "authorization_code")
 	v.Set("redirect_uri", getRedirectURL())
 
@@ -313,7 +369,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	tokenData, err := requestToken(r.Context(), currentOAuthRequest.provider, req)
 	if err != nil {
 		log.Error().Err(err).Any("data", tokenData).Msg("Unexpected oauth error")
-		http.Error(w, fmt.Sprintf("Unexpected error: %s", err), http.StatusInternalServerError)
+		failOAuthRequest(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -329,7 +385,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		log.Error().Bool("hasAccessToken", resp.AccessToken != "").
 			Bool("hasRefreshToken", resp.RefreshToken != "").
 			Msg("Incomplete oauth token response")
-		http.Error(w, "Incomplete token response", http.StatusBadGateway)
+		failOAuthRequest(w, http.StatusBadGateway, "incomplete token response")
 		return
 	}
 
@@ -344,8 +400,8 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 	if err != nil {
-		log.Error().Any("data", profileData).Msg("Unexpected oauth error")
-		http.Error(w, fmt.Sprintf("Unexpected error: %s", err), http.StatusInternalServerError)
+		log.Error().Err(err).Any("data", profileData).Msg("Unexpected oauth error")
+		failOAuthRequest(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -356,7 +412,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if resp.Email == "" {
-		http.Error(w, "No email returned from profile request", http.StatusBadRequest)
+		failOAuthRequest(w, http.StatusBadGateway, "no email returned from profile request")
 		return
 	}
 
@@ -365,15 +421,13 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	// cache below, making the reconnect the user just completed look broken.
 	clearInvalidRefreshToken(resp.RefreshToken)
 
-	currentOAuthRequest.response = &resp
 	log.Info().
 		Str("provider", currentOAuthRequest.provider).
 		Str("email", resp.Email).
 		Msg("Completed oauth response")
 
-	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	w.Write(oauthCompleteTemplate)
+	completeOAuthRequest(w, http.StatusOK, &resp,
+		"Authentication complete, please close this window & return to the Kanmail app.")
 }
 
 func GetOAuthRequestURL(ctx context.Context, provider string) (string, string, error) {

@@ -5,11 +5,17 @@ import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/int
 import { OAuthRequest } from "../../../bindings/github.com/oxygem/kanmail/internal/services/models.ts";
 import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import ColorPicker from "../../components/ColorPicker.tsx";
-import { ACCOUNT_ACCENT_COLORS, APPLE_APP_PASSWORD_LINK } from "../../constants.ts";
-import { trackEvent } from "../../util/analytics.ts";
-import { normalizeError } from "../../util/error.ts";
+import {
+	ACCOUNT_ACCENT_COLORS,
+	APPLE_APP_PASSWORD_LINK,
+	SETUP_GMAIL_DOC_LINK,
+	SETUP_IMAP_DOC_LINK,
+	SETUP_OUTLOOK_DOC_LINK,
+} from "../../constants.ts";
 import settingsStore from "../../stores/settings.ts";
 import { getNextAccentColor } from "../../util/accounts.ts";
+import { trackEvent } from "../../util/analytics.ts";
+import { normalizeError } from "../../util/error.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "./AccountForm.tsx";
 
@@ -22,10 +28,49 @@ function deriveNameFromEmail(email: string): string {
 		.join(" ");
 }
 
+// Providers that no longer accept passwords for IMAP/SMTP - autoconfigure finds
+// their servers just fine, so offer a sign in button for oauth.
+const OAUTH_PROVIDERS = [
+	{
+		accountType: "gmail",
+		name: "Google",
+		docLink: SETUP_GMAIL_DOC_LINK,
+		domains: ["gmail.com", "googlemail.com"],
+	},
+	{
+		accountType: "outlook",
+		name: "Outlook",
+		docLink: SETUP_OUTLOOK_DOC_LINK,
+		domains: ["outlook.com", "hotmail.com", "live.com", "msn.com", "office365.com"],
+	},
+];
+
+type OauthProvider = (typeof OAUTH_PROVIDERS)[number];
+
+// Matches on the autoconfigured hosts as well as the email domain, so accounts
+// on a custom domain (Google Workspace, Microsoft 365) are caught too.
+function getOauthProviderForSettings(settings: AccountSettings | null): OauthProvider | null {
+	if (!settings) {
+		return null;
+	}
+
+	const hosts = _.filter([
+		settings.imapSettings?.host,
+		settings.smtpSettings?.host,
+		(settings.imapSettings?.username || "").split("@")[1],
+	]).map((host) => host.toLowerCase());
+
+	return _.find(OAUTH_PROVIDERS, (provider) =>
+		_.some(hosts, (host) =>
+			_.some(provider.domains, (domain) => host === domain || host.endsWith(`.${domain}`)),
+		),
+	) || null;
+}
+
 interface GenericAccountFormProps {
 	accountType: string;
 	closeForm: () => void;
-	handleAddAccountError: (s: AccountSettings, e: Error) => void;
+	handleAddAccountError: (s: AccountSettings, e: string) => void;
 	completeAddNewAccount: (s: AccountSettings) => void;
 	handleClickManualAddAccount: () => void;
 }
@@ -108,12 +153,9 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 							your provider. See{" "}
 							<button
 								type="button"
-								onClick={() =>
-									openLink("https://kanmail.io/docs/email-providers")
-								}
-							>
-								<strong>our help page for more information</strong>.
-							</button>
+								className="manual"
+								onClick={() => openLink(SETUP_IMAP_DOC_LINK)}
+							>our help page for more information</button>.
 						</span>
 					),
 					isLoadingNewAccount: false,
@@ -137,8 +179,14 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			error = normalizeError(error);
 			let settings = getEmptyAccountSettings();
 			if (error.cause && error.cause.settings) {
-				settings = error.cause.settings as AccountSettings;
+				settings = AccountSettings.createFrom(error.cause.settings);
 			}
+
+			_.each([settings.imapSettings, settings.smtpSettings], (connection) => {
+				connection.username = connection.username || this.state.newAccountUsername;
+				connection.password = connection.password || this.state.newAccountPassword;
+			});
+
 			this.props.handleAddAccountError(settings, error.message);
 		}
 		this.setState({ isLoadingNewAccount: true });
@@ -363,26 +411,53 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 }
 
 class OauthAccountFormMixin extends GenericAccountForm {
-	oauthRequestCheck: ReturnType<typeof setInterval>
-
-	constructor(props) {
-		super(props);
-		this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 100);
-	}
+	oauthRequestCheck: ReturnType<typeof setInterval> | null = null;
 
 	componentDidMount() {
+		this.startOauthRequest();
+	}
+
+	componentWillUnmount() {
+		this.stopOauthPoll();
+	}
+
+	stopOauthPoll = () => {
+		if (this.oauthRequestCheck) {
+			clearInterval(this.oauthRequestCheck);
+			this.oauthRequestCheck = null;
+		}
+	};
+
+	getProviderName(): string {
+		const provider = _.find(
+			OAUTH_PROVIDERS,
+			({ accountType }) => accountType === this.props.accountType,
+		);
+		return provider ? provider.name : this.props.accountType;
+	}
+
+	startOauthRequest = () => {
+		this.stopOauthPoll();
+		this.setState({
+			oauthError: null,
+			oauthRequestId: null,
+			oauthRequestUrl: null,
+		});
+
 		AccountsService.StartOAuthRequest(this.getOauthProvider()).then((v: OAuthRequest) => {
 			this.setState({
 				oauthRequestId: v.uid,
 				oauthRequestUrl: v.url,
 			});
+			this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 100);
 			trackEvent("AddAccountOAuthStarted", { accountType: this.props.accountType });
-		})
-	}
-
-	componentWillUnmount() {
-		clearInterval(this.oauthRequestCheck);
-	}
+		}).catch((e) => {
+			e = normalizeError(e);
+			this.setState({
+				oauthError: `Could not start sign in with ${this.getProviderName()}: ${e.message}`,
+			});
+		});
+	};
 
 	checkForOauthRequest = () => {
 		if (!this.state.oauthRequestId) {
@@ -393,9 +468,27 @@ class OauthAccountFormMixin extends GenericAccountForm {
 			if (!resp) {
 				return
 			}
-			clearInterval(this.oauthRequestCheck);
-			trackEvent("AddAccountOAuthResponse", { accountType: this.props.accountType });
+			this.stopOauthPoll();
 
+			// The provider bounced the user back without a token - they hit
+			// cancel or something rejected the sign in, either way there's
+			// nothing left to wait for
+			if (resp.cancelled || resp.error) {
+				const name = this.getProviderName();
+				this.setState({
+					oauthError: resp.cancelled
+						? `Sign in with ${name} was cancelled.`
+						: `Sign in with ${name} failed: ${resp.error}`,
+					oauthRequestId: null,
+					isLoadingNewAccount: false,
+				});
+				trackEvent(resp.cancelled ? "AddAccountOAuthCancelled" : "AddAccountOAuthFailed", {
+					accountType: this.props.accountType,
+				});
+				return;
+			}
+
+			trackEvent("AddAccountOAuthResponse", { accountType: this.props.accountType });
 			this.setState({ isLoadingNewAccount: true });
 
 			const data = {
@@ -422,11 +515,17 @@ class OauthAccountFormMixin extends GenericAccountForm {
 
 				let settings = getEmptyAccountSettings();
 				if (e.cause && e.cause.settings) {
-					settings = e.cause.settings as AccountSettings;
+					settings = AccountSettings.createFrom(e.cause.settings);
 				}
 
 				this.props.handleAddAccountError(settings, e.message);
 			})
+		}).catch((e) => {
+			// Keeping the interval running would repeat whatever just failed
+			// every tick, and it can't fix itself
+			this.stopOauthPoll();
+			e = normalizeError(e);
+			this.setState({ oauthError: `Sign in failed: ${e.message}` });
 		});
 	};
 
@@ -447,24 +546,53 @@ class OauthAccountFormMixin extends GenericAccountForm {
 	}
 
 	renderNewAccountForm() {
-		let text = <p>Waiting for confirmation!</p>;
 		if (this.state.isLoadingNewAccount) {
-			text = <p><i className="fa fa-refresh fa-spin" /> Setting up account...</p>
-		}
-		return (
-			<div className="account-control-buttons">
-				{this.state.isLoadingNewAccount ?
+			return (
+				<>
 					<p><i className="fa fa-refresh fa-spin" /> Setting up account...</p>
-					: <>
-						<p>Waiting for confirmation!</p>
-						<p>Nothing happening or not working? Try opening this URL in your web browser:</p>
-						<pre className="wrap">{this.state.oauthRequestUrl}</pre>
-					</>
-				}
-				<button className="cancel" onClick={this.props.closeForm}>
-					Cancel
-				</button>
-			</div>
+					<div className="account-control-buttons">
+						<button type="button" className="cancel" onClick={this.props.closeForm}>
+							Cancel
+						</button>
+					</div>
+				</>
+			);
+		}
+
+		if (this.state.oauthError) {
+			return (
+				<>
+					<div className="error">{this.state.oauthError}</div>
+					<div className="account-control-buttons">
+						<button
+							type="button"
+							className="submit main-button"
+							onClick={this.startOauthRequest}
+						>
+							<i className="fa fa-refresh" /> Try again
+						</button>
+						<button type="button" className="cancel" onClick={this.props.closeForm}>
+							Cancel
+						</button>
+					</div>
+				</>
+			);
+		}
+
+		return (
+			<>
+				<p>
+					<i className="fa fa-refresh fa-spin" />{" "}
+					Waiting for confirmation from {this.getProviderName()}...
+				</p>
+				<p>Nothing happening or not working? Try opening this URL in your web browser:</p>
+				<pre className="wrap">{this.state.oauthRequestUrl}</pre>
+				<div className="account-control-buttons">
+					<button type="button" className="cancel" onClick={this.props.closeForm}>
+						Cancel
+					</button>
+				</div>
+			</>
 		);
 	}
 }
@@ -546,7 +674,6 @@ const getInitialState = (): NewAccountFormState => ({
 	accountType: "",
 
 	// Add account phase 1 - name/username/password autoconfig form
-	newAccountName: "",
 	newAccountError: null,
 
 	// Add account phase 2 - manual config if auto fails
@@ -565,7 +692,6 @@ interface NewAccountFormProps {
 }
 
 interface NewAccountFormState {
-	newAccountName: string;
 	newAccountError: null | React.ReactNode | string;
 
 	accountType: string;
@@ -598,17 +724,38 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		const imapUsernameBits = settings.imapSettings.username.split("@");
 		trackEvent("AddAccountError", {
 			accountType: this.state.accountType,
-			error: error, // should be generic/non-PII
+			// Server errors quote the address they failed to log in with, so
+			// strip any of those out before this leaves the device
+			error: error.replace(/[^\s@]+@[^\s@]+/g, "<address>"),
 			domain: imapUsernameBits[imapUsernameBits.length - 1], // domain only, no PII
 		});
 	};
 
-	handleClickManualAddAccount = (ev) => {
+	// Whatever autoconfigure did work out (hosts, ports, credentials) carries
+	// over, so manual setup starts from it rather than from an empty form
+	startManualConfig = (settings: AccountSettings) => {
+		const { username } = settings.imapSettings;
+		if (username) {
+			settings.name = settings.name || username;
+			if (_.isEmpty(settings.contacts)) {
+				settings.contacts = [new Address({
+					name: deriveNameFromEmail(username),
+					email: username,
+				})];
+			}
+		}
+
 		this.setState({
 			isLoadingNewAccount: false,
+			showErrorRecovery: false,
 			manuallyConfiguringAccount: true,
-			newAccountSettings: getEmptyAccountSettings(),
+			newAccountSettings: settings,
+			newAccountError: this.state.autoconfigError || null,
 		});
+	};
+
+	handleClickManualAddAccount = () => {
+		this.startManualConfig(getEmptyAccountSettings());
 		trackEvent("AddAccountManual");
 	};
 
@@ -629,48 +776,69 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 
 	renderErrorRecovery() {
 		const settings = this.state.newAccountSettings;
-		const error = this.state.autoconfigError.toLowerCase();
+		const error = this.state.autoconfigError;
+		const lowerError = error.toLowerCase();
 		const hasPartialConfig = settings && settings.imapSettings.host;
 
-		const isAuthError = error.includes("auth")
-			|| error.includes("login")
-			|| error.includes("password")
-			|| error.includes("credentials");
-		const isConnectionError = error.includes("connect")
-			|| error.includes("timeout")
-			|| error.includes("network")
-			|| error.includes("dial");
+		// Accounts that arrived here via the provider's own sign-in flow have
+		// already tried OAuth, so there's nothing to redirect them to
+		const cameFromOauth = _.some(
+			OAUTH_PROVIDERS,
+			(provider) => provider.accountType === this.state.accountType,
+		);
+		const oauthProvider = cameFromOauth ? null : getOauthProviderForSettings(settings);
+
+		const isAuthError = lowerError.includes("auth")
+			|| lowerError.includes("login")
+			|| lowerError.includes("password")
+			|| lowerError.includes("credentials");
+		const isConnectionError = lowerError.includes("connect")
+			|| lowerError.includes("timeout")
+			|| lowerError.includes("network")
+			|| lowerError.includes("dial");
+
+		let message = <p>Automatic setup was not able to configure your account.</p>;
+		if (oauthProvider) {
+			message = (
+				<p>
+					This looks like a <strong>{oauthProvider.name}</strong> account, and
+					{" "}{oauthProvider.name} no longer accepts normal passwords in email
+					apps. Sign in with {oauthProvider.name} to continue.{" "}
+					<button
+						type="button"
+						className="manual"
+						onClick={() => openLink(oauthProvider.docLink)}
+					>Learn more</button>
+				</p>
+			);
+		} else if (isAuthError) {
+			message = (
+				<p>
+					The email or password appears to be incorrect.
+					Some providers require an <strong>app-specific password</strong> instead
+					of your regular password.{" "}
+					<button
+						type="button"
+						className="manual"
+						onClick={() => openLink(SETUP_IMAP_DOC_LINK)}
+					>Learn more</button>
+				</p>
+			);
+		} else if (isConnectionError) {
+			message = (
+				<p>
+					Could not connect to the email server.
+					Please check your internet connection and try again.
+				</p>
+			);
+		}
 
 		return (
 			<div className="account-overlay">
 				<div className="account-overlay-content">
 					<h3><i className="fa fa-exclamation-triangle" /> Account Setup Problem</h3>
 
-					{isAuthError && (
-						<p>
-							The email or password appears to be incorrect.
-							Some providers require an <strong>app-specific password</strong> instead
-							of your regular password.{" "}
-							<button
-								type="button"
-								className="manual"
-								onClick={() => openLink("https://kanmail.io/docs/email-providers")}
-							>Learn more</button>
-						</p>
-					)}
-
-					{isConnectionError && (
-						<p>
-							Could not connect to the email server.
-							Please check your internet connection and try again.
-						</p>
-					)}
-
-					{!isAuthError && !isConnectionError && (
-						<p>
-							Automatic setup was not able to configure your account.
-						</p>
-					)}
+					{message}
 
 					{hasPartialConfig && (
 						<p>
@@ -678,29 +846,44 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 						</p>
 					)}
 
+					{error && <div className="error">{error}</div>}
+
 					<div className="account-control-buttons">
-						<button
-							className="submit main-button"
-							onClick={() => {
-								trackEvent("AddAccountErrorRetry", { accountType: this.state.accountType });
-								this.setState({
-									showErrorRecovery: false,
-									newAccountSettings: null,
-									autoconfigError: "",
-								});
-							}}
-						>
-							<i className="fa fa-refresh" /> Try again
-						</button>
+						{oauthProvider ? (
+							<button
+								className="submit main-button"
+								onClick={() => {
+									trackEvent("AddAccountErrorOAuth", {
+										accountType: oauthProvider.accountType,
+									});
+									this.setState({
+										...getInitialState(),
+										accountType: oauthProvider.accountType,
+									});
+								}}
+							>
+								<i className="fa fa-sign-in" /> Sign in with {oauthProvider.name}
+							</button>
+						) : (
+							<button
+								className="submit main-button"
+								onClick={() => {
+									trackEvent("AddAccountErrorRetry", { accountType: this.state.accountType });
+									this.setState({
+										showErrorRecovery: false,
+										newAccountSettings: null,
+										autoconfigError: "",
+									});
+								}}
+							>
+								<i className="fa fa-refresh" /> Try again
+							</button>
+						)}
 						<button
 							className="submit"
 							onClick={() => {
 								trackEvent("AddAccountErrorManual", { accountType: this.state.accountType });
-								this.setState({
-									showErrorRecovery: false,
-									manuallyConfiguringAccount: true,
-									newAccountError: this.state.autoconfigError,
-								});
+								this.startManualConfig(settings || getEmptyAccountSettings());
 							}}
 						>
 							Configure manually
@@ -726,18 +909,14 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		}
 
 		if (this.state.manuallyConfiguringAccount) {
-			const { newAccountSettings } = this.state;
-			newAccountSettings!.name = this.state.newAccountName;
-
 			return (
 				<div className="account-overlay">
 					<div className="account-overlay-content">
 						<div className="accounts">
 							<AccountForm
-								key={this.state.newAccountName}
 								isAddingNewAccount={true}
 								itemIndex={0}
-								accountSettings={newAccountSettings || new AccountSettings()}
+								accountSettings={this.state.newAccountSettings || getEmptyAccountSettings()}
 								error={this.state.newAccountError}
 								deleteItem={this.resetState}
 								updateItem={(_, s) => this.completeAddNewAccount(s)}

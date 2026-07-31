@@ -2,7 +2,7 @@ import _ from "lodash";
 import React from "react";
 
 import ColorPicker from "../../components/ColorPicker.tsx";
-import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, PROVIDERS_DOC_LINK } from "../../constants.ts";
+import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, SETUP_IMAP_DOC_LINK } from "../../constants.ts";
 import { openLink } from "../../window.ts";
 import requestStore from "../../stores/request.ts";
 import { trackEvent } from "../../util/analytics.ts";
@@ -100,7 +100,9 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
 
     isSaving: false,
 
-    hasConnectionChange: false,
+    // A new account has never had its connection tested, even when it opens on
+    // settings autoconfigure prefilled - always test before adding it
+    hasConnectionChange: !!props.isAddingNewAccount,
 
     oauthRequestId: null,
     oauthRequestUrl: null,
@@ -210,6 +212,21 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
         return;
       }
       this.stopOauthPoll();
+
+      // The provider sent the user back without a token - they cancelled, or
+      // the sign in was rejected. Nothing to wait for either way.
+      if (resp.cancelled || resp.error) {
+        this.setState({
+          isReconnecting: false,
+          error: resp.cancelled
+            ? "Sign in was cancelled."
+            : `Sign in failed: ${resp.error}`,
+        });
+        trackEvent(resp.cancelled ? "ReconnectAccountCancelled" : "ReconnectAccountFailed", {
+          provider: this.getOauthProvider(),
+        });
+        return;
+      }
 
       // Signing in as somebody else would silently repoint this account at a
       // different mailbox, leaving its cached mail attributed to the wrong one.
@@ -590,7 +607,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
               <a
                 onClick={(ev) => {
                   ev.preventDefault();
-                  openLink(`${PROVIDERS_DOC_LINK}#advanced-settings`);
+                  openLink(`${SETUP_IMAP_DOC_LINK}#advanced-settings`);
                 }}
               >
                 more info

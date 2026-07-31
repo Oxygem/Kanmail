@@ -778,6 +778,23 @@ section#settings-app #settings .km-settings {
         text-decoration: underline;
       }
     }
+
+    // Server errors are long, unwrappable and worth copying when reporting a
+    // problem, so they get their own scrollable block rather than a line
+    > .error {
+      margin-top: 18px;
+      padding: 10px 12px;
+      max-height: 140px;
+      overflow: auto;
+      border-radius: var(--r-md);
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-ring);
+      color: var(--danger);
+      font-size: 12.5px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      user-select: text;
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -25,6 +26,108 @@ func withTokenEndpoint(t *testing.T, provider, endpoint string) {
 		ClearOAuthAccessTokens()
 	})
 	ClearOAuthAccessTokens()
+}
+
+// withOAuthRequest puts a request in flight for the duration of a test - the
+// redirect handler only answers when the app is waiting for one.
+func withOAuthRequest(t *testing.T, provider string) {
+	t.Helper()
+	oauthRequestLock.Lock()
+	currentOAuthRequest = &oauthRequest{provider: provider}
+	oauthRequestLock.Unlock()
+
+	originalAddr := oauthResponseServerAddr
+	oauthResponseServerAddr = &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 12345}
+
+	t.Cleanup(func() {
+		oauthRequestLock.Lock()
+		currentOAuthRequest = nil
+		oauthRequestLock.Unlock()
+		oauthResponseServerAddr = originalAddr
+	})
+}
+
+// Every way the flow can end must leave a response behind, otherwise the app
+// sits on "waiting for confirmation" with nothing coming.
+func TestHandleOAuthResponseRecordsFailures(t *testing.T) {
+	for _, tc := range []struct {
+		name          string
+		query         string
+		wantCancelled bool
+		wantError     string
+	}{
+		{
+			name:          "user cancelled",
+			query:         "?error=access_denied",
+			wantCancelled: true,
+		},
+		{
+			name:          "redirect with nothing at all",
+			wantCancelled: true,
+		},
+		{
+			name:      "provider rejected the request",
+			query:     "?error=invalid_scope&error_description=Bad+scope",
+			wantError: "invalid_scope: Bad scope",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			withOAuthRequest(t, "gmail")
+
+			w := httptest.NewRecorder()
+			handleOAuthResponse(w, httptest.NewRequest(http.MethodGet, "/"+tc.query, nil))
+
+			if got := w.Header().Get("Content-Type"); got != "text/html" {
+				t.Fatalf("Content-Type = %q, want text/html", got)
+			}
+
+			resp, err := GetOAuthResponse(context.Background(), "uid")
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if resp == nil {
+				t.Fatal("no response recorded - the app would wait forever")
+			}
+			if resp.Cancelled != tc.wantCancelled {
+				t.Fatalf("Cancelled = %v, want %v", resp.Cancelled, tc.wantCancelled)
+			}
+			if resp.Error != tc.wantError {
+				t.Fatalf("Error = %q, want %q", resp.Error, tc.wantError)
+			}
+			if resp.RefreshToken != "" {
+				t.Fatalf("RefreshToken = %q, want empty", resp.RefreshToken)
+			}
+		})
+	}
+}
+
+func TestHandleOAuthResponseRecordsTokenFailure(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "invalid_request", "error_description": "Missing required parameter: code"}`))
+	}))
+	defer server.Close()
+	withTokenEndpoint(t, "gmail", server.URL)
+	withOAuthRequest(t, "gmail")
+
+	w := httptest.NewRecorder()
+	handleOAuthResponse(w, httptest.NewRequest(http.MethodGet, "/?code=some-code", nil))
+
+	resp, err := GetOAuthResponse(context.Background(), "uid")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("no response recorded - the app would wait forever")
+	}
+	if resp.Cancelled {
+		t.Fatal("Cancelled = true, want false - the exchange failed, the user didn't cancel")
+	}
+	want := "gmail oauth token error: invalid_request: Missing required parameter: code"
+	if resp.Error != want {
+		t.Fatalf("Error = %q, want %q", resp.Error, want)
+	}
 }
 
 func TestTokenErrorClassification(t *testing.T) {
