@@ -16,7 +16,7 @@ export default class WelcomeSettings extends React.Component<{}, IWelcomeSetting
     super(props);
 
     this.state = {
-      settings: settingsStore.props,
+      settings: _.cloneDeep(settingsStore.props),
     }
   }
 

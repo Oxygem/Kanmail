@@ -257,9 +257,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     if (!newSettings.name) {
       newSettings.name = newSettings.imapSettings.username || "new account";
     }
-    const items = this.props.accounts;
-    items.push(newSettings);
-    this.setAccounts(items);
+    this.setAccounts([...this.props.accounts, newSettings]);
     this.setState({ showAccountForm: false });
   };
 
@@ -272,13 +270,13 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       newSettings.name = newSettings.imapSettings.username;
     }
 
-    const items = this.props.accounts;
+    const items = [...this.props.accounts];
     items[itemIndex] = newSettings;
     this.setAccounts(items);
   };
 
   moveAccount = (index: number, position: number) => {
-    const items = this.props.accounts;
+    const items = [...this.props.accounts];
     arrayMove(items, index, index + position);
     this.setAccounts(items);
   };

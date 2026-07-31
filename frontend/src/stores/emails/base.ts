@@ -138,7 +138,8 @@ export default class BaseEmails {
   }
 
   getAccountKeys() {
-    return _.map(settingsStore.props.accounts, (account) => account.id);
+    // Accounts without an ID aren't saved yet, so the backend has no such account
+    return _.compact(_.map(settingsStore.props.accounts, (account) => account.id));
   }
 
   getAccountEmails() {

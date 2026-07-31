@@ -127,20 +127,21 @@ export default class EmailsApp extends React.Component<ISettings> {
   }
 
   getNewEmailsLoop = async () => {
-    if (this.props.accounts.length === 0) {
-      return;
-    }
-    const folderNames = this.getFoldersToSync();
-    console.info(`[EmailsApp] New emails sync for current folders: ${folderNames}`);
     const start = performance.now();
 
-    for (let i = 0; i < folderNames.length; i++) {
-      const folder = folderNames[i];
-      const columnMetaStore = getColumnMetaStore(folder);
-      if (columnMetaStore.props.isSyncing) {
-        console.debug(`[EmailsApp] Not syncing ${folder} as we are already syncing!`);
-      } else {
-        await mainEmailStore.syncFolderEmails(folder, {});
+    // Nothing to sync during onboarding, but keep looping
+    if (mainEmailStore.getAccountKeys().length > 0) {
+      const folderNames = this.getFoldersToSync();
+      console.info(`[EmailsApp] New emails sync for current folders: ${folderNames}`);
+
+      for (let i = 0; i < folderNames.length; i++) {
+        const folder = folderNames[i];
+        const columnMetaStore = getColumnMetaStore(folder);
+        if (columnMetaStore.props.isSyncing) {
+          console.debug(`[EmailsApp] Not syncing ${folder} as we are already syncing!`);
+        } else {
+          await mainEmailStore.syncFolderEmails(folder, {});
+        }
       }
     }
 
