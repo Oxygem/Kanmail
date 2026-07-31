@@ -128,7 +128,9 @@ func MakeSASLClient(conf types.ConnectionSettings, accessToken string) sasl.Clie
 	})
 }
 
-var oauthHTTPClient = &http.Client{}
+// Generous enough for a slow connection, but bounded - without a timeout a
+// black-holed endpoint (sleep/wake, captive portal) blocks the caller forever
+var oauthHTTPClient = &http.Client{Timeout: time.Minute}
 var oauthResponseServerAddr net.Addr
 
 // requestToken posts to a provider's token endpoint, turning an OAuth2 error
@@ -188,7 +190,42 @@ var oauthTokens = map[string]cachedAccessToken{}
 // re-authorises, which mints a different refresh token anyway.
 var invalidRefreshTokens = map[string]error{}
 
+// Guards the two maps above only. It must never be held across the token
+// request itself - that request is per-account, but this lock is global, so
+// one slow provider would stall every other account's connections behind it.
 var oauthTokenLock sync.Mutex
+
+// Serialises refreshes of a single refresh token, so concurrent connections
+// for one account ask the token endpoint once rather than stampeding it.
+var refreshLocks = map[string]*sync.Mutex{}
+var refreshLocksLock sync.Mutex
+
+func refreshLockFor(refreshToken string) *sync.Mutex {
+	refreshLocksLock.Lock()
+	defer refreshLocksLock.Unlock()
+
+	lock, ok := refreshLocks[refreshToken]
+	if !ok {
+		lock = &sync.Mutex{}
+		refreshLocks[refreshToken] = lock
+	}
+	return lock
+}
+
+// cachedTokenFor returns a usable access token, or the error recorded when the
+// provider rejected this refresh token. ok is false when a refresh is due.
+func cachedTokenFor(refreshToken string) (token string, err error, ok bool) {
+	oauthTokenLock.Lock()
+	defer oauthTokenLock.Unlock()
+
+	if err, rejected := invalidRefreshTokens[refreshToken]; rejected {
+		return "", err, true
+	}
+	if cached, found := oauthTokens[refreshToken]; found && time.Now().Before(cached.expiresAt) {
+		return cached.accessToken, nil, true
+	}
+	return "", nil, false
+}
 
 // Refresh tokens slightly before the server-side expiry so we never hand out
 // a token that expires mid-login
@@ -389,17 +426,20 @@ func GetOAuthResponse(ctx context.Context, uid string) (*OAuthResponse, error) {
 }
 
 func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (string, error) {
-	oauthTokenLock.Lock()
-	defer oauthTokenLock.Unlock()
-
-	if err, ok := invalidRefreshTokens[refreshToken]; ok {
-		return "", err
+	if token, err, ok := cachedTokenFor(refreshToken); ok {
+		if err == nil {
+			zerolog.Ctx(ctx).Trace().Msg("Using cached access token")
+		}
+		return token, err
 	}
 
-	cached, ok := oauthTokens[refreshToken]
-	if ok && time.Now().Before(cached.expiresAt) {
-		zerolog.Ctx(ctx).Trace().Msg("Using cached access token")
-		return cached.accessToken, nil
+	lock := refreshLockFor(refreshToken)
+	lock.Lock()
+	defer lock.Unlock()
+
+	// Another goroutine may have refreshed this token while we waited
+	if token, err, ok := cachedTokenFor(refreshToken); ok {
+		return token, err
 	}
 
 	service := oauthServices[provider]
@@ -424,8 +464,11 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	})
 	if err != nil {
 		if util.IsReauthRequired(err) {
+			oauthTokenLock.Lock()
 			invalidRefreshTokens[refreshToken] = err
 			delete(oauthTokens, refreshToken)
+			oauthTokenLock.Unlock()
+
 			zerolog.Ctx(ctx).Error().Err(err).Str("provider", provider).
 				Msg("OAuth refresh token rejected, account needs re-authenticating")
 		}
@@ -442,10 +485,13 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	if expiresIn, ok := tokenData["expires_in"].(float64); ok {
 		expiresAt = time.Now().Add(time.Duration(expiresIn) * time.Second)
 	}
+
+	oauthTokenLock.Lock()
 	oauthTokens[refreshToken] = cachedAccessToken{
 		accessToken: accessToken,
 		expiresAt:   expiresAt.Add(-accessTokenExpiryBuffer),
 	}
+	oauthTokenLock.Unlock()
 
 	return accessToken, nil
 }
