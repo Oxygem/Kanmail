@@ -300,7 +300,7 @@ func (c *IMAPConnectionWrapper) doOAuthLogin(ctx context.Context, client *imapcl
 	}
 
 	if err := client.Authenticate(oauth.MakeSASLClient(c.conf, accessToken)); err != nil {
-		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken)
+		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
 		return err
 	}
 

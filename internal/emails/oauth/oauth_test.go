@@ -3,6 +3,7 @@ package oauth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -157,5 +158,45 @@ func TestGetOAuthAccessTokenCachesSuccess(t *testing.T) {
 
 	if got := calls.Load(); got != 1 {
 		t.Fatalf("token endpoint called %d times, want 1", got)
+	}
+}
+
+func TestClearOAuthAccessTokenIgnoresStaleToken(t *testing.T) {
+	var calls atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"access_token": "at-%d", "expires_in": 3600}`, calls.Add(1))
+	}))
+	defer server.Close()
+	withTokenEndpoint(t, "gmail", server.URL)
+
+	first, err := GetOAuthAccessToken(context.Background(), "gmail", "live-token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// One connection's login is rejected, so it drops the token it used and the
+	// next caller fetches a replacement.
+	ClearOAuthAccessToken("live-token", first)
+	second, err := GetOAuthAccessToken(context.Background(), "gmail", "live-token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if second == first {
+		t.Fatalf("token = %q, want a refreshed one", second)
+	}
+
+	// A sibling connection was holding the same token and reports its own
+	// failure a moment later. The replacement is not what it failed on.
+	ClearOAuthAccessToken("live-token", first)
+	third, err := GetOAuthAccessToken(context.Background(), "gmail", "live-token")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if third != second {
+		t.Fatalf("token = %q, want the cached %q", third, second)
+	}
+	if got := calls.Load(); got != 2 {
+		t.Fatalf("token endpoint called %d times, want 2", got)
 	}
 }

@@ -496,10 +496,14 @@ func GetOAuthAccessToken(ctx context.Context, provider, refreshToken string) (st
 	return accessToken, nil
 }
 
-func ClearOAuthAccessToken(refreshToken string) {
+// ClearOAuthAccessToken discards a cached access token for a given refresh token
+func ClearOAuthAccessToken(refreshToken, accessToken string) {
 	oauthTokenLock.Lock()
-	delete(oauthTokens, refreshToken)
-	oauthTokenLock.Unlock()
+	defer oauthTokenLock.Unlock()
+
+	if cached, ok := oauthTokens[refreshToken]; ok && cached.accessToken == accessToken {
+		delete(oauthTokens, refreshToken)
+	}
 }
 
 func clearInvalidRefreshToken(refreshToken string) {

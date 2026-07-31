@@ -154,7 +154,7 @@ func (c *SMTPConnectionWrapper) doOAuthLogin(ctx context.Context, client *smtp.C
 	}
 
 	if err := client.Auth(oauth.MakeSASLClient(c.conf, accessToken)); err != nil {
-		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken)
+		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
 		return err
 	}
 
