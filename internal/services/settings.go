@@ -128,7 +128,7 @@ func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Sett
 				s.trackSettingsFileError("migrate")
 			} else if didMigrate {
 				b = migrated
-				if err := writeFileAtomic(s.settingsFile, migrated); err != nil {
+				if err := s.writeFileAtomic(migrated); err != nil {
 					s.log.Err(err).Msg("Failed to persist migrated settings file")
 				} else {
 					s.log.Info().Msg("Migrated columnGroups settings to ordered list")
@@ -273,13 +273,13 @@ func (s *SettingsService) writeSettingsFile(settings types.Settings) error {
 	if err != nil {
 		return err
 	}
-	return writeFileAtomic(s.settingsFile, b)
+	return s.writeFileAtomic(b)
 }
 
-func writeFileAtomic(filename string, b []byte) error {
-	dir := path.Dir(filename)
+func (s *SettingsService) writeFileAtomic(b []byte) error {
+	dir := path.Dir(s.settingsFile)
 
-	f, err := os.CreateTemp(dir, path.Base(filename)+".tmp-*")
+	f, err := os.CreateTemp(dir, path.Base(s.settingsFile)+".tmp-*")
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,7 @@ func writeFileAtomic(filename string, b []byte) error {
 	if err := os.Chmod(tmpName, 0644); err != nil {
 		return err
 	}
-	if err := os.Rename(tmpName, filename); err != nil {
+	if err := os.Rename(tmpName, s.settingsFile); err != nil {
 		return err
 	}
 
@@ -308,7 +308,9 @@ func writeFileAtomic(filename string, b []byte) error {
 	// file can still be missing entirely after a crash
 	if d, err := os.Open(dir); err == nil {
 		defer d.Close()
-		return d.Sync()
+		if err := d.Sync(); err != nil {
+			s.log.Warn().Err(err).Msg("Settings directory sync failed")
+		}
 	}
 	return nil
 }
