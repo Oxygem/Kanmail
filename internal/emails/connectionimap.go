@@ -261,6 +261,7 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 
 		if c.conf.Password != "" {
 			if err := client.Login(c.conf.Username, c.conf.Password).Wait(); err != nil {
+				client.Close()
 				return nil, fmt.Errorf("failed imap password login: %w %s@%s:%d", err, c.conf.Username, c.conf.Host, c.conf.Port)
 			}
 		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
@@ -279,10 +280,12 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 					log.Debug().Msg("Connected")
 				}
 				if err := c.doOAuthLogin(ctx, client); err != nil {
+					client.Close()
 					return nil, fmt.Errorf("failed imap oauth login (twice): %w", err)
 				}
 			}
 		} else {
+			client.Close()
 			return nil, fmt.Errorf("no authentication methods configured")
 		}
 

@@ -115,6 +115,7 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 		if c.conf.Password != "" {
 			auth := sasl.NewPlainClient("", c.conf.Username, c.conf.Password)
 			if err := client.Auth(auth); err != nil {
+				client.Close()
 				return nil, fmt.Errorf("failed smtp password login: %w", err)
 			}
 		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
@@ -133,10 +134,12 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 					log.Debug().Msg("Connected")
 				}
 				if err := c.doOAuthLogin(ctx, client); err != nil {
+					client.Close()
 					return nil, fmt.Errorf("failed smtp oauth login (twice): %w", err)
 				}
 			}
 		} else {
+			client.Close()
 			return nil, fmt.Errorf("no authentication methods configured")
 		}
 
