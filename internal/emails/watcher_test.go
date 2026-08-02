@@ -62,9 +62,20 @@ func expectWatchBlocked(t *testing.T, results chan *WatchResp, desc string) {
 
 func appendFakeMessage(t *testing.T, accountKey, folder string) {
 	t.Helper()
+	appendFakeMessageWithID(t, accountKey, folder, "")
+}
+
+func appendFakeMessageWithID(t *testing.T, accountKey, folder, messageID string) {
+	t.Helper()
+	raw := "Subject: test\r\n"
+	if messageID != "" {
+		raw += "Message-Id: " + messageID + "\r\n"
+	}
+	raw += "\r\nbody"
+
 	client := imapinterface.NewFakeIMAPClient(accountKey)
 	cmd := client.Append(folder, 0, nil)
-	if _, err := cmd.Write([]byte("Subject: test\r\n\r\nbody")); err != nil {
+	if _, err := cmd.Write([]byte(raw)); err != nil {
 		t.Fatalf("append write failed: %v", err)
 	}
 	if _, err := cmd.Wait(); err != nil {

@@ -44,6 +44,30 @@ func (c *IMAPConnectionPool) WithConnection(
 	})
 }
 
+func withSelectedFolder(
+	ctx context.Context,
+	conn imapinterface.IMAPClient,
+	folderName types.FolderName,
+	fn func(conn imapinterface.IMAPClient) error,
+) error {
+	if _, missing, err := selectFolder(ctx, conn, folderName); err != nil {
+		return err
+	} else if missing {
+		return fmt.Errorf("%w: %s", errMailboxMissing, folderName)
+	}
+
+	log := zerolog.Ctx(ctx)
+	log.Trace().Str("folder", string(folderName)).Msg("Selected folder")
+	defer func() {
+		if err := conn.Unselect().Wait(); err != nil {
+			log.Err(err).Str("folder", string(folderName)).Msg("Failed to unselect folder")
+		}
+		log.Trace().Str("folder", string(folderName)).Msg("Unselected folder")
+	}()
+
+	return fn(conn)
+}
+
 func (c *IMAPConnectionPool) WithFolderConnection(
 	ctx context.Context,
 	folderName types.FolderName,
@@ -53,18 +77,7 @@ func (c *IMAPConnectionPool) WithFolderConnection(
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
-			if _, err := conn.Select(string(folderName), nil).Wait(); err != nil {
-				return err
-			}
-			defer zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Unselected folder")
-			defer func() {
-				if err := conn.Unselect().Wait(); err != nil {
-					zerolog.Ctx(ctx).Err(err).Str("folder", string(folderName)).Msg("Failed to unselect folder")
-				}
-			}()
-			zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Selected folder")
-
-			return fn(conn)
+			return withSelectedFolder(ctx, conn, folderName, fn)
 		}
 	})
 }
@@ -91,14 +104,7 @@ func (c *IMAPConnectionPool) WithFolderPriorityConnection(
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
-			if _, err := conn.Select(string(folderName), nil).Wait(); err != nil {
-				return err
-			}
-			defer zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Unselected folder")
-			defer func() { conn.Unselect().Wait() }()
-			zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Selected folder")
-
-			return fn(conn)
+			return withSelectedFolder(ctx, conn, folderName, fn)
 		}
 	})
 }
@@ -125,14 +131,7 @@ func (c *IMAPConnectionPool) WithFolderBackgroundConnection(
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
-			if _, err := conn.Select(string(folderName), nil).Wait(); err != nil {
-				return err
-			}
-			defer zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Unselected folder")
-			defer func() { conn.Unselect().Wait() }()
-			zerolog.Ctx(ctx).Trace().Str("folder", string(folderName)).Msg("Selected folder")
-
-			return fn(conn)
+			return withSelectedFolder(ctx, conn, folderName, fn)
 		}
 	})
 }

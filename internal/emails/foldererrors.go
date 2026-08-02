@@ -12,14 +12,20 @@ import (
 	"github.com/oxygem/kanmail/internal/util"
 )
 
-// isMissingMailboxErr reports a definitive "that mailbox isn't there" response:
+var errMailboxMissing = errors.New("mailbox does not exist")
+
+// isMissingMailboxCode reports a definitive "that mailbox isn't there" response:
 // NONEXISTENT (SELECT, RFC 5530) or TRYCREATE (APPEND/COPY/MOVE, RFC 9051).
-func isMissingMailboxErr(err error) bool {
+func isMissingMailboxCode(err error) bool {
 	var imapErr *imap.Error
 	if !errors.As(err, &imapErr) {
 		return false
 	}
 	return imapErr.Code == imap.ResponseCodeNonExistent || imapErr.Code == imap.ResponseCodeTryCreate
+}
+
+func isMissingMailboxErr(err error) bool {
+	return errors.Is(err, errMailboxMissing) || isMissingMailboxCode(err)
 }
 
 // isNoStatusErr reports any NO status response. On its own this is ambiguous:
@@ -57,7 +63,7 @@ func mailboxMissing(
 	name types.FolderName,
 	err error,
 ) bool {
-	if isMissingMailboxErr(err) {
+	if isMissingMailboxCode(err) {
 		return true
 	}
 	if !isNoStatusErr(err) || util.IsRetryableIMAPError(err) {

@@ -73,18 +73,22 @@ func TestFolderErrorClassifiers(t *testing.T) {
 	for _, tc := range []struct {
 		desc    string
 		err     error
+		code    bool
 		missing bool
 		no      bool
 	}{
-		{"nonexistent", no(imap.ResponseCodeNonExistent), true, true},
-		{"trycreate", no(imap.ResponseCodeTryCreate), true, true},
-		{"wrapped nonexistent", fmt.Errorf("select: %w", no(imap.ResponseCodeNonExistent)), true, true},
-		{"bare no", no(""), false, true},
-		{"in use", no(imap.ResponseCodeInUse), false, true},
-		{"already exists", no(imap.ResponseCodeAlreadyExists), false, true},
-		{"bad", &imap.Error{Type: imap.StatusResponseTypeBad}, false, false},
-		{"network", io.ErrUnexpectedEOF, false, false},
+		{"nonexistent", no(imap.ResponseCodeNonExistent), true, true, true},
+		{"trycreate", no(imap.ResponseCodeTryCreate), true, true, true},
+		{"wrapped nonexistent", fmt.Errorf("select: %w", no(imap.ResponseCodeNonExistent)), true, true, true},
+		{"bare no", no(""), false, false, true},
+		{"in use", no(imap.ResponseCodeInUse), false, false, true},
+		{"already exists", no(imap.ResponseCodeAlreadyExists), false, false, true},
+		{"bad", &imap.Error{Type: imap.StatusResponseTypeBad}, false, false, false},
+		{"network", io.ErrUnexpectedEOF, false, false, false},
+		{"missing mailbox", errMailboxMissing, false, true, false},
+		{"wrapped missing mailbox", fmt.Errorf("select: %w", errMailboxMissing), false, true, false},
 	} {
+		assert.Equal(t, tc.code, isMissingMailboxCode(tc.err), "isMissingMailboxCode: %s", tc.desc)
 		assert.Equal(t, tc.missing, isMissingMailboxErr(tc.err), "isMissingMailboxErr: %s", tc.desc)
 		assert.Equal(t, tc.no, isNoStatusErr(tc.err), "isNoStatusErr: %s", tc.desc)
 	}
@@ -224,24 +228,63 @@ func TestAppendCreatesMissingFolder(t *testing.T) {
 	assert.Equal(t, uint32(1), fakeFolderMessages(t, t.Name(), "brand-new"))
 }
 
-// Threading searches common folders that may not exist on every account
+// Threading searches common folders that may not exist on every account. Servers
+// differ in how they report that: some tag the NO with NONEXISTENT, others send a
+// bare NO that only a LIST can disambiguate.
 func TestSearchMissingFolderReturnsEmpty(t *testing.T) {
-	account, _, ctx := newTestAccount(t)
-	folder := account.GetFolder("nope")
+	for _, bareNo := range []bool{false, true} {
+		t.Run(fmt.Sprintf("bare_no=%v", bareNo), func(t *testing.T) {
+			account, _, ctx := newTestAccount(t)
+			imapinterface.SetFakeBareStatusResponses(t.Name(), bareNo)
+			folder := account.GetFolder("nope")
 
-	emails, err := folder.SearchEmails(ctx, "test", 10)
-	assert.NoError(t, err)
-	assert.Empty(t, emails)
+			emails, err := folder.SearchEmails(ctx, "test", 10)
+			assert.NoError(t, err)
+			assert.Empty(t, emails)
 
-	results, missing, err := folder.SearchMessageIDs(ctx, []string{"<1@test>"})
-	assert.NoError(t, err)
-	assert.Empty(t, results)
-	assert.Equal(t, []string{"<1@test>"}, missing)
+			results, missing, err := folder.SearchMessageIDs(ctx, []string{"<1@test>"})
+			assert.NoError(t, err)
+			assert.Empty(t, results)
+			assert.Equal(t, []string{"<1@test>"}, missing)
 
-	refResults, refMissing, err := folder.SearchReferences(ctx, []EmailRef{{Reference: "<1@test>"}})
-	assert.NoError(t, err)
-	assert.Empty(t, refResults)
-	assert.Len(t, refMissing, 1)
+			refResults, refMissing, err := folder.SearchReferences(ctx, []EmailRef{{Reference: "<1@test>"}})
+			assert.NoError(t, err)
+			assert.Empty(t, refResults)
+			assert.Len(t, refMissing, 1)
+		})
+	}
+}
+
+// Message ID lookups fall back to the account's archive/sent/trash folders, which
+// are only searched when the account maps them to a real mailbox - probing the
+// literal names is what surfaced "Mailbox doesn't exist: archive".
+func TestFindMessageIDsOnlySearchesMappedFolders(t *testing.T) {
+	const messageID = "<found@kanmail>"
+
+	setup := func(t *testing.T) (*Account, context.Context) {
+		account, _, ctx := newTestAccount(t)
+		imapinterface.SetFakeBareStatusResponses(t.Name(), true)
+		appendFakeMessageWithID(t, t.Name(), "archive", messageID)
+		return account, ctx
+	}
+
+	t.Run("unmapped", func(t *testing.T) {
+		account, ctx := setup(t)
+
+		emails, err := account.FindMessageIDs(ctx, []string{messageID})
+		assert.NoError(t, err)
+		assert.Empty(t, emails)
+	})
+
+	t.Run("mapped", func(t *testing.T) {
+		account, ctx := setup(t)
+		account.Folders.Archive = "archive"
+
+		emails, err := account.FindMessageIDs(ctx, []string{messageID})
+		require.NoError(t, err)
+		require.Len(t, emails, 1)
+		assert.Equal(t, messageID, emails[0].MessageID)
+	})
 }
 
 // Fetching from a missing folder must not fabricate "failed to parse" emails

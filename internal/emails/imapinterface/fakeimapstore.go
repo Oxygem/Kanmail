@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -85,6 +86,9 @@ type fakeIMAPStore struct {
 	folders      *exsync.Map[string, *fakeFolderData]
 	fakeThreads  [][]fakeEmail
 	localAddress imap.Address
+	// Answer a select of a missing mailbox with a bare NO, no response code, as
+	// plenty of real servers do
+	bareStatusResponses atomic.Bool
 }
 
 var (
@@ -129,6 +133,13 @@ func CreateFakeFolder(accountKey, name string) {
 // mailbox deleted by another client.
 func DeleteFakeFolder(accountKey, name string) {
 	getOrCreateFakeStore(accountKey).folders.Delete(name)
+}
+
+// SetFakeBareStatusResponses makes an account's fake server reject a select of a
+// missing mailbox with a bare NO instead of tagging it NONEXISTENT, matching
+// servers whose absent mailboxes are only identifiable via LIST.
+func SetFakeBareStatusResponses(accountKey string, bare bool) {
+	getOrCreateFakeStore(accountKey).bareStatusResponses.Store(bare)
 }
 
 func newFakeFolderData(folderName string) *fakeFolderData {

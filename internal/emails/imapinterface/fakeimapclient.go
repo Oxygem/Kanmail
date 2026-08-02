@@ -387,15 +387,17 @@ func missingMailboxErr(name string) *imap.Error {
 func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) SelectCommand {
 	folder, exists := c.store.folders.Get(name)
 	if !exists {
-		// Match the real client: a failed SELECT surfaces as a NO status response
-		cmd := &FakeSelectCommand{
-			FakeCommand: &FakeCommand{err: &imap.Error{
-				Type: imap.StatusResponseTypeNo,
-				Code: imap.ResponseCodeNonExistent,
-				Text: fmt.Sprintf("folder %s does not exist", name),
-			}},
+		// Match the real client: a failed SELECT surfaces as a NO status response,
+		// carrying a response code only when the server bothers to send one
+		selectErr := &imap.Error{
+			Type: imap.StatusResponseTypeNo,
+			Code: imap.ResponseCodeNonExistent,
+			Text: fmt.Sprintf("folder %s does not exist", name),
 		}
-		return cmd
+		if c.store.bareStatusResponses.Load() {
+			selectErr.Code = ""
+		}
+		return &FakeSelectCommand{FakeCommand: &FakeCommand{err: selectErr}}
 	}
 
 	c.unsubscribeCurrentFolder()

@@ -279,6 +279,12 @@ func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*t
 		if len(missing) == 0 {
 			break
 		}
+		if a.Folders.GetFromName(folder) == "" {
+			zerolog.Ctx(ctx).Debug().
+				Str("folder", string(folder)).
+				Msg("Skip messageID search in unmapped folder")
+			continue
+		}
 		newMsg, missingNext, err := a.GetFolder(folder).SearchMessageIDs(ctx, missing)
 		if err != nil {
 			return nil, err
