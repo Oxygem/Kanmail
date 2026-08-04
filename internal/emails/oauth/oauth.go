@@ -108,6 +108,7 @@ var oauthServices = map[string]oauthService{
 		clientID:            constants.OAUTH_GMAIL_CLIENT_ID,
 		clientSecret:        constants.OAUTH_GMAIL_CLIENT_SECRET,
 		includeClientSecret: true,
+		UseLegacyXOAuth2:    true, // Seems to work better?
 	},
 	"outlook": {
 		authEndpoint:     "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
