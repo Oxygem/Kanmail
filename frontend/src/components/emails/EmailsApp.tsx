@@ -19,7 +19,6 @@ import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
 import CommandBar from "./CommandBar.tsx";
 import EmailColumn from "./EmailColumn.tsx";
-import OnboardingColumnsPanel from "./OnboardingColumnsPanel.tsx";
 import Search from "./Search.jsx";
 import SearchResultsColumn from "./SearchResultsColumn.tsx";
 import Sidebar from "./Sidebar.jsx";
@@ -239,7 +238,6 @@ export default class EmailsApp extends React.Component<ISettings> {
         {this.renderToolbar()}
         <div className="km-columns-row">
           {this.renderColumns()}
-          <OnboardingColumnsPanel />
           <AddNewColumnForm />
         </div>
       </section>
