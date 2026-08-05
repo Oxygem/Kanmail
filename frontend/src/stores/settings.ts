@@ -213,6 +213,14 @@ class SettingsStore extends BaseStore {
 		await this.putSettings(["sidebarFolders"]);
 	}
 
+	async setShowWelcomeEmail(show: boolean) {
+		if (this.props.system.showWelcomeEmail === show) {
+			return;
+		}
+		this.props.system.showWelcomeEmail = show;
+		await this.putSettings(["system"]);
+	}
+
 	async setCurrentAccount(accountID: string | null) {
 		this.savePrevProps();
 		const value = accountID || "";

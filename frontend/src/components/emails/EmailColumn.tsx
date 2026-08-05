@@ -2,7 +2,7 @@ import _ from "lodash";
 import React from "react";
 import { DropTarget } from "react-dnd";
 
-import { ALIAS_FOLDERS } from "../../constants.ts";
+import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import { subscribe } from "../../stores/base.tsx";
 import { getColumnMetaStore, getColumnStore, IColumnProps } from "../../stores/columns.ts";
 import { Thread } from "../../stores/emails/base.ts";
@@ -10,6 +10,7 @@ import { getEmailStore } from "../../stores/emails/controller.ts";
 import filterStore from "../../stores/filters.ts";
 import settingsStore from "../../stores/settings.ts";
 import { moveOrCopyThread } from "../../util/threads.js";
+import { getWelcomeThread } from "../../stores/emails/welcome.ts";
 import EmailColumnHeader from "./EmailColumnHeader.jsx";
 import EmailColumnThread from "./EmailColumnThread.tsx";
 
@@ -189,11 +190,19 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
     });
 
     // Sort by the *first/latest* email in each thread
-    return _.orderBy(
+    const threads = _.orderBy(
       this.props.incomingThreads.concat(filteredThreads),
       (thread) => new Date(thread[0].date),
       "desc"
     );
+
+    // The welcome thread is pinned above everything else in the inbox,
+    // rendering (and keyboard navigating) like any other thread
+    if (this.props.id === INBOX && settingsStore.props.system.showWelcomeEmail) {
+      threads.unshift(getWelcomeThread());
+    }
+
+    return threads;
   }
 
   handleScroll = () => {

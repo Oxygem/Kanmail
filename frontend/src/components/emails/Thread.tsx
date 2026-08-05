@@ -132,7 +132,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
     }
     const latestMessage = messages[messages.length - 1];
     const isDraft = _.includes(_.keys(latestMessage.folderUids), "drafts");
-    if (isDraft) {
+    if (isDraft || latestMessage.welcome) {
       return null;
     }
     return <QuickReply latestMessage={latestMessage} />;

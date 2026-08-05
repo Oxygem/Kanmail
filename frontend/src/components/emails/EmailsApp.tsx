@@ -115,6 +115,11 @@ export default class EmailsApp extends React.Component<ISettings> {
     const prevIDs = _.map(prevProps.accounts, a => a.id);
     const ids = _.map(this.props.accounts, a => a.id);
 
+    // First *saved* account, add the welcome email
+    if (_.compact(prevIDs).length === 0 && _.compact(ids).length > 0) {
+      settingsStore.setShowWelcomeEmail(true);
+    }
+
     const added = _.without(ids, ...prevIDs);
     added.forEach(id => {
       mainEmailStore.onAddAccount(id);

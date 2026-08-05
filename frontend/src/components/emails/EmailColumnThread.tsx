@@ -27,6 +27,7 @@ import {
   getMoveDataFromThreadComponent,
   getThreadColumnMessageIds,
 } from "../../util/threads.js";
+import { getWelcomeBodies } from "../../stores/emails/welcome.ts";
 import { EmailColumn } from "./EmailColumn.tsx";
 
 /*
@@ -51,6 +52,9 @@ function getThreadFolderMessageIds(thread) {
 }
 
 const emailSource = {
+  // The app-generated welcome thread lives nowhere, so there's nothing to
+  // drag anywhere
+  canDrag: (props) => !props.thread[0].welcome,
   beginDrag: (props, monitor, component) => {
     return getMoveDataFromThreadComponent(component);
   },
@@ -209,6 +213,22 @@ export default class EmailColumnThread extends React.Component<
     return this.state.locked;
   };
 
+  // The app-generated welcome thread renders and navigates like any other
+  // thread, but exists only on this device: archive/trash dismiss it, and
+  // anything that would hit the backend (star/move/reply/drag) is inert.
+  isWelcome = () => {
+    return !!this.props.thread[0].welcome;
+  };
+
+  dismissWelcome = () => {
+    if (this.state.open) {
+      threadStore.close();
+    }
+    // Let the collapse animation play before the settings change unmounts
+    // the row
+    setTimeout(() => settingsStore.setShowWelcomeEmail(false), 300);
+  };
+
   isDeleteOnTrash() {
     if (this.props.columnId === "trash") {
       return true;
@@ -335,12 +355,18 @@ export default class EmailColumnThread extends React.Component<
         this.setState({
           open: false,
         });
-      }
+      },
+      // The welcome thread's body lives here, not in any mailbox
+      this.isWelcome() ? getWelcomeBodies() : undefined,
     );
   };
 
   handleClickStar = (ev) => {
     ev.stopPropagation();
+
+    if (this.isWelcome()) {
+      return;
+    }
 
     if (this.state.locked) {
       console.debug("Thread locked, not starring!");
@@ -382,6 +408,10 @@ export default class EmailColumnThread extends React.Component<
   handleClickMove = (ev) => {
     ev.stopPropagation();
 
+    if (this.isWelcome()) {
+      return;
+    }
+
     if (this.state.locked) {
       console.debug("Thread locked, not moving!");
     }
@@ -391,6 +421,10 @@ export default class EmailColumnThread extends React.Component<
 
   handleClickReply = (ev) => {
     ev.stopPropagation();
+
+    if (this.isWelcome()) {
+      return;
+    }
 
     AppService.OpenSendWindow({
       mode: "reply",
@@ -403,6 +437,10 @@ export default class EmailColumnThread extends React.Component<
   handleClickReplyAll = (ev) => {
     ev.stopPropagation();
 
+    if (this.isWelcome()) {
+      return;
+    }
+
     AppService.OpenSendWindow({
       mode: "reply-all",
       accountID: this.props.thread[0].accountID,
@@ -413,6 +451,10 @@ export default class EmailColumnThread extends React.Component<
 
   handleClickForward = (ev) => {
     ev.stopPropagation();
+
+    if (this.isWelcome()) {
+      return;
+    }
 
     AppService.OpenSendWindow({
       mode: "forward",
@@ -537,6 +579,15 @@ export default class EmailColumnThread extends React.Component<
       return;
     }
 
+    if (this.isWelcome()) {
+      this.setState({
+        archiving: true,
+        locked: true,
+      });
+      this.dismissWelcome();
+      return;
+    }
+
     if (this.sendNotifications && this.state.unread) {
       mainEmailStore.reduceInboxUnreadCount();
     }
@@ -566,6 +617,15 @@ export default class EmailColumnThread extends React.Component<
     // No double trashing please!
     if (this.state.locked) {
       console.debug("Thread locked, not trashing!");
+      return;
+    }
+
+    if (this.isWelcome()) {
+      this.setState({
+        trashing: true,
+        locked: true,
+      });
+      this.dismissWelcome();
       return;
     }
 
@@ -636,7 +696,7 @@ export default class EmailColumnThread extends React.Component<
         Render
     */
   renderStarButton() {
-    if (_.includes(["trash", "spam"], this.props.columnId)) {
+    if (this.isWelcome() || _.includes(["trash", "spam"], this.props.columnId)) {
       return;
     }
 
@@ -674,6 +734,10 @@ export default class EmailColumnThread extends React.Component<
   }
 
   renderMoveButton() {
+    if (this.isWelcome()) {
+      return;
+    }
+
     const classNames = ["fa"];
 
     if (this.state.moving) {
@@ -705,24 +769,31 @@ export default class EmailColumnThread extends React.Component<
       return;
     }
 
+    const isWelcome = this.isWelcome();
     const classNames = ["fa"];
 
     if (this.state.archiving) {
       classNames.push("fa-cog");
       classNames.push("fa-spin");
     } else {
-      classNames.push("fa-archive");
+      classNames.push(isWelcome ? "fa-check" : "fa-archive");
     }
 
     return (
       <Tooltip
         text={
           <span>
-            Archive (<i className="fa fa-keyboard-o" /> enter)
+            {isWelcome ? "Dismiss" : "Archive"} (<i className="fa fa-keyboard-o" /> enter)
           </span>
         }
       >
-        <a onClick={keyboard.archiveCurrentThread} className="archive">
+        {/* The welcome dismiss button is always visible, so it can be
+            clicked when this thread isn't the hover-selected component -
+            act on this row directly rather than via the keyboard */}
+        <a
+          onClick={isWelcome ? this.handleClickArchive : keyboard.archiveCurrentThread}
+          className="archive"
+        >
           <i className={classNames.join(" ")} />
         </a>
       </Tooltip>
@@ -753,6 +824,10 @@ export default class EmailColumnThread extends React.Component<
   }
 
   renderTrashButton() {
+    if (this.isWelcome()) {
+      return;
+    }
+
     const classNames = ["fa"];
 
     if (this.state.trashing) {
@@ -890,6 +965,11 @@ export default class EmailColumnThread extends React.Component<
       classNames.push("incoming");
     }
 
+    const isWelcome = this.isWelcome();
+    if (isWelcome) {
+      classNames.push("welcome");
+    }
+
     // Apply the custom per-sender colour via a CSS variable — the visible row
     // background is an inset, rounded ::before layer (see columns.less), not the
     // full-width box. Suppressed during the archive/trash animation.
@@ -931,9 +1011,15 @@ export default class EmailColumnThread extends React.Component<
           <span className="acct">
             <span
               className="dot"
-              style={{ background: settingsStore.getAccountAccentColor(latestEmail.accountID) || "var(--faint)" }}
+              style={{
+                background: isWelcome
+                  ? "var(--brand-pink)"
+                  : settingsStore.getAccountAccentColor(latestEmail.accountID) || "var(--faint)",
+              }}
             />
-            {settingsStore.getAccountSettings(latestEmail.accountID)?.name || latestEmail.accountID}
+            {isWelcome
+              ? "Kanmail"
+              : settingsStore.getAccountSettings(latestEmail.accountID)?.name || latestEmail.accountID}
           </span>
           {this.renderLabels()}
           <span className="buttons">

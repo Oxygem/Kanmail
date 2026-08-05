@@ -152,6 +152,10 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
   renderMeta() {
     const { message } = this.props;
 
+    if (message.welcome) {
+      return null;
+    }
+
     return (
       <div className="meta flex" onClick={this.handleClick}>
         <div className="addresses half">
@@ -208,6 +212,10 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
 
   renderControls() {
     const { message } = this.props;
+
+    if (message.welcome) {
+      return null;
+    }
 
     const isDraft = _.includes(_.keys(this.props.message.folderUids), "drafts");
     const forwardButton = isDraft ? null : (

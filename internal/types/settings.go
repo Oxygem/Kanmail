@@ -124,6 +124,10 @@ type SystemSettings struct {
 
 	ShowHelpButton bool `json:"showHelpButton"`
 
+	// Show the app-generated welcome email pinned at the top of the inbox, set
+	// when onboarding completes and cleared when the user dismisses it
+	ShowWelcomeEmail bool `json:"showWelcomeEmail"`
+
 	// Whether the sync status list (bottom of the sidebar footer) is expanded
 	StatusBarOpen bool `json:"statusBarOpen"`
 

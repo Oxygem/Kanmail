@@ -40,6 +40,10 @@ export interface IEmail extends Email {
   // scalar compare rather than deep-comparing the (shared, mutated-in-place) object.
   folderUidsVersion: number;
   originalReferences: string[];
+  // App-generated welcome guide message: exists only on this device, never in
+  // any mailbox, so anything that would hit the backend (reply/move/fetch)
+  // must be suppressed for it.
+  welcome?: boolean;
 }
 
 export interface Thread extends Array<IEmail> {

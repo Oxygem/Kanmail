@@ -152,7 +152,7 @@ class ThreadStore extends BaseStore {
     this.isOpen = false;
   }
 
-  open(component, thread, onClose) {
+  open(component, thread, onClose, knownBodies?: Map<string, string>) {
     if (this.isOpen) {
       this.close(false);
     }
@@ -168,7 +168,7 @@ class ThreadStore extends BaseStore {
     this.triggerUpdate();
 
     // Now, actually load the thread!
-    this.loadThread(thread);
+    this.loadThread(thread, knownBodies);
   }
 
   loadThread(thread: Thread, knownBodies?: Map<string, string>) {

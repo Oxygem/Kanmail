@@ -520,6 +520,65 @@ section#columns {
       }
     }
 
+    // The app-generated welcome thread: an always-on soft brand tint on the
+    // inset background layer marks it out as app UI rather than a real email.
+    // These sit after the .hover/.open rules so the tint wins the cascade,
+    // deepening on selection rather than switching to the pill background.
+    &.welcome {
+      margin-bottom: 5px;
+
+      div.meta {
+        // The dismiss button is always visible, not just hover-revealed
+        span.buttons {
+          display: flex;
+        }
+
+        // Always hide the (empty) extra-meta - its auto margin otherwise
+        // fights the buttons' and centres the dismiss button until hover
+        span.extra-meta {
+          display: none;
+        }
+      }
+    }
+
+    &.welcome::before {
+      background: linear-gradient(
+        100deg,
+        rgba(227, 25, 110, 0.07),
+        rgba(240, 140, 29, 0.05)
+      );
+    }
+
+    &.welcome.hover::before,
+    &.welcome.open::before {
+      background: linear-gradient(
+        100deg,
+        rgba(227, 25, 110, 0.13),
+        rgba(240, 140, 29, 0.09)
+      );
+    }
+
+    // Dark backgrounds swallow low-alpha tints (matching the per-sender
+    // background opacities, 0.05 light / 0.2 dark)
+    @media (prefers-color-scheme: dark) {
+      &.welcome::before {
+        background: linear-gradient(
+          100deg,
+          rgba(227, 25, 110, 0.16),
+          rgba(240, 140, 29, 0.11)
+        );
+      }
+
+      &.welcome.hover::before,
+      &.welcome.open::before {
+        background: linear-gradient(
+          100deg,
+          rgba(227, 25, 110, 0.26),
+          rgba(240, 140, 29, 0.18)
+        );
+      }
+    }
+
     // Archiving / trashing / moving: flash a tint (green for archive/move,
     // red for trash), then fade out while collapsing the row to zero height
     // (rather than leaving a blank gap). The tint goes on the ::before layer —
