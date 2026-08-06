@@ -201,7 +201,7 @@ func (f *Folder) createDestinationAndRetry(
 	fn func() error,
 ) error {
 	err := fn()
-	if err == nil || !mailboxMissing(ctx, conn, dest.Name, err) {
+	if err == nil || !isMissingMailboxErr(err) {
 		return err
 	}
 

@@ -69,28 +69,39 @@ func TestFolderErrorClassifiers(t *testing.T) {
 	no := func(code imap.ResponseCode) error {
 		return &imap.Error{Type: imap.StatusResponseTypeNo, Code: code}
 	}
+	noText := func(text string) error {
+		return &imap.Error{Type: imap.StatusResponseTypeNo, Text: text}
+	}
 
 	for _, tc := range []struct {
 		desc    string
 		err     error
-		code    bool
 		missing bool
-		no      bool
 	}{
-		{"nonexistent", no(imap.ResponseCodeNonExistent), true, true, true},
-		{"trycreate", no(imap.ResponseCodeTryCreate), true, true, true},
-		{"wrapped nonexistent", fmt.Errorf("select: %w", no(imap.ResponseCodeNonExistent)), true, true, true},
-		{"bare no", no(""), false, false, true},
-		{"in use", no(imap.ResponseCodeInUse), false, false, true},
-		{"already exists", no(imap.ResponseCodeAlreadyExists), false, false, true},
-		{"bad", &imap.Error{Type: imap.StatusResponseTypeBad}, false, false, false},
-		{"network", io.ErrUnexpectedEOF, false, false, false},
-		{"missing mailbox", errMailboxMissing, false, true, false},
-		{"wrapped missing mailbox", fmt.Errorf("select: %w", errMailboxMissing), false, true, false},
+		{"nonexistent", no(imap.ResponseCodeNonExistent), true},
+		{"trycreate", no(imap.ResponseCodeTryCreate), true},
+		{"wrapped nonexistent", fmt.Errorf("select: %w", no(imap.ResponseCodeNonExistent)), true},
+		{"missing mailbox", errMailboxMissing, true},
+		{"wrapped missing mailbox", fmt.Errorf("select: %w", errMailboxMissing), true},
+		{"exchange bare no", noText("INBOX doesn't exist."), true},
+		{"dovecot bare no", noText("Mailbox doesn't exist: Kanmail/Done"), true},
+		{"cyrus bare no", noText("Mailbox does not exist"), true},
+		{"courier bare no", noText("Mailbox does not exist, or must be subscribed to."), true},
+		{"uw bare no", noText("Can't open mailbox Archive: no such mailbox"), true},
+		{"old gmail bare no", noText("Unknown Mailbox: [Gmail]/Trash (Failure)"), true},
+		{"wrapped bare no", fmt.Errorf("select: %w", noText("Mailbox does not exist")), true},
+		{"bare no", no(""), false},
+		{"permission denied", noText("Permission denied"), false},
+		{"transient", noText("Server busy, try again later"), false},
+		{"other code overrides text", &imap.Error{
+			Type: imap.StatusResponseTypeNo, Code: imap.ResponseCodeInUse, Text: "Mailbox does not exist",
+		}, false},
+		{"in use", no(imap.ResponseCodeInUse), false},
+		{"already exists", no(imap.ResponseCodeAlreadyExists), false},
+		{"bad", &imap.Error{Type: imap.StatusResponseTypeBad, Text: "Folder could not be found."}, false},
+		{"network", io.ErrUnexpectedEOF, false},
 	} {
-		assert.Equal(t, tc.code, isMissingMailboxCode(tc.err), "isMissingMailboxCode: %s", tc.desc)
 		assert.Equal(t, tc.missing, isMissingMailboxErr(tc.err), "isMissingMailboxErr: %s", tc.desc)
-		assert.Equal(t, tc.no, isNoStatusErr(tc.err), "isNoStatusErr: %s", tc.desc)
 	}
 }
 

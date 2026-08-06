@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"mime/quotedprintable"
@@ -263,4 +264,52 @@ func (f *Folder) makeBodyPartResp(ctx context.Context, in bodyPartResp) *BodyPar
 	}
 
 	return out
+}
+
+var errMailboxMissing = errors.New("mailbox does not exist")
+
+var missingMailboxTexts = []string{
+	"doesn't exist",   // Dovecot <2.4, Exchange online
+	"does not exist",  // Cyrus, Courier, Dbmail
+	"no such mailbox", // UW-IMAP/MailEnable/Apache James
+	"unknown mailbox", // Gmail/Yahoo
+}
+
+// isMissingMailboxErr reports a "that mailbox isn't there" failure: the
+// NONEXISTENT (SELECT, RFC 5530) or TRYCREATE (APPEND/COPY/MOVE, RFC 9051)
+// response codes, or a codeless NO whose text matches known server wordings.
+// Any other response code is trusted over the text.
+func isMissingMailboxErr(err error) bool {
+	if errors.Is(err, errMailboxMissing) {
+		return true
+	}
+	var imapErr *imap.Error
+	if !errors.As(err, &imapErr) {
+		return false
+	}
+	if imapErr.Code != "" {
+		return imapErr.Code == imap.ResponseCodeNonExistent || imapErr.Code == imap.ResponseCodeTryCreate
+	}
+	if imapErr.Type != imap.StatusResponseTypeNo {
+		return false
+	}
+	text := strings.ToLower(imapErr.Text)
+	return slices.ContainsFunc(missingMailboxTexts, func(fragment string) bool {
+		return strings.Contains(text, fragment)
+	})
+}
+
+func selectFolder(
+	ctx context.Context,
+	conn imapinterface.IMAPClient,
+	name types.FolderName,
+) (data *imap.SelectData, missing bool, err error) {
+	data, err = conn.Select(string(name), nil).Wait()
+	if err == nil {
+		return data, false, nil
+	}
+	if isMissingMailboxErr(err) {
+		return nil, true, nil
+	}
+	return nil, false, err
 }
