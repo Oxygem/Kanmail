@@ -15,19 +15,36 @@ export function lowercaseFirstLetter(string) {
   return string.charAt(0).toLowerCase() + string.slice(1);
 }
 
+// Calendar output is relative to the current day ("Yesterday", etc), so the
+// cache is only valid within a single day.
+const formatDateCache = new Map<string, string>();
+let formatDateCacheDay: string | null = null;
+
 export function formatDate(date) {
-  return moment(date).calendar(null, {
-    sameDay: "HH:mm A",
-    lastDay: "[Yesterday]",
-    lastWeek: "dddd",
-    nextWeek: "[Next] dddd,", // should never happen (future)
-    sameElse: function (now) {
-      if (this.isSame(now, "year")) {
-        return "MMM DD";
-      }
-      return "MMM DD YY";
-    },
-  });
+  const today = new Date().toDateString();
+  if (today !== formatDateCacheDay) {
+    formatDateCache.clear();
+    formatDateCacheDay = today;
+  }
+
+  let formatted = formatDateCache.get(date);
+  if (formatted === undefined) {
+    formatted = moment(date).calendar(null, {
+      sameDay: "HH:mm A",
+      lastDay: "[Yesterday]",
+      lastWeek: "dddd",
+      nextWeek: "[Next] dddd,", // should never happen (future)
+      sameElse: function (now) {
+        if (this.isSame(now, "year")) {
+          return "MMM DD";
+        }
+        return "MMM DD YY";
+      },
+    });
+    formatDateCache.set(date, formatted);
+  }
+
+  return formatted;
 }
 
 export function formatAddress(address: Address, short = false) {

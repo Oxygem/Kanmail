@@ -30,6 +30,9 @@ import {
 import { getWelcomeBodies } from "../../stores/emails/welcome.ts";
 import { EmailColumn } from "./EmailColumn.tsx";
 
+// MediaQueryList tracks changes live, so .matches is always current
+const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
 /*
     Return a map of folder -> UIDs for all messages in this thread.
 */
@@ -264,7 +267,7 @@ export default class EmailColumnThread extends React.Component<
     }
 
     const rgb = hexToRgb(c);
-    const desiredOpacity = window.matchMedia("(prefers-color-scheme: dark)").matches ? 0.2 : 0.05;
+    const desiredOpacity = darkModeMediaQuery.matches ? 0.2 : 0.05;
     const alwaysShow = settingsStore.props.system.theme.alwaysShowThreadBackgrounds;
     let opacity = isHover ? desiredOpacity : 0.0;
     if (alwaysShow) {
