@@ -90,12 +90,17 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
   }
 
   setFrameHeight() {
-    let height = this.frameElement!.contentWindow!.document.body.scrollHeight;
+    const frameWindow = this.frameElement?.contentWindow;
+    if (!frameWindow) {
+      return;
+    }
+
+    let height = frameWindow.document.body.scrollHeight;
 
     if (height === 0) {
       console.warn("Could not get height of HTML iframe")
       height = 500;
-      this.frameElement!.contentWindow!.document.body.style.overflow = "auto";
+      frameWindow.document.body.style.overflow = "auto";
     }
 
     this.frameElement!.style.height = (height) + 'px';
