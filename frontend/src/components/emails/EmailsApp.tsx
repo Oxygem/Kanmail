@@ -1,7 +1,5 @@
 import _ from "lodash";
 import React from "react";
-import { DragDropContext } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import keyboard from "../../keyboard.ts";
@@ -27,7 +25,6 @@ import WelcomeSettings from "./WelcomeSettings.jsx";
 import WorkflowSwitcher from "./WorkflowSwitcher.tsx";
 
 @subscribe(settingsStore)
-@DragDropContext(HTML5Backend)
 export default class EmailsApp extends React.Component<ISettings> {
   getNewEmailsInterval: ReturnType<typeof setInterval>;
   columnRefs: (EmailColumn | SearchResultsColumn | null)[] = [];

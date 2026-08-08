@@ -32,8 +32,6 @@
     "randomcolor": "0.x",
     "react": "^17.0.2",
     "react-color": "^2.19.3",
-    "react-dnd": "2.x",
-    "react-dnd-html5-backend": "2.x",
     "react-dom": "^17.0.2",
     "react-select": "^5.10.2",
     "squire-rte": "^2.3.3",

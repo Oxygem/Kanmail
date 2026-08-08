@@ -128,16 +128,9 @@ export const getPreviousThreadComponent = (thread) =>
 export function collectVisibleThreadComponents(threadRefs) {
   return _.reduce(
     threadRefs,
-    (memo: EmailColumnThread[], value) => {
-      if (value) {
-        const component: EmailColumnThread = value.getDecoratedComponentInstance();
-        if (!component) {
-          console.log("ERR COMPONENT", value);
-          return memo;
-        }
-        if (!component.isBusy()) {
-          memo.push(component);
-        }
+    (memo: EmailColumnThread[], component: EmailColumnThread) => {
+      if (component && !component.isBusy()) {
+        memo.push(component);
       }
       return memo;
     },

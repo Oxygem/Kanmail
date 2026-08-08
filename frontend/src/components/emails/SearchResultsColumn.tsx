@@ -109,16 +109,7 @@ export class SearchResultsColumn extends React.Component<ISearchResultsColumnPro
   renderEmailThreads(groups: IThreadGroup[]) {
     const threadRefs: EmailColumnThread[] = [];
 
-    const getThread = (id) => {
-      const thread = threadRefs[id];
-
-      if (thread) {
-        // Thread is wrapped by react-dnd, so get the underlying
-        // EmailColumnThread instance!
-        // @ts-ignore
-        return thread.getDecoratedComponentInstance();
-      }
-    };
+    const getThread = (id) => threadRefs[id];
 
     // Thread refs are indexed across all groups so keyboard up/down flows
     // through the folder sub-headers.

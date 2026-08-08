@@ -1,6 +1,5 @@
 import _ from "lodash";
 import React from "react";
-import { DropTarget } from "react-dnd";
 
 import { ALIAS_FOLDERS, INBOX } from "../../constants.ts";
 import { subscribe } from "../../stores/base.tsx";
@@ -9,29 +8,11 @@ import { Thread } from "../../stores/emails/base.ts";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import filterStore from "../../stores/filters.ts";
 import settingsStore from "../../stores/settings.ts";
+import { createThreadDropTarget } from "../../util/dnd.ts";
 import { moveOrCopyThread } from "../../util/threads.js";
 import { getWelcomeThread } from "../../stores/emails/welcome.ts";
 import EmailColumnHeader from "./EmailColumnHeader.jsx";
 import EmailColumnThread from "./EmailColumnThread.tsx";
-
-const columnTarget = {
-  canDrop(props, monitor) {
-    const { oldColumn } = monitor.getItem();
-    return oldColumn !== props.id;
-  },
-
-  drop(props, monitor) {
-    moveOrCopyThread(monitor.getItem(), props.id);
-  },
-};
-
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
-    canDrop: monitor.canDrop(),
-  };
-}
 
 interface IEmailColumnProps extends IColumnProps {
   id: string;
@@ -41,20 +22,16 @@ interface IEmailColumnProps extends IColumnProps {
 
   system: any;
 
-  isOver: boolean;
-  canDrop: boolean;
-  connectDropTarget: any;
-
   getPreviousColumn: () => EmailColumn;
   getNextColumn: () => EmailColumn;
 }
 
-@DropTarget("email", columnTarget, collect)
 export class EmailColumn extends React.Component<IEmailColumnProps> {
-  containerDiv: Element;
   emailsContainer: Element;
   lastScrollTop: number = 0;
   threadRefs: EmailColumnThread[];
+
+  dropTarget = createThreadDropTarget(() => this.props.id, moveOrCopyThread);
 
   componentDidMount() {
     getEmailStore().onShowFolder(this.props.id);
@@ -64,12 +41,6 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
     // Columns are keyed by index, so the same instance can switch folder
     if (prevProps.id !== this.props.id) {
       getEmailStore().onShowFolder(this.props.id);
-    }
-
-    if (this.props.canDrop && !prevProps.isOver && this.props.isOver) {
-      this.containerDiv.classList.add("hover");
-    } else {
-      this.containerDiv.classList.remove("hover");
     }
   }
 
@@ -110,16 +81,7 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
     // thread can access the previous/next threads (keyboard shortcuts).
     const threadRefs: EmailColumnThread[] = [];
 
-    const getThread = (id) => {
-      const thread = threadRefs[id];
-
-      if (thread) {
-        // Thread is a wrapped by react-dnd, so get the underlying
-        // EmailColumnThread instance!
-        // @ts-ignore
-        return thread.getDecoratedComponentInstance();
-      }
-    };
+    const getThread = (id) => threadRefs[id];
 
     const threadElements = _.map(threads, (thread, i) => {
       const getPreviousThread = () => getThread(i - 1);
@@ -254,7 +216,6 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
   render() {
     console.debug(`Render EmailColumn ${this.props.id} (hidden=${this.props.hidden})`);
 
-    const { connectDropTarget } = this.props;
     const threads = this.getFilteredEmailThreads();
 
     const classNames = ["column"];
@@ -265,11 +226,8 @@ export class EmailColumn extends React.Component<IEmailColumnProps> {
       classNames.push("open");
     }
 
-    return connectDropTarget(
-      <div
-        className={classNames.join(" ")}
-        ref={(div) => div && (this.containerDiv = div)}
-      >
+    return (
+      <div className={classNames.join(" ")} {...this.dropTarget}>
         <EmailColumnHeader
           id={this.props.id}
           index={this.props.index}
@@ -309,7 +267,7 @@ export default class EmailColumnWrapper extends EmailColumn {
   wrappedEmailColumn: any;
 
   getDecoratedComponentInstance() {
-    return this.wrappedEmailColumn.wrappedComponent.getDecoratedComponentInstance();
+    return this.wrappedEmailColumn.wrappedComponent;
   }
 
   render() {

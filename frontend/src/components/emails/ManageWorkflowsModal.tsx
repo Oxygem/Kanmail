@@ -182,9 +182,8 @@ export default class ManageWorkflowsModal extends React.Component<
         key={index}
         draggable={this.state.dragArmedIndex === index}
         onDragStart={(ev) => {
-          // Keep the drag away from react-dnd's window-level HTML5 backend
-          // (EmailsApp's DragDropContext), which otherwise forces
-          // dropEffect "none" over non-react-dnd targets and blocks the drop.
+          // Keep the row reorder inside the modal, away from the thread drop
+          // targets (columns/sidebar folders) this may be rendered over
           ev.stopPropagation();
           ev.dataTransfer.setData("text/plain", String(index));
           ev.dataTransfer.effectAllowed = "move";

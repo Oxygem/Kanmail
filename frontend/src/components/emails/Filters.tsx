@@ -1,6 +1,5 @@
 import _ from "lodash";
 import React from "react";
-import { DropTarget } from "react-dnd";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { ALIAS_FOLDERS, ALIAS_TO_ICON } from "../../constants.ts";
@@ -10,53 +9,25 @@ import filterStore from "../../stores/filters.ts";
 import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import { createThreadDropTarget } from "../../util/dnd.ts";
 import { capitalizeFirstLetter } from "../../util/string.js";
 import { moveOrCopyThread } from "../../util/threads.js";
 
-const folderLinkTarget = {
-  canDrop(props, monitor) {
-    const { oldColumn } = monitor.getItem();
-    return oldColumn !== props.folderName;
-  },
-
-  drop(props, monitor) {
-    const moveData = monitor.getItem();
-    moveOrCopyThread(moveData, props.folderName);
-  },
-};
-
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver(),
-    canDrop: monitor.canDrop(),
-  };
-}
-
 interface ISidebarFolderLinkProps {
-  canDrop: boolean;
-  isOver: boolean;
   isActive: boolean;
   folderName: string;
   pinned: boolean;
   unreadCount: number;
-  connectDropTarget: any;
   iconName: string;
   iconClassName: string;
   handleClick: () => {};
 }
 
-@DropTarget("email", folderLinkTarget, collect)
 class SidebarFolderLink extends React.Component<ISidebarFolderLinkProps> {
-  containerLi: HTMLLIElement | null;
-
-  componentDidUpdate(prevProps) {
-    if (this.props.canDrop && !prevProps.isOver && this.props.isOver) {
-      this.containerLi!.classList.add("hover");
-    } else {
-      this.containerLi!.classList.remove("hover");
-    }
-  }
+  dropTarget = createThreadDropTarget(
+    () => this.props.folderName,
+    moveOrCopyThread
+  );
 
   pinFolder = (ev) => {
     ev.stopPropagation();
@@ -93,15 +64,11 @@ class SidebarFolderLink extends React.Component<ISidebarFolderLinkProps> {
   }
 
   render() {
-    const { connectDropTarget } = this.props;
-
-    return connectDropTarget(
+    return (
       <li
         key={this.props.folderName}
         className={this.props.isActive ? "active" : ""}
-        ref={(li) => {
-          this.containerLi = li;
-        }}
+        {...this.dropTarget}
       >
         <a onClick={this.props.handleClick}>
           <i

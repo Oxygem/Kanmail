@@ -1,6 +1,5 @@
 import _ from "lodash";
 import React from "react";
-import { DragSource } from "react-dnd";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
@@ -18,6 +17,7 @@ import settingsStore from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { buildMovePage } from "../../util/commands.tsx";
+import { endThreadDrag, startThreadDrag } from "../../util/dnd.ts";
 import {
   capitalizeFirstLetter,
   formatAddress,
@@ -55,22 +55,6 @@ function getThreadFolderMessageIds(thread) {
   );
 }
 
-const emailSource = {
-  // The app-generated welcome thread lives nowhere, so there's nothing to
-  // drag anywhere
-  canDrag: (props) => !props.thread[0].welcome,
-  beginDrag: (props, monitor, component) => {
-    return getMoveDataFromThreadComponent(component);
-  },
-};
-
-function collect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-}
-
 interface EmailColumnThreadProps {
   thread: Thread;
   columnId: string;
@@ -82,8 +66,6 @@ interface EmailColumnThreadProps {
   getNextColumn: () => EmailColumn | undefined;
   getPreviousThread: () => EmailColumnThread;
   getNextThread: () => EmailColumnThread;
-
-  connectDragSource?: any;
 }
 
 interface EmailColumnThreadState {
@@ -104,7 +86,6 @@ interface EmailColumnThreadState {
   starring?: boolean;
 }
 
-@DragSource("email", emailSource, collect)
 export default class EmailColumnThread extends React.Component<
   EmailColumnThreadProps,
   EmailColumnThreadState
@@ -314,6 +295,13 @@ export default class EmailColumnThread extends React.Component<
     if (this.state.hover) {
       keyboard.setThreadComponent(null);
     }
+  };
+
+  /*
+        Drag handling - the thread is dropped on a column or sidebar folder
+    */
+  handleDragStart = (ev: React.DragEvent) => {
+    startThreadDrag(ev, getMoveDataFromThreadComponent(this));
   };
 
   /*
@@ -899,7 +887,7 @@ export default class EmailColumnThread extends React.Component<
       return null;
     }
 
-    const { connectDragSource, thread } = this.props;
+    const { thread } = this.props;
     const latestEmail = thread[0];
 
     // Show the avatar of the most recent external (non local user) email
@@ -973,13 +961,18 @@ export default class EmailColumnThread extends React.Component<
       ? ({ "--thread-bg": backgroundColor } as React.CSSProperties)
       : undefined;
 
-    return connectDragSource(
+    return (
       <div
         className={classNames.join(" ")}
         style={style}
         onClick={this.handleClick}
         onMouseMove={this.handleMouseMove}
         onMouseLeave={this.handleMouseLeave}
+        // The app-generated welcome thread lives nowhere, so there's nothing
+        // to drag anywhere
+        draggable={!isWelcome}
+        onDragStart={this.handleDragStart}
+        onDragEnd={endThreadDrag}
         ref={(ref) => this.element = ref}
       >
         <h5 data-uid={latestEmail.uid}>
