@@ -1,0 +1,55 @@
+/*
+    Drag & drop — the thread drag image built in util/dnd.ts.
+
+    Never visible in place: the browser snapshots it at dragstart and the
+    element is removed on the next frame. It sits offscreen (rather than
+    hidden) because an unrendered element snapshots blank, and hangs on body
+    so the active `body.theme-*` tokens still cascade into it.
+*/
+div.thread-drag-image {
+  position: fixed;
+  top: 0;
+  left: -9999px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 320px;
+  padding: 8px 12px;
+  border-radius: var(--r-md);
+  // A ring rather than a shadow — the snapshot is clipped to the border box,
+  // so a shadow would be sliced off mid-blur.
+  border: 1px solid var(--ring);
+  background: var(--bar);
+  font-size: 13px;
+  line-height: 18px;
+  white-space: nowrap;
+
+  span.dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 99px;
+    flex: none;
+  }
+
+  span.sender {
+    flex: none;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  span.subject {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--muted);
+  }
+
+  span.count {
+    flex: none;
+    padding: 0 6px;
+    border-radius: 99px;
+    background: var(--pill);
+    color: var(--muted);
+    font-size: 11px;
+  }
+}

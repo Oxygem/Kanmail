@@ -1,6 +1,8 @@
 import React from "react";
 
 import { Thread } from "../stores/emails/base.ts";
+import settingsStore from "../stores/settings.ts";
+import { formatAddress } from "./string.js";
 
 /*
     Threads are only ever dragged within a single window, so the payload - which
@@ -21,10 +23,64 @@ const THREAD_MIME_TYPE = "application/x-kanmail-thread";
 
 let currentItem: ThreadDragItem | null = null;
 
+// Where the cursor sits within the drag image - just inside the leading edge,
+// vertically centred, so the chip hangs off the pointer
+const DRAG_IMAGE_GRAB_X = 16;
+
+/*
+    The default drag image is a bitmap of the card itself: column wide, mostly
+    empty space, and snapshotted with whatever hover state it had. Replace it
+    with a compact chip naming what's being moved.
+
+    The browser snapshots a real rendered element, so the chip has to be in the
+    document and painted - it's positioned offscreen rather than hidden, and
+    removed once the snapshot has been taken.
+*/
+function setThreadDragImage(ev: React.DragEvent, item: ThreadDragItem) {
+  const latestEmail = item.thread[0];
+
+  const element = document.createElement("div");
+  element.className = "thread-drag-image";
+
+  const dot = document.createElement("span");
+  dot.className = "dot";
+  dot.style.background =
+    settingsStore.getAccountAccentColor(item.accountID) || "var(--faint)";
+
+  const sender = document.createElement("span");
+  sender.className = "sender";
+  sender.textContent = formatAddress(latestEmail.from[0], true);
+
+  const subject = document.createElement("span");
+  subject.className = "subject";
+  subject.textContent = latestEmail.subject;
+
+  element.append(dot, sender, subject);
+
+  if (item.thread.length > 1) {
+    const count = document.createElement("span");
+    count.className = "count";
+    count.textContent = `${item.thread.length}`;
+    element.append(count);
+  }
+
+  document.body.appendChild(element);
+  ev.dataTransfer.setDragImage(
+    element,
+    DRAG_IMAGE_GRAB_X,
+    element.offsetHeight / 2
+  );
+
+  // The snapshot is taken after this handler returns, so the element can only
+  // go once the browser has had a frame to read it
+  requestAnimationFrame(() => element.remove());
+}
+
 export function startThreadDrag(ev: React.DragEvent, item: ThreadDragItem) {
   currentItem = item;
   ev.dataTransfer.effectAllowed = "move";
   ev.dataTransfer.setData(THREAD_MIME_TYPE, item.oldColumn);
+  setThreadDragImage(ev, item);
 }
 
 export function endThreadDrag() {
