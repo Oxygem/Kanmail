@@ -612,6 +612,11 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         <button className="btn-soft" onClick={() => AppService.OpenLink(systemStore.props.logFilename)}>
           <i className="fa fa-file-text-o" /> Open log file
         </button>
+        {!this.props.system.showWelcomeEmail && (
+          <button className="btn-soft" onClick={() => this.updateSystem({ showWelcomeEmail: true })}>
+            <i className="fa fa-envelope-o" /> Reset welcome email
+          </button>
+        )}
       </div>
     </>;
 
