@@ -31,3 +31,28 @@ tasks:
     summary: Runs the application in development mode
     cmds:
       - wails3 dev -config ./build/config.yaml -port {{.VITE_PORT}}
+
+  build:server:
+    summary: Builds the application in server mode (no GUI, HTTP server only)
+    cmds:
+      - task: common:build:server
+
+  run:server:
+    summary: Builds and runs a development server
+    cmds:
+      - task: common:run:server
+
+  run:server:e2e:
+    summary: Runs a headless dev server with fake data, for e2e testing (localhost:8080)
+    deps:
+      - task: common:build:server
+        vars:
+          PRODUCTION: "false"
+    cmds:
+      - '"./{{.BIN_DIR}}/{{.APP_NAME}}-server{{exeExt}}"'
+    env:
+      KANMAIL_PROFILE: e2e
+      KANMAIL_DEBUG_CACHES_DISABLE: 1
+      KANMAIL_DEBUG_FAKE_IMAP: '{{.FAKE_DATA | default "on"}}'
+      KANMAIL_DEBUG_FAKE_KEYRING: 1
+      KANMAIL_DEBUG_LICENSED: 1

@@ -35,6 +35,9 @@ tasks:
       - task: install:frontend:deps
       - task: generate:runtime
       - task: generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
     cmds:
       - npm run {{.BUILD_COMMAND}} -q
     env:
@@ -89,3 +92,32 @@ tasks:
     dir: build
     cmds:
       - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yaml -dir .
+
+  build:server:
+    summary: Builds the application in server mode (no GUI, HTTP server only)
+    desc: |
+      Builds a production server binary by default (-tags server,production,
+      -trimpath and a stripped binary), mirroring the desktop production build.
+      Server mode runs as a pure HTTP server without native GUI dependencies.
+
+      Usage: task build:server [PRODUCTION=false]
+    deps:
+      - task: build:frontend
+        vars:
+          PRODUCTION: '{{.PRODUCTION | default "true"}}'
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+    cmds:
+      - 'go build {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}-server{{exeExt}}"'
+    vars:
+      PRODUCTION: '{{.PRODUCTION | default "true"}}'
+      BUILD_FLAGS: '-tags server{{if eq .PRODUCTION "true"}},production{{end}} {{if eq .PRODUCTION "true"}}-trimpath -buildvcs=false -ldflags="-w -s -X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{else}}-buildvcs=false -gcflags=all="-l" -ldflags="-X main.Commit={{.GIT_COMMIT_HASH}} -X main.Version={{.KANMAIL_APP_VERSION}}"{{end}}'
+
+  run:server:
+    summary: Builds and runs a development server
+    deps:
+      - task: build:server
+        vars:
+          PRODUCTION: "false"
+    cmds:
+      - '"./{{.BIN_DIR}}/{{.APP_NAME}}-server{{exeExt}}"'
