@@ -423,6 +423,10 @@ section#columns {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    // Let the browser skip layout/paint of off-screen cards - virtualization
+    // at the render layer (rather than React).
+    content-visibility: auto;
+    contain-intrinsic-size: auto 134px;
     // Anchors the archive/trash collapse animation; comfortably above the
     // card's fixed natural height (~134px) so it never clips a real card.
     max-height: 160px;
@@ -782,6 +786,8 @@ section#columns {
 section#columns.compact {
   div.email {
     padding: 9px 16px;
+    // Compact cards are much shorter - correct the pre-first-render estimate.
+    contain-intrinsic-size: auto 60px;
 
     // Match the inset divider to the compact padding.
     &::after {

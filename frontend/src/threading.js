@@ -113,19 +113,9 @@ function messageContainer(message) {
         return true;
       }
 
-      if (this.children.length < 1) {
-        return false;
-      }
-
-      var descendantPresent = false;
-
-      this.children.forEach(function (child) {
-        if (child.hasDescendant(container)) {
-          descendantPresent = true;
-        }
+      return this.children.some(function (child) {
+        return child.hasDescendant(container);
       });
-
-      return descendantPresent;
     }
 
     return {

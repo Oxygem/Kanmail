@@ -40,10 +40,19 @@ export interface IEmail extends Email {
   // scalar compare rather than deep-comparing the (shared, mutated-in-place) object.
   folderUidsVersion: number;
   originalReferences: string[];
+  // Lazily cached `new Date(date).getTime()` - see getEmailTimestamp
+  dateTimestamp?: number;
   // App-generated welcome guide message: exists only on this device, never in
   // any mailbox, so anything that would hit the backend (reply/move/fetch)
   // must be suppressed for it.
   welcome?: boolean;
+}
+
+function getEmailTimestamp(email: IEmail): number {
+  if (email.dateTimestamp === undefined) {
+    email.dateTimestamp = new Date(email.date).getTime();
+  }
+  return email.dateTimestamp;
 }
 
 export interface Thread extends Array<IEmail> {
@@ -56,23 +65,18 @@ export interface Thread extends Array<IEmail> {
   allFlags: string[];
   isIncoming: boolean;
   mergedThreads: number;
+  latestTimestamp: number;
 }
 
 export function makeThread(messages: IEmail[]): Thread {
   // @ts-ignore
-  const thread: Thread = _.orderBy(
-    messages,
-    (message) => {
-      const date = new Date(message.date);
-      return date;
-    },
-    "desc"
-  );
+  const thread: Thread = _.orderBy(messages, getEmailTimestamp, "desc");
 
   // The hash becomes the key in react so must be unique per thread,
   // but also not change as new emails come in, so we use the *oldest*
   // thread message.
   thread.hash = thread[thread.length - 1].accountMessageId;
+  thread.latestTimestamp = getEmailTimestamp(thread[0]);
 
   const allSeen: boolean[] = [];
   const allDeleted: boolean[] = [];
@@ -104,6 +108,62 @@ export function makeThread(messages: IEmail[]): Thread {
   return thread;
 }
 
+function mergeSingleSenderThreads(
+  folderEmails: Map<string, Thread[]>
+): Map<string, Thread[]> {
+  const newFolderEmails: Map<string, Thread[]> = new Map();
+
+  folderEmails.forEach((threads: Thread[], folderName: string) => {
+    const senderToSingleThreads: { [_: string]: Thread[] } = {};
+    const otherThreads: Thread[] = [];
+
+    _.each(threads, (thread: Thread) => {
+      if (thread.length > 1) {
+        otherThreads.push(thread);
+        return;
+      }
+
+      const accountKey = thread[0].accountID;
+      const subject = thread[0].subject.match(/\[.*\]/) || thread[0].subject;
+      const from_ = _.map(thread[0].from, (address) => address[1]);
+      const threadKey = `${accountKey}-${from_}-${subject}-${thread.allFolderNames}`;
+      if (!senderToSingleThreads[threadKey]) {
+        senderToSingleThreads[threadKey] = [];
+      }
+      senderToSingleThreads[threadKey].push(thread);
+    });
+
+    _.each(senderToSingleThreads, (singleThreads: Thread[]) => {
+      // Ensure the threads are in date-reverse order, matching other threads
+      singleThreads = _.orderBy(
+        singleThreads,
+        (thread) => thread.latestTimestamp,
+        "desc"
+      );
+
+      // We want the first thread object to be the "base" of this thread as this
+      // contains all the special values we assigned above (unread, etc).
+      let newThread: Thread | undefined;
+      _.each(singleThreads, (singleThread) => {
+        if (!newThread) {
+          newThread = makeThread(_.clone(singleThread));
+        } else {
+          _.each(singleThread, (message) => newThread!.push(message));
+        }
+      });
+
+      if (singleThreads.length > 1) {
+        newThread!.mergedThreads = singleThreads.length;
+      }
+      otherThreads.push(newThread!);
+    });
+
+    newFolderEmails.set(folderName, otherThreads);
+  });
+
+  return newFolderEmails;
+}
+
 export interface ISyncOptions {
   forceProcess: boolean;
   accountIDs: string[];
@@ -131,6 +191,10 @@ export default class BaseEmails {
   }
   meta: Map<string, Map<string, any>>;
   referencedMessageIDs: Set<string>;
+  // Accounts whose emails/flags changed since the last process - only these
+  // are re-threaded, others reuse their cached threads
+  dirtyAccounts: Set<string>;
+  accountFolderThreads: Map<string, Map<string, Thread[]>>;
 
   constructor() {
     this.active = false;
@@ -210,6 +274,9 @@ export default class BaseEmails {
     this.meta = new Map();
 
     this.referencedMessageIDs = new Set<string>();
+
+    this.dirtyAccounts = new Set();
+    this.accountFolderThreads = new Map();
   }
 
   setMetaForAccountFolder(accountKey, folderName, meta) {
@@ -300,6 +367,8 @@ export default class BaseEmails {
       `Deleting ${uids.length} emails from ${accountKey}/${folderName}`
     );
 
+    this.dirtyAccounts.add(accountKey);
+
     _.each(uids, (uid) => {
       const message = this.getEmailFromAccountFolder(
         accountKey,
@@ -331,6 +400,8 @@ export default class BaseEmails {
     console.debug(
       `Adding ${emails.length} emails to ${accountKey}/${folderName}`
     );
+
+    this.dirtyAccounts.add(accountKey);
 
     const missingMessageIDs = new Set<string>();
     const unreferencedAccountMessageIDs = new Set<string>();
@@ -487,6 +558,7 @@ export default class BaseEmails {
 
       if (!_.includes(email.flags, Flag.FlagFlagged)) {
         email.flags.push(Flag.FlagFlagged);
+        this.dirtyAccounts.add(accountKey);
       }
     });
   }
@@ -509,6 +581,7 @@ export default class BaseEmails {
       );
 
       email.flags = _.without(email.flags, Flag.FlagFlagged);
+      this.dirtyAccounts.add(accountKey);
     });
   }
 
@@ -531,6 +604,7 @@ export default class BaseEmails {
 
       if (!_.includes(email.flags, Flag.FlagDeleted)) {
         email.flags.push(Flag.FlagDeleted);
+        this.dirtyAccounts.add(accountKey);
       }
     });
   }
@@ -554,8 +628,9 @@ export default class BaseEmails {
     _.each(accountMessageIds, (messageId) => {
       const email = this.emails.get(messageId);
 
-      if (isEmailUnread(email)) {
-        this.emails.get(messageId)!.flags.push(Flag.FlagSeen);
+      if (email && isEmailUnread(email)) {
+        email.flags.push(Flag.FlagSeen);
+        this.dirtyAccounts.add(email.accountID);
       }
     });
   }
@@ -580,48 +655,15 @@ export default class BaseEmails {
 
       if (email && !isEmailUnread(email)) {
         email.flags = _.without(email.flags, Flag.FlagSeen);
+        this.dirtyAccounts.add(email.accountID);
       }
     });
   }
 
-  // TODO: process for ONE column!
-  // basically: grab all emails in the column
-  // for each grab all referenced
-  // NO can't because threading gonna need map of all emails for ACCOUNT
-
-  // Process BY ACCOUNT
-  // filter emails by account before threading
-  // modify column store setThreads to only overwrite account threads
-
-  _processEmailChanges(opts: Partial<ISyncOptions>[][] = []) {
-    /*
-      Turn our single global list of emails into threads and assign to
-      folders/columns, pushing updates to the relevant `ColumnStores` on
-      changes.
-    */
-
-    if (opts.length > 0) {
-      console.debug("Debounced process email changes", opts);
-    }
-
-    const options: Partial<ISyncOptions> = {};
-
-    _.each(opts, opt => {
-      if (opt[0].forceProcess) {
-        options.forceProcess = true
-      };
-    })
-
-    if (!this.active) {
-      return;
-    }
-
-    const emails: IEmail[] = Array.from(this.emails.values());
-
-    console.debug(`(re)Processing ${emails.length} emails (forceProcess=${options.forceProcess || "false"})`);
-
-    const processStart = performance.now();
-
+  // Thread a single account's emails into a folder name -> threads map.
+  // Threading never crosses accounts: message references and the subject
+  // table are both account-prefixed.
+  makeAccountFolderThreads(emails: IEmail[]): Map<string, Thread[]> {
     const threader = messageThreader();
 
     // Make the initial ID/reference based threads
@@ -634,8 +676,7 @@ export default class BaseEmails {
       threader.groupBySubject(rootThread);
     }
 
-    // Map of folder name -> emails (list of threads)
-    let folderEmails: Map<string, Thread[]> = new Map();
+    const folderEmails: Map<string, Thread[]> = new Map();
 
     _.each(rootThread.children, (messageContainer) => {
       const messages = messageContainer.flattenChildren() || [];
@@ -660,60 +701,84 @@ export default class BaseEmails {
     // EXPERIMENTAL!
     // Now merge single threads from the same sender
     if (settingsStore.props.system.groupSingleSenderThreads) {
-      const newFolderEmails = new Map();
-
-      folderEmails.forEach((threads: Thread[], folderName: string) => {
-        const senderToSingleThread: Map<string, Thread> = new Map();
-        const otherThreads: Thread[] = [];
-
-        _.each(threads, (thread: Thread) => {
-          if (thread.length > 1) {
-            otherThreads.push(thread);
-            return;
-          }
-
-          const accountKey = thread[0].accountID;
-          const subject =
-            thread[0].subject.match(/\[.*\]/) || thread[0].subject;
-          const from_ = _.map(thread[0].from, (address) => address[1]);
-          const threadKey = `${accountKey}-${from_}-${subject}-${thread.allFolderNames}`;
-          if (!senderToSingleThread[threadKey]) {
-            senderToSingleThread[threadKey] = [];
-          }
-          senderToSingleThread[threadKey].push(thread);
-        });
-
-        // @ts-ignore
-        _.each(senderToSingleThread, (singleThreads: Thread[]) => {
-          // Ensure the threads are in date-reverse order, matching other threads
-          singleThreads = _.orderBy(
-            singleThreads,
-            (thread) => new Date(thread[0].date),
-            "desc"
-          );
-
-          // We want the first thread object to be the "base" of this thread as this
-          // contains all the special values we assigned above (unread, etc).
-          let newThread: Thread;
-          _.each(singleThreads, (singleThread) => {
-            if (!newThread) {
-              newThread = makeThread(_.clone(singleThread));
-            } else {
-              _.each(singleThread, (message) => newThread.push(message));
-            }
-          });
-
-          if (singleThreads.length > 1) {
-            newThread!.mergedThreads = singleThreads.length;
-          }
-          otherThreads.push(newThread!);
-        });
-
-        newFolderEmails.set(folderName, otherThreads);
-      });
-
-      folderEmails = newFolderEmails;
+      return mergeSingleSenderThreads(folderEmails);
     }
+
+    return folderEmails;
+  }
+
+  _processEmailChanges(opts: Partial<ISyncOptions>[][] = []) {
+    /*
+      Turn our single global list of emails into threads and assign to
+      folders/columns, pushing updates to the relevant `ColumnStores` on
+      changes. Only accounts flagged dirty since the last process are
+      re-threaded, other accounts reuse their cached threads.
+    */
+
+    if (opts.length > 0) {
+      console.debug("Debounced process email changes", opts);
+    }
+
+    const options: Partial<ISyncOptions> = {};
+
+    _.each(opts, opt => {
+      if (opt[0].forceProcess) {
+        options.forceProcess = true
+      };
+    })
+
+    if (!this.active) {
+      return;
+    }
+
+    const processStart = performance.now();
+
+    const emailsByAccount: Map<string, IEmail[]> = new Map();
+    this.emails.forEach((email) => {
+      let accountEmails = emailsByAccount.get(email.accountID);
+      if (!accountEmails) {
+        accountEmails = [];
+        emailsByAccount.set(email.accountID, accountEmails);
+      }
+      accountEmails.push(email);
+    });
+
+    // Cleanup cached threads for accounts that no longer have any emails
+    this.accountFolderThreads.forEach((_threads, accountKey) => {
+      if (!emailsByAccount.has(accountKey)) {
+        this.accountFolderThreads.delete(accountKey);
+      }
+    });
+
+    let threadedCount = 0;
+    emailsByAccount.forEach((accountEmails, accountKey) => {
+      if (
+        !options.forceProcess &&
+        !this.dirtyAccounts.has(accountKey) &&
+        this.accountFolderThreads.has(accountKey)
+      ) {
+        return;
+      }
+      threadedCount += accountEmails.length;
+      this.accountFolderThreads.set(
+        accountKey,
+        this.makeAccountFolderThreads(accountEmails)
+      );
+    });
+    this.dirtyAccounts.clear();
+
+    // Merge the per-account maps into folder name -> emails (list of threads)
+    const folderEmails: Map<string, Thread[]> = new Map();
+    this.accountFolderThreads.forEach((accountFolderThreads) => {
+      accountFolderThreads.forEach((threads, folderName) => {
+        const existing = folderEmails.get(folderName);
+        if (existing) {
+          existing.push(...threads);
+        } else {
+          folderEmails.set(folderName, [...threads]);
+        }
+      });
+    });
 
     const processTaken = (performance.now() - processStart).toFixed(2);
 
@@ -742,9 +807,10 @@ export default class BaseEmails {
         // scroll position as other accounts paginate that far back.
         const watermark = this.getFolderDateWatermark(columnName);
         if (watermark) {
+          const watermarkTime = watermark.getTime();
           threads = _.filter(
             threads,
-            (thread) => new Date(thread[0].date) >= watermark
+            (thread) => thread.latestTimestamp >= watermarkTime
           );
         }
 
@@ -761,7 +827,7 @@ export default class BaseEmails {
 
     const renderTaken = (performance.now() - renderStart).toFixed(2);
     console.info(
-      `${emails.length} Emails processed in ${processTaken}ms and rendered in ${renderTaken}ms`
+      `${threadedCount}/${this.emails.size} emails (re)threaded in ${processTaken}ms and rendered in ${renderTaken}ms`
     );
 
     this.onProcessedEmailChanges(folderEmails);
