@@ -631,6 +631,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 				}
 			}
 			f.reset()
+			resp.Reset = true
 			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
 			return nil
 		}
@@ -647,6 +648,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
 			f.reset()
+			resp.Reset = true
 			// Post-reset the count is unknown and the (future) lastSentDate tells
 			// the frontend nothing has been sent yet
 			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
@@ -681,6 +683,7 @@ func (f *Folder) SyncEmails(ctx context.Context) (*SyncResp, error) {
 			}
 			resp.DeletedUIDs = f.uids.AllGreaterThan(f.lastSentUID)
 			f.reset()
+			resp.Reset = true
 			resp.Meta = PaginateRespMeta{LastSentDate: f.lastSentDate}
 			return nil
 		}

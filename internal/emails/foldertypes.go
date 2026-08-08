@@ -35,6 +35,11 @@ type SyncResp struct {
 	DeletedUIDs []imap.UID `json:"deletedUids"`
 	ReadUIDs    []imap.UID `json:"readUids"`
 	UnreadUIDs  []imap.UID `json:"unreadUids"`
+	// The folder state was dropped (mailbox (re)appeared, UIDVALIDITY changed,
+	// too many new UIDs) so nothing was sent. Sync only ever returns UIDs at or
+	// above what's been paginated, so the frontend must re-paginate from the top
+	// to see the folder's contents again.
+	Reset bool `json:"reset"`
 }
 
 type FetchEmailPartsOptions struct {

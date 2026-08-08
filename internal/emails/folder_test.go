@@ -196,9 +196,43 @@ func TestSyncFolderRestoredRemotely(t *testing.T) {
 	resp, err = folder.SyncEmails(ctx)
 	assert.NoError(t, err)
 	assert.False(t, resp.Meta.Missing)
+	assert.True(t, resp.Reset, "reset folder must ask the frontend to re-paginate")
 
 	// ...then it behaves as any other folder
 	assert.Len(t, paginateUIDs(t, folder, ctx), 1)
+
+	resp, err = folder.SyncEmails(ctx)
+	assert.NoError(t, err)
+	assert.False(t, resp.Reset)
+}
+
+// The reported bug: moving mail into a folder that doesn't exist creates it, but
+// the destination is still standing in as empty. Sync can only ever return UIDs
+// at or above what's been paginated, so it must flag the reset - without that the
+// frontend never paginates and the moved email stays invisible until restart.
+func TestSyncFolderCreatedByMove(t *testing.T) {
+	account, _, ctx := newTestAccount(t)
+	appendFakeMessage(t, t.Name(), "inbox")
+
+	inbox := account.GetFolder("inbox")
+	uids := paginateUIDs(t, inbox, ctx)
+	require.Len(t, uids, 1)
+
+	// Displaying the (absent) destination column stands it in as empty
+	destination := account.GetFolder("brand-new")
+	destinationResp, err := destination.PaginateEmails(ctx, PaginateOptions{BatchSize: 10})
+	require.NoError(t, err)
+	require.True(t, destinationResp.Meta.Missing)
+
+	require.NoError(t, inbox.MoveEmails(ctx, "brand-new", uids))
+
+	resp, err := destination.SyncEmails(ctx)
+	assert.NoError(t, err)
+	assert.Empty(t, resp.Emails)
+	assert.False(t, resp.Meta.Missing)
+	assert.True(t, resp.Reset)
+
+	assert.Len(t, paginateUIDs(t, destination, ctx), 1)
 }
 
 func TestMoveCreatesMissingDestination(t *testing.T) {

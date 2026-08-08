@@ -314,6 +314,14 @@ class MainEmails extends BaseEmails {
       if (changed || options.forceProcess) {
         this.processEmailChanges(options);
       }
+
+      // The backend dropped its state for this folder and sent nothing with it -
+      // sync can only return UIDs at or above what's been paginated, so nothing
+      // it does from here can reload the folder. Paginate from the top instead.
+      if (data.reset) {
+        console.debug(`[mainEmailStore] sync reset ${accountID}/${folderName}, paginating`);
+        return this.getFolderEmails(folderName, { accountIDs: [accountID] });
+      }
     });
   }
 
