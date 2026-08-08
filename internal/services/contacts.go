@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/types"
@@ -47,6 +48,30 @@ func (c *ContactsService) SearchContacts(ctx context.Context, term string) ([]ty
 	return c.caches.ContactsCache.Search(ctx, term)
 }
 
+// unrollDomain returns the domain followed by each parent domain up to (and
+// including) the registrable one, ie mail.email.etsy.com becomes:
+// [mail.email.etsy.com, email.etsy.com, etsy.com]
+func unrollDomain(domain string) []string {
+	domain = strings.ToLower(strings.Trim(domain, "."))
+	domains := []string{domain}
+
+	root, err := publicsuffix.EffectiveTLDPlusOne(domain)
+	if err != nil {
+		return domains
+	}
+
+	for domain != root {
+		_, parent, ok := strings.Cut(domain, ".")
+		if !ok {
+			break
+		}
+		domains = append(domains, parent)
+		domain = parent
+	}
+
+	return domains
+}
+
 type AvatarResp struct {
 	Data        *string `json:"data"`
 	ContentType string  `json:"contentType"`
@@ -78,10 +103,12 @@ func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarR
 	}}
 
 	if _, domain, ok := strings.Cut(email, "@"); ok {
-		reqs = append(reqs, &util.HTTPRequest{
-			Method: http.MethodGet,
-			URL:    "https://icons.duckduckgo.com/ip3/" + domain + ".ico",
-		})
+		for _, d := range unrollDomain(domain) {
+			reqs = append(reqs, &util.HTTPRequest{
+				Method: http.MethodGet,
+				URL:    "https://icons.duckduckgo.com/ip3/" + d + ".ico",
+			})
+		}
 	}
 
 	var avatar *AvatarResp
