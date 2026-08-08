@@ -12,22 +12,23 @@ import commandStore from "../../stores/command.ts";
 import { Thread } from "../../stores/emails/base.ts";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
+import { getWelcomeBodies } from "../../stores/emails/welcome.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
+import { trackEvent } from "../../util/analytics.ts";
+import { buildMovePage } from "../../util/commands.tsx";
 import {
   capitalizeFirstLetter,
   formatAddress,
   formatDate,
   hexToRgb,
 } from "../../util/string.js";
-import { buildMovePage } from "../../util/commands.tsx";
 import {
   collectVisibleThreadComponents,
   getMoveDataFromThreadComponent,
   getThreadColumnMessageIds,
 } from "../../util/threads.js";
-import { getWelcomeBodies } from "../../stores/emails/welcome.ts";
 import { EmailColumn } from "./EmailColumn.tsx";
 
 // MediaQueryList tracks changes live, so .matches is always current
@@ -227,6 +228,7 @@ export default class EmailColumnThread extends React.Component<
     if (this.state.open) {
       threadStore.close();
     }
+    trackEvent("DismissWelcomeEmail");
     // Let the collapse animation play before the settings change unmounts
     // the row
     setTimeout(() => settingsStore.setShowWelcomeEmail(false), 300);
@@ -327,28 +329,17 @@ export default class EmailColumnThread extends React.Component<
       keyboard.setThreadComponent(this);
     }
 
-    // Mark the emails as read in the global email store
-    // TODO: this should be done on sync response unreads?
-
-    // if (this.state.unread) {
-    //   getEmailStore().setEmailsRead(
-    //     _.map(this.props.thread, (email) => email.accountMessageId)
-    //   );
-
-    //   // Read the emails via the column store, just in case we re-render the column
-    //   const columnStore = getColumnStore(this.props.columnId);
-    //   columnStore.readThread(this.props.thread);
-
-    //   if (this.sendNotifications) {
-    //     mainEmailStore.reduceInboxUnreadCount();
-    //   }
-    // }
-
     // Set as open (triggers highlight)
     this.setState({
       open: true,
       unread: false,
     });
+
+    var knownBodies: Map<string, string> | undefined;
+    if (this.isWelcome()) {
+      knownBodies = getWelcomeBodies();
+      trackEvent("OpenWelcomeEmail");
+    }
 
     threadStore.open(
       this,
@@ -359,8 +350,7 @@ export default class EmailColumnThread extends React.Component<
           open: false,
         });
       },
-      // The welcome thread's body lives here, not in any mailbox
-      this.isWelcome() ? getWelcomeBodies() : undefined,
+      knownBodies,
     );
   };
 

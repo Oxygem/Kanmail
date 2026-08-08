@@ -12,6 +12,7 @@ import settingsStore from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { arrayMove } from "../../util/array.ts";
+import { openFeedbackWindow } from "../../util/feedback.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
 import KeyboardShortcutsTab from "../settings/KeyboardShortcutsTab.tsx";
@@ -611,6 +612,9 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         </button>
         <button className="btn-soft" onClick={() => AppService.OpenLink(systemStore.props.logFilename)}>
           <i className="fa fa-file-text-o" /> Open log file
+        </button>
+        <button className="btn-soft" onClick={() => openFeedbackWindow("SettingsOpenFeedback")}>
+          <i className="fa fa-comment-o" /> Give feedback
         </button>
         {!this.props.system.showWelcomeEmail && (
           <button className="btn-soft" onClick={() => this.updateSystem({ showWelcomeEmail: true })}>

@@ -86,7 +86,11 @@ const bootSendApp = async (
     ]);
 
     if (!urlParams.get("mode")) {
-        bootApp(SendApp, appContainer);
+        bootApp(SendApp, appContainer, {
+            to: urlParams.getAll("to"),
+            subject: urlParams.get("subject") || "",
+            messageContent: urlParams.get("body") || "",
+        });
         return;
     }
 

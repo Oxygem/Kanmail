@@ -139,6 +139,11 @@ type OpenSendWindowOptions struct {
 	AccountID  types.AccountID  `json:"accountID,omitempty"`
 	FolderName types.FolderName `json:"folderName,omitempty"`
 	UID        imap.UID         `json:"uid,omitempty"`
+
+	// Prefilled fields for a new (non-reply) message
+	To      []string `json:"to,omitempty"`
+	Subject string   `json:"subject,omitempty"`
+	Body    string   `json:"body,omitempty"`
 }
 
 func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowOptions) {
@@ -161,6 +166,15 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 	}
 	if options.UID > 0 {
 		v["uid"] = []string{strconv.Itoa(int(options.UID))}
+	}
+	if len(options.To) > 0 {
+		v["to"] = options.To
+	}
+	if options.Subject != "" {
+		v["subject"] = []string{options.Subject}
+	}
+	if options.Body != "" {
+		v["body"] = []string{options.Body}
 	}
 
 	window := util.MakeWindow(ctx, a.app, util.WindowOptions{

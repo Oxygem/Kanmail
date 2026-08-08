@@ -27,6 +27,7 @@ export const SETUP_IMAP_DOC_LINK = "https://kanmail.io/docs/setup-imap/";
 export const SETUP_GMAIL_DOC_LINK = "https://kanmail.io/docs/setup-gmail/";
 export const SETUP_OUTLOOK_DOC_LINK = "https://kanmail.io/docs/setup-outlook/";
 export const SUPPORT_DOC_LINK = "https://kanmail.io/support";
+export const FEEDBACK_EMAIL = "nick@oxygem.com";
 
 export const THEME_NAMES = ["default", "default-dark", "default-light"];
 

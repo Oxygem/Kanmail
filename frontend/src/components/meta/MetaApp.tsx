@@ -3,6 +3,7 @@ import React from "react";
 import keyboard from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import systemStore from "../../stores/system.ts";
+import { openFeedbackWindow } from "../../util/feedback.ts";
 
 @subscribe(systemStore)
 export default class MetaApp extends React.Component {
@@ -31,6 +32,11 @@ export default class MetaApp extends React.Component {
           <p>
             This is Kanmail v{systemStore.props.currentVersion}
             .
+          </p>
+          <p>
+            <a onClick={() => openFeedbackWindow("MetaOpenFeedback")}>
+              <i className="fa fa-comment-o" /> Give feedback
+            </a>
           </p>
         </section>
       </section>

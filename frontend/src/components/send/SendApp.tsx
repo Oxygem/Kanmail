@@ -9,7 +9,7 @@ import {
 import {
   EmailsService,
 } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import type { Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { Address, type Email } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import keyboard, { metaKeyLabel } from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import requestStore from "../../stores/request.ts";
@@ -41,6 +41,10 @@ interface ISendAppProps extends ISettings, ISystem {
   message?: Email;
   messageContent?: string;
   mode?: string;
+
+  // Prefilled fields, used when there's no message to reply to
+  to?: string[];
+  subject?: string;
 }
 
 interface ISendAppState {
@@ -142,6 +146,15 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         if (cc.length > 0) {
           state.showCc = true;
         }
+      }
+    } else {
+      if (props.subject) {
+        state.subject = props.subject;
+      }
+      if (props.to?.length) {
+        state.to = toAddressOptions(
+          props.to.map(email => new Address({ name: "", email })),
+        );
       }
     }
 
