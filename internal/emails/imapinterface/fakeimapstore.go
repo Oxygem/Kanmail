@@ -142,6 +142,30 @@ func SetFakeBareStatusResponses(accountKey string, bare bool) {
 	getOrCreateFakeStore(accountKey).bareStatusResponses.Store(bare)
 }
 
+var standardFakeFolders = []string{"inbox", "sent", "drafts", "archive", "trash"}
+
+// threadFolderPatterns returns the patterns used to spread each thread's emails
+// across folders. Any extra seeded folders get a pattern of their own so threads
+// are shared out between them as well as the standard folders.
+func threadFolderPatterns(extraFolders []string) [][]string {
+	patterns := [][]string{
+		// Normal conversation: inbox -> sent -> inbox
+		{"inbox", "sent", "inbox", "sent", "inbox"},
+		// Draft scenario: some emails in drafts
+		{"inbox", "drafts", "sent", "inbox"},
+		// Trashed thread w/later replies
+		{"trash", "inbox", "sent", "inbox"},
+		// Archive scenario: older conversation
+		{"archive", "sent", "archive"},
+	}
+
+	for _, name := range extraFolders {
+		patterns = append(patterns, []string{name, "sent", name})
+	}
+
+	return patterns
+}
+
 func newFakeFolderData(folderName string) *fakeFolderData {
 	return &fakeFolderData{
 		name:        folderName,
@@ -160,47 +184,25 @@ func (s *fakeIMAPStore) createEmptyFolderData(folderName string) {
 // createAllFoldersFromThreads uses the realistic fake email threads to populate all folders
 // Each email in a thread is distributed across different folders to simulate conversation flow
 func (s *fakeIMAPStore) createAllFoldersFromThreads() {
-	// Create standard folders
-	folders := []string{"inbox", "sent", "drafts", "archive", "trash"}
+	// Create the standard folders plus any extras requested via the env var
+	extraFolders := fakeExtraFolders()
 	folderData := make(map[string]*fakeFolderData)
 
-	for _, folderName := range folders {
-		folderData[folderName] = &fakeFolderData{
-			name:        folderName,
-			uidValidity: 1234567890,
-			uidNext:     1,
-			exists:      0,
-			recent:      0,
-			messages:    exsync.NewMap[imap.UID, *fakeMessage](),
-		}
+	for _, folderName := range slices.Concat(standardFakeFolders, extraFolders) {
+		folderData[folderName] = newFakeFolderData(folderName)
 	}
+
+	patterns := threadFolderPatterns(extraFolders)
 
 	var uidCounter imap.UID = 1
 
 	// Process each thread
 	for threadIdx, thread := range s.fakeThreads {
-		// Pattern for distributing emails in thread across folders
-		// Most threads follow inbox -> Sent -> inbox pattern for conversations
-		folderPattern := []string{"inbox", "sent", "inbox", "sent", "inbox"}
+		folderPattern := patterns[threadIdx%len(patterns)]
 
-		// Some threads have different patterns
-		switch threadIdx % 4 {
-		case 0:
-			// Normal conversation: inbox -> Sent -> inbox
-			folderPattern = []string{"inbox", "sent", "inbox", "sent", "inbox"}
-		case 1:
-			// Draft scenario: some emails in drafts
-			if len(thread) == 1 {
-				folderPattern = []string{"drafts"}
-			} else {
-				folderPattern = []string{"inbox", "drafts", "sent", "inbox"}
-			}
-		case 2:
-			// Trashed thread w/later replies
-			folderPattern = []string{"trash", "inbox", "sent", "inbox"}
-		case 3:
-			// Archive scenario: older conversation
-			folderPattern = []string{"archive", "sent", "archive"}
+		// A single email in the drafts pattern is just an unsent draft
+		if len(thread) == 1 && slices.Contains(folderPattern, "drafts") {
+			folderPattern = []string{"drafts"}
 		}
 
 		// Track message IDs for InReplyTo references

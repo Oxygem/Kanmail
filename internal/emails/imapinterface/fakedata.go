@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strings"
 	"sync"
 
 	"github.com/oxygem/kanmail/internal/constants"
@@ -87,6 +89,21 @@ func buildFakeThreadPool() [][]fakeEmail {
 		all = append(all, loadFakeThreads("sales")...)
 		return all
 	}
+}
+
+// fakeExtraFolders returns the additional folder names to seed alongside the
+// standard set, parsed from the comma separated env var. Blanks, duplicates and
+// standard folder names are dropped.
+func fakeExtraFolders() []string {
+	var folders []string
+	for _, name := range strings.Split(constants.ENV_DEBUG_FAKE_FOLDERS, ",") {
+		name = strings.TrimSpace(name)
+		if name == "" || slices.Contains(standardFakeFolders, name) || slices.Contains(folders, name) {
+			continue
+		}
+		folders = append(folders, name)
+	}
+	return folders
 }
 
 // allocateAccountThreads hands out the next disjoint slice of the shared pool so
