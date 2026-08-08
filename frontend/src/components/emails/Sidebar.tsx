@@ -33,13 +33,13 @@ export default class Sidebar extends React.Component {
               Kanmail {systemStore.props.currentVersion || "2.unknown"}
             </span>
             {systemStore.props.isLicensed ? (
-              <a className="lic" onClick={() => AppService.OpenLicenseWindow()}>
+              <a className="lic" onClick={() => AppService.OpenSettingsWindow("license")}>
                 Licensed
               </a>
             ) : (
               <a
                 className="badge-up"
-                onClick={() => AppService.OpenLicenseWindow()}
+                onClick={() => AppService.OpenSettingsWindow("license")}
               >
                 Upgrade
               </a>

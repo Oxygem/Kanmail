@@ -54,7 +54,6 @@ type AppService struct {
 
 	mainWindow     *application.WebviewWindow
 	settingsWindow *application.WebviewWindow
-	licenseWindow  *application.WebviewWindow
 	metaWindow     *application.WebviewWindow
 	sendWindows    []*application.WebviewWindow
 
@@ -241,37 +240,9 @@ func (a *AppService) OpenDebugWindow(ctx context.Context, options OpenDebugWindo
 	})
 }
 
-func (a *AppService) OpenLicenseWindow(ctx context.Context) {
-	ctx = a.log.WithContext(ctx)
-	defer util.LogAndPanic(ctx)
-
-	a.lock.Lock()
-	defer a.lock.Unlock()
-
-	if a.licenseWindow != nil {
-		screen, err := a.licenseWindow.GetScreen()
-		if err != nil {
-			panic(fmt.Errorf("failed to get window screeen: %w", err))
-		} else if screen == nil {
-			a.log.Warn().Msg("License window has been destroted, re-creating")
-			a.licenseWindow = nil
-		} else {
-			a.licenseWindow.Show()
-			a.licenseWindow.Focus()
-			return
-		}
-	}
-
-	a.licenseWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
-		Title:   "Kanmail v2 License",
-		AppName: "license",
-		Compact: true,
-		Width:   850,
-		Height:  510,
-	})
-}
-
-func (a *AppService) OpenSettingsWindow(ctx context.Context) {
+// OpenSettingsWindow opens (or focuses) the settings window, optionally
+// switching it to the given tab.
+func (a *AppService) OpenSettingsWindow(ctx context.Context, tab string) {
 	ctx = a.log.WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
@@ -288,14 +259,23 @@ func (a *AppService) OpenSettingsWindow(ctx context.Context) {
 		} else {
 			a.settingsWindow.Show()
 			a.settingsWindow.Focus()
+			if tab != "" {
+				a.app.Event.Emit(string(types.SettingsSelectTabEvent), tab)
+			}
 			return
 		}
+	}
+
+	v := url.Values{}
+	if tab != "" {
+		v.Set("tab", tab)
 	}
 
 	a.settingsWindow = util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Settings",
 		AppName: "settings",
 		Compact: true,
+		Values:  v,
 	})
 }
 
@@ -390,7 +370,7 @@ func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
 	dialog.SetDefaultButton(purchaseButton)
 
 	dialog.AddButton("Enter license key").OnClick(func() {
-		a.OpenLicenseWindow(ctx)
+		a.OpenSettingsWindow(ctx, "license")
 	})
 
 	dialog.Show()

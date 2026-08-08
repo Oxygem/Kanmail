@@ -2,7 +2,8 @@ import _ from "lodash";
 import React from "react";
 
 import { AccountsService, AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, Address, CacheStats, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, Address, CacheStats, EventName, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { Events } from "../../../wails/runtime.js";
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import keyboard from "../../keyboard.ts";
@@ -16,6 +17,7 @@ import { openFeedbackWindow } from "../../util/feedback.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
 import KeyboardShortcutsTab from "../settings/KeyboardShortcutsTab.tsx";
+import LicenseSettings from "../settings/LicenseSettings.tsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
 
 interface ISenderColorFormProps {
@@ -216,20 +218,32 @@ interface ISettingsViewState {
   showSenderColorForm: boolean;
 }
 
+const TABS = ["accounts", "appearance", "shortcuts", "system", "licensed", "license"];
+
 export default class SettingsView extends React.Component<ISettingsViewProps, ISettingsViewState> {
   private releaseKeyboard: () => void;
+  private releaseTabEvent: () => void;
 
   constructor(props: ISettingsViewProps) {
     super(props);
 
     this.releaseKeyboard = keyboard.suspend("SettingsView");
 
+    const initialTab = new URLSearchParams(window.location.search).get("tab");
+
     this.state = {
       showAccountForm: false,
-      tab: "accounts",
+      tab: TABS.includes(initialTab!) ? initialTab! : "accounts",
       openColorPicker: null,
       showSenderColorForm: false,
     };
+
+    this.releaseTabEvent = Events.On(EventName.SettingsSelectTabEvent, (ev) => {
+      const tab = ev.data as string;
+      if (TABS.includes(tab)) {
+        this.setTab(tab);
+      }
+    });
 
     setTimeout(async () => {
       const stats: CacheStats = await AppService.GetCacheStats();
@@ -241,6 +255,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
   componentWillUnmount() {
     this.releaseKeyboard();
+    this.releaseTabEvent();
   }
 
   setAccounts = (items: AccountSettings[]) => {
@@ -701,6 +716,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         onClick={() => this.setTab("system")}
         className={this.state.tab == "system" ? "active" : ""}
       >System</a>
+      <a
+        onClick={() => this.setTab("license")}
+        className={this.state.tab == "license" ? "active" : ""}
+      >{systemStore.props.isLicensed ? "License" : "Upgrade"}</a>
       {systemStore.props.isLicensed ? <a
         onClick={() => this.setTab("licensed")}
         className={this.state.tab == "licensed" ? "active" : ""}
@@ -767,6 +786,8 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         return this.renderSystemSettings()
       case "licensed":
         return this.renderLicensedSettings()
+      case "license":
+        return this.renderPanel("license-panel", <LicenseSettings />)
       default: throw new Error("no such tab: " + this.state.tab);
     }
   }

@@ -2,27 +2,18 @@ import React from "react";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { subscribe } from "../../stores/base.tsx";
-import systemStore from "../../stores/system.ts";
 import requestStore from "../../stores/request.ts";
+import systemStore from "../../stores/system.ts";
+import LicensePurchase from "../LicensePurchase.tsx";
 
-const PURCHASE_URL = "https://kanmail.io/license";
-
-const FEATURES = [
-  "One user, unlimited devices",
-  "Every past & future v2 release",
-  "Exclusive midnight & nord light themes",
-  "Experimental features",
-  "No subscription, ever",
-];
-
-interface ILicenseAppState {
+interface ILicenseSettingsState {
   isSaving?: boolean;
   error?: string;
   license: string;
 }
 
 @subscribe(systemStore)
-export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
+export default class LicenseSettings extends React.Component<{}, ILicenseSettingsState> {
   constructor(props) {
     super(props);
 
@@ -65,36 +56,6 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
       requestStore.addError("Failed to remove license", e, { silent: true });
     });
   };
-
-  handlePurchase = (ev) => {
-    ev.preventDefault();
-    AppService.OpenLink(PURCHASE_URL);
-  };
-
-  renderPurchase() {
-    return (
-      <div className="license-col purchase">
-        <div className="plan">Personal</div>
-        <div className="price"><span className="amount">$49</span></div>
-        <div className="price-note">one time — yours forever</div>
-
-        <div className="divider" />
-
-        <ul className="features">
-          {FEATURES.map((feature) => (
-            <li key={feature}>
-              <span className="dot" />
-              {feature}
-            </li>
-          ))}
-        </ul>
-
-        <button type="button" className="btn-primary" onClick={this.handlePurchase}>
-          Buy your license →
-        </button>
-      </div>
-    );
-  }
 
   renderActivate() {
     const isLicensed = systemStore.props.isLicensed;
@@ -146,17 +107,11 @@ export default class LicenseApp extends React.Component<{}, ILicenseAppState> {
     const isLicensed = systemStore.props.isLicensed;
 
     return (
-      <section id="license-app" className="no-select">
-        <header className="titlebar">
-          <span className="title">Manage License</span>
-        </header>
-
-        <div className="km-license">
-          {!isLicensed && this.renderPurchase()}
-          {!isLicensed && <div className="col-divider" />}
-          {this.renderActivate()}
-        </div>
-      </section>
+      <div className="km-license">
+        {!isLicensed && <LicensePurchase />}
+        {!isLicensed && <div className="col-divider" />}
+        {this.renderActivate()}
+      </div>
     );
   }
 }

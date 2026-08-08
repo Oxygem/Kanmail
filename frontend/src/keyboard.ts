@@ -464,7 +464,7 @@ keyboard.register({
   ],
   handler: () => {
     trackEvent("KeyboardOpenSettings");
-    AppService.OpenSettingsWindow();
+    AppService.OpenSettingsWindow("");
   },
 });
 

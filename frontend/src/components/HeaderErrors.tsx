@@ -94,11 +94,11 @@ export default class HeaderErrors extends Component<IRequestStoreProps> {
               {error.message}
             </p>
           ))}
-          <button onClick={() => AppService.OpenSettingsWindow()}>
+          <button onClick={() => AppService.OpenSettingsWindow("accounts")}>
             Open settings
           </button>
         </div>
-        <a className="reauth" onClick={() => AppService.OpenSettingsWindow()}>
+        <a className="reauth" onClick={() => AppService.OpenSettingsWindow("accounts")}>
           <i className="fa fa-unlink"></i> {errors.length}
         </a>
       </div>

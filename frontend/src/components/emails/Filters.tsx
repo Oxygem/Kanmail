@@ -306,7 +306,7 @@ export default class Filters extends React.Component<IFiltersProps, IFiltersStat
           {this.renderUpdateLink()}
           <li className="small">
             <a onClick={() => {
-              AppService.OpenSettingsWindow();
+              AppService.OpenSettingsWindow("");
               trackEvent("SidebarOpenSettings");
             }}>
               <i className="fa fa-sliders"></i> Settings

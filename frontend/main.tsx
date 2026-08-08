@@ -141,11 +141,6 @@ const main = () => {
                 ({ default: SettingsApp }) => bootApp(SettingsApp, appContainer),
             ).catch(bootError);
             break;
-        case "license":
-            import("./src/components/license/LicenseApp.tsx").then(
-                ({ default: LicenseApp }) => bootApp(LicenseApp, appContainer),
-            ).catch(bootError);
-            break;
         case "meta":
             import("./src/components/meta/MetaApp.tsx").then(
                 ({ default: MetaApp }) => bootApp(MetaApp, appContainer),

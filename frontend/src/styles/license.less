@@ -1,42 +1,11 @@
 /*
-    Manage License window (?app=license) — 2.x redesign.
+    License tab inside the settings window — 2.x redesign.
     Themed entirely via design tokens (var(--*)); one rule set covers light and
-    dark. Content blends straight into the window background — no card chrome.
-    The purchase and license-key columns sit side by side.
+    dark. The purchase and license-key columns sit side by side.
 */
 
-section#license-app {
-  min-height: 100vh;
-  background: var(--bar);
-  color: var(--ink);
-
-  /* titlebar doubles as the draggable window chrome */
-  header.titlebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 20;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 14px;
-    background: var(--bar);
-    border-bottom: 1px solid var(--divider);
-    -webkit-app-region: drag;
-
-    .title {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--muted);
-    }
-  }
-
+#settings .license-panel {
   .km-license {
-    max-width: 820px;
-    margin: 0 auto;
-    padding: 72px 28px 40px;
     display: flex;
     align-items: stretch;
     gap: 36px;
@@ -50,29 +19,15 @@ section#license-app {
 }
 
 /* ------------------------------ columns ------------------------------- */
-#license-app .license-col {
+#settings .license-col {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-
-  h3.sub {
-    margin: 0 0 6px;
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    color: var(--ink);
-  }
-
-  p.help-text {
-    margin: 0 0 16px;
-    font-size: 13px;
-    color: var(--muted);
-  }
 }
 
 /* ------------------------------ purchase ------------------------------ */
-#license-app .license-col.purchase {
+#settings .license-col.purchase {
   .plan {
     font-size: 14px;
     font-weight: 700;
@@ -137,38 +92,23 @@ section#license-app {
 }
 
 /* ------------------------------ activate ------------------------------ */
-#license-app .license-col.activate {
+#settings .license-col.activate {
   .remove-form {
     margin-top: 16px;
   }
 }
 
 /* --------------------------- form controls ---------------------------- */
-#license-app textarea.license-key {
+#settings textarea.license-key {
   display: block;
   width: 100%;
-  padding: 12px 14px;
   margin-bottom: 14px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--ring);
-  background: var(--input);
-  color: var(--ink);
-  font-size: 14px;
-  line-height: 1.5;
   resize: none;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-
-  &:hover {
-    border-color: var(--faint);
-  }
-
-  &:focus {
-    border-color: var(--brand-pink);
-  }
 }
 
 /* ------------------------------ buttons ------------------------------- */
-#license-app button.btn-primary {
+#settings button.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -195,26 +135,7 @@ section#license-app {
   }
 }
 
-#license-app button.btn-danger {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 18px;
-  border-radius: var(--r-md);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--danger);
-  background: var(--danger-bg);
-  border: 1px solid var(--danger-ring);
-  cursor: pointer;
-
-  &:hover {
-    filter: brightness(1.03);
-  }
-}
-
-#license-app .license-error {
+#settings .license-error {
   margin: 0 0 14px;
   padding: 10px 14px;
   border-radius: var(--r-md);
@@ -222,8 +143,4 @@ section#license-app {
   color: var(--danger);
   background: var(--danger-bg);
   border: 1px solid var(--danger-ring);
-}
-
-body.os-darwin section#license-app header.titlebar {
-  padding-left: 78px;
 }

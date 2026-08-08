@@ -155,7 +155,7 @@ export function buildRootPage(): CommandPage {
     requestStore.undo();
   });
   addOption(appOptions, "app.settings", "Open settings", () => {
-    AppService.OpenSettingsWindow();
+    AppService.OpenSettingsWindow("");
   });
   addOption(appOptions, "app.cheatsheet", "Show keyboard shortcuts", () => {
     cheatsheetStore.open();
