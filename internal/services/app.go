@@ -714,9 +714,14 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 	return true, nil
 }
 
+// Fake licensed state only applies alongside the fake IMAP backend
+func isFakeLicensed() bool {
+	return constants.ENV_DEBUG_FAKE_IMAP != "" && constants.ENV_DEBUG_FAKE_LICENSED != ""
+}
+
 // Checks license key, called by frontend on startup + LicenseChangedEvent events
 func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
-	if constants.ENV_DEBUG_LICENSED != "" {
+	if isFakeLicensed() {
 		return true, nil
 	}
 
@@ -750,7 +755,7 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 }
 
 func (a *AppService) CheckCachedLicense(ctx context.Context) bool {
-	if constants.ENV_DEBUG_LICENSED != "" {
+	if isFakeLicensed() {
 		return true
 	}
 
