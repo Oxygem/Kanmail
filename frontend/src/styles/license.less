@@ -1,7 +1,9 @@
 /*
-    License tab inside the settings window — 2.x redesign.
-    Themed entirely via design tokens (var(--*)); one rule set covers light and
-    dark. The purchase and license-key columns sit side by side.
+    License tab inside the settings window, plus the shared purchase card
+    (.license-col.purchase) which also appears in the send window's post-send
+    upsell. Themed entirely via design tokens (var(--*)); one rule set covers
+    light and dark. In settings the purchase and license-key columns sit side
+    by side.
 */
 
 #settings .license-panel {
@@ -19,7 +21,7 @@
 }
 
 /* ------------------------------ columns ------------------------------- */
-#settings .license-col {
+.license-col {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -27,7 +29,7 @@
 }
 
 /* ------------------------------ purchase ------------------------------ */
-#settings .license-col.purchase {
+.license-col.purchase {
   .plan {
     font-size: 14px;
     font-weight: 700;
@@ -92,7 +94,7 @@
 }
 
 /* ------------------------------ activate ------------------------------ */
-#settings .license-col.activate {
+.license-col.activate {
   .remove-form {
     margin-top: 16px;
   }
@@ -108,7 +110,7 @@
 }
 
 /* ------------------------------ buttons ------------------------------- */
-#settings button.btn-primary {
+.license-col button.btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;

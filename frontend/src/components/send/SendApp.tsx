@@ -27,6 +27,7 @@ import {
   toAddressOptions,
 } from "../../util/send.ts";
 import { makeDragElement } from "../../window.ts";
+import LicensePurchase from "../LicensePurchase.tsx";
 import Tooltip from "../Tooltip.tsx";
 import ContactSelect from "./ContactSelect.tsx";
 import EditorToolButtons from "./EditorToolButtons.tsx";
@@ -63,6 +64,7 @@ interface ISendAppState {
   isSending: boolean;
   isSaving: boolean;
   isSentOrSaved?: boolean;
+  showPurchaseUpsell?: boolean;
 
   showCc: boolean;
   formatStates: SquireFormatStates;
@@ -235,10 +237,15 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     };
 
     EmailsService.SendEmail(this.state.accountContact.value[0], sendOptions).then(() => {
-      this.setState({ isSentOrSaved: true })
       trackEvent("SendEmail");
-      // @ts-ignore
-      setTimeout(() => wails.Window.Close(), 1000);
+      if (this.props.isLicensed) {
+        this.setState({ isSentOrSaved: true });
+        // @ts-ignore
+        setTimeout(() => wails.Window.Close(), 1000);
+      } else {
+        // Instead of closing, pitch a license purchase
+        this.setState({ isSentOrSaved: true, showPurchaseUpsell: true });
+      }
     }).catch(e => {
       // Reset isSending so the user can fix the problem and retry, rather than
       // being stuck with Cancel (which discards the message) as the only exit
@@ -324,6 +331,29 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     );
   };
 
+  renderPurchaseUpsell() {
+    return (
+      <div className="sent-upsell">
+        <div className="sent-head">
+          <h2><i className="fa fa-check" /> Email sent!</h2>
+          <p>
+            Kanmail is free to evaluate — a license unlocks it forever and
+            supports future development.
+          </p>
+        </div>
+        <LicensePurchase />
+        <button
+          type="button"
+          className="btn-cancel"
+          // @ts-ignore
+          onClick={() => wails.Window.Close()}
+        >
+          Close window
+        </button>
+      </div>
+    );
+  }
+
   render() {
     const accountOptions: accountAddressOption[] = _.reduce(
       this.props.accounts,
@@ -350,7 +380,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
           <div className="header-errors-anchor"></div>
         </header>
 
-        <form
+        {this.state.showPurchaseUpsell ? this.renderPurchaseUpsell() : <form
           id="send-form"
           className="flex flex-vertical flex-nowrap"
           // Prevent button clicks submitting the form
@@ -477,7 +507,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
               </button>
             </Tooltip>
           </div>
-        </form>
+        </form>}
       </section>
     );
   }

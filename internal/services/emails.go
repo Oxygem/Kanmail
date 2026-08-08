@@ -90,10 +90,6 @@ func (e *EmailsService) SendEmail(
 	ctx = e.log.With().Str("method", "SendEmail").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	if !e.app.CheckCachedLicense(ctx) {
-		e.app.OpenPurchaseLicenseDialog(ctx)
-	}
-
 	account := e.accounts.GetOrCreateAccount(ctx, accountID)
 	if account == nil {
 		return nil, fmt.Errorf("%w: %s", ErrNoAccount, accountID)

@@ -525,3 +525,126 @@ section#new-email {
     margin: 0;
   }
 }
+
+/* ----------------------------------------------------------------------- */
+/* Post-send license upsell — replaces the form for unlicensed users once   */
+/* their email has been sent. Reuses the shared purchase card               */
+/* (.license-col.purchase, license.less).                                   */
+/* ----------------------------------------------------------------------- */
+section#new-email .sent-upsell {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 40px 30px;
+
+  .sent-head {
+    text-align: center;
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+
+      i {
+        color: var(--brand-pink);
+        margin-right: 4px;
+      }
+    }
+
+    p {
+      margin: 0 auto;
+      max-width: 420px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+  }
+
+  /* Reflow the shared vertical purchase column into a compact horizontal
+     card: plan/price/buy on the left, feature list on the right. */
+  .license-col.purchase {
+    flex: none;
+    display: grid;
+    grid-template-columns: auto 1px auto;
+    grid-template-rows: auto auto auto 1fr;
+    grid-template-areas:
+      "plan  div features"
+      "price div features"
+      "note  div features"
+      "buy   div features";
+    column-gap: 36px;
+    padding: 26px 34px;
+    background: var(--card);
+    border: 1px solid var(--card-ring);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow);
+
+    .plan {
+      grid-area: plan;
+    }
+
+    .price {
+      grid-area: price;
+
+      .amount {
+        font-size: 46px;
+      }
+    }
+
+    .price-note {
+      grid-area: note;
+      margin-top: 6px;
+      font-size: 13px;
+    }
+
+    .divider {
+      grid-area: div;
+      width: 1px;
+      height: 100%;
+      margin: 0;
+    }
+
+    ul.features {
+      grid-area: features;
+      align-self: center;
+      margin: 0;
+      gap: 11px;
+
+      li {
+        font-size: 13.5px;
+      }
+    }
+
+    button.btn-primary {
+      grid-area: buy;
+      align-self: end;
+      justify-self: start;
+      margin-top: 20px;
+      height: 40px;
+      padding: 0 18px;
+      font-size: 13.5px;
+    }
+  }
+
+  .btn-cancel {
+    height: 36px;
+    padding: 0 16px;
+    font-size: @textSize;
+    font-weight: 600;
+    border-radius: var(--r-md);
+    background: var(--bg);
+    border: 1px solid var(--ring);
+    color: var(--ink);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--pill);
+    }
+  }
+}
