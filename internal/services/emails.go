@@ -96,7 +96,13 @@ func (e *EmailsService) SendEmail(
 	}
 
 	email, err := account.SendEmail(ctx, options)
-	return email, types.WrapAccountError(accountID, err)
+	if err != nil {
+		return nil, types.WrapAccountError(accountID, err)
+	}
+
+	e.app.EmitFolderSync(accountID, "sent")
+
+	return email, nil
 }
 
 func (e *EmailsService) GetAccountFolderNames(
