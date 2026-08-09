@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +30,7 @@ import (
 	"github.com/oxygem/kanmail/internal/backend"
 	"github.com/oxygem/kanmail/internal/caches"
 	"github.com/oxygem/kanmail/internal/constants"
+	"github.com/oxygem/kanmail/internal/emails"
 	"github.com/oxygem/kanmail/internal/types"
 	"github.com/oxygem/kanmail/internal/util"
 )
@@ -100,6 +102,9 @@ func (a *AppService) ResizeWindow(ctx context.Context, width, height int) {
 }
 
 func (a *AppService) SetAnalyticsEnabled(enabled bool) {
+	if a.analyticsEnabled == enabled {
+		return
+	}
 	a.analyticsEnabled = enabled
 	util.SetAnalyticsEnabled(enabled)
 }
@@ -143,6 +148,11 @@ type OpenSendWindowOptions struct {
 	To      []string `json:"to,omitempty"`
 	Subject string   `json:"subject,omitempty"`
 	Body    string   `json:"body,omitempty"`
+
+	// Attachments already prepared on disk, carried over when popping a quick
+	// reply out into the full editor. Non-nil (even empty) means "use exactly
+	// these" — the send window then skips re-collecting forwarded parts.
+	Attachments []emails.SendAttachment `json:"attachments,omitempty"`
 }
 
 func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowOptions) {
@@ -174,6 +184,11 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 	}
 	if options.Body != "" {
 		v["body"] = []string{options.Body}
+	}
+	if options.Attachments != nil {
+		if b, err := json.Marshal(options.Attachments); err == nil {
+			v["attachments"] = []string{string(b)}
+		}
 	}
 
 	window := util.MakeWindow(ctx, a.app, util.WindowOptions{

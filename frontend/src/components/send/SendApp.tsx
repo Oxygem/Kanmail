@@ -49,7 +49,15 @@ interface ISendAppProps extends ISettings, ISystem {
   quotedContent?: string;
   mode?: string;
 
-  // Prefilled fields, used when there's no message to reply to
+  // Complete editor HTML from a popped-out quick reply — used as-is, since it
+  // already contains the reply, signature and quote
+  completeContent?: string;
+  // Attachments already prepared by the quick reply; non-null means use
+  // exactly these instead of re-collecting forwarded parts
+  attachments?: SendAttachment[];
+
+  // Prefilled fields, used when there's no message to reply to (or, for to,
+  // when popping out a partially-composed forward)
   to?: string[];
   subject?: string;
 }
@@ -142,6 +150,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         if (cc.length > 0) {
           state.showCc = true;
         }
+      } else if (props.to?.length) {
+        state.to = toAddressOptions(
+          props.to.map(email => new Address({ name: "", email })),
+        );
       }
     } else {
       if (props.subject) {
@@ -155,6 +167,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     }
 
 
+    if (props.attachments) {
+      state.attachments = props.attachments;
+    }
+
     // Seed the body with what the editor will be mounted with, so sending
     // without typing still includes the signature and the quote
     state.html = this.buildEditorContent(state.accountContact.value[0]);
@@ -167,7 +183,11 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     document.addEventListener("keydown", this.handleKeyDown);
 
     const { message, mode } = this.props;
-    if (mode === "forward" && message && message.parts && message.parts.length > 0) {
+    if (
+      mode === "forward"
+      && !this.props.attachments
+      && message && message.parts && message.parts.length > 0
+    ) {
       this.setState({ isLoadingAttachments: true });
       EmailsService.CreateForwardAttachments(
         message.accountID,
@@ -274,6 +294,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
   }
 
   buildEditorContent(accountID: string): string {
+    if (this.props.completeContent) {
+      return this.props.completeContent;
+    }
+
     // Always open on something to type into above the signature, so autoFocus
     // doesn't drop the cursor inside the signature itself
     const body = this.props.messageContent || "<div><br></div>";

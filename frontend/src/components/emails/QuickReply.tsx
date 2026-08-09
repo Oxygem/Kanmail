@@ -249,6 +249,14 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       accountID: latestMessage.accountID,
       folderName: latestMessage.folderName,
       uid: latestMessage.uid,
+      // Carry the full editor state over so nothing typed or attached is lost
+      body: this.state.html,
+      to: _.map(this.state.to, (option) => option.value.email),
+      // While forwarded parts are still downloading pass nothing, letting the
+      // full editor re-collect them itself
+      attachments: this.state.isLoadingAttachments
+        ? undefined
+        : this.state.attachments,
     });
     this.handleCancel();
   };
