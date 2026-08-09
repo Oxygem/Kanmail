@@ -87,6 +87,9 @@ export function endThreadDrag() {
   currentItem = null;
 }
 
+window.addEventListener("dragend", endThreadDrag);
+window.addEventListener("drop", endThreadDrag);
+
 /*
     Build the drag event handlers for a folder drop target. The target toggles
     its own `hover` class rather than setting state, avoiding a re-render of the
@@ -100,7 +103,10 @@ export function createThreadDropTarget(
   // dropping the highlight as soon as the cursor crosses a thread
   let depth = 0;
 
-  const getDroppableItem = () => {
+  const getDroppableItem = (ev: React.DragEvent) => {
+    if (!ev.dataTransfer.types.includes(THREAD_MIME_TYPE)) {
+      return;
+    }
     if (currentItem && currentItem.oldColumn !== getFolderName()) {
       return currentItem;
     }
@@ -113,7 +119,7 @@ export function createThreadDropTarget(
 
   return {
     onDragEnter: (ev: React.DragEvent) => {
-      if (!getDroppableItem()) {
+      if (!getDroppableItem(ev)) {
         return;
       }
       ev.preventDefault();
@@ -121,7 +127,7 @@ export function createThreadDropTarget(
       ev.currentTarget.classList.add("hover");
     },
     onDragOver: (ev: React.DragEvent) => {
-      if (!getDroppableItem()) {
+      if (!getDroppableItem(ev)) {
         return;
       }
       // Without accepting the drag here the browser never fires onDrop
@@ -135,7 +141,7 @@ export function createThreadDropTarget(
       }
     },
     onDrop: (ev: React.DragEvent) => {
-      const item = getDroppableItem();
+      const item = getDroppableItem(ev);
       clearHover(ev.currentTarget);
       if (!item) {
         return;
