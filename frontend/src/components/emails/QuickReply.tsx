@@ -18,10 +18,10 @@ import { IThreadMessage } from "../../stores/thread.ts";
 import threadStore from "../../stores/thread.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
-import { safeDocumentFromHtml } from "../../util/html.ts";
 import {
   AddressOption,
   ReplyRecipients,
+  buildQuotedContent,
   buildReplyRecipients,
   getAccountContactOptions,
   hasReplyAllRecipients,
@@ -34,6 +34,7 @@ import EditorToolButtons from "../send/EditorToolButtons.tsx";
 import SquireEditor, {
   SquireEditorApi,
   SquireFormatStates,
+  buildComposeContent,
   defaultFormatStates,
 } from "../send/SquireEditor.tsx";
 
@@ -122,6 +123,17 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     return getAccountContactOptions(account)[0].value[1];
   }
 
+  // The reply/forward body the editor is mounted with: an empty line to type
+  // on, the account signature, then the quoted original
+  getInitialEditorContent(): string {
+    const { latestMessage } = this.props;
+    return buildComposeContent(
+      "<div><br></div>",
+      this.getAccount()?.settings.signature || "",
+      buildQuotedContent(latestMessage, latestMessage.body),
+    );
+  }
+
   getReplyRecipients(): ReplyRecipients {
     return buildReplyRecipients(
       this.props.latestMessage,
@@ -137,15 +149,12 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
   handleExpand = (mode: Mode = "reply") => {
     if (mode === "forward") {
       const { latestMessage } = this.props;
-      const doc = safeDocumentFromHtml(latestMessage.body);
-      const title = `On ${latestMessage.date} ${formatAddress(latestMessage.from[0])} wrote:`;
-      const quoted = `<p></p>${title}<blockquote>${doc}</blockquote>`;
       const hasParts = Boolean(latestMessage.parts && latestMessage.parts.length > 0);
 
       this.setState({
         expanded: true,
         mode,
-        html: quoted,
+        html: this.getInitialEditorContent(),
         to: [],
         attachments: [],
         isLoadingAttachments: hasParts,
@@ -159,7 +168,12 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
           latestMessage.parts,
         ).then(attachments => {
           if (this.state.expanded && this.state.mode === "forward") {
-            this.setState({ attachments, isLoadingAttachments: false });
+            // Concat, not replace: the user may have attached their own files
+            // while the forwarded parts were downloading
+            this.setState({
+              attachments: _.concat(this.state.attachments, attachments),
+              isLoadingAttachments: false,
+            });
           }
         }).catch(e => {
           this.setState({ isLoadingAttachments: false });
@@ -170,7 +184,13 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     }
 
     const canReplyAll = this.canReplyAll();
-    this.setState({ expanded: true, mode: mode === "reply-all" && !canReplyAll ? "reply" : mode });
+    this.setState({
+      expanded: true,
+      mode: mode === "reply-all" && !canReplyAll ? "reply" : mode,
+      html: this.getInitialEditorContent(),
+      attachments: [],
+      isLoadingAttachments: false,
+    });
   };
 
   handleForward = () => {
@@ -214,8 +234,12 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     this.editorApi?.command(command, value);
   };
 
-  handlePromptEditorCommand = (command: string, promptText: string) => {
-    this.editorApi?.promptCommand(command, promptText);
+  handleClickAttach = () => {
+    EmailsService.CreateSendAttachments().then(attachments => {
+      this.setState({ attachments: _.concat(this.state.attachments, attachments) });
+    }).catch(e => {
+      requestStore.addError("Failed to attach files", e);
+    });
   };
 
   handlePopOut = () => {
@@ -246,12 +270,13 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
     const isForward = this.state.mode === "forward";
 
+    if (this.state.isLoadingAttachments) {
+      return;
+    }
+
     let to: Address[];
     let cc: Address[] = [];
     if (isForward) {
-      if (this.state.isLoadingAttachments) {
-        return;
-      }
       to = _.map(this.state.to, option => option.value);
       if (to.length === 0) {
         return;
@@ -267,7 +292,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       from,
       to,
       cc,
-      attachments: isForward ? this.state.attachments : [],
+      attachments: this.state.attachments,
       replyingTo: latestMessage,
     };
 
@@ -298,10 +323,8 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         } else {
           threadStore.reloadThread();
         }
-        // Kick a background sync so the real server-side message reconciles.
-        mainEmailStore.syncFolderEmails("sent", {
-          accountIDs: [latestMessage.accountID],
-        }).catch(() => {});
+        // The backend emits a sent folder sync, which reconciles the injected
+        // email with the real server-side message.
       } else {
         threadStore.reloadThread();
       }
@@ -466,11 +489,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     );
   }
 
-  renderForwardAttachments() {
-    if (this.state.mode !== "forward") {
-      return null;
-    }
-
+  renderAttachments() {
     if (this.state.isLoadingAttachments) {
       return (
         <div className="quick-reply-attachments">
@@ -526,14 +545,14 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
         <SquireEditor
           key={isForward ? "forward" : "reply"}
-          initialContent={isForward ? this.state.html : ""}
+          initialContent={this.state.html}
           autoFocus
           onReady={(api) => { this.editorApi = api; }}
           onFormatStateChange={(states) => this.setState({ formatStates: states })}
           onUpdate={(data) => this.setState({ html: data })}
         />
 
-        {this.renderForwardAttachments()}
+        {this.renderAttachments()}
 
         <div className="quick-reply-actions">
           <Tooltip
@@ -546,17 +565,25 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
               onClick={this.handleSend}
               disabled={
                 this.state.isSending
-                || (isForward && (this.state.to.length === 0 || this.state.isLoadingAttachments))
+                || this.state.isLoadingAttachments
+                || (isForward && this.state.to.length === 0)
               }
             >
               {this.renderSendButtonContent()}
             </button>
           </Tooltip>
           <div className="vrule" />
+          <button
+            type="button"
+            className="tool-btn"
+            title="Attach"
+            onClick={this.handleClickAttach}
+          >
+            <i className="fa fa-paperclip" />
+          </button>
           <EditorToolButtons
             formatStates={this.state.formatStates}
             onCommand={this.handleEditorCommand}
-            onPromptCommand={this.handlePromptEditorCommand}
           />
           <span className="spacer" />
           <Tooltip

@@ -61,12 +61,17 @@ type AccountSettings struct {
 		DeleteOnTrash   bool   `json:"deleteOnTrash"`
 		CopyFromInbox   bool   `json:"copyFromInbox"`
 		AccentColor     string `json:"accentColor"`
+
+		// nil = never set (so apply default), blank = user intentionally set blank
+		Signature *string `json:"signature"`
 	} `json:"settings"`
 
 	Folders FolderSettings `json:"folders"`
 
 	Contacts []Address `json:"contacts"`
 }
+
+const DefaultSignatureHTML = `<div>--</div><div>Sent via <a href="https://kanmail.io">Kanmail</a></div>`
 
 type ConnectionSettings struct {
 	Username string `json:"username"`
@@ -89,12 +94,6 @@ type ConnectionSettings struct {
 	// Total connection pool budget (IMAP: partitioned across
 	// regular/priority/background; SMTP: regular pool size). Zero uses the default.
 	Connections int `json:"connections,omitempty"`
-}
-
-type Signature struct {
-	Name string `json:"name"`
-	Text string `json:"text"`
-	HTML string `json:"html"`
 }
 
 type KeyboardBinding struct {
@@ -159,7 +158,6 @@ type ColumnGroup struct {
 type Settings struct {
 	Accounts       []AccountSettings `json:"accounts"`
 	SidebarFolders []FolderName      `json:"sidebarFolders"`
-	Signatures     []Signature       `json:"signatures"`
 	System         SystemSettings    `json:"system"`
 
 	ColumnGroups            []ColumnGroup `json:"columnGroups"`
@@ -203,6 +201,13 @@ func (s *Settings) ApplyDefaults() {
 	}
 	if s.System.Zoom == 0 {
 		s.System.Zoom = 1.0
+	}
+
+	for i := range s.Accounts {
+		if s.Accounts[i].Settings.Signature == nil {
+			sig := DefaultSignatureHTML
+			s.Accounts[i].Settings.Signature = &sig
+		}
 	}
 }
 

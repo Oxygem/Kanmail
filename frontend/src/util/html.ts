@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import _ from "lodash";
 
 export function documentFromHtml(html): Document {
@@ -17,4 +18,11 @@ export function safeDocumentFromHtml(html): string {
   );
 
   return tempDocument.body.innerHTML;
+}
+
+// Strips scripts, event handlers and unsafe URL schemes. Note that
+// safeDocumentFromHtml above only removes a handful of elements and leaves
+// attributes alone, so it is not a substitute for this.
+export function sanitizeHtml(html: string): string {
+  return DOMPurify.sanitize(html || "");
 }

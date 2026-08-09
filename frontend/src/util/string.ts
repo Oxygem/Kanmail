@@ -47,6 +47,13 @@ export function formatDate(date) {
   return formatted;
 }
 
+// Absolute date for text that outlives the current session, ie the quote
+// header in a reply - unlike formatDate, "Yesterday" won't do.
+export function formatLongDate(date): string {
+  const parsed = moment(date);
+  return parsed.isValid() ? parsed.format("ddd, D MMM YYYY [at] HH:mm") : "";
+}
+
 export function formatAddress(address: Address, short = false) {
   // Messages can legitimately have no from/to/cc entries (drafts, malformed
   // headers), leaving from[0] etc. undefined - don't crash the thread render.

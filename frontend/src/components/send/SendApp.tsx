@@ -31,7 +31,12 @@ import LicensePurchase from "../LicensePurchase.tsx";
 import Tooltip from "../Tooltip.tsx";
 import ContactSelect from "./ContactSelect.tsx";
 import EditorToolButtons from "./EditorToolButtons.tsx";
-import SquireEditor, { SquireEditorApi, SquireFormatStates } from "./SquireEditor.tsx";
+import SquireEditor, {
+  buildComposeContent,
+  defaultFormatStates,
+  SquireEditorApi,
+  SquireFormatStates,
+} from "./SquireEditor.tsx";
 
 type addressOption = AddressOption;
 
@@ -41,6 +46,7 @@ interface ISendAppProps extends ISettings, ISystem {
   // Message we're replying to, if any
   message?: Email;
   messageContent?: string;
+  quotedContent?: string;
   mode?: string;
 
   // Prefilled fields, used when there's no message to reply to
@@ -99,24 +105,12 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       // replyToMessageReferences: null,
       // replyToQuoteHtml: null,
 
-      // selectedSignatureIdx: -1,
-      // signatureHtml: null,
-      // signatureText: null,
-
       isLoadingAttachments: false,
       isSending: false,
       isSaving: false,
 
       showCc: false,
-      formatStates: {
-        bold: false,
-        italic: false,
-        underline: false,
-        code: false,
-        quote: false,
-        unorderedList: false,
-        orderedList: false,
-      },
+      formatStates: defaultFormatStates,
     };
 
     if (props.message) {
@@ -160,6 +154,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       }
     }
 
+
+    // Seed the body with what the editor will be mounted with, so sending
+    // without typing still includes the signature and the quote
+    state.html = this.buildEditorContent(state.accountContact.value[0]);
 
     this.state = state;
   }
@@ -209,11 +207,15 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     });
   };
 
-  handleSelectChange = (field: keyof ISendAppState, item: any) => {
-    this.setState({
-      ...this.state,
-      [field]: item,
-    });
+  handleAccountChange = (option: accountAddressOption) => {
+    const previousAccountID = this.state.accountContact.value[0];
+    this.setState({ accountContact: option });
+
+    // Accounts can have several contacts, and those share a signature
+    const accountID = option.value[0];
+    if (accountID !== previousAccountID) {
+      this.editorApi?.setSignature(this.getSignatureHtml(accountID));
+    }
   };
 
   handleSendEmail = (ev) => {
@@ -266,26 +268,26 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
     })
   };
 
-  getInitialEditorContent = (): string => {
-    let content = this.props.messageContent || "";
+  getSignatureHtml(accountID: string): string {
+    const account = _.find(this.props.accounts, (account) => account.id === accountID);
+    return account?.settings.signature || "";
+  }
 
-    if (!this.props.isLicensed) {
-      const signature = '<div><br></div><div>--</div><div>Sent via <a href="https://kanmail.io">Kanmail</a></div>';
-      content = content + signature;
-    }
+  buildEditorContent(accountID: string): string {
+    // Always open on something to type into above the signature, so autoFocus
+    // doesn't drop the cursor inside the signature itself
+    const body = this.props.messageContent || "<div><br></div>";
 
-    return content;
-  };
+    return buildComposeContent(
+      body,
+      this.getSignatureHtml(accountID),
+      this.props.quotedContent || "",
+    );
+  }
 
   handleEditorCommand = (command: string, value?: any) => {
     if (this.editorApi) {
       this.editorApi.command(command, value);
-    }
-  };
-
-  handlePromptEditorCommand = (command: string, promptText: string) => {
-    if (this.editorApi) {
-      this.editorApi.promptCommand(command, promptText);
     }
   };
 
@@ -395,7 +397,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
                 options={accountOptions}
                 value={this.state.accountContact}
                 formatOptionLabel={this.formatAccountOptionLabel}
-                onChange={(v) => this.handleSelectChange("accountContact", v)}
+                onChange={(v) => this.handleAccountChange(v as accountAddressOption)}
               />
             </div>
 
@@ -442,7 +444,8 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
           <div className="compose-body form-content" onClick={stopEventPropagation}>
             <SquireEditor
-              initialContent={this.getInitialEditorContent()}
+              initialContent={this.state.html}
+              autoFocus
               onReady={(api) => { this.editorApi = api; }}
               onFormatStateChange={(states) => this.setState({ formatStates: states })}
               onUpdate={data => {
@@ -453,9 +456,8 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             />
           </div>
 
-          <div className={`form-attachments ${
-            this.state.attachments.length === 0 && !this.state.isLoadingAttachments ? "empty" : ""
-          }`}>
+          <div className={`form-attachments ${this.state.attachments.length === 0 && !this.state.isLoadingAttachments ? "empty" : ""
+            }`}>
             {this.state.isLoadingAttachments && (
               <div className="attachment loading">
                 <i className="fa fa-spin fa-refresh" />
@@ -493,7 +495,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
             <EditorToolButtons
               formatStates={formatStates}
               onCommand={this.handleEditorCommand}
-              onPromptCommand={this.handlePromptEditorCommand}
             />
             <span className="spacer" />
             <Tooltip position="top" text="Discard message and close">

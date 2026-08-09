@@ -19,6 +19,7 @@ import AccountForm from "../settings/AccountForm.tsx";
 import KeyboardShortcutsTab from "../settings/KeyboardShortcutsTab.tsx";
 import LicenseSettings from "../settings/LicenseSettings.tsx";
 import NewAccountForm from "../settings/NewAccountForm.tsx";
+import SignaturesTab from "../settings/SignaturesTab.tsx";
 
 interface ISenderColorFormProps {
   existingEmails: string[];
@@ -218,7 +219,7 @@ interface ISettingsViewState {
   showSenderColorForm: boolean;
 }
 
-const TABS = ["accounts", "appearance", "shortcuts", "system", "licensed", "license"];
+const TABS = ["accounts", "signatures", "appearance", "shortcuts", "system", "licensed", "license"];
 
 export default class SettingsView extends React.Component<ISettingsViewProps, ISettingsViewState> {
   private releaseKeyboard: () => void;
@@ -288,6 +289,20 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     const items = [...this.props.accounts];
     items[itemIndex] = newSettings;
+    this.setAccounts(items);
+  };
+
+  updateAccountSignature = (accountIndex: number, signature: string) => {
+    const account = this.props.accounts[accountIndex];
+    if (!account) {
+      return;
+    }
+
+    const items = [...this.props.accounts];
+    items[accountIndex] = {
+      ...account,
+      settings: { ...account.settings, signature },
+    };
     this.setAccounts(items);
   };
 
@@ -705,6 +720,10 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         className={this.state.tab == "accounts" ? "active" : ""}
       >Accounts</a>
       <a
+        onClick={() => this.setTab("signatures")}
+        className={this.state.tab == "signatures" ? "active" : ""}
+      >Signatures</a>
+      <a
         onClick={() => this.setTab("appearance")}
         className={this.state.tab == "appearance" ? "active" : ""}
       >Appearance</a>
@@ -778,6 +797,11 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     switch (this.state.tab) {
       case "accounts":
         return this.renderAccounts()
+      case "signatures":
+        return this.renderPanel("signatures-panel", <SignaturesTab
+          accounts={this.props.accounts}
+          updateAccountSignature={this.updateAccountSignature}
+        />)
       case "appearance":
         return this.renderAppearanceSettings()
       case "shortcuts":

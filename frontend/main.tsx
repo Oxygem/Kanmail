@@ -77,12 +77,10 @@ const bootSendApp = async (
 ) => {
     const [
         { default: SendApp },
-        { safeDocumentFromHtml },
-        { formatAddress },
+        { buildQuotedContent },
     ] = await Promise.all([
         import("./src/components/send/SendApp.tsx"),
-        import("./src/util/html.ts"),
-        import("./src/util/string.ts"),
+        import("./src/util/send.ts"),
     ]);
 
     if (!urlParams.get("mode")) {
@@ -99,17 +97,10 @@ const bootSendApp = async (
         urlParams.get("folderName")!,
         parseInt(urlParams.get("uid")!),
     ).then(([email, data]) => {
-        const doc = safeDocumentFromHtml(data!.data);
-        const title = `On ${email!.date} ${formatAddress(email!.from[0])} wrote:`
-        const content = `
-    <p></p>
-    ${title}:
-
-    <blockquote>${doc}</blockquote>`;
-
+        // SendApp positions the signature between the reply and the quote
         bootApp(SendApp, appContainer, {
             message: email,
-            messageContent: content,
+            quotedContent: buildQuotedContent(email!, data!.data),
             mode: urlParams.get("mode") || "reply",
         })
     }).catch((e) => {

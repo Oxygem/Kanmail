@@ -16,6 +16,7 @@ interface IProps {
 interface IState {
   capturingId: string | null;
   conflict: { shortcutId: string; description: string } | null;
+  confirmingResetAll: boolean;
 }
 
 const SCOPE_LABELS: Record<string, string> = {
@@ -27,7 +28,11 @@ const SCOPE_LABELS: Record<string, string> = {
 const SCOPE_ORDER = ["always", "global", "thread"] as const;
 
 export default class KeyboardShortcutsTab extends React.Component<IProps, IState> {
-  state: IState = { capturingId: null, conflict: null };
+  state: IState = {
+    capturingId: null,
+    conflict: null,
+    confirmingResetAll: false,
+  };
 
   private currentBinding(shortcutId: string): Binding | null {
     const bindings = keyboard.getBindingsFor(shortcutId);
@@ -99,15 +104,14 @@ export default class KeyboardShortcutsTab extends React.Component<IProps, IState
   };
 
   private resetAll = () => {
-    if (!window.confirm("Reset all keyboard shortcuts to defaults?")) return;
     this.props.updateFn({
       system: { ...this.props.system, keyboardShortcuts: undefined },
     });
-    this.setState({ capturingId: null, conflict: null });
+    this.setState({ capturingId: null, conflict: null, confirmingResetAll: false });
   };
 
   private startCapture = (shortcutId: string) => {
-    this.setState({ capturingId: shortcutId, conflict: null });
+    this.setState({ capturingId: shortcutId, conflict: null, confirmingResetAll: false });
   };
 
   private cancelCapture = () => {
@@ -210,10 +214,22 @@ export default class KeyboardShortcutsTab extends React.Component<IProps, IState
           <button
             type="button"
             className="red"
-            onClick={this.resetAll}
+            onClick={this.state.confirmingResetAll
+              ? this.resetAll
+              : () => this.setState({ confirmingResetAll: true })}
           >
-            Reset all to defaults
+            {this.state.confirmingResetAll
+              ? "Confirm reset all"
+              : "Reset all to defaults"}
           </button>
+          {this.state.confirmingResetAll && (
+            <a
+              className="shortcut-reset"
+              onClick={() => this.setState({ confirmingResetAll: false })}
+            >
+              Cancel
+            </a>
+          )}
         </div>
       </div>
     );

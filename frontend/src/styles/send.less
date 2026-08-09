@@ -619,3 +619,79 @@ section#new-email .sent-upsell {
   }
 
 }
+
+/* ----------------------------------------------------------------------- */
+/* Link popover — shared by the compose dock, quick reply actions bar and   */
+/* the signature editor. Fixed positioning keeps it clear of the            */
+/* overflow:hidden containers those toolbars sit inside.                    */
+/* ----------------------------------------------------------------------- */
+.link-popover-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+}
+
+.link-popover {
+  position: fixed;
+  z-index: 1501;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--ring);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--input);
+    border: 1px solid var(--ring);
+    border-radius: var(--r-sm);
+
+    &:focus {
+      border-color: var(--brand-pink);
+    }
+  }
+
+  button {
+    flex: none;
+    height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--r-sm);
+
+    &.apply {
+      .km-btn-primary-skin();
+
+      &[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+
+        &:hover {
+          filter: none;
+          box-shadow: none;
+        }
+      }
+    }
+
+    &.remove {
+      .km-btn-ghost-skin();
+      padding: 0 10px;
+      color: var(--muted);
+
+      &:hover {
+        color: var(--danger);
+        border-color: var(--danger-ring);
+      }
+    }
+  }
+}

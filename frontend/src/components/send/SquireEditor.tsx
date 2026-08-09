@@ -2,6 +2,8 @@ import DOMPurify from 'dompurify';
 import React, { useEffect, useRef } from 'react';
 import Squire from "squire-rte";
 
+import { sanitizeHtml } from "../../util/html.ts";
+
 // @ts-ignore
 window.DOMPurify = DOMPurify;
 
@@ -13,11 +15,33 @@ export interface SquireFormatStates {
   quote: boolean;
   unorderedList: boolean;
   orderedList: boolean;
+  // href of the link under the cursor, if any
+  link: string | null;
 }
 
 export interface SquireEditorApi {
   command: (command: string, value?: any) => void;
-  promptCommand: (command: string, promptText: string) => void;
+  // Swaps the signature block in place, leaving the rest of the document (and
+  // the user's cursor) alone
+  setSignature: (html: string) => void;
+}
+
+export const SIGNATURE_CLASS = "kanmail-signature";
+
+// Always emit the wrapper, even for an empty signature, so a later swap has
+// something to find. The <br> filler stops Squire collapsing the empty block.
+export function wrapSignature(html: string): string {
+  return `<div class="${SIGNATURE_CLASS}">${sanitizeHtml(html) || "<br>"}</div>`;
+}
+
+// The document an editor is mounted with: what the user types into, then the
+// signature, then any quoted original after a blank line
+export function buildComposeContent(body: string, signature: string, quote: string): string {
+  return [
+    body,
+    wrapSignature(signature),
+    quote ? `<div><br></div>${quote}` : "",
+  ].join("");
 }
 
 export const defaultFormatStates: SquireFormatStates = {
@@ -28,6 +52,7 @@ export const defaultFormatStates: SquireFormatStates = {
   quote: false,
   unorderedList: false,
   orderedList: false,
+  link: null,
 };
 
 const SquireEditor = ({
@@ -72,10 +97,22 @@ const SquireEditor = ({
     editor.setHTML(initialContent)
     squireRef.current = editor;
 
+    // Squire only fires "input" on user edits, so without this the parent's
+    // html state stays empty until the first keystroke - sending without
+    // typing would drop the quote and signature entirely.
+    onUpdate(editor.getHTML());
+
     if (autoFocus) {
       editor.moveCursorToStart();
       editor.focus();
     }
+
+    const getLinkHref = (range: Range): string | null => {
+      const node = range.commonAncestorContainer;
+      const element = node instanceof Element ? node : node.parentElement;
+      const anchor = element?.closest('a');
+      return anchor && editor.getRoot().contains(anchor) ? anchor.getAttribute('href') : null;
+    };
 
     // Update format states on selection change
     const updateFormatStates = () => {
@@ -89,7 +126,8 @@ const SquireEditor = ({
         code: editor.hasFormat('CODE'),
         quote: editor.getPath().includes('BLOCKQUOTE'),
         unorderedList: editor.getPath().includes('UL'),
-        orderedList: editor.getPath().includes('OL')
+        orderedList: editor.getPath().includes('OL'),
+        link: getLinkHref(range),
       };
       if (onFormatStateChange) {
         onFormatStateChange(states);
@@ -122,7 +160,10 @@ const SquireEditor = ({
     })
 
     if (onReady) {
-      onReady({ command: handleCommand, promptCommand: handlePromptCommand });
+      onReady({
+        command: handleCommand,
+        setSignature: handleSetSignature,
+      });
     }
 
     return () => {
@@ -140,14 +181,27 @@ const SquireEditor = ({
         squireRef.current[command]();
       }
       squireRef.current.focus();
+      // Squire only fires "input" for typing, not for format commands, so the
+      // parent would otherwise miss a link/format applied just before sending
+      onUpdate(squireRef.current.getHTML());
     }
   };
 
-  const handlePromptCommand = (command, promptText) => {
-    const value = prompt(promptText);
-    if (value !== null) {
-      handleCommand(command, value);
+  const handleSetSignature = (html: string) => {
+    const editor = squireRef.current;
+    const root = editorRef.current as HTMLElement | null;
+    if (!editor || !root) {
+      return;
     }
+
+    // No marker means the user deleted the signature - respect that
+    const existing = root.querySelector(`.${SIGNATURE_CLASS}`);
+    if (!existing) {
+      return;
+    }
+
+    existing.innerHTML = sanitizeHtml(html) || "<br>";
+    onUpdate(editor.getHTML());
   };
 
   return (

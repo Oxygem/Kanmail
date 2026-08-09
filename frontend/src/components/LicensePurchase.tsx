@@ -4,6 +4,11 @@ import { AppService } from "../../bindings/github.com/oxygem/kanmail/internal/se
 
 const PURCHASE_URL = "https://kanmail.io/license/buy";
 
+export function openPurchasePage(ev?: React.SyntheticEvent) {
+  ev?.preventDefault();
+  AppService.OpenLink(PURCHASE_URL);
+}
+
 const FEATURES = [
   "One user, unlimited devices",
   "Every past & future v2 release",
@@ -13,11 +18,6 @@ const FEATURES = [
 ];
 
 export default class LicensePurchase extends React.Component {
-  handlePurchase = (ev) => {
-    ev.preventDefault();
-    AppService.OpenLink(PURCHASE_URL);
-  };
-
   render() {
     return (
       <div className="license-col purchase">
@@ -36,7 +36,7 @@ export default class LicensePurchase extends React.Component {
           ))}
         </ul>
 
-        <button type="button" className="btn-primary" onClick={this.handlePurchase}>
+        <button type="button" className="btn-primary" onClick={openPurchasePage}>
           Buy your license →
         </button>
       </div>

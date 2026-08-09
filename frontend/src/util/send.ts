@@ -1,7 +1,8 @@
 import _ from "lodash";
 
 import { Address, AccountSettings } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import { formatAddress } from "./string.ts";
+import { safeDocumentFromHtml } from "./html.ts";
+import { formatAddress, formatLongDate } from "./string.ts";
 
 export interface AccountAddressOption {
   value: [string, Address];
@@ -137,6 +138,19 @@ export function hasReplyAllRecipients(
   const reply = buildReplyRecipients(message, false, account);
   const replyAll = buildReplyRecipients(message, true, account);
   return replyAll.to.length + replyAll.cc.length > reply.to.length;
+}
+
+export interface QuotedMessage {
+  date: string;
+  from: Address[];
+}
+
+// The quoted original, rendered below the signature on replies and forwards
+export function buildQuotedContent(message: QuotedMessage, bodyHtml: string): string {
+  const sender = formatAddress(message.from[0]);
+  const date = formatLongDate(message.date);
+  const title = date ? `On ${date}, ${sender} wrote:` : `${sender} wrote:`;
+  return `${title}<blockquote>${safeDocumentFromHtml(bodyHtml)}</blockquote>`;
 }
 
 export function prependIfNotPresent(prependTo: string, prependString: string): string {
