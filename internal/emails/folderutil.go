@@ -53,25 +53,24 @@ func imapAddrsToAddrs(imapAddrs []imap.Address) []types.Address {
 
 func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMessageBuffer) *types.Email {
 	email := types.Email{
-		AccountID: f.AccountID,
-
+		AccountID:       f.AccountID,
 		FolderName:      f.Name,
 		FolderAliasName: f.AliasName,
+		UID:             msg.UID,
+		Flags:           msg.Flags,
+		Size:            msg.RFC822Size,
+	}
 
-		UID:     msg.UID,
-		Flags:   msg.Flags,
-		Size:    msg.RFC822Size,
-		Date:    msg.Envelope.Date,
-		Subject: msg.Envelope.Subject,
-
-		From:    imapAddrsToAddrs(msg.Envelope.From),
-		To:      imapAddrsToAddrs(msg.Envelope.To),
-		Sender:  imapAddrsToAddrs(msg.Envelope.Sender),
-		CC:      imapAddrsToAddrs(msg.Envelope.Cc),
-		BCC:     imapAddrsToAddrs(msg.Envelope.Bcc),
-		ReplyTo: imapAddrsToAddrs(msg.Envelope.ReplyTo),
-
-		MessageID: msg.Envelope.MessageID,
+	if msg.Envelope != nil {
+		email.Date = msg.Envelope.Date
+		email.Subject = msg.Envelope.Subject
+		email.MessageID = msg.Envelope.MessageID
+		email.From = imapAddrsToAddrs(msg.Envelope.From)
+		email.To = imapAddrsToAddrs(msg.Envelope.To)
+		email.Sender = imapAddrsToAddrs(msg.Envelope.Sender)
+		email.CC = imapAddrsToAddrs(msg.Envelope.Cc)
+		email.BCC = imapAddrsToAddrs(msg.Envelope.Bcc)
+		email.ReplyTo = imapAddrsToAddrs(msg.Envelope.ReplyTo)
 	}
 
 	for _, data := range msg.BodySection {
