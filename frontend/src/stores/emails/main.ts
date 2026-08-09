@@ -426,6 +426,12 @@ export default mainEmailStore;
 // The backend holds an IMAP IDLE watch per displayed column and emits this when
 // a folder changes server-side; sync just that account's folder in response.
 Events.On(EventName.FolderSyncEvent, (ev) => {
+  const app = new URLSearchParams(window.location.search).get("app");
+  if (app !== "emails") {
+    console.error(`[watcher] folder sync delivered to ${app} window, ignoring`);
+    return;
+  }
+
   const { accountID, folder } = ev.data as { accountID: string; folder: string };
   console.debug(`[watcher] change in ${accountID}/${folder}, syncing`);
   mainEmailStore.syncFolderEmails(folder, { accountIDs: [accountID] });

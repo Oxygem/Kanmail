@@ -295,9 +295,12 @@ func (a *AppService) EmitFolderSync(account types.AccountID, folder types.Folder
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	a.app.Event.Emit(string(types.FolderSyncEvent), types.FolderSync{
-		AccountID: string(account),
-		Folder:    string(folder),
+	a.mainWindow.DispatchWailsEvent(&application.CustomEvent{
+		Name: string(types.FolderSyncEvent),
+		Data: types.FolderSync{
+			AccountID: string(account),
+			Folder:    string(folder),
+		},
 	})
 }
 
