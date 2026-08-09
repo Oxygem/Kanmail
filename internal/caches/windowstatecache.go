@@ -30,7 +30,7 @@ type WindowStateCache struct {
 	stmtGet *sql.Stmt
 }
 
-func NewWindowStateCache(db *sql.DB) *WindowStateCache {
+func NewWindowStateCache(db *sql.DB) (*WindowStateCache, error) {
 	stmtStore, err := db.Prepare(`
 		INSERT OR REPLACE INTO window_state (
 			window_name, x, y, width, height,
@@ -38,7 +38,7 @@ func NewWindowStateCache(db *sql.DB) *WindowStateCache {
 		)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtGet, err := db.Prepare(`
@@ -47,14 +47,14 @@ func NewWindowStateCache(db *sql.DB) *WindowStateCache {
 		FROM window_state
 		WHERE window_name = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &WindowStateCache{
 		db:        db,
 		stmtStore: stmtStore,
 		stmtGet:   stmtGet,
-	}
+	}, nil
 }
 
 func (c *WindowStateCache) Store(ctx context.Context, windowName string, state WindowState) error {

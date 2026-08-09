@@ -21,12 +21,12 @@ type ContactsCache struct {
 	stmtGetAlwaysShowImages *sql.Stmt
 }
 
-func NewContactsCache(db *sql.DB) *ContactsCache {
+func NewContactsCache(db *sql.DB) (*ContactsCache, error) {
 	stmtStore, err := db.Prepare(`
 		INSERT INTO contacts (email, name) VALUES (?, ?)
 		ON CONFLICT (email, name) DO NOTHING`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtSearch, err := db.Prepare(`
@@ -36,7 +36,7 @@ func NewContactsCache(db *sql.DB) *ContactsCache {
 		ORDER BY email
 		LIMIT ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtSetAlwaysShowImages, err := db.Prepare(`
@@ -44,13 +44,13 @@ func NewContactsCache(db *sql.DB) *ContactsCache {
 		ON CONFLICT (email, name) DO UPDATE
 		SET always_show_images = excluded.always_show_images`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtGetAlwaysShowImages, err := db.Prepare(`
 		SELECT always_show_images FROM contacts WHERE email = ? AND name = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &ContactsCache{
@@ -59,7 +59,7 @@ func NewContactsCache(db *sql.DB) *ContactsCache {
 		stmtSearch:              stmtSearch,
 		stmtSetAlwaysShowImages: stmtSetAlwaysShowImages,
 		stmtGetAlwaysShowImages: stmtGetAlwaysShowImages,
-	}
+	}, nil
 }
 
 func (c *ContactsCache) Store(ctx context.Context, addr types.Address) error {

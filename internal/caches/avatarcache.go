@@ -16,26 +16,26 @@ type AvatarCache struct {
 	stmtGet *sql.Stmt
 }
 
-func NewAvatarCache(db *sql.DB) *AvatarCache {
+func NewAvatarCache(db *sql.DB) (*AvatarCache, error) {
 	stmtStore, err := db.Prepare(`
 		INSERT OR REPLACE INTO email_avatars (email, data, data_size, data_type)
 		VALUES (?, ?, ?, ?)`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtDelete, err := db.Prepare(`
 		DELETE FROM email_avatars
 		WHERE email = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtGet, err := db.Prepare(`
 		SELECT data, data_type FROM email_avatars
 		WHERE email = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &AvatarCache{
@@ -43,7 +43,7 @@ func NewAvatarCache(db *sql.DB) *AvatarCache {
 		stmtStore:  stmtStore,
 		stmtDelete: stmtDelete,
 		stmtGet:    stmtGet,
-	}
+	}, nil
 }
 
 func (c *AvatarCache) Store(ctx context.Context, email string, data []byte, dataType string) error {

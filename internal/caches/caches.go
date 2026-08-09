@@ -75,10 +75,29 @@ func openCaches(log zerolog.Logger, path string) (*Caches, error) {
 		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	caches.ContactsCache = NewContactsCache(db)
-	caches.AvatarCache = NewAvatarCache(db)
-	caches.LicenseCache = NewLicenseCache(db)
-	caches.WindowStateCache = NewWindowStateCache(db)
+	caches.ContactsCache, err = NewContactsCache(db)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare contacts cache: %w", err)
+	}
+
+	caches.AvatarCache, err = NewAvatarCache(db)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare avatar cache: %w", err)
+	}
+
+	caches.LicenseCache, err = NewLicenseCache(db)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare license cache: %w", err)
+	}
+
+	caches.WindowStateCache, err = NewWindowStateCache(db)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to prepare window state cache: %w", err)
+	}
 
 	caches.FolderUIDCache, err = NewFolderUIDCache(db)
 	if err != nil {

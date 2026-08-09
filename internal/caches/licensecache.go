@@ -17,26 +17,26 @@ type LicenseCache struct {
 	stmtDelete *sql.Stmt
 }
 
-func NewLicenseCache(db *sql.DB) *LicenseCache {
+func NewLicenseCache(db *sql.DB) (*LicenseCache, error) {
 	stmtUpsert, err := db.Prepare(`
 		INSERT OR REPLACE INTO license_check (license_key_hash, checked_at)
 		VALUES (?, CURRENT_TIMESTAMP)`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtGet, err := db.Prepare(`
 		SELECT checked_at FROM license_check
 		WHERE license_key_hash = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stmtDelete, err := db.Prepare(`
 		DELETE FROM license_check
 		WHERE license_key_hash = ?`)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &LicenseCache{
@@ -44,7 +44,7 @@ func NewLicenseCache(db *sql.DB) *LicenseCache {
 		stmtUpsert: stmtUpsert,
 		stmtGet:    stmtGet,
 		stmtDelete: stmtDelete,
-	}
+	}, nil
 }
 
 func (c *LicenseCache) Upsert(ctx context.Context, licenseKeyHash string) error {
