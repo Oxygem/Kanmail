@@ -1011,7 +1011,9 @@ func (f *Folder) getOrFetchEmails(
 		for _, uid := range uncachedUIDs {
 			err := connFn(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 				singleEmail, err := f.fetchEmailHeadersWithConnection(ctx, conn, []imap.UID{uid})
-				if err != nil {
+				if util.IsRetryableError(err) {
+					return err
+				} else if err != nil {
 					log.Err(err).
 						Uint32("uid", uint32(uid)).
 						Msg("Failed to fetch or parse email header")
