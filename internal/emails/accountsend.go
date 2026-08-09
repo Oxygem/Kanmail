@@ -221,11 +221,13 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 
 	if a.Settings.SaveSentCopies && sentFolder != "" {
 		log.Debug().Msg("Saving email")
-		uid, err := a.GetFolder("sent").AppendEmail(ctx, b)
-		if err != nil {
-			return nil, fmt.Errorf("failed to save email after sending: %w", err)
+		if uid, err := a.GetFolder("sent").AppendEmail(ctx, b); err != nil {
+			// Log, but don't return an error here,  we don't want the user to re-try as it'll be
+			// a double-send which is worse.
+			zerolog.Ctx(ctx).Err(err).Msg("Failed to save email after sending")
+		} else {
+			sentEmail.UID = uid
 		}
-		sentEmail.UID = uid
 	}
 
 	return sentEmail, nil
