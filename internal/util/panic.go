@@ -37,7 +37,7 @@ func LogAndPanic(ctx context.Context) {
 func ReportPanic(ctx context.Context, err any) {
 	zerolog.Ctx(ctx).Error().Stack().Any("error", err).Msg("Recovered panic")
 
-	if analyticsEnabled && deviceID != "" {
+	if analyticsEnabled {
 		trackCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		_ = backend.SendAnalytics(trackCtx, deviceID, "$exception", map[string]any{
 			"$exception_list": []map[string]any{{
