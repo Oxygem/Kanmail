@@ -118,6 +118,7 @@
 
   /* reset-all button */
   button.red {
+    .km-btn-danger-skin();
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -126,13 +127,5 @@
     border-radius: var(--r-md);
     font-size: 13px;
     font-weight: 600;
-    color: var(--danger);
-    background: var(--danger-bg);
-    border: 1px solid var(--danger-ring);
-    cursor: pointer;
-
-    &:hover {
-      filter: brightness(1.03);
-    }
   }
 }

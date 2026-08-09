@@ -31,6 +31,48 @@
   --brand-pink: #e3196e;
 }
 
+/*
+    Shared button skins — colour/border/hover only, geometry stays per-site.
+    Every button in the redesigned UI uses one of these three looks:
+      primary — brand gradient + white text
+      ghost   — page background + hairline ring, pink ring on hover
+      danger  — soft danger tint, solid danger ring on hover
+*/
+.km-btn-primary-skin() {
+  background: var(--grad);
+  color: #fff;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
+
+  &:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 5px 18px rgba(227, 25, 110, 0.45);
+  }
+}
+
+.km-btn-ghost-skin() {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--ring);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--brand-pink);
+  }
+}
+
+.km-btn-danger-skin() {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-ring);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--danger);
+  }
+}
+
 .km-tokens-light() {
   --bg: #ffffff;
   --ink: #1d1d1f;

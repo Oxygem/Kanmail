@@ -59,11 +59,14 @@ button {
   color: @buttonTextColor;
   background: @buttonBackgroundColor;
 
-  &:hover, &.active {
+  // Redesigned btn-* buttons carry their own skins (tokens.less) — without
+  // this guard the hover/disabled backgrounds here outrank them and wipe the
+  // gradient/ghost looks (body.theme-* button:hover beats .x button.btn-y).
+  &:hover:not([class*="btn-"]), &.active:not([class*="btn-"]) {
     background: @buttonHoverBackgroundColor;
   }
 
-  &[disabled]{
+  &[disabled]:not([class*="btn-"]) {
     background: @buttonBackgroundColor !important;
     cursor: default;
   }

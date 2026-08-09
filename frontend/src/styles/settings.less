@@ -196,22 +196,14 @@ section#settings-app #settings .km-settings {
   }
 
   button.btn-danger {
+    .km-btn-danger-skin();
     display: inline-flex;
     align-items: center;
     gap: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--danger);
     padding: 9px 16px;
     border-radius: var(--r-md);
-    background: var(--danger-bg);
-    border: 1px solid var(--danger-ring);
-    cursor: pointer;
-
-    &:hover {
-      background: var(--danger-bg);
-      filter: brightness(1.03);
-    }
   }
 
   button.icon-btn {
@@ -368,6 +360,7 @@ section#settings-app #settings .km-settings {
 
 /* the add-new-account trigger */
 #settings .add-account-button {
+  .km-btn-ghost-skin();
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -375,14 +368,6 @@ section#settings-app #settings .km-settings {
   border-radius: var(--r-lg);
   font-size: 14px;
   font-weight: 600;
-  color: var(--ink);
-  background: var(--pill);
-  border: 1px solid var(--ring);
-  cursor: pointer;
-
-  &:hover {
-    border-color: var(--brand-pink);
-  }
 }
 
 /* --------------------------- account edit form ------------------------- */
@@ -421,22 +406,15 @@ section#settings-app #settings .km-settings {
 
     button[type="submit"].submit,
     button.submit {
+      .km-btn-primary-skin();
       display: inline-flex;
       align-items: center;
       gap: 6px;
       height: 34px;
       padding: 0 16px;
       border-radius: var(--r-md);
-      background: var(--grad);
-      color: #fff;
       font-size: 13px;
       font-weight: 600;
-      border: 0;
-      box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
-
-      &:hover {
-        filter: brightness(1.04);
-      }
     }
 
     .right > button:not(.submit) {
@@ -577,18 +555,12 @@ section#settings-app #settings .km-settings {
     }
 
     button.submit {
+      .km-btn-primary-skin();
       height: 34px;
       padding: 0 16px;
       border-radius: var(--r-md);
-      background: var(--grad);
-      color: #fff;
       font-size: 13px;
       font-weight: 600;
-      border: 0;
-
-      &:hover {
-        filter: brightness(1.04);
-      }
     }
 
     pre.wrap {
@@ -724,22 +696,15 @@ section#settings-app #settings .km-settings {
 
       button.submit,
       button.main-button {
+        .km-btn-primary-skin();
         display: inline-flex;
         align-items: center;
         gap: 7px;
         height: 40px;
         padding: 0 20px;
         border-radius: var(--r-md);
-        background: var(--grad);
-        color: #fff;
         font-size: 14px;
         font-weight: 600;
-        border: 0;
-        box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
-
-        &:hover {
-          filter: brightness(1.04);
-        }
 
         &:disabled {
           background: var(--input);
@@ -749,6 +714,7 @@ section#settings-app #settings .km-settings {
 
           &:hover {
             filter: none;
+            box-shadow: none;
           }
         }
       }
@@ -969,6 +935,7 @@ section#settings-app #settings .km-settings {
 
 #settings button.submit.small,
 #settings button.small {
+  .km-btn-ghost-skin();
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -977,15 +944,9 @@ section#settings-app #settings .km-settings {
   border-radius: var(--r-md);
   font-size: 13px;
   font-weight: 600;
-  border: 1px solid var(--ring);
-  background: var(--pill);
-  color: var(--ink);
 
   &.submit {
-    background: var(--grad);
-    color: #fff;
-    border: 0;
-    box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
+    .km-btn-primary-skin();
   }
 
   &.cancel {
@@ -1150,6 +1111,7 @@ section#welcome-settings {
 }
 
 #settings button.main-button {
+  .km-btn-primary-skin();
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -1157,16 +1119,9 @@ section#welcome-settings {
   padding: 0 26px;
   margin: 8px 0 22px;
   border-radius: var(--r-lg);
-  background: var(--grad);
-  color: #fff;
   font-size: 16px;
   font-weight: 700;
-  border: 0;
   box-shadow: 0 6px 18px rgba(227, 25, 110, 0.32);
-
-  &:hover {
-    filter: brightness(1.04);
-  }
 
   &:disabled {
     background: var(--input);
@@ -1176,6 +1131,7 @@ section#welcome-settings {
 
     &:hover {
       filter: none;
+      box-shadow: none;
     }
   }
 }

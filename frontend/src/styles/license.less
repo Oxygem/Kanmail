@@ -111,6 +111,7 @@
 
 /* ------------------------------ buttons ------------------------------- */
 .license-col button.btn-primary {
+  .km-btn-primary-skin();
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -118,22 +119,17 @@
   height: 44px;
   padding: 0 22px;
   border-radius: var(--r-md);
-  background: var(--grad);
-  color: #fff;
   font-size: 14px;
   font-weight: 700;
-  border: 0;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(227, 25, 110, 0.28);
-
-  &:hover {
-    filter: brightness(1.04);
-  }
 
   &[disabled] {
     opacity: 0.5;
     box-shadow: none;
     cursor: default;
+
+    &:hover {
+      filter: none;
+    }
   }
 }
 

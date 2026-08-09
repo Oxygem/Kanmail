@@ -95,27 +95,18 @@ section#columns {
 
     // Nested so it beats the generic themed `button` rule on specificity.
     button.btn-primary {
+      .km-btn-primary-skin();
       display: inline-flex;
       align-items: center;
       gap: 8px;
       height: 34px;
       padding: 0 16px 0 13px;
       border-radius: var(--r-md);
-      background: var(--grad);
-      color: #fff;
       font-size: 13px;
       font-weight: 600;
-      border: 0;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
 
       i {
         font-size: 14px;
-      }
-
-      &:hover {
-        background: var(--grad);
-        filter: brightness(1.04);
       }
     }
   }

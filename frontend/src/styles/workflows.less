@@ -428,43 +428,28 @@
 
     // Nested so they beat the generic themed `button` rule on specificity.
     button.btn-ghost {
+      .km-btn-ghost-skin();
       display: inline-flex;
       align-items: center;
       gap: 8px;
       height: 38px;
       padding: 0 16px;
       border-radius: var(--r-md);
-      background: var(--bg);
-      border: 1px solid var(--ring);
-      color: var(--ink);
       font-size: 13.5px;
       font-weight: 600;
-      cursor: pointer;
 
       i {
         color: var(--muted);
       }
-
-      &:hover {
-        border-color: var(--brand-pink);
-      }
     }
 
     button.btn-primary {
+      .km-btn-primary-skin();
       height: 38px;
       padding: 0 22px;
       border-radius: var(--r-md);
-      background: var(--grad);
-      color: #fff;
       font-size: 13.5px;
       font-weight: 600;
-      border: 0;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
-
-      &:hover {
-        filter: brightness(1.04);
-      }
     }
   }
 }

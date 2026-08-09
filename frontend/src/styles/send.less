@@ -315,26 +315,18 @@ section#new-email {
     }
 
     .btn-primary {
+      .km-btn-primary-skin();
       display: inline-flex;
       align-items: center;
       gap: 7px;
       height: 38px;
       font-size: 13.5px;
       padding: 0 20px 0 16px;
-      background: var(--grad);
-      color: #fff;
-      border: 0;
       border-radius: var(--r-md);
       font-weight: 600;
-      box-shadow: 0 4px 14px rgba(227, 25, 110, 0.32);
-      cursor: pointer;
 
       i {
         font-size: 13px;
-      }
-
-      &:hover {
-        filter: brightness(1.04);
       }
     }
 
@@ -364,21 +356,15 @@ section#new-email {
 
     }
 
-    .btn-cancel {
-      height: 36px;
-      padding: 0 16px;
-      font-size: @textSize;
-      font-weight: 600;
-      border-radius: var(--r-md);
-      background: var(--bg);
-      border: 1px solid var(--ring);
-      color: var(--ink);
-      cursor: pointer;
+  }
 
-      &:hover {
-        background: var(--pill);
-      }
-    }
+  .btn-cancel {
+    .km-btn-ghost-skin();
+    height: 36px;
+    padding: 0 16px;
+    font-size: @textSize;
+    font-weight: 600;
+    border-radius: var(--r-md);
   }
 }
 
@@ -632,19 +618,4 @@ section#new-email .sent-upsell {
     }
   }
 
-  .btn-cancel {
-    height: 36px;
-    padding: 0 16px;
-    font-size: @textSize;
-    font-weight: 600;
-    border-radius: var(--r-md);
-    background: var(--bg);
-    border: 1px solid var(--ring);
-    color: var(--ink);
-    cursor: pointer;
-
-    &:hover {
-      background: var(--pill);
-    }
-  }
 }
