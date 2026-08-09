@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -33,10 +34,10 @@ func hashLicenseKey(key string) string {
 
 func ensureDeviceIDFile(log zerolog.Logger, filename string) string {
 	b, _ := os.ReadFile(filename)
-	if b != nil {
+	if len(b) > 0 {
 		log.Info().Str("device_id", string(b)).Msg("Read device ID from file")
 		// TODO: validate device ID!
-		return string(b)
+		return strings.TrimSpace(string(b))
 	}
 
 	d := generateDeviceID()
