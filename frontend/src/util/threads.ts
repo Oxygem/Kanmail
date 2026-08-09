@@ -32,7 +32,7 @@ export function moveOrCopyThread(
     _.includes(settingsStore.getAllColumns(), targetFolder) &&
     !_.includes(ALIAS_FOLDERS, targetFolder);
   const handler =
-    accountSettings!.settings.copyFromInbox === true &&
+    accountSettings?.settings.copyFromInbox === true &&
     oldColumn == "inbox" &&
     targetIsWorkflowColumn
       ? emailStore.copyEmails

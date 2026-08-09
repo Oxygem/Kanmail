@@ -217,6 +217,7 @@ class ColumnStore extends BaseStore {
           previousThread.archived !== thread.archived ||
           previousThread.unread !== thread.unread ||
           previousThread.starred !== thread.starred ||
+          previousThread.deleted !== thread.deleted ||
           // Compare each message's live folderUidsVersion against the snapshot taken
           // at the last set, not previousThread[j] which is the same mutated object.
           _.some(

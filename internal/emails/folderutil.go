@@ -86,7 +86,7 @@ func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMe
 			// Extract reference headers, we want to pull a list of the messageIDs without <>
 			refHeaders := hdr.Values("REFERENCES")
 			for _, refHeader := range refHeaders {
-				refs := strings.Split(refHeader, " ")
+				refs := strings.Fields(refHeader)
 				for _, ref := range refs {
 					if strings.HasPrefix(ref, "=?") {
 						// Skip RFC2047 "name" parts of the header
@@ -94,6 +94,9 @@ func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMe
 						continue
 					}
 					ref = strings.Trim(ref, "<>")
+					if ref == "" {
+						continue
+					}
 					email.References = append(email.References, ref)
 				}
 			}
@@ -116,8 +119,11 @@ func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMe
 	// For each in-reply-to value append to the references list if it doesn't already exist. This
 	// assumes that the in-reply-to values are "later" in the thread. Ultimately the order should
 	// not make a significant difference when calculating the thread.
-	for _, msgid := range slices.Backward(msg.Envelope.InReplyTo) {
-		if !slices.Contains(email.References, msgid) {
+	if msg.Envelope != nil {
+		for _, msgid := range slices.Backward(msg.Envelope.InReplyTo) {
+			if msgid == "" || slices.Contains(email.References, msgid) {
+				continue
+			}
 			zerolog.Ctx(ctx).Warn().
 				Strs("in_reply_to", msg.Envelope.InReplyTo).
 				Strs("references", email.References).

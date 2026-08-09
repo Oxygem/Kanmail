@@ -351,6 +351,7 @@ export default class EmailColumnThread extends React.Component<
 
     if (this.state.locked) {
       console.debug("Thread locked, not starring!");
+      return;
     }
 
     this.setState({
@@ -383,6 +384,15 @@ export default class EmailColumnThread extends React.Component<
         starring: false,
         starred: !this.state.starred,
       });
+    }).catch((e) => {
+      this.setState({
+        locked: false,
+        starring: false,
+      });
+      requestStore.addError(
+        this.state.starred ? "Failed to unstar" : "Failed to star",
+        e,
+      );
     });
   };
 
@@ -395,6 +405,7 @@ export default class EmailColumnThread extends React.Component<
 
     if (this.state.locked) {
       console.debug("Thread locked, not moving!");
+      return;
     }
 
     commandStore.open(buildMovePage(this));

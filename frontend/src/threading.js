@@ -202,6 +202,9 @@ export function messageThreader() {
         }
 
         references.forEach(function (reference) {
+          if (!reference) {
+            return;
+          }
           const container = getContainer(reference);
           if (
             prev &&

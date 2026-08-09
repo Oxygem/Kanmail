@@ -117,6 +117,9 @@ class ThreadStore extends BaseStore {
   }
 
   reloadThread() {
+    if (!this.isOpen || !this.props.thread) {
+      return;
+    }
     this.loadThread(this.props.thread);
   }
 

@@ -87,9 +87,12 @@ export function buildRootPage(): CommandPage {
     addOption(threadOptions, "thread.archive", "Archive", () => {
       keyboard.archiveCurrentThread(fakeEvent());
     });
-    addOption(threadOptions, "thread.move", "Move to folder...", () =>
-      buildMovePage(component),
-    );
+    // The welcome thread only exists locally, there's nowhere to move it to
+    if (!component.isWelcome()) {
+      addOption(threadOptions, "thread.move", "Move to folder...", () =>
+        buildMovePage(component),
+      );
+    }
     addOption(threadOptions, "thread.trash", "Move to trash", () => {
       keyboard.trashCurrentThread(fakeEvent());
     });
