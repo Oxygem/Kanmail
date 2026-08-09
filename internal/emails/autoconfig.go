@@ -43,7 +43,7 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 	}
 
 	// First try the domain directly
-	if settings := getAutconfigForDomain(ctx, username, domain); settings != nil {
+	if settings := getAutconfigForDomain(ctx, username, domain, defaultSettings); settings != nil {
 		return *settings, nil
 	}
 
@@ -55,7 +55,7 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 	} else {
 		for _, d := range mx {
 			host := d.Host[:len(d.Host)-1]
-			if settings := getAutconfigForDomain(ctx, username, host); settings != nil {
+			if settings := getAutconfigForDomain(ctx, username, host, defaultSettings); settings != nil {
 				return *settings, nil
 			}
 		}
@@ -67,13 +67,17 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 	)
 }
 
-func getAutconfigForDomain(ctx context.Context, username, domain string) *types.AccountSettings {
+func getAutconfigForDomain(
+	ctx context.Context,
+	username, domain string,
+	defaults types.AccountSettings,
+) *types.AccountSettings {
 	if rootDomain, err := publicsuffix.EffectiveTLDPlusOne(domain); err == nil {
 		domain = rootDomain
 	}
 
 	ispdbURL := fmt.Sprintf(ispdbURL, domain)
-	if settings, err := getAutoconfFromURL(ctx, ispdbURL); settings != nil {
+	if settings, err := getAutoconfFromURL(ctx, ispdbURL, defaults); settings != nil {
 		zerolog.Ctx(ctx).Debug().Msgf("Got autoconf from ISPB: %s", ispdbURL)
 		return settings
 	} else {
@@ -81,7 +85,7 @@ func getAutconfigForDomain(ctx context.Context, username, domain string) *types.
 	}
 
 	providerURL := fmt.Sprintf(autoconfURL, domain, username)
-	if settings, err := getAutoconfFromURL(ctx, providerURL); settings != nil {
+	if settings, err := getAutoconfFromURL(ctx, providerURL, defaults); settings != nil {
 		zerolog.Ctx(ctx).Debug().Msgf("Got autoconf from provider: %s", ispdbURL)
 		return settings
 	} else {
@@ -91,7 +95,11 @@ func getAutconfigForDomain(ctx context.Context, username, domain string) *types.
 	return nil
 }
 
-func getAutoconfFromURL(ctx context.Context, url string) (*types.AccountSettings, error) {
+func getAutoconfFromURL(
+	ctx context.Context,
+	url string,
+	defaults types.AccountSettings,
+) (*types.AccountSettings, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -118,7 +126,10 @@ func getAutoconfFromURL(ctx context.Context, url string) (*types.AccountSettings
 		return nil, err
 	}
 
-	settings := parseAutoconf(data)
+	settings, err := parseAutoconf(data, defaults)
+	if err != nil {
+		return nil, err
+	}
 	return &settings, nil
 }
 
@@ -147,32 +158,49 @@ type autoconfData struct {
 	} `xml:"emailProvider"`
 }
 
-func parseAutoconf(data autoconfData) types.AccountSettings {
-	var settings types.AccountSettings
+func parseAutoconf(data autoconfData, settings types.AccountSettings) (types.AccountSettings, error) {
+	imap, err := findAutoconfServer(data.EmailProvider.IncomingServer, "imap")
+	if err != nil {
+		return settings, err
+	}
 
-	for _, server := range data.EmailProvider.IncomingServer {
-		if server.Type != "imap" {
+	smtp, err := findAutoconfServer(data.EmailProvider.OutgoingServer, "smtp")
+	if err != nil {
+		return settings, err
+	}
+
+	applyAutoconfServer(&settings.IMAPSettings, imap)
+	applyAutoconfServer(&settings.SMTPSettings, smtp)
+
+	return settings, nil
+}
+
+func findAutoconfServer(servers []autoConfServer, serverType string) (autoConfServer, error) {
+	err := fmt.Errorf("no %s server in autoconfig", serverType)
+
+	for _, server := range servers {
+		if server.Type != serverType {
 			continue
 		}
 
-		settings.IMAPSettings.Host = server.Hostname
-		settings.IMAPSettings.Port = server.Port
-		settings.IMAPSettings.SSL = server.SocketType == "SSL"
-		settings.IMAPSettings.StartTLS = server.SocketType == "STARTTLS"
-		break
-	}
-
-	for _, server := range data.EmailProvider.OutgoingServer {
-		if server.Type != "smtp" {
-			continue
+		switch {
+		case server.Hostname == "":
+			err = fmt.Errorf("%s server has no hostname", serverType)
+		case server.Port <= 0 || server.Port > 65535:
+			err = fmt.Errorf("%s server has invalid port: %d", serverType, server.Port)
+		case server.SocketType != "SSL" && server.SocketType != "STARTTLS":
+			err = fmt.Errorf("%s server is unencrypted: %q", serverType, server.SocketType)
+		default:
+			return server, nil
 		}
-
-		settings.SMTPSettings.Host = server.Hostname
-		settings.SMTPSettings.Port = server.Port
-		settings.SMTPSettings.SSL = server.SocketType == "SSL"
-		settings.SMTPSettings.StartTLS = server.SocketType == "STARTTLS"
-		break
 	}
 
-	return settings
+	return autoConfServer{}, err
+}
+
+func applyAutoconfServer(conn *types.ConnectionSettings, server autoConfServer) {
+	conn.Host = server.Hostname
+	conn.Port = server.Port
+	conn.SSL = server.SocketType == "SSL"
+	conn.StartTLS = server.SocketType == "STARTTLS"
 }
