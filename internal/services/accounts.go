@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -52,7 +51,7 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context, settings types
 
 	for id, account := range a.accounts {
 		if accountSettings, ok := newSettings[id]; ok &&
-			reflect.DeepEqual(account.AccountSettings, accountSettings) {
+			!account.AccountSettings.NeedsReconnect(accountSettings) {
 			continue
 		}
 		a.log.Info().

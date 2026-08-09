@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"maps"
+	"reflect"
 	"slices"
 )
 
@@ -72,6 +73,12 @@ type AccountSettings struct {
 }
 
 const DefaultSignatureHTML = `<div>--</div><div>Sent via <a href="https://kanmail.io">Kanmail</a></div>`
+
+func (a AccountSettings) NeedsReconnect(b AccountSettings) bool {
+	a.Settings.AccentColor, b.Settings.AccentColor = "", ""
+	a.Settings.Signature, b.Settings.Signature = nil, nil
+	return !reflect.DeepEqual(a, b)
+}
 
 type ConnectionSettings struct {
 	Username string `json:"username"`

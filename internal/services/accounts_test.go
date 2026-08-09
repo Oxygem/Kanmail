@@ -26,6 +26,43 @@ func makeAccountSettings(name string) types.AccountSettings {
 	return settings
 }
 
+func TestResetAccountsCacheIgnoresPresentationalChanges(t *testing.T) {
+	one := makeAccountSettings("one")
+
+	service := &AccountsService{
+		log:      zerolog.Nop(),
+		accounts: map[types.AccountID]*emails.Account{"one-id": emails.NewAccount(one, nil)},
+	}
+	accountOne := service.accounts["one-id"]
+
+	// Signature/accent colour are frontend-only, so editing them must not drop
+	// the account's connections and IDLE watchers
+	presentational := makeAccountSettings("one")
+	presentational.Settings.AccentColor = "#ff0000"
+	signature := "<div>Regards</div>"
+	presentational.Settings.Signature = &signature
+	if err := service.ResetAccountsCache(context.Background(), types.Settings{
+		Accounts: []types.AccountSettings{presentational},
+	}); err != nil {
+		t.Fatalf("reset failed: %v", err)
+	}
+	if service.accounts["one-id"] != accountOne {
+		t.Fatal("presentational changes should keep the account")
+	}
+
+	// ...but a setting the backend actually reads still drops it
+	functional := makeAccountSettings("one")
+	functional.Settings.SaveSentCopies = true
+	if err := service.ResetAccountsCache(context.Background(), types.Settings{
+		Accounts: []types.AccountSettings{functional},
+	}); err != nil {
+		t.Fatalf("reset failed: %v", err)
+	}
+	if _, ok := service.accounts["one-id"]; ok {
+		t.Fatal("functional changes should drop the account")
+	}
+}
+
 func TestResetAccountsCacheKeepsUnchangedAccounts(t *testing.T) {
 	one := makeAccountSettings("one")
 	two := makeAccountSettings("two")
