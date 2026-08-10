@@ -125,7 +125,7 @@ function mergeSingleSenderThreads(
 
       const accountKey = thread[0].accountID;
       const subject = thread[0].subject.match(/\[.*\]/) || thread[0].subject;
-      const from_ = _.map(thread[0].from, (address) => address[1]);
+      const from_ = _.map(thread[0].from, (address) => address.email);
       const threadKey = `${accountKey}-${from_}-${subject}-${thread.allFolderNames}`;
       if (!senderToSingleThreads[threadKey]) {
         senderToSingleThreads[threadKey] = [];
@@ -189,7 +189,9 @@ export default class BaseEmails {
       [_: string]: IEmail,
     },
   }
-  meta: Map<string, Map<string, any>>;
+  // Plain nested object of folder -> account -> pagination meta (declared and
+  // used with object indexing - never as a Map)
+  meta: { [folderName: string]: { [accountKey: string]: any } };
   referencedMessageIDs: Set<string>;
   // Accounts whose emails/flags changed since the last process - only these
   // are re-threaded, others reuse their cached threads
@@ -271,7 +273,7 @@ export default class BaseEmails {
     this.accountFolderUidToEmail = {};
 
     // Map of folder -> account -> meta
-    this.meta = new Map();
+    this.meta = {};
 
     this.referencedMessageIDs = new Set<string>();
 
@@ -349,19 +351,6 @@ export default class BaseEmails {
     delete accountFolder[uid];
   }
 
-  getUnreadUidsForAccountFolder(accountKey, folderName): string[] {
-    return _.reduce(
-      this.getAccountFolder(accountKey, folderName),
-      (memo: string[], email, uid) => {
-        if (isEmailUnread(email)) {
-          memo.push(uid);
-        }
-        return memo;
-      },
-      []
-    );
-  }
-
   deleteEmailsFromAccountFolder(accountKey, folderName, uids) {
     console.debug(
       `Deleting ${uids.length} emails from ${accountKey}/${folderName}`
@@ -383,13 +372,16 @@ export default class BaseEmails {
         return;
       }
 
-      // Remove any UID for this folder
-      delete message.folderUids[folderName];
-      message.folderUidsVersion += 1;
+      // Only remove the folder mapping if it still points at the UID being
+      // deleted - a stale index entry must not strip the email's current UID
+      if (String(message.folderUids[folderName]) === String(uid)) {
+        delete message.folderUids[folderName];
+        message.folderUidsVersion += 1;
 
-      // If the email is in no folders, delete from global emails
-      if (_.keys(message.folderUids).length === 0) {
-        this.emails.delete(message.accountMessageId);
+        // If the email is in no folders, delete from global emails
+        if (_.keys(message.folderUids).length === 0) {
+          this.emails.delete(message.accountMessageId);
+        }
       }
 
       this.deleteEmailFromAccountFolder(accountKey, folderName, uid);
@@ -420,7 +412,18 @@ export default class BaseEmails {
       if (existingEmail) {
         // Only bump the version when the UID for this folder actually changes,
         // so re-adding already-known emails doesn't force spurious re-renders.
-        if (existingEmail.folderUids[folderName] !== email.uid) {
+        const previousUid = existingEmail.folderUids[folderName];
+        if (previousUid !== email.uid) {
+          // Drop the index entry for the old UID - left behind, a later delete
+          // of it would strip the folder mapping now held under the new one.
+          // Only when it still points at *this* email: when UIDs shuffle within
+          // one batch another email may have already claimed that slot.
+          if (
+            previousUid !== undefined &&
+            this.getEmailFromAccountFolder(accountKey, folderName, previousUid) === existingEmail
+          ) {
+            this.deleteEmailFromAccountFolder(accountKey, folderName, previousUid);
+          }
           existingEmail.folderUids[folderName] = email.uid;
           existingEmail.folderUidsVersion += 1;
         }
@@ -556,7 +559,8 @@ export default class BaseEmails {
         uid
       );
 
-      if (!_.includes(email.flags, Flag.FlagFlagged)) {
+      // The email may have gone from the store while the request was in flight
+      if (email && !_.includes(email.flags, Flag.FlagFlagged)) {
         email.flags.push(Flag.FlagFlagged);
         this.dirtyAccounts.add(accountKey);
       }
@@ -580,6 +584,10 @@ export default class BaseEmails {
         uid
       );
 
+      if (!email) {
+        return;
+      }
+
       email.flags = _.without(email.flags, Flag.FlagFlagged);
       this.dirtyAccounts.add(accountKey);
     });
@@ -602,7 +610,8 @@ export default class BaseEmails {
         uid
       );
 
-      if (!_.includes(email.flags, Flag.FlagDeleted)) {
+      // The email may have gone from the store while the request was in flight
+      if (email && !_.includes(email.flags, Flag.FlagDeleted)) {
         email.flags.push(Flag.FlagDeleted);
         this.dirtyAccounts.add(accountKey);
       }
@@ -611,9 +620,8 @@ export default class BaseEmails {
 
   setEmailsReadByUid(accountKey, folderName, messageUids) {
     const accountFolder = this.getAccountFolder(accountKey, folderName);
-    const accountMessageIds = _.map(
-      messageUids,
-      (uid) => accountFolder[uid].accountMessageId
+    const accountMessageIds = _.compact(
+      _.map(messageUids, (uid) => accountFolder[uid]?.accountMessageId)
     );
     this.setEmailsRead(accountMessageIds);
   }

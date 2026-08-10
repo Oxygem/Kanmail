@@ -148,6 +148,21 @@ class ColumnStore extends BaseStore {
 
   addIncomingThread(thread: Thread) {
     const incomingThread = _.clone(thread);
+    // _.clone on an array copies the elements but not custom properties - carry
+    // over the thread-level state the incoming (ghost) card renders from
+    _.assign(
+      incomingThread,
+      _.pick(thread, [
+        "archived",
+        "starred",
+        "unread",
+        "deleted",
+        "allFolderNames",
+        "allFlags",
+        "latestTimestamp",
+        "mergedThreads",
+      ])
+    );
     incomingThread.isIncoming = true;
     incomingThread.hash = `incoming-${thread.hash}`;
 
@@ -242,6 +257,13 @@ class ColumnStore extends BaseStore {
           this.folderUidsSnapshot[message.accountMessageId] =
             message.folderUidsVersion;
         });
+
+        // The read set only exists to bridge the gap between clicking a
+        // thread and the read state syncing through - once a thread arrives
+        // read, drop its hash so genuinely new unread mail shows unread again
+        if (!thread.unread) {
+          this.readThreadHashes.delete(thread.hash);
+        }
       });
 
       this.hiddenMessageIds.forEach((messageId) => {
