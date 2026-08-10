@@ -49,6 +49,12 @@ function getFolderUidsForThread(thread: Thread): folderUids {
   return _.reduce(
     thread,
     (memo: folderUids, message) => {
+      // The app-generated welcome message renders as a component, there's no
+      // body content to fetch
+      if (message.welcome) {
+        return memo;
+      }
+
       let uid: number = 0;
       let folderName: string = "";
 

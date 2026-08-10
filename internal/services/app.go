@@ -187,6 +187,7 @@ type OpenSendWindowOptions struct {
 
 	// Prefilled fields for a new (non-reply) message
 	To      []string `json:"to,omitempty"`
+	CC      []string `json:"cc,omitempty"`
 	Subject string   `json:"subject,omitempty"`
 	Body    string   `json:"body,omitempty"`
 

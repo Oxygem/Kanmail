@@ -1,62 +1,99 @@
 /*
-    Keyboard shortcut cheatsheet overlay */
+    Keyboard shortcut cheatsheet overlay — 2.x modal.
+    Themed via design tokens (var(--*)), chrome matches the workflow manage
+    modal; binding chips match the Shortcuts settings tab. */
 
 section#cheatsheet-background {
-  position: absolute;
-  z-index: 10;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: rgba(100, 100, 100, 0.6);
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding-top: 80px;
+  padding: 24px;
+  .no-select;
 }
 
 section#cheatsheet {
-  width: 600px;
-  max-height: calc(100vh - 160px);
-  overflow-y: auto;
-  border-radius: @borderRadius;
-  padding: 20px 24px 24px 24px;
+  width: 860px;
+  max-width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--ring);
+  border-radius: 16px;
+  box-shadow: var(--shadow-win);
+  overflow: hidden;
 
-  header {
+  .cheatsheet-head {
+    flex: none;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 12px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--divider);
+
+    > i {
+      font-size: 18px;
+      color: var(--brand-pink);
+    }
 
     h3 {
       margin: 0;
-      font-size: @titleTextSize;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    .icon-btn {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 0;
+      background: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 15px;
+
+      &:hover {
+        background: var(--pill);
+        color: var(--ink);
+      }
     }
   }
 
-  .cheatsheet-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    line-height: 1;
-    cursor: pointer;
-    padding: 0 4px;
-    color: @lightTextGrey;
-
-    &:hover {
-      color: @textGrey;
-    }
+  .cheatsheet-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 26px 22px;
+    columns: 2;
+    column-gap: 44px;
+    .scrollbar;
   }
 
   .cheatsheet-group {
-    margin-bottom: 16px;
+    break-inside: avoid;
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
 
     h4 {
-      margin: 0 0 6px 0;
-      font-size: @smallTextSize;
+      margin: 0 0 2px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: @lightTextGrey;
+      color: var(--faint);
     }
 
     table {
@@ -65,35 +102,77 @@ section#cheatsheet {
     }
 
     td {
-      padding: 4px 0;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--divider);
       vertical-align: middle;
     }
 
-    td.cheatsheet-keys {
-      width: 180px;
-      white-space: nowrap;
+    tr:last-child td {
+      border-bottom: 0;
     }
 
     td.cheatsheet-description {
-      font-size: @textSize;
+      font-size: 13.5px;
+      line-height: 1.4;
+      color: var(--sub);
+      padding-right: 14px;
+    }
+
+    td.cheatsheet-keys {
+      width: 1%;
+      white-space: nowrap;
+      text-align: right;
+
+      kbd + kbd {
+        margin-left: 5px;
+      }
     }
   }
 
   kbd {
     display: inline-block;
-    padding: 2px 8px;
-    border: 1px solid @formBorderGrey;
-    border-radius: @smallBorderRadius;
-    font-family: inherit;
-    font-size: @smallTextSize;
-    background: @lightestGrey;
-    color: @textGrey;
-    min-width: 24px;
+    min-width: 30px;
+    padding: 3px 9px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    font-weight: 600;
     text-align: center;
+    color: var(--ink);
+    background: var(--kbd);
+    border: 1px solid var(--ring);
+    border-bottom-width: 2px;
+    border-radius: 7px;
   }
 
-  .cheatsheet-sep {
-    margin: 0 6px;
-    color: @lightestTextGrey;
+  .cheatsheet-foot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 22px;
+    border-top: 1px solid var(--divider);
+
+    .cheatsheet-hint {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    // Nested so it beats the generic themed `button` rule on specificity.
+    button.btn-ghost {
+      .km-btn-ghost-skin();
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--r-md);
+      font-size: 13px;
+      font-weight: 600;
+
+      i {
+        color: var(--muted);
+      }
+    }
   }
 }

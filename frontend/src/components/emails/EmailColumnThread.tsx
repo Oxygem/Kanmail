@@ -11,7 +11,6 @@ import commandStore from "../../stores/command.ts";
 import { Thread } from "../../stores/emails/base.ts";
 import { getEmailStore } from "../../stores/emails/controller.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
-import { getWelcomeBodies } from "../../stores/emails/welcome.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
 import threadStore from "../../stores/thread.ts";
@@ -326,9 +325,7 @@ export default class EmailColumnThread extends React.Component<
     // Mark as read immediately so any re-renders outside of sync are consistent
     getColumnStore(this.props.columnId).readThread(this.props.thread);
 
-    var knownBodies: Map<string, string> | undefined;
     if (this.isWelcome()) {
-      knownBodies = getWelcomeBodies();
       trackEvent("OpenWelcomeEmail");
     }
 
@@ -341,7 +338,6 @@ export default class EmailColumnThread extends React.Component<
           open: false,
         });
       },
-      knownBodies,
     );
   };
 

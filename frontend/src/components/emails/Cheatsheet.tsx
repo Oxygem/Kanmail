@@ -1,5 +1,6 @@
 import React from "react";
 
+import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import keyboard, { bindingToDisplayString } from "../../keyboard.ts";
 import { subscribe } from "../../stores/base.tsx";
 import cheatsheetStore from "../../stores/cheatsheet.ts";
@@ -20,6 +21,11 @@ export default class Cheatsheet extends React.Component<ICheatsheetProps> {
     if (ev.target === ev.currentTarget) {
       cheatsheetStore.close();
     }
+  };
+
+  handleClickCustomize = () => {
+    cheatsheetStore.close();
+    AppService.OpenSettingsWindow("shortcuts");
   };
 
   renderShortcuts() {
@@ -45,16 +51,13 @@ export default class Cheatsheet extends React.Component<ICheatsheetProps> {
                 const bindings = keyboard.getBindingsFor(shortcut.id);
                 return (
                   <tr key={shortcut.id}>
-                    <td className="cheatsheet-keys">
-                      {bindings.map((b, i) => (
-                        <React.Fragment key={i}>
-                          {i > 0 && <span className="cheatsheet-sep">/</span>}
-                          <kbd>{bindingToDisplayString(b)}</kbd>
-                        </React.Fragment>
-                      ))}
-                    </td>
                     <td className="cheatsheet-description">
                       {shortcut.description}
+                    </td>
+                    <td className="cheatsheet-keys">
+                      {bindings.map((b, i) => (
+                        <kbd key={i}>{bindingToDisplayString(b)}</kbd>
+                      ))}
                     </td>
                   </tr>
                 );
@@ -77,18 +80,34 @@ export default class Cheatsheet extends React.Component<ICheatsheetProps> {
         onClick={this.handleBackgroundClick}
       >
         <section id="cheatsheet">
-          <header>
+          <div className="cheatsheet-head">
+            <i className="fa fa-keyboard-o" />
             <h3>Keyboard shortcuts</h3>
             <button
               type="button"
-              className="cheatsheet-close"
+              className="icon-btn"
               onClick={cheatsheetStore.close}
               aria-label="Close"
             >
-              ×
+              <i className="fa fa-times" />
             </button>
-          </header>
-          {this.renderShortcuts()}
+          </div>
+          <div className="cheatsheet-body">
+            {this.renderShortcuts()}
+          </div>
+          <div className="cheatsheet-foot">
+            <span className="cheatsheet-hint">
+              Press <kbd>?</kbd> any time to show this
+            </span>
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={this.handleClickCustomize}
+            >
+              <i className="fa fa-sliders" />
+              Customize
+            </button>
+          </div>
         </section>
       </section>
     );

@@ -13,6 +13,7 @@ import { ensureInView } from "../../util/element.ts";
 import { formatAddress, formatDate } from "../../util/string.ts";
 import Tooltip from "../Tooltip.tsx";
 import ThreadMessageContent from "./ThreadMessageContent.tsx";
+import WelcomeMessage from "./WelcomeMessage.tsx";
 
 class TrackerCount extends React.Component<{}, { count: number }> {
   constructor(props) {
@@ -271,6 +272,11 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
 
   renderBody() {
     const { message } = this.props;
+
+    if (message.welcome) {
+      return <div className="mail-card"><WelcomeMessage /></div>;
+    }
+
     return <div className="mail-card"><ThreadMessageContent
       body={message.body}
       parts={message.parts}
