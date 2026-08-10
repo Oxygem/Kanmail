@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -11,15 +12,26 @@ import (
 	"github.com/oxygem/kanmail/internal/backend"
 )
 
-var deviceID string
-var analyticsEnabled bool
+// Written on every settings read and read from watch goroutines, so atomic
+var deviceID atomic.Value // string
+var analyticsEnabled atomic.Bool
+
+func init() {
+	// Default true, must match the AppService value
+	analyticsEnabled.Store(true)
+}
 
 func SetDeviceID(id string) {
-	deviceID = id
+	deviceID.Store(id)
+}
+
+func getDeviceID() string {
+	id, _ := deviceID.Load().(string)
+	return id
 }
 
 func SetAnalyticsEnabled(enabled bool) {
-	analyticsEnabled = enabled
+	analyticsEnabled.Store(enabled)
 }
 
 func LogAndPanic(ctx context.Context) {
@@ -37,9 +49,9 @@ func LogAndPanic(ctx context.Context) {
 func ReportPanic(ctx context.Context, err any) {
 	zerolog.Ctx(ctx).Error().Stack().Any("error", err).Msg("Recovered panic")
 
-	if analyticsEnabled {
+	if analyticsEnabled.Load() {
 		trackCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		_ = backend.SendAnalytics(trackCtx, deviceID, "$exception", map[string]any{
+		_ = backend.SendAnalytics(trackCtx, getDeviceID(), "$exception", map[string]any{
 			"$exception_list": []map[string]any{{
 				"type":      "go_panic",
 				"value":     fmt.Sprintf("%v", err),

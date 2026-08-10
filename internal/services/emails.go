@@ -302,12 +302,16 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 		return types.WrapFolderError(accountID, folderName, fmt.Errorf("email does not support one click unsubscribe"))
 	}
 
+	if err := validatePublicHTTPSURL(email.ListUnsubscribeURL); err != nil {
+		return types.WrapFolderError(accountID, folderName, fmt.Errorf("refusing unsubscribe POST: %w", err))
+	}
+
 	zerolog.Ctx(ctx).Info().
 		Str("list_unsubscribe_url", email.ListUnsubscribeURL).
 		Msg("Senting unsubscribe POST")
 
 	// See RFC 8058
-	resp, err := externalHTTPClient.Post(
+	resp, err := publicHTTPSClient.Post(
 		email.ListUnsubscribeURL,
 		"application/x-www-form-urlencoded",
 		strings.NewReader("List-Unsubscribe=One-Click"),

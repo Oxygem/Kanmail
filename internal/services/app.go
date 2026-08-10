@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -45,14 +46,16 @@ const licenseCheckCachedTimeout = 7 * 24 * time.Hour
 const appExitTrackTimeout = 5 * time.Second
 
 type AppService struct {
-	log              zerolog.Logger
-	lock             sync.Mutex
-	app              *application.App
-	caches           *caches.Caches
-	cacheDir         string
-	keyring          *util.CachedKeyring
-	analyticsEnabled bool
-	startedAt        time.Time
+	log       zerolog.Logger
+	lock      sync.Mutex
+	app       *application.App
+	caches    *caches.Caches
+	cacheDir  string
+	keyring   *util.CachedKeyring
+	startedAt time.Time
+
+	// Read by TrackAnalytics from any goroutine, written on settings reads
+	analyticsEnabled atomic.Bool
 
 	mainWindow     *application.WebviewWindow
 	settingsWindow *application.WebviewWindow
@@ -75,18 +78,19 @@ func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring)
 	if version > 0 {
 		backend.SetAppVersion(fmt.Sprintf("2.%d", version))
 	}
-	return &AppService{
+	a := &AppService{
 		log:                   log.With().Str("component", "app").Logger(),
 		keyring:               keyring,
 		accountsNeedingReauth: map[types.AccountID]string{},
 		sendWindowPayloads:    map[string]OpenSendWindowOptions{},
-		AppVersion:            version,
 		openableFiles:         map[string]struct{}{},
 		startedAt:             time.Now(),
 
-		// Default true, matching settings defaults
-		analyticsEnabled: true,
+		AppVersion: version,
 	}
+	// Default true, matching settings defaults
+	a.analyticsEnabled.Store(true)
+	return a
 }
 
 func (a *AppService) Bootstrap(app *application.App, caches *caches.Caches, cacheDir string) {
@@ -109,10 +113,7 @@ func (a *AppService) ResizeWindow(ctx context.Context, width, height int) {
 }
 
 func (a *AppService) SetAnalyticsEnabled(enabled bool) {
-	if a.analyticsEnabled == enabled {
-		return
-	}
-	a.analyticsEnabled = enabled
+	a.analyticsEnabled.Store(enabled)
 	util.SetAnalyticsEnabled(enabled)
 }
 
@@ -427,8 +428,12 @@ func (a *AppService) OpenPurchaseLicenseDialog(ctx context.Context) *struct{} {
 }
 
 func (a *AppService) TrackAnalytics(ctx context.Context, event string, properties map[string]any) error {
-	if !a.analyticsEnabled {
+	if !a.analyticsEnabled.Load() {
 		return nil
+	}
+	properties = maps.Clone(properties)
+	if properties == nil {
+		properties = map[string]any{}
 	}
 
 	ctx = a.log.With().Str("method", "TrackAnalytics").Logger().WithContext(ctx)
@@ -517,6 +522,10 @@ func (a *AppService) CheckUpdate(ctx context.Context) (*backend.Version, error) 
 func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 	ctx = a.log.With().Str("method", "DoUpdate").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
+
+	if a.app.Env.Info().Debug {
+		return nil, errors.New("refusing to self update in debug mode")
+	}
 
 	update, err := a.getUpdate(ctx)
 	if err != nil {
@@ -610,10 +619,6 @@ func (a *AppService) DoUpdate(ctx context.Context) (*struct{}, error) {
 		currentPath = appImagePath
 	}
 
-	if a.app.Env.Info().Debug {
-		return nil, errors.New("refusing to self update in debug mode")
-	}
-
 	err = a.applyUpdate(currentPath, newPath)
 	if err != nil {
 		a.log.Err(err).Msg("Error applying update")
@@ -674,7 +679,7 @@ func (a *AppService) RestartApp() {
 	case "windows":
 		// Windows has no exec syscall to replace the process, so just start a new Kanmail exe and
 		// then exit this one.
-		cmd := exec.Command(os.Args[0], os.Args[1:]...)
+		cmd := exec.Command(bin, os.Args[1:]...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -711,9 +716,23 @@ func (a *AppService) RemoveLicense(ctx context.Context) error {
 	ctx = a.log.With().Str("method", "RemoveLicense").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	if err := a.keyring.Delete(appDirName, a.getKeyringLicenseUser()); err != nil {
+	// Read the key first so its cache row can be cleared below
+	val, err := a.keyring.Get(appDirName, a.getKeyringLicenseUser())
+	if err != nil && !errors.Is(err, keyring.ErrNotFound) {
 		return types.WrapError(err)
 	}
+
+	// Nothing stored is fine - removing an absent license is not an error
+	if err := a.keyring.Delete(appDirName, a.getKeyringLicenseUser()); err != nil && !errors.Is(err, keyring.ErrNotFound) {
+		return types.WrapError(err)
+	}
+
+	if val != "" {
+		if err := a.caches.LicenseCache.Delete(ctx, hashLicenseKey(val)); err != nil {
+			zerolog.Ctx(ctx).Err(err).Msg("Failed to delete license cache row")
+		}
+	}
+
 	a.emitLicenseChangedEvent()
 	return nil
 }
@@ -734,9 +753,10 @@ func (a *AppService) ValidateLicense(ctx context.Context, licenseKey string) (bo
 		return false, types.WrapError(err)
 	}
 
-	// Cache the key, ignore error here as will retry
+	// Cache the key - the license is valid and stored, so a cache write error
+	// only means the next check asks the backend again
 	if err = a.caches.LicenseCache.Upsert(ctx, hashLicenseKey(licenseKey)); err != nil {
-		return false, types.WrapError(err)
+		zerolog.Ctx(ctx).Err(err).Msg("Failed to cache license check")
 	}
 
 	a.emitLicenseChangedEvent()
@@ -777,7 +797,12 @@ func (a *AppService) CheckLicense(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, types.WrapError(err)
 	} else if isValid {
-		return true, types.WrapError(a.caches.LicenseCache.Upsert(ctx, hashedKey))
+		// The license is valid - a failed cache write must not report otherwise,
+		// it only means the next check asks the backend again
+		if err := a.caches.LicenseCache.Upsert(ctx, hashedKey); err != nil {
+			zerolog.Ctx(ctx).Err(err).Msg("Failed to cache license check")
+		}
+		return true, nil
 	}
 	err = a.caches.LicenseCache.Delete(ctx, hashedKey)
 	return false, types.WrapError(err)

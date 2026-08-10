@@ -249,12 +249,13 @@ func FlushNetworkErrors(ctx context.Context) {
 }
 
 func sendNetworkErrorEvent(ctx context.Context, event string, properties map[string]any) {
-	if !analyticsEnabled || deviceID == "" {
+	id := getDeviceID()
+	if !analyticsEnabled.Load() || id == "" {
 		return
 	}
 	sendCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := backend.SendAnalytics(sendCtx, deviceID, event, properties); err != nil {
+	if err := backend.SendAnalytics(sendCtx, id, event, properties); err != nil {
 		zerolog.Ctx(ctx).Warn().Err(err).Str("event", event).Msg("Failed to send network error event")
 	}
 }
