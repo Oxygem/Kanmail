@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -45,10 +46,35 @@ func newFullHTMLCleaner() *bluemonday.Policy {
 	p.AllowDataURIImages()
 	p.AllowURLSchemes("cid")
 	p.AllowAttrs("style").Globally()
+	// Presentational CSS only: with a style allowlist declared, bluemonday strips
+	// every property not on it.
+	p.AllowStyles("background").MatchingHandler(func(value string) bool {
+		return !strings.Contains(strings.ToLower(value), "url")
+	}).Globally()
+	p.AllowStyles(
+		"color", "background-color", "background-position", "background-repeat",
+		"background-size", "opacity",
+		"font", "font-family", "font-size", "font-style", "font-weight", "font-variant",
+		"line-height", "letter-spacing", "text-align", "text-decoration", "text-transform",
+		"text-indent", "text-overflow", "vertical-align", "white-space",
+		"word-break", "word-wrap", "overflow-wrap", "direction",
+		"display", "overflow", "float", "clear", "box-sizing",
+		"width", "height", "max-width", "min-width", "max-height", "min-height",
+		"margin", "margin-top", "margin-right", "margin-bottom", "margin-left",
+		"padding", "padding-top", "padding-right", "padding-bottom", "padding-left",
+		"border", "border-top", "border-right", "border-bottom", "border-left",
+		"border-width", "border-style", "border-color", "border-radius",
+		"border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+		"border-top-style", "border-right-style", "border-bottom-style", "border-left-style",
+		"border-top-color", "border-right-color", "border-bottom-color", "border-left-color",
+		"border-collapse", "border-spacing", "table-layout",
+	).Globally()
 	p.AllowAttrs(
-		"width", "height", "align", "valign", "bgcolor", "background",
+		"width", "height", "align", "valign", "bgcolor",
 		"border", "cellpadding", "cellspacing",
 	).Globally()
+	// Only allow backgrounds from embedded images
+	p.AllowAttrs("background").Matching(regexp.MustCompile(`(?i)^\s*(data|cid):`)).Globally()
 	p.AllowElements("center", "font")
 	p.AllowAttrs("color", "face", "size").OnElements("font")
 	return p

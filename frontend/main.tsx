@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import { EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
+import { AppService, EmailsService } from "./bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import ErrorBoundary from "./src/components/ErrorBoundary.tsx";
 import showErrorInformation from "./src/components/ErrorInformation.tsx";
 import { HeaderErrorsHost } from "./src/components/HeaderErrors.tsx";
@@ -83,30 +83,46 @@ const bootSendApp = async (
         import("./src/util/send.ts"),
     ]);
 
-    if (!urlParams.get("mode")) {
+    const token = urlParams.get("payload");
+    const payload = token ? await AppService.GetSendWindowPayload(token) : null;
+
+    if (!payload?.mode) {
         bootApp(SendApp, appContainer, {
-            to: urlParams.getAll("to"),
-            subject: urlParams.get("subject") || "",
-            messageContent: urlParams.get("body") || "",
+            to: payload?.to || [],
+            subject: payload?.subject || "",
+            messageContent: payload?.body || "",
         });
         return;
     }
 
+    const completeContent = payload.body;
+
+    const carriedProps = {
+        completeContent: completeContent || undefined,
+        attachments: payload.attachments || undefined,
+        to: payload.to || [],
+        subject: payload.subject || undefined,
+        mode: payload.mode,
+    };
+
     EmailsService.GetAccountFolderEmailAndContent(
-        urlParams.get("accountID")!,
-        urlParams.get("folderName")!,
-        parseInt(urlParams.get("uid")!),
+        payload.accountID!,
+        payload.folderName!,
+        payload.uid!,
     ).then(([email, data]) => {
         // SendApp positions the signature between the reply and the quote
         bootApp(SendApp, appContainer, {
+            ...carriedProps,
             message: email,
-            quotedContent: buildQuotedContent(email!, data!.data),
-            mode: urlParams.get("mode") || "reply",
+            quotedContent: completeContent ? "" : buildQuotedContent(email!, data!.data),
         })
     }).catch((e) => {
+        // Loading the replied-to email can fail (offline, transient IMAP) but
+        // the carried compose content must never be dropped with it
         requestStore.addError("Failed to load reply email", e);
         bootApp(SendApp, appContainer, {
-            messageContent: "failed to load reply to email",
+            ...carriedProps,
+            messageContent: completeContent ? undefined : "failed to load reply to email",
         })
     })
 }

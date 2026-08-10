@@ -17,6 +17,7 @@ import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore, { ISystem } from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
+import { restoreRemoteImages } from "../../util/html.ts";
 import {
   AccountAddressOption,
   AddressOption,
@@ -26,7 +27,6 @@ import {
   stringToColor,
   toAddressOptions,
 } from "../../util/send.ts";
-import { makeDragElement } from "../../window.ts";
 import LicensePurchase from "../LicensePurchase.tsx";
 import Tooltip from "../Tooltip.tsx";
 import ContactSelect from "./ContactSelect.tsx";
@@ -249,7 +249,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
     const sendOptions: SendOptions = {
       subject: this.state.subject,
-      html: this.state.html,
+      html: restoreRemoteImages(this.state.html),
       text: this.state.text,
       from: this.state.accountContact.value[1],
       to: _.map(this.state.to, opt => opt.value),
@@ -285,6 +285,8 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       this.setState({
         attachments: _.concat(this.state.attachments, attachments),
       })
+    }).catch(e => {
+      requestStore.addError("Failed to attach files", e);
     })
   };
 
@@ -398,7 +400,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         <header
           className="new-email titlebar"
           onClick={stopEventPropagation}
-          ref={makeDragElement}
         >
           <span className="title">
             <i className="fa fa-pencil" /> New Message
@@ -491,11 +492,15 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
               </div>
             )}
             {_.map(this.state.attachments, (attachment, i) => (
-              <div className="attachment" onClick={() => {
-                const attachments = this.state.attachments;
-                attachments.splice(i, 1);
-                this.setState({ attachments })
-              }}>
+              <div
+                key={`${attachment.path}-${i}`}
+                className="attachment"
+                onClick={() => {
+                  this.setState({
+                    attachments: _.filter(this.state.attachments, (_a, j) => j !== i),
+                  });
+                }}
+              >
                 <i className="fa fa-file-o" />
                 <div>
                   <span>{attachment.filename}</span>

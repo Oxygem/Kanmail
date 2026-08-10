@@ -7,8 +7,12 @@ const POPOVER_EDGE_GAP = 12;
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();
-  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
-    return trimmed;
+  const scheme = trimmed.match(/^([a-z][a-z0-9+.-]*):/i)?.[1]?.toLowerCase();
+  // A dot never appears in a real scheme - "example.com:8080" is a host:port
+  if (scheme && !scheme.includes(".")) {
+    // Only linkable schemes may pass through - javascript:/data:/etc must
+    // never reach makeLink
+    return ["http", "https", "mailto", "tel", "sms"].includes(scheme) ? trimmed : "";
   }
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
     return `mailto:${trimmed}`;
@@ -61,7 +65,10 @@ const EditorToolButtons = ({
 
   const applyLink = () => {
     if (!linkUrl.trim()) return;
-    onCommand("makeLink", normalizeUrl(linkUrl));
+    const url = normalizeUrl(linkUrl);
+    if (url) {
+      onCommand("makeLink", url);
+    }
     closeLinkPopover();
   };
 

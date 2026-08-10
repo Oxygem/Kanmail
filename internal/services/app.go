@@ -57,7 +57,6 @@ type AppService struct {
 	mainWindow     *application.WebviewWindow
 	settingsWindow *application.WebviewWindow
 	metaWindow     *application.WebviewWindow
-	sendWindows    []*application.WebviewWindow
 
 	accountsNeedingReauth map[types.AccountID]string
 
@@ -72,8 +71,8 @@ func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring)
 	return &AppService{
 		log:                   log.With().Str("component", "app").Logger(),
 		keyring:               keyring,
-		sendWindows:           make([]*application.WebviewWindow, 0),
 		accountsNeedingReauth: map[types.AccountID]string{},
+		sendWindowPayloads:    map[string]OpenSendWindowOptions{},
 		AppVersion:            version,
 		startedAt:             time.Now(),
 
@@ -162,42 +161,31 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	v := make(url.Values, 5)
+	token := uuid.NewString()
+	a.sendWindowPayloadsLock.Lock()
+	a.sendWindowPayloads[token] = options
+	a.sendWindowPayloadsLock.Unlock()
 
-	if options.Mode != "" {
-		v["mode"] = []string{options.Mode}
-	}
-	if options.AccountID != "" {
-		v["accountID"] = []string{string(options.AccountID)}
-	}
-	if options.FolderName != "" {
-		v["folderName"] = []string{string(options.FolderName)}
-	}
-	if options.UID > 0 {
-		v["uid"] = []string{strconv.Itoa(int(options.UID))}
-	}
-	if len(options.To) > 0 {
-		v["to"] = options.To
-	}
-	if options.Subject != "" {
-		v["subject"] = []string{options.Subject}
-	}
-	if options.Body != "" {
-		v["body"] = []string{options.Body}
-	}
-	if options.Attachments != nil {
-		if b, err := json.Marshal(options.Attachments); err == nil {
-			v["attachments"] = []string{string(b)}
-		}
-	}
+	v := url.Values{}
+	v.Set("payload", token)
 
-	window := util.MakeWindow(ctx, a.app, util.WindowOptions{
+	util.MakeWindow(ctx, a.app, util.WindowOptions{
 		Title:   "Kanmail v2 Send",
 		AppName: "send",
 		Compact: true,
 		Values:  v,
 	})
-	a.sendWindows = append(a.sendWindows, window)
+}
+
+func (a *AppService) GetSendWindowPayload(ctx context.Context, token string) (*OpenSendWindowOptions, error) {
+	a.sendWindowPayloadsLock.Lock()
+	defer a.sendWindowPayloadsLock.Unlock()
+
+	options, ok := a.sendWindowPayloads[token]
+	if !ok {
+		return nil, fmt.Errorf("no send window payload for token")
+	}
+	return &options, nil
 }
 
 func (a *AppService) OpenMetaWindow(ctx context.Context) {

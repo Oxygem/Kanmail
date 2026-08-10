@@ -14,10 +14,10 @@ import keyboard, { metaKeyLabel } from "../../keyboard.ts";
 import mainEmailStore from "../../stores/emails/main.ts";
 import requestStore from "../../stores/request.ts";
 import settingsStore from "../../stores/settings.ts";
-import { IThreadMessage } from "../../stores/thread.ts";
-import threadStore from "../../stores/thread.ts";
+import threadStore, { IThreadMessage } from "../../stores/thread.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
+import { restoreRemoteImages } from "../../util/html.ts";
 import {
   AddressOption,
   ReplyRecipients,
@@ -249,7 +249,10 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       accountID: latestMessage.accountID,
       folderName: latestMessage.folderName,
       uid: latestMessage.uid,
-      // Carry the full editor state over so nothing typed or attached is lost
+      subject: prependIfNotPresent(
+        latestMessage.subject,
+        this.state.mode === "forward" ? "Fwd" : "Re",
+      ),
       body: this.state.html,
       to: _.map(this.state.to, (option) => option.value.email),
       // While forwarded parts are still downloading pass nothing, letting the
@@ -257,8 +260,13 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       attachments: this.state.isLoadingAttachments
         ? undefined
         : this.state.attachments,
+    }).then(() => {
+      // Only discard the quick reply once the send window actually opened -
+      // wiping it first would lose the typed reply if the open fails
+      this.handleCancel();
+    }).catch((e) => {
+      requestStore.addError("Failed to open send window", e);
     });
-    this.handleCancel();
   };
 
   handleSend = () => {
@@ -295,7 +303,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
     const sendOptions: SendOptions = {
       subject: prependIfNotPresent(latestMessage.subject, isForward ? "Fwd" : "Re"),
-      html: this.state.html,
+      html: restoreRemoteImages(this.state.html),
       text: "",
       from,
       to,

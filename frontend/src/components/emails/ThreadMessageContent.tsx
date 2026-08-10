@@ -127,18 +127,25 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     });
 
     // Remove any background images (by attribute) (currently cannot be restored!)
+    // Anything that isn't an inline data:/cid: source counts as remote.
     _.each(tempDocument.body.querySelectorAll("*[background]"), (element) => {
       const background = element.getAttribute("background");
-      if (background && _.includes(background, "://")) {
+      if (background && !/^\s*(data|cid):/i.test(background)) {
         element.setAttribute("original-background", background);
         element.removeAttribute("background");
       }
     });
 
-    // Remove any inline style background
+    // Remove any inline style background. Any url() that isn't inline
+    // data:/cid: counts as remote - a "://" substring check would let
+    // protocol-relative URLs through.
     _.each(tempDocument.body.querySelectorAll("*[style]"), (element) => {
       const style = element.getAttribute("style");
-      if (style && _.includes(style, "background") && _.includes(style, "://")) {
+      if (
+        style &&
+        _.includes(style, "background") &&
+        /url\s*\(\s*['"]?\s*(?!data:|cid:)/i.test(style)
+      ) {
         element.setAttribute("original-style", style);
         // Replacing "background" allows us to prevent the background without impacting other styles
         element.setAttribute("style", style.replaceAll("background", "bgremovedbykanmail"));
@@ -356,7 +363,13 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     if (this.props.trusted) {
       return <div ref={el => this.htmlElement = el} />
     } else {
-      return <iframe ref={el => this.frameElement = el} />;
+      // allow-same-origin + allow-scripts are required for our own inject and
+      // darkreader scripts and the parent's process/measure access; email
+      // content itself can never script (CSP).
+      return <iframe
+        sandbox="allow-same-origin allow-scripts"
+        ref={el => this.frameElement = el}
+      />;
     }
   }
 

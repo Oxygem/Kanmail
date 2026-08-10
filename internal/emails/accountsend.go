@@ -70,30 +70,16 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 
 	var b bytes.Buffer
 
-	// Mixed writer (text/html + attachments)
-	var mw *mail.Writer
-	// Inline writer (text/html)
-	var iw *mail.InlineWriter
+	// Create top level multipart/mixed writer from header for inline + attachments
+	mw, err := mail.CreateWriter(&b, header)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
-	if len(options.Attachments) == 0 && false {
-		// Just create inline multipart/alternative for the text/html
-		iw, err = mail.CreateInlineWriter(&b, header)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// Create top level multipart/mixed writer from header for inline + attachments
-		mw, err = mail.CreateWriter(&b, header)
-		if err != nil {
-			return nil, err
-		}
-
-		// Create inline (text) writer for plain and html texts
-		iw, err = mw.CreateInline()
-		if err != nil {
-			return nil, err
-		}
+	// Create inline (text) writer for plain and html texts
+	iw, err := mw.CreateInline()
+	if err != nil {
+		return nil, err
 	}
 
 	if options.Text != "" {
@@ -139,20 +125,22 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 		f, err := os.Open(attachment.Path)
 		if err != nil {
 			return nil, fmt.Errorf("failed to open attachment file: %s: %w", attachment.Path, err)
-		} else if _, err := io.Copy(w, f); err != nil {
-			return nil, fmt.Errorf("failed to copy attachment: %w", err)
 		}
-		if err := f.Close(); err != nil {
-			return nil, err
-		} else if err := w.Close(); err != nil {
+		_, copyErr := io.Copy(w, f)
+		closeErr := f.Close()
+		if copyErr != nil {
+			return nil, fmt.Errorf("failed to copy attachment: %w", copyErr)
+		}
+		if closeErr != nil {
+			return nil, closeErr
+		}
+		if err := w.Close(); err != nil {
 			return nil, fmt.Errorf("failed to close attachment writer: %w", err)
 		}
 	}
 
-	if mw != nil {
-		if err := mw.Close(); err != nil {
-			return nil, fmt.Errorf("failed to close multiwriter: %w", err)
-		}
+	if err := mw.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multiwriter: %w", err)
 	}
 
 	// Derive an imap.BodyStructure from the bytes we just wrote, then reuse the
