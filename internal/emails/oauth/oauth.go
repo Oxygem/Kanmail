@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +17,7 @@ import (
 	"github.com/emersion/go-sasl"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
+	"go.mau.fi/util/random"
 
 	"github.com/oxygem/kanmail/internal/constants"
 	"github.com/oxygem/kanmail/internal/types"
@@ -182,7 +185,13 @@ type OAuthResponse struct {
 
 type oauthRequest struct {
 	provider string
-	response *OAuthResponse
+	// CSRF protection: the provider echoes state back on the redirect, so a
+	// response that doesn't carry it can't belong to the flow we started
+	state string
+	// PKCE (RFC 7636): the code is only exchangeable with the verifier, which
+	// never leaves this process
+	pkceVerifier string
+	response     *OAuthResponse
 }
 
 // var oauthRequests = map[uuid.UUID]*oauthRequest{}
@@ -244,32 +253,47 @@ func cachedTokenFor(refreshToken string) (token string, err error, ok bool) {
 // a token that expires mid-login
 const accessTokenExpiryBuffer = 5 * time.Minute
 
+// Guards oauthResponseServerAddr: without it two rapid StartOAuthRequest calls
+// could both Listen (leaking one socket), and the addr write had no
+// happens-before with the handler goroutine's read.
+var oauthResponseServerLock sync.Mutex
+
 func getRedirectURL() string {
+	oauthResponseServerLock.Lock()
+	defer oauthResponseServerLock.Unlock()
 	return "http://" + oauthResponseServerAddr.String()
 }
 
 func ensureResponseServer(ctx context.Context) error {
-	if oauthResponseServerAddr == nil {
-		listener, err := net.Listen("tcp", "localhost:0")
-		if err != nil {
-			return err
-		}
-		server := &http.Server{Handler: http.HandlerFunc(handleOAuthResponse)}
+	oauthResponseServerLock.Lock()
+	defer oauthResponseServerLock.Unlock()
 
-		go func() {
-			defer util.LogAndPanic(ctx)
-			if err := server.Serve(listener); err != http.ErrServerClosed {
-				// Panic is appropriate here because if the server dies while oauth flow in effect
-				// the alternative is a hanging app with no explanation.
-				panic(err)
-			}
-		}()
-
-		oauthResponseServerAddr = listener.Addr()
-		zerolog.Ctx(ctx).Debug().
-			Str("addr", listener.Addr().String()).
-			Msg("Started OAuth response server")
+	if oauthResponseServerAddr != nil {
+		return nil
 	}
+
+	listener, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return err
+	}
+	server := &http.Server{Handler: http.HandlerFunc(handleOAuthResponse)}
+
+	// Addr is assigned before the server goroutine starts, so the handler can
+	// never observe it unset
+	oauthResponseServerAddr = listener.Addr()
+
+	go func() {
+		defer util.LogAndPanic(ctx)
+		if err := server.Serve(listener); err != http.ErrServerClosed {
+			// Panic is appropriate here because if the server dies while oauth flow in effect
+			// the alternative is a hanging app with no explanation.
+			panic(err)
+		}
+	}()
+
+	zerolog.Ctx(ctx).Debug().
+		Str("addr", listener.Addr().String()).
+		Msg("Started OAuth response server")
 	return nil
 }
 
@@ -314,9 +338,19 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		Str("provider", currentOAuthRequest.provider).
 		Logger()
 
+	query := r.URL.Query()
+
+	// A response without our state can't belong to the flow we started, so it
+	// gets a page but does not complete (or cancel) the pending request.
+	if query.Get("state") != currentOAuthRequest.state {
+		log.Warn().Msg("OAuth response with missing or mismatched state")
+		writeOAuthPage(w, http.StatusBadRequest,
+			"This response doesn't match the sign in in progress - please start again from the Kanmail app.")
+		return
+	}
+
 	// Providers redirect back here with an error and no code when the user hits
 	// cancel or declines any of the access asked for
-	query := r.URL.Query()
 	if errCode := query.Get("error"); errCode != "" || query.Get("code") == "" {
 		log.Warn().
 			Str("error", errCode).
@@ -356,6 +390,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	v.Set("code", query.Get("code"))
 	v.Set("grant_type", "authorization_code")
 	v.Set("redirect_uri", getRedirectURL())
+	v.Set("code_verifier", currentOAuthRequest.pkceVerifier)
 
 	if service.includeClientSecret {
 		v.Set("client_secret", service.clientSecret)
@@ -432,7 +467,9 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetOAuthRequestURL(ctx context.Context, provider string) (string, string, error) {
-	ensureResponseServer(ctx)
+	if err := ensureResponseServer(ctx); err != nil {
+		return "", "", fmt.Errorf("failed to start oauth response server: %w", err)
+	}
 
 	oauthRequestLock.Lock()
 	defer oauthRequestLock.Unlock()
@@ -444,8 +481,12 @@ func GetOAuthRequestURL(ctx context.Context, provider string) (string, string, e
 
 	uid := uuid.New()
 	currentOAuthRequest = &oauthRequest{
-		provider: provider,
+		provider:     provider,
+		state:        base64.RawURLEncoding.EncodeToString(random.Bytes(16)),
+		pkceVerifier: base64.RawURLEncoding.EncodeToString(random.Bytes(32)),
 	}
+
+	pkceChallenge := sha256.Sum256([]byte(currentOAuthRequest.pkceVerifier))
 
 	v := url.Values{}
 	v.Set("client_id", service.clientID)
@@ -454,6 +495,9 @@ func GetOAuthRequestURL(ctx context.Context, provider string) (string, string, e
 	v.Set("access_type", "offline")
 	v.Set("prompt", "consent")
 	v.Set("redirect_uri", getRedirectURL())
+	v.Set("state", currentOAuthRequest.state)
+	v.Set("code_challenge", base64.RawURLEncoding.EncodeToString(pkceChallenge[:]))
+	v.Set("code_challenge_method", "S256")
 
 	url := service.authEndpoint + "?" + v.Encode()
 	return uid.String(), url, nil
