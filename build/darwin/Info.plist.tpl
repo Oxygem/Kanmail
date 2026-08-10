@@ -30,5 +30,16 @@
             <key>NSAllowsLocalNetworking</key>
             <true/>
         </dict>
+        <key>CFBundleURLTypes</key>
+        <array>
+            <dict>
+                <key>CFBundleURLName</key>
+                <string>com.oxygem.kanmail.mailto</string>
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>mailto</string>
+                </array>
+            </dict>
+        </array>
     </dict>
 </plist>

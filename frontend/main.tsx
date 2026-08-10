@@ -89,6 +89,7 @@ const bootSendApp = async (
     if (!payload?.mode) {
         bootApp(SendApp, appContainer, {
             to: payload?.to || [],
+            cc: payload?.cc || [],
             subject: payload?.subject || "",
             messageContent: payload?.body || "",
         });

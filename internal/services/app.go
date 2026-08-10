@@ -220,6 +220,24 @@ func (a *AppService) OpenSendWindow(ctx context.Context, options OpenSendWindowO
 	})
 }
 
+// Composes a mailto: link in-app rather than handing it to the OS default mail
+// client. Used both for links clicked inside Kanmail and, where Kanmail is
+// registered as the mailto handler, for links opened elsewhere on the system.
+func (a *AppService) OpenMailto(ctx context.Context, rawURL string) error {
+	mailto, err := util.ParseMailto(rawURL)
+	if err != nil {
+		return err
+	}
+
+	a.OpenSendWindow(ctx, OpenSendWindowOptions{
+		To:      mailto.To,
+		CC:      mailto.CC,
+		Subject: mailto.Subject,
+		Body:    util.TextToHTML(mailto.Body),
+	})
+	return nil
+}
+
 func (a *AppService) GetSendWindowPayload(ctx context.Context, token string) (*OpenSendWindowOptions, error) {
 	a.sendWindowPayloadsLock.Lock()
 	defer a.sendWindowPayloadsLock.Unlock()

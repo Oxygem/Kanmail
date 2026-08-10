@@ -226,6 +226,13 @@ func (k *Kanmail) Run() error {
 	emailsWindow.OnWindowEvent(events.Common.WindowDidMove, saveWindowState)
 	emailsWindow.OnWindowEvent(events.Common.WindowDidResize, saveWindowState)
 
+	k.App.Event.OnApplicationEvent(events.Common.ApplicationLaunchedWithUrl, func(event *application.ApplicationEvent) {
+		launchURL := event.Context().URL()
+		if err := k.AppService.OpenMailto(ctx, launchURL); err != nil {
+			k.log.Err(err).Str("url", launchURL).Msg("Failed to open launch URL")
+		}
+	})
+
 	// Quit the entire app if the main window is closed
 	emailsWindow.OnWindowEvent(events.Common.WindowClosing, func(event *application.WindowEvent) {
 		if constants.ENV_DEBUG_NO_AUTOCLOSE != "" {

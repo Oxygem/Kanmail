@@ -59,6 +59,7 @@ interface ISendAppProps extends ISettings, ISystem {
   // Prefilled fields, used when there's no message to reply to (or, for to,
   // when popping out a partially-composed forward)
   to?: string[];
+  cc?: string[];
   subject?: string;
 }
 
@@ -163,6 +164,12 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         state.to = toAddressOptions(
           props.to.map(email => new Address({ name: "", email })),
         );
+      }
+      if (props.cc?.length) {
+        state.cc = toAddressOptions(
+          props.cc.map(email => new Address({ name: "", email })),
+        );
+        state.showCc = true;
       }
     }
 
