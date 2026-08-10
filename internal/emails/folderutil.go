@@ -28,7 +28,7 @@ import (
 var tempDirForFailedDecodes string
 
 func InitTempDirForFailedDecodes(path string) {
-	if err := os.MkdirAll(path, os.ModePerm); err != nil {
+	if err := os.MkdirAll(path, 0o755); err != nil {
 		panic(err)
 	}
 	tempDirForFailedDecodes = path
@@ -213,7 +213,8 @@ func (f *Folder) decodePart(ctx context.Context, in bodyPartResp) []byte {
 			encoding = "unknown"
 		}
 		filename := path.Join(tempDirForFailedDecodes, timeStr+"."+encoding)
-		if err := os.WriteFile(filename, in.Bytes, os.ModePerm); err != nil {
+		// Raw undecodable mail content - keep it private to the user
+		if err := os.WriteFile(filename, in.Bytes, 0o600); err != nil {
 			panic(err)
 		}
 		zerolog.Ctx(ctx).Err(err).

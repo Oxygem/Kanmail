@@ -69,17 +69,18 @@ type SettingsService struct {
 func NewSettingsService(log zerolog.Logger, logFilename string, appService *AppService, keyring *util.CachedKeyring) *SettingsService {
 	configDir, cacheDir, logsDir := getAppDirs()
 
-	if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		panic(err)
-	} else if err := os.MkdirAll(cacheDir, os.ModePerm); err != nil {
+	} else if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		panic(err)
-	} else if err := os.MkdirAll(logsDir, os.ModePerm); err != nil {
+	} else if err := os.MkdirAll(logsDir, 0o755); err != nil {
 		panic(err)
 	}
 
 	emails.InitTempDirForFailedDecodes(path.Join(cacheDir, "failed-decodes"))
 
 	appService.SetDeviceID(configDir)
+	appService.allowOpenFile(logFilename)
 
 	return &SettingsService{
 		log:     log.With().Str("component", "settings").Logger(),

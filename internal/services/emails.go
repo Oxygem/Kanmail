@@ -100,6 +100,11 @@ func (e *EmailsService) SendEmail(
 		return nil, types.WrapAccountError(accountID, err)
 	}
 
+	// Forwarded attachments were staged into temp dirs - sent now, so clean up
+	for _, attachment := range options.Attachments {
+		cleanupForwardAttachment(attachment.Path)
+	}
+
 	e.app.EmitFolderSync(accountID, "sent")
 
 	return email, nil
@@ -405,8 +410,14 @@ func (e *EmailsService) DownloadAccountFolderEmailPartData(
 	}
 
 	data := partData[uid].Bytes
-	err = os.WriteFile(path, data, os.ModePerm)
-	return path, types.WrapFolderError(accountID, folderName, err)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return "", types.WrapFolderError(accountID, folderName, err)
+	}
+
+	// The frontend offers to open the file it just downloaded
+	e.app.allowOpenFile(path)
+
+	return path, nil
 }
 
 // Download attachment parts of an email to temp files so they can be included
@@ -435,10 +446,17 @@ func (e *EmailsService) CreateForwardAttachments(
 
 	folder := account.GetFolder(folderName)
 
-	dir, err := os.MkdirTemp("", "kanmail-forward-")
+	dir, err := os.MkdirTemp("", forwardAttachmentDirPattern)
 	if err != nil {
 		return nil, err
 	}
+	// On any failure below nothing references the dir - don't leak it
+	success := false
+	defer func() {
+		if !success {
+			os.RemoveAll(dir)
+		}
+	}()
 
 	attachments := make([]emails.SendAttachment, 0, len(parts))
 	for i, part := range parts {
@@ -449,18 +467,19 @@ func (e *EmailsService) CreateForwardAttachments(
 			return nil, types.WrapFolderError(accountID, folderName, errors.New("part not found"))
 		}
 
-		filename := filepath.Base(part.Description)
-		if filename == "" || filename == "." {
+		// Sanitized so eg ".." can't escape the temp dir
+		filename := util.SanitizeFilename(part.Description)
+		if filename == "attachment" {
 			filename = fmt.Sprintf("attachment-%s", part.PartStr)
 		}
 
 		partDir := filepath.Join(dir, strconv.Itoa(i))
-		if err := os.MkdirAll(partDir, os.ModePerm); err != nil {
+		if err := os.MkdirAll(partDir, 0o755); err != nil {
 			return nil, err
 		}
 
 		path := filepath.Join(partDir, filename)
-		if err := os.WriteFile(path, partData[uid].Bytes, os.ModePerm); err != nil {
+		if err := os.WriteFile(path, partData[uid].Bytes, 0o644); err != nil {
 			return nil, err
 		}
 
@@ -471,7 +490,29 @@ func (e *EmailsService) CreateForwardAttachments(
 		})
 	}
 
+	success = true
 	return attachments, nil
+}
+
+const forwardAttachmentDirPattern = "kanmail-forward-"
+
+// cleanupForwardAttachment removes the temp directory tree behind a forward
+// attachment once it has been sent. Attachments the user picked themselves live
+// outside our temp prefix and are never touched.
+func cleanupForwardAttachment(attachmentPath string) {
+	prefix := filepath.Join(os.TempDir(), forwardAttachmentDirPattern)
+
+	abs, err := filepath.Abs(attachmentPath)
+	if err != nil || !strings.HasPrefix(abs, prefix) {
+		return
+	}
+
+	// Walk up from <root>/<i>/<filename> to the kanmail-forward-XXXX root
+	root := abs
+	for parent := filepath.Dir(abs); strings.HasPrefix(parent, prefix); parent = filepath.Dir(parent) {
+		root = parent
+	}
+	os.RemoveAll(root)
 }
 
 // Folder batch / UID commands

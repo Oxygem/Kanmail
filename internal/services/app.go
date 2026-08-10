@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -60,6 +59,10 @@ type AppService struct {
 
 	accountsNeedingReauth map[types.AccountID]string
 
+	// Track files we're allowed to open (log file, downloaded attachments)
+	openableFiles     map[string]struct{}
+	openableFilesLock sync.Mutex
+
 	AppVersion int
 	DeviceID   string
 }
@@ -74,6 +77,7 @@ func NewAppService(log zerolog.Logger, version int, keyring *util.CachedKeyring)
 		accountsNeedingReauth: map[types.AccountID]string{},
 		sendWindowPayloads:    map[string]OpenSendWindowOptions{},
 		AppVersion:            version,
+		openableFiles:         map[string]struct{}{},
 		startedAt:             time.Now(),
 
 		// Default true, matching settings defaults
@@ -120,6 +124,39 @@ func (a *AppService) GetEventNames() []types.EventName {
 
 func (a *AppService) OpenLink(ctx context.Context, url string) error {
 	return util.OpenInBrowser(url)
+}
+
+func (a *AppService) allowOpenFile(filename string) {
+	if filename == "" {
+		return
+	}
+
+	abs, err := filepath.Abs(filename)
+	if err != nil {
+		a.log.Err(err).Str("file", filename).Msg("Failed to resolve openable file path")
+		return
+	}
+
+	a.openableFilesLock.Lock()
+	defer a.openableFilesLock.Unlock()
+	a.openableFiles[abs] = struct{}{}
+}
+
+func (a *AppService) OpenFile(ctx context.Context, filename string) error {
+	abs, err := filepath.Abs(filename)
+	if err != nil {
+		return fmt.Errorf("invalid file path: %w", err)
+	}
+
+	a.openableFilesLock.Lock()
+	_, allowed := a.openableFiles[abs]
+	a.openableFilesLock.Unlock()
+
+	if !allowed {
+		return fmt.Errorf("refusing to open file not written by Kanmail: %s", filename)
+	}
+
+	return util.OpenFile(abs)
 }
 
 func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error) {
@@ -347,7 +384,9 @@ func (a *AppService) clearAccountAuthErrors() {
 
 func (a *AppService) OpenSaveFileDialog(part types.BodyPart) (string, error) {
 	dialog := application.Get().Dialog.SaveFile()
-	dialog.SetFilename(part.Description)
+	// The description is the attacker-controlled MIME filename - never hand it
+	// to the native dialog with path components or control characters intact
+	dialog.SetFilename(util.SanitizeFilename(part.Description))
 
 	if home, err := os.UserHomeDir(); err == nil {
 		dialog.SetDirectory(filepath.Join(home, "Downloads"))

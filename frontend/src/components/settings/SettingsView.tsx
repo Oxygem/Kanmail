@@ -647,7 +647,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
         <button className="btn-soft" onClick={AppService.RestartApp}>
           <i className="fa fa-refresh" /> Restart Kanmail
         </button>
-        <button className="btn-soft" onClick={() => AppService.OpenLink(systemStore.props.logFilename)}>
+        <button className="btn-soft" onClick={() => AppService.OpenFile(systemStore.props.logFilename)}>
           <i className="fa fa-file-text-o" /> Open log file
         </button>
         <button className="btn-soft" onClick={() => openFeedbackWindow("SettingsOpenFeedback")}>

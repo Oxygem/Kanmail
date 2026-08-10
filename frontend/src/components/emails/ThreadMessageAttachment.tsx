@@ -37,7 +37,9 @@ export default class ThreadMessageAttachment extends React.Component<
 
   handleClick = () => {
     if (this.state.downloaded) {
-      AppService.OpenLink(this.state.downloadedFilename!);
+      AppService.OpenFile(this.state.downloadedFilename!).catch((ev) => {
+        requestStore.addError("Failed to open attachment", ev, { silent: true });
+      });
       return;
     }
 

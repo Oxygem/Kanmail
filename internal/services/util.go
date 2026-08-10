@@ -41,7 +41,7 @@ func ensureDeviceIDFile(log zerolog.Logger, filename string) string {
 	}
 
 	d := generateDeviceID()
-	if err := os.WriteFile(filename, []byte(d), fs.ModePerm); err != nil {
+	if err := os.WriteFile(filename, []byte(d), 0o644); err != nil {
 		log.Err(err).Msg("Failed to write deviceID file")
 	}
 
