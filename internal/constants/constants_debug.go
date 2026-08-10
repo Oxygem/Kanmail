@@ -1,3 +1,5 @@
+//go:build !production
+
 package constants
 
 import (
