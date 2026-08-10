@@ -280,7 +280,6 @@ class ThreadStore extends BaseStore {
         });
         const showImages = !_.includes(allShow, false);
         const part = fetchedParts.get(message.accountMessageId);
-        console.log("SHOWIMG", showImages, allShow, part);
         return {
           body: part?.data || "",
           trusted: part?.trusted || false,

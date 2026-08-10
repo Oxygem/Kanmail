@@ -1,7 +1,8 @@
 function isReplyOrForward(subject) {
-  const pattern = /^(Re|Fwd)/i;
-  const match = subject.match(pattern);
-  return match ? true : false;
+  // Match the whole prefix token ("Re:", "Fwd:", "re[2]:", localized "RE : ")
+  // - not any subject merely starting with those letters ("Reminder: ...")
+  const pattern = /^\s*(re|fwd?)(\[\d+\])?\s*:/i;
+  return pattern.test(subject);
 }
 
 function normalizeSubject(accountID, subject) {
@@ -22,14 +23,6 @@ function normalizeSubject(accountID, subject) {
 function messageContainer(message) {
   return (function (message) {
     var children = [];
-
-    function getConversation(id) {
-      var child = this.getSpecificChild(id);
-      var flattened = [];
-      if (child) flattened = child.flattenChildren();
-      if (child.message) flattened.unshift(child.message);
-      return flattened;
-    }
 
     function flattenChildren() {
       var messages = [];
@@ -122,7 +115,6 @@ function messageContainer(message) {
       message: message,
       children: children,
       flattenChildren: flattenChildren,
-      getConversation: getConversation,
       getSpecificChild: getSpecificChild,
       threadParent: threadParent,
       addChild: addChild,

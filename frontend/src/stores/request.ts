@@ -254,19 +254,6 @@ class RequestStore extends BaseStore {
     pendingRequest.onUndo();
   };
 
-  close = async () => {
-    // Firstly kick all the pending requests
-    _.each(this.props.pendingRequests, req => {
-      clearTimeout(req.timeoutId);
-      // Run the callback function
-      req.callback();
-    });
-
-    // Now wait for requests to stop coming in
-    while (this.props.fetchRequests.size > 0 || this.props.pushRequests.size > 0) {
-      await new Promise(r => setTimeout(r, 1000));
-    }
-  }
 }
 
 const requestStore = new RequestStore();
