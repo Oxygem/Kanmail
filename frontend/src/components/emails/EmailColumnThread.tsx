@@ -323,6 +323,9 @@ export default class EmailColumnThread extends React.Component<
       unread: false,
     });
 
+    // Mark as read immediately so any re-renders outside of sync are consistent
+    getColumnStore(this.props.columnId).readThread(this.props.thread);
+
     var knownBodies: Map<string, string> | undefined;
     if (this.isWelcome()) {
       knownBodies = getWelcomeBodies();

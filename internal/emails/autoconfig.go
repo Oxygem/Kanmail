@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog"
 	"golang.org/x/net/publicsuffix"
@@ -18,6 +19,10 @@ const (
 	autoconfURL = "https://autoconfig.%s/mail/config-v1.1.xml?emailaddress=%s"
 	ispdbURL    = "https://ispdb.kanmail.io/%s/v1.1/config.xml"
 )
+
+var autoconfHTTPClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
 
 func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string) (types.AccountSettings, error) {
 	// Make some sensible defaults, the client will fallback to these if we fail to autoconf
@@ -105,8 +110,7 @@ func getAutoconfFromURL(
 		return nil, err
 	}
 
-	// TODO: don't use DefaultClient (why not?)
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := autoconfHTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}

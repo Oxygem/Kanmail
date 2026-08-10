@@ -369,14 +369,21 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     </div>;
   }
 
-  renderSenderColorRow = (email: string, color: string) => {
+  renderSenderColorRow = (email: string, color: string, index: number) => {
     const senderColors = this.props.system.senderColors || {};
     const isOpen = this.state.openColorPicker === email;
 
     const updateEmail = (newEmail: string) => {
-      const newSenderColors = { ...senderColors };
-      delete newSenderColors[email];
-      newSenderColors[newEmail.toLowerCase()] = color;
+      // Rebuild in iteration order, replacing the edited key in place - the
+      // row must not jump to the end (it's keyed by position) mid-edit
+      const newSenderColors: { [email: string]: string } = {};
+      _.each(senderColors, (existingColor, existingEmail) => {
+        if (existingEmail === email) {
+          newSenderColors[newEmail.toLowerCase()] = color;
+        } else {
+          newSenderColors[existingEmail] = existingColor ?? "";
+        }
+      });
       this.props.updateFn({
         system: {
           ...this.props.system,
@@ -412,7 +419,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     };
 
     return (
-      <div className="sender-color-row" key={email}>
+      <div className="sender-color-row" key={index}>
         <input
           type="text"
           placeholder="sender@example.com"
@@ -447,7 +454,7 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
 
     return (
       <div className="sender-colors-list">
-        {entries.map(([email, color]) => this.renderSenderColorRow(email, color ?? ""))}
+        {entries.map(([email, color], index) => this.renderSenderColorRow(email, color ?? "", index))}
       </div>
     );
   }

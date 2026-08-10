@@ -116,7 +116,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
 
       return (
         <ThreadMessage
-          key={message.messageId}
+          key={message.messageId || `no-message-id-${i}`}
           message={message}
           scrollToOnLoad={isLast}
           open={this.state.showAllMessages || unread || isLast}

@@ -30,7 +30,7 @@ export function formatDate(date) {
   let formatted = formatDateCache.get(date);
   if (formatted === undefined) {
     formatted = moment(date).calendar(null, {
-      sameDay: "HH:mm A",
+      sameDay: "HH:mm",
       lastDay: "[Yesterday]",
       lastWeek: "dddd",
       nextWeek: "[Next] dddd,", // should never happen (future)

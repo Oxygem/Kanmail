@@ -31,15 +31,27 @@ class SystemStore extends BaseStore {
     }
 
     async getLogFilename(): Promise<void> {
-        this.props.logFilename = await SettingsService.GetLogFilename();
+        const logFilename = await SettingsService.GetLogFilename();
+        if (logFilename !== this.props.logFilename) {
+            this.props.logFilename = logFilename;
+            this.triggerUpdate(["logFilename"]);
+        }
     }
 
     async getExecutableFilename(): Promise<void> {
-        this.props.executableFilename = await AppService.GetExecutable();
+        const executableFilename = await AppService.GetExecutable();
+        if (executableFilename !== this.props.executableFilename) {
+            this.props.executableFilename = executableFilename;
+            this.triggerUpdate(["executableFilename"]);
+        }
     }
 
     async checkCachedLicense(): Promise<void> {
-        this.props.isLicensed = await AppService.CheckCachedLicense();
+        const isLicensed = await AppService.CheckCachedLicense();
+        if (isLicensed !== this.props.isLicensed) {
+            this.props.isLicensed = isLicensed;
+            this.triggerUpdate(["isLicensed"]);
+        }
     }
 
     async checkCurrentVersion(): Promise<void> {
@@ -52,7 +64,11 @@ class SystemStore extends BaseStore {
     }
 
     async checkDebug(): Promise<void> {
-        this.props.isDebug = (await System.Environment()).Debug;
+        const isDebug = (await System.Environment()).Debug;
+        if (isDebug !== this.props.isDebug) {
+            this.props.isDebug = isDebug;
+            this.triggerUpdate(["isDebug"]);
+        }
     }
 
     async checkLicense(): Promise<void> {

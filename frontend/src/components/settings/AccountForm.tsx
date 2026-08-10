@@ -3,9 +3,9 @@ import React from "react";
 
 import ColorPicker from "../../components/ColorPicker.tsx";
 import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, SETUP_IMAP_DOC_LINK } from "../../constants.ts";
-import { openLink } from "../../window.ts";
 import requestStore from "../../stores/request.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { AccountSettings, Address, ConnectionSettings, FolderSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
@@ -120,11 +120,11 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
 
   if (props.accountSettings) {
     state.name = props.accountSettings.name;
-    state.imapSettings = _.clone(props.accountSettings.imapSettings);
-    state.smtpSettings = _.clone(props.accountSettings.smtpSettings);
-    state.folders = _.clone(props.accountSettings.folders) || {};
-    state.settings = _.clone(props.accountSettings.settings) || {};
-    state.contacts = _.clone(props.accountSettings.contacts) || [];
+    state.imapSettings = _.cloneDeep(props.accountSettings.imapSettings);
+    state.smtpSettings = _.cloneDeep(props.accountSettings.smtpSettings);
+    state.folders = _.cloneDeep(props.accountSettings.folders) || {};
+    state.settings = _.cloneDeep(props.accountSettings.settings) || {};
+    state.contacts = _.cloneDeep(props.accountSettings.contacts) || [];
   }
 
   return state;
@@ -133,6 +133,7 @@ const getInitialState = (props: IAccountFormProps): IAccountFormState => {
 
 export default class AccountForm extends React.Component<IAccountFormProps, IAccountFormState> {
   oauthPoll: ReturnType<typeof setInterval> | null = null;
+  oauthPollInFlight = false;
 
   constructor(props: IAccountFormProps) {
     super(props);
@@ -203,9 +204,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
   };
 
   checkOauthResponse = () => {
-    if (!this.state.oauthRequestId) {
+    if (!this.state.oauthRequestId || this.oauthPollInFlight) {
       return;
     }
+    this.oauthPollInFlight = true;
 
     AccountsService.GetOAuthResponse(this.state.oauthRequestId).then((resp) => {
       if (!resp) {
@@ -251,8 +253,23 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
         hasConnectionChange: true,
         isReconnecting: false,
       }, this.submitSettings);
+    }).catch((error) => {
+      this.stopOauthPoll();
+      this.setState({ isReconnecting: false, error: error.message });
+      requestStore.addError("Failed to check OAuth response", error, { silent: true });
+    }).finally(() => {
+      this.oauthPollInFlight = false;
     });
   };
+
+  // Anything that changes how we talk to the server has to be re-tested before
+  // it can be saved - the pool size is the one setting that doesn't
+  isConnectionChange(settingsKey: string, key: string) {
+    return (
+      (settingsKey === "imapSettings" || settingsKey === "smtpSettings") &&
+      key !== "connections"
+    );
+  }
 
   handleUpdate = (settingsKey: string, key: string, ev) => {
     let value = ev.target.value;
@@ -263,18 +280,11 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     const target = this.state[settingsKey];
     target[key] = value;
 
-    let hasConnectionChange = this.state.hasConnectionChange;
-    if (
-      (settingsKey === "imapSettings" || settingsKey === "smtpSettings") &&
-      key !== "connections"
-    ) {
-      hasConnectionChange = true;
-    }
-
     // @ts-ignore
     this.setState({
       [settingsKey]: target,
-      hasConnectionChange: hasConnectionChange,
+      hasConnectionChange:
+        this.state.hasConnectionChange || this.isConnectionChange(settingsKey, key),
     });
   };
 
@@ -285,6 +295,8 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     // @ts-ignore
     this.setState({
       [settingsKey]: target,
+      hasConnectionChange:
+        this.state.hasConnectionChange || this.isConnectionChange(settingsKey, key),
     });
   };
 
@@ -664,11 +676,19 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 type: "number",
               })}
             </div>
-            <div className="half">
+            <div className="quarter">
               <label className="checkbox" htmlFor="imapSettings-ssl">
                 Use SSL?
               </label>
               {this.renderInput("imapSettings", "ssl", {
+                type: "checkbox",
+              })}
+            </div>
+            <div className="quarter">
+              <label className="checkbox" htmlFor="imapSettings-startTls">
+                Use STARTTLS?
+              </label>
+              {this.renderInput("imapSettings", "startTls", {
                 type: "checkbox",
               })}
             </div>
@@ -704,10 +724,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
               })}
             </div>
             <div className="quarter">
-              <label className="checkbox" htmlFor="smtpSettings-tls">
-                Use TLS?
+              <label className="checkbox" htmlFor="smtpSettings-startTls">
+                Use STARTTLS?
               </label>
-              {this.renderInput("smtpSettings", "tls", {
+              {this.renderInput("smtpSettings", "startTls", {
                 type: "checkbox",
               })}
             </div>

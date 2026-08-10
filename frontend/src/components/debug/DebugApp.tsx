@@ -34,8 +34,10 @@ export default class DebugApp extends React.Component<{}, DebugAppState> {
       emailData: null,
       contentData: null,
     };
+  }
 
-    if (props.accountID !== "" && props.folderName !== "" && props.uid !== "") {
+  componentDidMount() {
+    if (this.state.accountID && this.state.folderName && this.state.uid) {
       this.loadData();
     }
   }

@@ -154,11 +154,10 @@ export function buildQuotedContent(message: QuotedMessage, bodyHtml: string): st
 }
 
 export function prependIfNotPresent(prependTo: string, prependString: string): string {
-  if (
-    prependTo.startsWith(prependString) ||
-    prependTo.startsWith(prependString.toLowerCase()) ||
-    prependTo.startsWith(prependString.toUpperCase())
-  ) {
+  // Only skip when the subject already carries the prefix as a whole token
+  // ("Re:", "re[2]:", localized "RE : ") - "Reminder: ..." still gets "Re: "
+  const pattern = new RegExp(`^\\s*${prependString}(\\[\\d+\\])?\\s*:`, "i");
+  if (pattern.test(prependTo)) {
     return prependTo;
   }
   return `${prependString}: ${prependTo}`;

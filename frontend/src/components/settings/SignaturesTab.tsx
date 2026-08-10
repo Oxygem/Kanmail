@@ -53,10 +53,18 @@ class SignatureEditor extends React.Component<ISignatureEditorProps, ISignatureE
     this.save(signature);
   };
 
+  componentDidMount() {
+    window.addEventListener("pagehide", this.flushSave);
+  }
+
   componentWillUnmount() {
-    // Switching settings tabs or closing the window unmounts us mid-edit
+    window.removeEventListener("pagehide", this.flushSave);
     this.save.flush();
   }
+
+  flushSave = () => {
+    this.save.flush();
+  };
 
   render() {
     return (

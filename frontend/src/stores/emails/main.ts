@@ -117,12 +117,12 @@ class MainEmails extends BaseEmails {
     // If we've never seen this folder before, do a blocking reset paginate call first to initialize
     // it or reset if already initialized (devloop), then kick of a sync and exit.
     if (!this.initializedFolderNames.has(folderName)) {
+      this.initializedFolderNames.add(folderName);
       await this.getFolderEmails(folderName, {
         reset: true,
         // Always init/reset all the accounts
         accountIDs: this.getAccountKeys(),
       });
-      this.initializedFolderNames.add(folderName);
       await this.syncFolderEmails(folderName);
       return;
     }

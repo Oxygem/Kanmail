@@ -239,7 +239,14 @@ class SettingsStore extends BaseStore {
 		}
 		setupThemes(this.props);
 		applyZoom(this.props.system.zoom);
-		return SettingsService.PutSettings(this.props);
+		return SettingsService.PutSettings(this.props).catch((e) => {
+			// The optimistic update above is now showing unsaved state - reload
+			// the authoritative settings so the UI doesn't lie until restart
+			console.error("[settingsStore] Failed to save settings, reloading", e);
+			return this.refreshSettings().then(() => {
+				throw e;
+			});
+		});
 	}
 
 	setSettings(settings: ISettings) {

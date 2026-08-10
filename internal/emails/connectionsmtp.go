@@ -140,7 +140,7 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 			}
 		} else {
 			client.Close()
-			return nil, fmt.Errorf("no authentication methods configured")
+			return nil, fmt.Errorf("no authentication methods configured: %w", util.ErrReauthRequired)
 		}
 
 		log.Debug().Msg("Authenticated")

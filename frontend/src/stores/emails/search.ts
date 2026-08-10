@@ -25,9 +25,9 @@ class SearchEmails extends BaseEmails {
 
     // Drop the previous query's emails but don't reprocess yet - the columns
     // keep the previous results rendered until the new query's results arrive
-    // and rebuild them, rather than flashing empty in between
+    // and rebuild them (finishLoading forces a final process), rather than
+    // flashing empty in between
     this.reset();
-    this.processEmailChanges({ forceProcess: true });
 
     // Set the value
     this.searchValue = value;

@@ -1,6 +1,9 @@
 package caches
 
 func makeInSQL(values []string) (string, []any) {
+	if len(values) == 0 {
+		return "NULL", nil
+	}
 	var query string
 	args := make([]any, len(values))
 	for i, msgid := range values {

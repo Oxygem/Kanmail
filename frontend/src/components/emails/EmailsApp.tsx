@@ -11,7 +11,6 @@ import settingsStore, { ISettings } from "../../stores/settings.ts";
 import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { collectVisibleThreadComponents } from "../../util/threads.ts";
-import { createWindowPositionHandlers } from "../../window.ts";
 import Tooltip from "../Tooltip.tsx";
 import AddNewColumnForm from "./AddNewColumnForm.tsx";
 import Cheatsheet from "./Cheatsheet.tsx";
@@ -45,9 +44,6 @@ export default class EmailsApp extends React.Component<ISettings> {
 
     // Let the keyboard reach our columns to enter keyboard mode from cold.
     keyboard.emailsApp = this;
-
-    // Create resize/move window position saver handlers
-    createWindowPositionHandlers();
 
     // Kick off version + license + update checks
     systemStore.checkCurrentVersion();

@@ -164,14 +164,18 @@ export default class ThreadMessage extends React.Component<IThreadMessageProps, 
           <br />
           <span className="meta-text">
             To: {this.renderAddresses(message.to)}
-            {message.cc.length > 0
-              ? `CC: ${this.renderAddresses(message.cc)}`
-              : ""}
-            {message.bcc.length > 0
-              ? `${message.cc ? <br /> : ""}BCC: ${this.renderAddresses(
-                message.bcc
-              )}`
-              : ""}
+            {message.cc.length > 0 && (
+              <>
+                <br />
+                CC: {this.renderAddresses(message.cc)}
+              </>
+            )}
+            {message.bcc.length > 0 && (
+              <>
+                <br />
+                BCC: {this.renderAddresses(message.bcc)}
+              </>
+            )}
           </span>
         </div>
         <div className="date half">

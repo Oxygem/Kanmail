@@ -412,6 +412,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 
 class OauthAccountFormMixin extends GenericAccountForm {
 	oauthRequestCheck: ReturnType<typeof setInterval> | null = null;
+	oauthCheckInFlight = false;
 
 	componentDidMount() {
 		this.startOauthRequest();
@@ -460,9 +461,10 @@ class OauthAccountFormMixin extends GenericAccountForm {
 	};
 
 	checkForOauthRequest = () => {
-		if (!this.state.oauthRequestId) {
+		if (!this.state.oauthRequestId || this.oauthCheckInFlight) {
 			return;
 		}
+		this.oauthCheckInFlight = true;
 
 		AccountsService.GetOAuthResponse(this.state.oauthRequestId).then((resp) => {
 			if (!resp) {
@@ -526,6 +528,8 @@ class OauthAccountFormMixin extends GenericAccountForm {
 			this.stopOauthPoll();
 			e = normalizeError(e);
 			this.setState({ oauthError: `Sign in failed: ${e.message}` });
+		}).finally(() => {
+			this.oauthCheckInFlight = false;
 		});
 	};
 

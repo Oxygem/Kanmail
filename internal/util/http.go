@@ -93,7 +93,11 @@ func MakeHTTPRequestJSON(ctx context.Context, client *http.Client, httpReq *HTTP
 
 	var data map[string]any
 	if jErr := json.Unmarshal(b, &data); jErr != nil {
-		return nil, fmt.Errorf("invalid JSON response")
+		// Prefer the original error here, if we didn't get valid JSON
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("invalid JSON response: %w", jErr)
 	}
 
 	zerolog.Ctx(ctx).Trace().Any("url", httpReq.URL).Any("data", data).Msg("Got JSON data")
