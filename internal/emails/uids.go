@@ -25,19 +25,21 @@ type uids []imap.UID
 
 func (u uids) sort() {
 	slices.SortFunc(u, func(a, b imap.UID) int {
-		if a == b {
-			panic("duplicate uid in list")
-		} else if a > b { // this makes it high -> low
+		if a > b { // this makes it high -> low
 			return -1
-		} else {
+		} else if a < b {
 			return 1
 		}
+		return 0
 	})
 }
 
 func NewUIDList(initialUIDs ...imap.UID) *uidList {
 	list := &uidList{uids: initialUIDs}
 	list.uids.sort()
+	// Initial UIDs come straight from server search results, and a noncompliant/buggy server might
+	// return duplicate ranges.
+	list.uids = slices.Compact(list.uids)
 	return list
 }
 
@@ -126,13 +128,18 @@ func (u *uidList) Extend(newUIDs *uidList) {
 	// Iter through the new UIDs, high -> low until we find one we don't have, at that point we
 	// can just extend our list by all remaining since we won't have any of them.
 	for i, uid := range newUIDs.uids {
-		if !u.containsBackwards(uid) {
-			if len(u.uids) > 0 && u.uids[len(u.uids)-1] < uid {
-				panic("cannot extend UIDs ahead of current")
-			}
-			u.uids = append(u.uids, newUIDs.uids[i:]...)
-			return
+		if u.containsBackwards(uid) {
+			continue
 		}
+		if len(u.uids) > 0 && u.uids[len(u.uids)-1] < uid {
+			// Extend pages should only ever contain UIDs at or below our current
+			// minimum - skip anything a noncompliant server returns above it
+			// rather than corrupt the ordering (or crash)
+			continue
+		}
+		// Everything from here down is below our minimum, so unknown - bulk append
+		u.uids = append(u.uids, newUIDs.uids[i:]...)
+		return
 	}
 }
 

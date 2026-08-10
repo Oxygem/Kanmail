@@ -11,10 +11,11 @@ import (
 )
 
 func TestUIDs(t *testing.T) {
-	t.Run("TestInvalid", func(t *testing.T) {
-		assert.Panics(t, func() {
-			emails.NewUIDList(1, 1)
-		})
+	t.Run("TestDuplicatesDeduped", func(t *testing.T) {
+		// Initial UIDs come straight from server search results, which a
+		// noncompliant server can overlap - dedupe rather than crash
+		uids := emails.NewUIDList(1, 1, 2, 2, 3)
+		assert.Equal(t, []imap.UID{3, 2, 1}, uids.All())
 	})
 
 	t.Run("TestInsert", func(t *testing.T) {
@@ -57,9 +58,9 @@ func TestUIDs(t *testing.T) {
 
 		assert.Equal(t, uids.All(), []imap.UID{6, 5, 4, 3, 2, 1})
 
-		// Check we can't extend with UIDs ahead of the current lowest
-		assert.Panics(t, func() {
-			uids.Extend(emails.NewUIDList(4, 5, 6, 7))
-		})
+		// UIDs ahead of the current maximum are server nonsense for an extend
+		// page - they're skipped rather than corrupting the order (or crashing)
+		uids.Extend(emails.NewUIDList(4, 5, 6, 7))
+		assert.Equal(t, uids.All(), []imap.UID{6, 5, 4, 3, 2, 1})
 	})
 }
