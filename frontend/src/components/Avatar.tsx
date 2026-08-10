@@ -7,7 +7,9 @@ import contactsStore from "../stores/contacts.ts";
 import settingsStore from "../stores/settings.ts";
 
 const emailToColorCache = {};
-const emailToIconBytesCache: { [_: string]: string | null } = {};
+const emailToIconCache: {
+  [_: string]: { data: string; contentType: string } | null;
+} = {};
 
 function getColorForAddress(address) {
   if (!address) {
@@ -56,39 +58,44 @@ interface IAvatarState {
 export default class Avatar extends React.Component<IAvatarProps, IAvatarState> {
   constructor(props: IAvatarProps) {
     super(props);
+    const cached = this.getCachedIcon();
     this.state = {
-      iconBytes: this.getCachedIcon(),
+      iconBytes: cached?.data,
+      iconContentType: cached?.contentType,
     };
   }
 
-  getCachedIcon = (): string | undefined => {
+  // undefined = not looked up yet, null = known to have no avatar
+  getCachedIcon = (): { data: string; contentType: string } | null | undefined => {
     const email = this.props.address ? this.props.address.email : "";
-    if (emailToIconBytesCache[email] !== undefined) {
-      return emailToIconBytesCache[email]!;
-    }
+    return emailToIconCache[email];
   }
 
-  getIcon = (): string | undefined => {
+  getIcon = (): void => {
     if (!settingsStore.props.system.loadContactIcons) {
       return;
     }
 
-    const icon = this.getCachedIcon();
-    if (icon !== undefined) {
-      this.setState({ iconBytes: icon });
+    const cached = this.getCachedIcon();
+    if (cached !== undefined) {
+      // Always set (undefined for a known no-avatar) - the address prop may
+      // have changed and a previous sender's icon must not linger
+      this.setState({ iconBytes: cached?.data, iconContentType: cached?.contentType });
       return;
     }
 
     const email = this.props.address ? this.props.address.email : "";
     contactsStore.getAvatar(email).then((resp: AvatarResp) => {
-      if (!resp) {
-        emailToIconBytesCache[email] = null
-        console.log("No avatar found", email)
-        return
+      if (!resp || !resp.data) {
+        emailToIconCache[email] = null;
+        this.setState({ iconBytes: undefined, iconContentType: undefined });
+        return;
       }
-      this.setState({ iconBytes: resp.data! })
-      emailToIconBytesCache[email] = resp.data!;
-      console.log("Loaded avatar", email);
+      const icon = { data: resp.data, contentType: resp.contentType };
+      emailToIconCache[email] = icon;
+      this.setState({ iconBytes: icon.data, iconContentType: icon.contentType });
+    }).catch((e) => {
+      console.debug("Failed to load avatar", email, e);
     })
   }
 
@@ -126,7 +133,7 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
     if (this.state.iconBytes) {
       return <div className="avatar">
         <img
-          src={`data:${this.state.iconContentType};base64,${this.state.iconBytes}`}
+          src={`data:${this.state.iconContentType || "image/png"};base64,${this.state.iconBytes}`}
           onLoad={this.checkIcon}
           style={{ border: this.getBorder() }}
         />

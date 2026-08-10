@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/emersion/go-imap/v2"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/zalando/go-keyring"
@@ -58,6 +59,9 @@ type AppService struct {
 	metaWindow     *application.WebviewWindow
 
 	accountsNeedingReauth map[types.AccountID]string
+
+	sendWindowPayloads     map[string]OpenSendWindowOptions
+	sendWindowPayloadsLock sync.Mutex
 
 	// Track files we're allowed to open (log file, downloaded attachments)
 	openableFiles     map[string]struct{}

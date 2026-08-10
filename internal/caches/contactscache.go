@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/oxygem/kanmail/internal/types"
 )
@@ -32,7 +33,7 @@ func NewContactsCache(db *sql.DB) (*ContactsCache, error) {
 	stmtSearch, err := db.Prepare(`
 		SELECT email, name
 		FROM contacts
-		WHERE email LIKE ? OR name LIKE ?
+		WHERE email LIKE ? ESCAPE '\' OR name LIKE ? ESCAPE '\'
 		ORDER BY email
 		LIMIT ?`)
 	if err != nil {
@@ -77,7 +78,8 @@ func (c *ContactsCache) Search(ctx context.Context, term string) ([]types.Addres
 	if c.disabled {
 		return nil, nil
 	}
-	searchTerm := "%" + term + "%"
+	// Escape LIKE wildcards so a literal % or _ in the term matches itself
+	searchTerm := "%" + strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(term) + "%"
 	rows, err := c.stmtSearch.QueryContext(ctx, searchTerm, searchTerm, searchResultLimit)
 	if err != nil {
 		return nil, err

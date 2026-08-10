@@ -93,7 +93,7 @@ func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarR
 		}, nil
 	}
 
-	hash := md5.Sum([]byte(email))
+	hash := md5.Sum([]byte(strings.ToLower(strings.TrimSpace(email))))
 	emailHash := hex.EncodeToString(hash[:])
 
 	reqs := []*util.HTTPRequest{{
@@ -113,9 +113,14 @@ func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarR
 
 	var avatar *AvatarResp
 	var data []byte
+	allNotFound := true
 	for _, req := range reqs {
 		resp, d, err := util.MakeHTTPRequest(ctx, externalHTTPClient, req)
 		if err != nil {
+			if resp == nil ||
+				(resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusGone) {
+				allNotFound = false
+			}
 			log.Warn().Err(err).Str("url", req.URL).Msg("Failed to load icon from url")
 			continue
 		}
@@ -129,7 +134,12 @@ func (c *ContactsService) GetAvatar(ctx context.Context, email string) (*AvatarR
 		break
 	}
 
-	// Note: intentionally caching nil here
+	if avatar == nil && !allNotFound {
+		// Don't cache the miss - the next lookup may succeed
+		return nil, nil
+	}
+
+	// Note: intentionally caching nil when every source returned a real "not found"
 	var contentType string
 	if avatar != nil {
 		contentType = avatar.ContentType

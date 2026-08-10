@@ -7,6 +7,14 @@ import (
 	"fmt"
 )
 
+// Cached avatars expire so a contact that gains one (or a source that was
+// briefly broken) is picked up eventually. Misses expire sooner than hits:
+// they're the cheaper thing to get wrong and the more likely to change.
+const (
+	avatarCacheTTL     = "-30 days"
+	avatarMissCacheTTL = "-7 days"
+)
+
 type AvatarCache struct {
 	db       *sql.DB
 	disabled bool
@@ -33,7 +41,8 @@ func NewAvatarCache(db *sql.DB) (*AvatarCache, error) {
 
 	stmtGet, err := db.Prepare(`
 		SELECT data, data_type FROM email_avatars
-		WHERE email = ?`)
+		WHERE email = ?
+		AND created_at > datetime('now', CASE WHEN data IS NULL THEN ? ELSE ? END)`)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +82,9 @@ func (c *AvatarCache) Get(ctx context.Context, email string) (bool, []byte, stri
 
 	var data []byte
 	var dataType string
-	err := c.stmtGet.QueryRowContext(ctx, email).Scan(&data, &dataType)
+	err := c.stmtGet.
+		QueryRowContext(ctx, email, avatarMissCacheTTL, avatarCacheTTL).
+		Scan(&data, &dataType)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil, "", nil
 	} else if err != nil {

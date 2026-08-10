@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/base32"
 	"encoding/hex"
-	"io/fs"
 	"net/http"
 	"os"
 	"strings"
