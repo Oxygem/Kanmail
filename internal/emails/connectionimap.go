@@ -82,11 +82,43 @@ func (c *IMAPConnectionPool) WithFolderConnection(
 	})
 }
 
+// WithFolderConnectionNoReplay is WithFolderConnection without network-error
+// retries, for commands that aren't safe to replay after a timeout or dropped
+// connection (COPY, MOVE - the server may have committed them already).
+func (c *IMAPConnectionPool) WithFolderConnectionNoReplay(
+	ctx context.Context,
+	folderName types.FolderName,
+	fn func(conn imapinterface.IMAPClient) error,
+) error {
+	return c.withConnectionNoReplay(ctx, func(wrapper *IMAPConnectionWrapper) error {
+		if conn, err := wrapper.Get(ctx); err != nil {
+			return err
+		} else {
+			return withSelectedFolder(ctx, conn, folderName, fn)
+		}
+	})
+}
+
 func (c *IMAPConnectionPool) WithPriorityConnection(
 	ctx context.Context,
 	fn func(conn imapinterface.IMAPClient) error,
 ) error {
 	return c.withPriorityConnection(ctx, func(wrapper *IMAPConnectionWrapper) error {
+		if conn, err := wrapper.Get(ctx); err != nil {
+			return err
+		} else {
+			return fn(conn)
+		}
+	})
+}
+
+// WithPriorityConnectionNoReplay is WithPriorityConnection without network-error
+// retries, for commands that aren't safe to replay (APPEND).
+func (c *IMAPConnectionPool) WithPriorityConnectionNoReplay(
+	ctx context.Context,
+	fn func(conn imapinterface.IMAPClient) error,
+) error {
+	return c.withPriorityConnectionNoReplay(ctx, func(wrapper *IMAPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -235,6 +267,11 @@ func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClie
 	}
 
 	if c.client == nil {
+		if !c.conf.SSL && !c.conf.StartTLS &&
+			(c.conf.Password != "" || c.conf.OAuthRefreshToken != "") {
+			return nil, errInsecurePasswordAuth
+		}
+
 		options := &imapclient.Options{
 			UnilateralDataHandler: c.unilateralHandler(),
 		}

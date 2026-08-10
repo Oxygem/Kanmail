@@ -190,7 +190,9 @@ func (f *Folder) markMissing(ctx context.Context) {
 
 func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) (imap.UID, error) {
 	var assignedUID imap.UID
-	err := f.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
+	// No replay on network errors: a timeout after the server committed the
+	// APPEND would write the message again.
+	err := f.imap.WithPriorityConnectionNoReplay(ctx, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, f, func() error {
 			uid, err := appendMessage(conn, string(f.Name), b.Bytes())
 			assignedUID = uid
@@ -854,7 +856,9 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 		var uidsStartAt imap.UID
 		uidSearchSet := imap.UIDSet{}
 
-		if selectData.NumMessages > uidSearchPaginateThreshold {
+		// The UIDNext guard prevents an underflow wrapping the start to ~4 billion
+		// when a hostile/buggy server reports more messages than it has UIDs
+		if selectData.NumMessages > uidSearchPaginateThreshold && selectData.UIDNext > uidSearchPaginateThreshold {
 			uidsStartAt = selectData.UIDNext - uidSearchPaginateThreshold
 			uidSearchSet.AddRange(uidsStartAt, 0)
 			searchCriteria.UID = []imap.UIDSet{uidSearchSet}

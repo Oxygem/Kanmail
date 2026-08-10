@@ -50,7 +50,7 @@ func (c *SMTPConnectionPool) WithConnectionOnce(
 	ctx context.Context,
 	fn func(conn smtpinterface.SMTPClient) error,
 ) error {
-	return c.withConnectionOnce(func(wrapper *SMTPConnectionWrapper) error {
+	return c.withConnectionOnce(ctx, func(wrapper *SMTPConnectionWrapper) error {
 		if conn, err := wrapper.Get(ctx); err != nil {
 			return err
 		} else {
@@ -94,6 +94,11 @@ func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClie
 	}
 
 	if c.client == nil {
+		if !c.conf.SSL && !c.conf.StartTLS &&
+			(c.conf.Password != "" || c.conf.OAuthRefreshToken != "") {
+			return nil, errInsecurePasswordAuth
+		}
+
 		dialFn := func(addr string, _ *tls.Config) (*smtp.Client, error) {
 			return smtp.Dial(addr)
 		}

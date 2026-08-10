@@ -17,6 +17,16 @@ import (
 // caller backs off and retries rather than stealing a slot from interactive work.
 var errNoIdleConnection = errors.New("no spare connection to idle on")
 
+// errPoolClosed is returned by every acquire path once CloseConnections has run.
+var errPoolClosed = errors.New("connection pool closed")
+
+// errInsecurePasswordAuth blocks the plaintext-credential path: with neither
+// SSL nor STARTTLS the password (or OAuth access token) would go over the wire
+// in the clear, readable by anything between here and the server.
+var errInsecurePasswordAuth = errors.New(
+	"refusing to send credentials over an unencrypted connection, enable SSL/TLS or STARTTLS",
+)
+
 // A pool of lazily loaded connections that can be retrieved for exclusive access within the current
 // goroutine. Safe to call the pool from multiple goroutines.
 type connection interface {
@@ -40,15 +50,20 @@ type ConnectionPool[T connection] struct {
 	pool           chan T
 	priorityPool   chan T
 	backgroundPool chan T
-	connections    []T
 	retryLimit     int
 
-	// Guards the idle bookkeeping below. Idlers borrow from the regular pool and
-	// yield it the moment interactive work needs it, so watching costs no extra
-	// connections beyond the pool budget.
+	// Guards the idle bookkeeping below plus the closed flag. Idlers borrow from
+	// the regular pool and yield it the moment interactive work needs it, so
+	// watching costs no extra connections beyond the pool budget.
 	idleMu     sync.Mutex
 	idleLeases []*idleLease
 	waiters    int // interactive acquirers blocked waiting for a regular connection
+	closed     bool
+
+	// Closed alongside the flag above to wake acquirers already parked on an
+	// empty pool - post-close nothing is ever returned to the channels, so
+	// without this they would block until their context is cancelled (if ever).
+	closedCh chan struct{}
 }
 
 type ConnectionPoolOptions struct {
@@ -68,24 +83,18 @@ func NewConnectionPool[T connection](
 		pool:           make(chan T, options.Connections),
 		priorityPool:   make(chan T, options.PriorityConnections),
 		backgroundPool: make(chan T, options.BackgroundConnections),
-		connections:    make([]T, 0, options.Connections+options.PriorityConnections+options.BackgroundConnections),
 		retryLimit:     options.NetworkErrRetries,
+		closedCh:       make(chan struct{}),
 	}
 
 	for range options.Connections {
-		c := makeConnection()
-		cpool.connections = append(cpool.connections, c)
-		cpool.pool <- c
+		cpool.pool <- makeConnection()
 	}
 	for range options.PriorityConnections {
-		c := makeConnection()
-		cpool.connections = append(cpool.connections, c)
-		cpool.priorityPool <- c
+		cpool.priorityPool <- makeConnection()
 	}
 	for range options.BackgroundConnections {
-		c := makeConnection()
-		cpool.connections = append(cpool.connections, c)
-		cpool.backgroundPool <- c
+		cpool.backgroundPool <- makeConnection()
 	}
 
 	if constants.ENV_DEBUG_OFFLINE != "" {
@@ -96,15 +105,84 @@ func NewConnectionPool[T connection](
 	return &cpool
 }
 
+// CloseConnections marks the pool closed and closes every parked connection.
+// Connections currently checked out by other goroutines are closed by release
+// when their holder returns them, rather than being torn down mid-command.
 func (c *ConnectionPool[T]) CloseConnections(ctx context.Context) {
-	for _, conn := range c.connections {
+	c.idleMu.Lock()
+	if !c.closed {
+		c.closed = true
+		close(c.closedCh)
+	}
+	leases := c.idleLeases
+	c.idleLeases = nil
+
+	var conns []T
+	for _, ch := range []chan T{c.pool, c.priorityPool, c.backgroundPool} {
+		for draining := true; draining; {
+			select {
+			case conn := <-ch:
+				conns = append(conns, conn)
+			default:
+				draining = false
+			}
+		}
+	}
+	c.idleMu.Unlock()
+
+	// Preempt idlers so they stop IDLE and release (= close) their connections
+	for _, lease := range leases {
+		lease.signal()
+	}
+
+	for _, conn := range conns {
 		if err := conn.Close(); err != nil {
 			zerolog.Ctx(ctx).Err(err).Msg("Failed to close connection")
 		}
 	}
 }
 
+func (c *ConnectionPool[T]) isClosed() bool {
+	c.idleMu.Lock()
+	defer c.idleMu.Unlock()
+	return c.closed
+}
+
+// release returns a connection to its pool, or closes it if the pool was closed
+// while it was checked out - without this the next acquirer would transparently
+// re-dial a connection belonging to a closed (eg deleted) account.
+func (c *ConnectionPool[T]) release(ch chan T, conn T) {
+	c.idleMu.Lock()
+	closed := c.closed
+	if !closed {
+		// Never blocks: each connection belongs to exactly one channel slot
+		ch <- conn
+	}
+	c.idleMu.Unlock()
+
+	if closed {
+		conn.Close()
+	}
+}
+
 func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn T) error) error {
+	return c.retryLoopIf(ctx, conn, util.IsRetryableError, fn)
+}
+
+// retryLoopNoReplay retries only errors where the server rejected the command
+// outright (a transient NO response). Network errors - a timeout or dropped
+// connection - are returned immediately: the server may have executed the
+// command before the pipe broke, and replaying it would perform it twice.
+func (c *ConnectionPool[T]) retryLoopNoReplay(ctx context.Context, conn T, fn func(conn T) error) error {
+	return c.retryLoopIf(ctx, conn, util.IsRetryableIMAPError, fn)
+}
+
+func (c *ConnectionPool[T]) retryLoopIf(
+	ctx context.Context,
+	conn T,
+	canRetry func(error) bool,
+	fn func(conn T) error,
+) error {
 	var attempt, netErrCount int
 	var err, lastNetErr error
 	for attempt < c.retryLimit {
@@ -114,8 +192,20 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			return nil
 		}
 		if util.IsRetryableError(err) {
-			lastNetErr = err
-			netErrCount++
+			// Server-rejected (NO) retries aren't network errors - don't record
+			// them as such, they'd misclassify in the analytics summary
+			if util.IsRetryableNetworkError(err) {
+				lastNetErr = err
+				netErrCount++
+			}
+			if !canRetry(err) {
+				break
+			}
+			// A retry against a closed pool would transparently re-dial a fresh
+			// connection to a closed (possibly deleted) account via wrapper.Get
+			if c.isClosed() {
+				break
+			}
 			delay := time.Duration(attempt) * time.Second
 			zerolog.Ctx(ctx).Warn().Err(err).
 				Int("attempt", attempt).
@@ -129,66 +219,41 @@ func (c *ConnectionPool[T]) retryLoop(ctx context.Context, conn T, fn func(conn 
 			}
 			continue
 		}
-		if lastNetErr != nil {
-			util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount)
-		}
-		return err
+		break
 	}
-	util.RecordNetworkError(ctx, c.accountName, err, netErrCount)
+	if lastNetErr != nil {
+		util.RecordNetworkError(ctx, c.accountName, lastNetErr, netErrCount)
+	}
 	return err
 }
 
 func (c *ConnectionPool[T]) withPriorityConnection(ctx context.Context, fn func(conn T) error) error {
-	if c.disabled {
-		return errors.New("connection unavailable")
+	return c.acquirePriority(ctx, func(conn T) error {
+		return c.retryLoop(ctx, conn, fn)
+	})
+}
+
+// withPriorityConnectionNoReplay is withPriorityConnection without network-error
+// retries - see retryLoopNoReplay. Use for commands that aren't safe to replay.
+func (c *ConnectionPool[T]) withPriorityConnectionNoReplay(ctx context.Context, fn func(conn T) error) error {
+	return c.acquirePriority(ctx, func(conn T) error {
+		return c.retryLoopNoReplay(ctx, conn, fn)
+	})
+}
+
+func (c *ConnectionPool[T]) acquirePriority(ctx context.Context, run func(conn T) error) error {
+	if err := c.available(); err != nil {
+		return err
 	}
 
 	// Priority work prefers its own pool but falls back to the regular pool,
 	// preempting an idler if that too is momentarily exhausted.
 	select {
 	case conn := <-c.priorityPool:
-		defer func() { c.priorityPool <- conn }()
-		return c.retryLoop(ctx, conn, fn)
+		defer c.release(c.priorityPool, conn)
+		return run(conn)
 	case conn := <-c.pool:
-		defer func() { c.pool <- conn }()
-		return c.retryLoop(ctx, conn, fn)
-	default:
-	}
-
-	c.beginWait()
-	defer c.endWait()
-
-	select {
-	case conn := <-c.priorityPool:
-		defer func() { c.priorityPool <- conn }()
-		return c.retryLoop(ctx, conn, fn)
-	case conn := <-c.pool:
-		defer func() { c.pool <- conn }()
-		return c.retryLoop(ctx, conn, fn)
-	}
-}
-
-func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) error) error {
-	return c.acquire(func(conn T) error {
-		return c.retryLoop(ctx, conn, fn)
-	})
-}
-
-// withConnectionOnce runs fn a single time, skipping the retry loop. Use it for
-// operations that cannot be safely replayed: a transient error raised after the
-// server already accepted the command performs it twice.
-func (c *ConnectionPool[T]) withConnectionOnce(fn func(conn T) error) error {
-	return c.acquire(fn)
-}
-
-func (c *ConnectionPool[T]) acquire(run func(conn T) error) error {
-	if c.disabled {
-		return errors.New("connection unavailable")
-	}
-
-	select {
-	case conn := <-c.pool:
-		defer func() { c.pool <- conn }()
+		defer c.release(c.pool, conn)
 		return run(conn)
 	default:
 	}
@@ -196,9 +261,75 @@ func (c *ConnectionPool[T]) acquire(run func(conn T) error) error {
 	c.beginWait()
 	defer c.endWait()
 
-	conn := <-c.pool
-	defer func() { c.pool <- conn }()
-	return run(conn)
+	select {
+	case conn := <-c.priorityPool:
+		defer c.release(c.priorityPool, conn)
+		return run(conn)
+	case conn := <-c.pool:
+		defer c.release(c.pool, conn)
+		return run(conn)
+	case <-c.closedCh:
+		return errPoolClosed
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func (c *ConnectionPool[T]) withConnection(ctx context.Context, fn func(conn T) error) error {
+	return c.acquire(ctx, func(conn T) error {
+		return c.retryLoop(ctx, conn, fn)
+	})
+}
+
+// withConnectionNoReplay is withConnection without network-error retries - see
+// retryLoopNoReplay. Use for commands that aren't safe to replay.
+func (c *ConnectionPool[T]) withConnectionNoReplay(ctx context.Context, fn func(conn T) error) error {
+	return c.acquire(ctx, func(conn T) error {
+		return c.retryLoopNoReplay(ctx, conn, fn)
+	})
+}
+
+// withConnectionOnce runs fn a single time, skipping the retry loop entirely.
+// Use it for operations that cannot be safely replayed: a transient error raised
+// after the server already accepted the command performs it twice.
+func (c *ConnectionPool[T]) withConnectionOnce(ctx context.Context, fn func(conn T) error) error {
+	return c.acquire(ctx, fn)
+}
+
+func (c *ConnectionPool[T]) available() error {
+	if c.disabled {
+		return errors.New("connection unavailable")
+	}
+	if c.isClosed() {
+		return errPoolClosed
+	}
+	return nil
+}
+
+func (c *ConnectionPool[T]) acquire(ctx context.Context, run func(conn T) error) error {
+	if err := c.available(); err != nil {
+		return err
+	}
+
+	select {
+	case conn := <-c.pool:
+		defer c.release(c.pool, conn)
+		return run(conn)
+	default:
+	}
+
+	c.beginWait()
+	defer c.endWait()
+
+	select {
+	case conn := <-c.pool:
+		defer c.release(c.pool, conn)
+		return run(conn)
+	case <-c.closedCh:
+		return errPoolClosed
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // beginWait marks that an interactive acquirer is now waiting on the regular
@@ -235,7 +366,7 @@ func (c *ConnectionPool[T]) withIdleConnection(ctx context.Context, fn func(conn
 
 	c.idleMu.Lock()
 	var conn T
-	if c.waiters > 0 {
+	if c.waiters > 0 || c.closed {
 		c.idleMu.Unlock()
 		return errNoIdleConnection
 	}
@@ -258,7 +389,7 @@ func (c *ConnectionPool[T]) withIdleConnection(ctx context.Context, fn func(conn
 			}
 		}
 		c.idleMu.Unlock()
-		c.pool <- conn
+		c.release(c.pool, conn)
 	}()
 
 	zerolog.Ctx(ctx).Trace().Msg("Borrowed pool connection for IDLE")
@@ -266,15 +397,22 @@ func (c *ConnectionPool[T]) withIdleConnection(ctx context.Context, fn func(conn
 }
 
 func (c *ConnectionPool[T]) withBackgroundConnection(ctx context.Context, fn func(conn T) error) error {
-	if c.disabled {
-		return errors.New("connection unavailable")
+	if err := c.available(); err != nil {
+		return err
 	}
 
-	conn := <-c.backgroundPool
+	var conn T
+	select {
+	case conn = <-c.backgroundPool:
+	case <-c.closedCh:
+		return errPoolClosed
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	zerolog.Ctx(ctx).Trace().Str("pool", "background").Msg("Acquired connection from pool")
 
 	defer func() {
-		c.backgroundPool <- conn
+		c.release(c.backgroundPool, conn)
 		zerolog.Ctx(ctx).Trace().Str("pool", "background").Msg("Returned connection to pool")
 	}()
 

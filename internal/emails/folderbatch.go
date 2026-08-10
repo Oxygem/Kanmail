@@ -13,7 +13,7 @@ func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderNam
 	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
 
-	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	return f.imap.WithFolderConnectionNoReplay(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
 			_, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolder.Name)).Wait()
 			return err
@@ -25,7 +25,7 @@ func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderNam
 	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
 
-	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
+	return f.imap.WithFolderConnectionNoReplay(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
 			_, err := conn.Copy(imap.UIDSetNum(uids...), string(otherFolder.Name)).Wait()
 			return err
