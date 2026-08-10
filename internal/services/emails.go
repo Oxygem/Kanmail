@@ -46,12 +46,7 @@ func (e *EmailsService) CloseAccountConnections(
 	ctx = e.log.With().Str("method", "CloseAccountConnections").Logger().WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
-	account := e.accounts.GetOrCreateAccount(ctx, accountID)
-	if account == nil {
-		return fmt.Errorf("%w: %s", ErrNoAccount, accountID)
-	}
-
-	account.CloseConnections(ctx)
+	e.accounts.CloseAccount(ctx, accountID)
 	return nil
 }
 

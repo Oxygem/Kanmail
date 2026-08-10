@@ -22,6 +22,9 @@ type AccountsService struct {
 	caches       *caches.Caches
 	accountsLock sync.Mutex
 	accounts     map[types.AccountID]*emails.Account
+
+	// GetOrCreateAccount reads outside the lock, we use generations
+	generation uint64
 }
 
 func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *caches.Caches) *AccountsService {
@@ -48,6 +51,7 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context, settings types
 
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
+	a.generation++
 
 	for id, account := range a.accounts {
 		if accountSettings, ok := newSettings[id]; ok &&
@@ -66,6 +70,7 @@ func (a *AccountsService) ResetAccountsCache(ctx context.Context, settings types
 func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountID types.AccountID) error {
 	a.accountsLock.Lock()
 	defer a.accountsLock.Unlock()
+	a.generation++
 
 	// Remove any cached account
 	if account, ok := a.accounts[accountID]; ok {
@@ -79,27 +84,64 @@ func (a *AccountsService) AfterDeleteAccount(ctx context.Context, accountID type
 	return a.caches.DeleteByAccount(ctx, accountID)
 }
 
-func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountID types.AccountID) *emails.Account {
-	// Get settings *before* locking, so we don't deadlock sync/paginate reqs against settings changes,
-	// which can both happen rapidly while clicking through the folders in the sidebar.
-	settings := a.settings.getSettingsWithSecrets(ctx)
-
+func (a *AccountsService) CloseAccount(ctx context.Context, accountID types.AccountID) {
 	a.accountsLock.Lock()
-	defer a.accountsLock.Unlock()
+	a.generation++
+	account, ok := a.accounts[accountID]
+	delete(a.accounts, accountID)
+	a.accountsLock.Unlock()
 
-	if account, ok := a.accounts[accountID]; ok {
-		return account
+	if ok {
+		account.CloseConnections(ctx)
 	}
+}
 
-	for _, accountSettings := range settings.Accounts {
-		if accountSettings.ID == accountID {
-			account := emails.NewAccount(accountSettings, a.caches)
-			a.accounts[accountID] = account
+func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountID types.AccountID) *emails.Account {
+	// We can't hold accountsLock for the entire function because it deadlocks w/settings writes:
+	// GetOrCreateAccount -> accountsLock -> settingsLock via getSettingsWithSecrets
+	// PutSettings -> settingsLock -> accountsLock via ResetAccountsCache
+	for {
+		a.accountsLock.Lock()
+		if account, ok := a.accounts[accountID]; ok {
+			a.accountsLock.Unlock()
 			return account
 		}
-	}
+		generation := a.generation
+		a.accountsLock.Unlock()
 
-	return nil
+		// Get settings *without* holding the lock, so we don't deadlock sync/paginate reqs against
+		// settings changes, which can both happen rapidly while clicking through the folders in the
+		// sidebar. The generation check below catches the snapshot going stale in the meantime.
+		settings := a.settings.getSettingsWithSecrets(ctx)
+
+		var accountSettings *types.AccountSettings
+		for i := range settings.Accounts {
+			if settings.Accounts[i].ID == accountID {
+				accountSettings = &settings.Accounts[i]
+				break
+			}
+		}
+		if accountSettings == nil {
+			// Deleted or unknown - never build (or resurrect) an account for it
+			return nil
+		}
+
+		a.accountsLock.Lock()
+		if account, ok := a.accounts[accountID]; ok {
+			a.accountsLock.Unlock()
+			return account
+		}
+		if a.generation != generation {
+			// Accounts were invalidated while we read settings - our snapshot may
+			// predate the change, so re-read rather than cache stale settings
+			a.accountsLock.Unlock()
+			continue
+		}
+		account := emails.NewAccount(*accountSettings, a.caches)
+		a.accounts[accountID] = account
+		a.accountsLock.Unlock()
+		return account
+	}
 }
 
 // Test new account settings and populate folder mappings and other account settings
@@ -122,6 +164,9 @@ func (a *AccountsService) TestAccountSettings(
 	}
 
 	tmpAccount := emails.NewAccount(testSettings, a.caches)
+	// The test account opens real IMAP/SMTP sessions - close them regardless of
+	// outcome, it's thrown away either way
+	defer tmpAccount.CloseConnections(ctx)
 
 	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
 		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check IMAP connection: %w", err))
