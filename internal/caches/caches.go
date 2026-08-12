@@ -125,6 +125,11 @@ func openCaches(log zerolog.Logger, path string) (*Caches, error) {
 		caches.FolderEmailPartCache.disabled = true
 	}
 
+	if constants.ENV_DEBUG_UID_CACHE_DISABLE != "" {
+		log.Warn().Msg("Folder UID cache disabled")
+		caches.FolderUIDCache.disabled = true
+	}
+
 	return caches, nil
 }
 

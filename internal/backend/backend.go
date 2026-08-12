@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/oxygem/kanmail/internal/constants"
 )
 
-var BACKEND_API_URL = "https://backend.kanmail.io"
 var httpClient *http.Client
 var sessionID string
 var sessionIDOnce sync.Once
@@ -28,11 +26,6 @@ func SetAppVersion(version string) {
 }
 
 func init() {
-	url := os.Getenv("KANMAIL_BACKEND_API_URL")
-	if url != "" {
-		BACKEND_API_URL = url
-	}
-
 	httpClient = &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -44,7 +37,8 @@ func doBackendRequest(ctx context.Context, method, endpoint string, payload any)
 		return nil, fmt.Errorf("failed to marshal analytics payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, BACKEND_API_URL+endpoint, bytes.NewBuffer(jsonData))
+	url := constants.ENV_BACKEND_API_URL + endpoint
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create analytics request: %w", err)
 	}

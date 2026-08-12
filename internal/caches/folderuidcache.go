@@ -7,10 +7,8 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/emersion/go-imap/v2"
-	"github.com/rs/zerolog/log"
 
 	"github.com/oxygem/kanmail/internal/types"
 )
@@ -60,11 +58,6 @@ func NewFolderUIDCache(db *sql.DB) (*FolderUIDCache, error) {
 		stmtGetUIDs:           stmtGetUIDs,
 		stmtDeleteUIDs:        stmtDeleteUIDs,
 		stmtDeleteAccountUIDs: stmtDeleteAccountUIDs,
-	}
-
-	if os.Getenv("KANMAIL_FOLDER_CACHE_DISABLE") != "" {
-		log.Warn().Msg("Folder cache disabled")
-		cache.disabled = true
 	}
 
 	return &cache, nil
