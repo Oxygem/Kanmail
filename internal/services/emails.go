@@ -20,6 +20,7 @@ import (
 )
 
 var ErrNoAccount = errors.New("no account found")
+var ErrNoEmail = errors.New("no email found")
 
 type EmailsService struct {
 	log      zerolog.Logger
@@ -291,6 +292,8 @@ func (e *EmailsService) OneClickAccountFolderEmailUnsubscribe(
 	email, err := folder.FetchEmail(ctx, uid)
 	if err != nil {
 		return types.WrapFolderError(accountID, folderName, err)
+	} else if email == nil {
+		return types.WrapFolderError(accountID, folderName, ErrNoEmail)
 	}
 
 	if !email.ListUnsubscribeOneclick || email.ListUnsubscribeURL == "" {
@@ -459,6 +462,9 @@ func (e *EmailsService) CreateForwardAttachments(
 
 	attachments := make([]emails.SendAttachment, 0, len(parts))
 	for i, part := range parts {
+		if part.Description == "" {
+			continue
+		}
 		partData, err := folder.FetchEmailPartData(ctx, emails.FetchPartsMap{uid: part})
 		if err != nil {
 			return nil, types.WrapFolderError(accountID, folderName, err)
