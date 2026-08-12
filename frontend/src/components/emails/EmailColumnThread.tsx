@@ -925,7 +925,7 @@ export default class EmailColumnThread extends React.Component<
         },
         []
       ),
-      (address) => address[1]
+      (address) => address.email
     );
 
     const addresses = _.map(uniqueAddresses, (address) =>
