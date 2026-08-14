@@ -71,6 +71,11 @@ Kanmail is a desktop email client that functions like a kanban board, built with
 - Components subscribe to stores via `subscribe()` decorator
 - Stores notify subscribed components on state changes
 
+### End to end testing
+
+The app can be run in server mode using `wails3 task run:server`, this can then be accessed via
+chrome and puppeteer/playwright/etc.
+
 ## Important Notes
 
 - NEVER edit files in `frontend/wails/` or `frontend/bindings/` - they are auto-generated
@@ -81,4 +86,4 @@ Kanmail is a desktop email client that functions like a kanban board, built with
 
 - Do not include redundant or unncessary comments, code should be self-explanatory where possible
 
-- Do not attempt to launch and control the app via macOS accessibility or similar, ask the human to test 
+- Do not attempt to launch and control the app via macOS accessibility, use the testing setup above 
