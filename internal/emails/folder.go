@@ -101,6 +101,10 @@ func makeErrorExcerpt(err error) string {
 	return strings.TrimSpace(out.String())
 }
 
+func isSentenceEnd(r rune) bool {
+	return strings.ContainsRune(".!?:;,…-–—", r)
+}
+
 // Convert text/plain -> safe markdown HTML
 var markdownConverter = goldmark.New(
 	goldmark.WithExtensions(extension.Linkify, extension.TaskList),
@@ -1192,14 +1196,17 @@ func (f *Folder) fetchEmailHeadersWithConnection(
 		var out strings.Builder
 		out.Grow(len(s))
 		var lastWasSpace bool
+		var lastRune rune
 
 		for _, r := range s {
 			if unicode.IsLetter(r) || unicode.IsNumber(r) || unicode.IsPunct(r) {
 				out.WriteRune(r)
 				lastWasSpace = false
+				lastRune = r
 			} else if unicode.IsSpace(r) && !lastWasSpace && out.Len() > 0 {
-				if string(r) == "\n" {
+				if r == '\n' && !isSentenceEnd(lastRune) {
 					out.WriteString(". ")
+					lastRune = '.'
 				} else {
 					out.WriteString(" ")
 				}
