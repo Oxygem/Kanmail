@@ -59,6 +59,9 @@
 }
 
 /* ------------------------------ dropdown -------------------------------- */
+
+@wf-slot: 29px;
+
 .workflow-backdrop {
   position: fixed;
   inset: 0;
@@ -123,8 +126,14 @@
       white-space: nowrap;
     }
 
-    .kbd {
+    .kbd,
+    i.wf-check {
       flex: none;
+      min-width: @wf-slot;
+      text-align: center;
+    }
+
+    .kbd {
       font-family: ui-monospace, "SF Mono", Menlo, monospace;
       font-size: 11px;
       font-weight: 600;
@@ -136,7 +145,6 @@
     }
 
     i.wf-check {
-      flex: none;
       color: var(--brand-pink);
       font-size: 14px;
     }
