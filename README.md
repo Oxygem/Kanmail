@@ -8,8 +8,11 @@ An email client that turns your inbox into a kanban board, for Mac/Windows/Linux
 > [!IMPORTANT]
 > Please note that Kanmail is **source available but not free**. Kanmail may be downloaded and evaluated for free; for continued use of Kanmail a [**license must be purchased**](https://kanmail.io/license).
 
-![](https://kanmail.io/img/kanmail-screenshot-light.webp)
-![](https://kanmail.io/img/kanmail-screenshot-dark.webp)
+<picture>
+  <source srcset=".github/screenshots/kanmail-dark.webp" media="(prefers-color-scheme: dark)">
+  <img src=".github/screenshots/kanmail-light.webp" alt="Screenshot of Kanmail app showing inbox and folders as a kanban board" title="" style="">
+</picture>
+
 
 ## Contributions
 
