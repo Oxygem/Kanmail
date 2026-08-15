@@ -65,12 +65,13 @@ func (f *fakeFolderData) notify() {
 }
 
 type fakeMessage struct {
-	uid      imap.UID
-	flags    []imap.Flag
-	size     uint32
-	envelope *imap.Envelope
-	date     time.Time
-	content  string
+	uid         imap.UID
+	flags       []imap.Flag
+	size        uint32
+	envelope    *imap.Envelope
+	date        time.Time
+	content     string
+	unsubscribe bool
 }
 
 // cloneFakeMessage copies a message for insertion into another folder under a new
@@ -251,12 +252,13 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 			}
 
 			msg := &fakeMessage{
-				uid:      uid,
-				flags:    []imap.Flag{},
-				size:     uint32(len(email.Content) + len(email.Subject) + 500),
-				date:     msgDate,
-				envelope: envelope,
-				content:  email.Content,
+				uid:         uid,
+				flags:       []imap.Flag{},
+				size:        uint32(len(email.Content) + len(email.Subject) + 500),
+				date:        msgDate,
+				envelope:    envelope,
+				content:     email.Content,
+				unsubscribe: email.Unsubscribe,
 			}
 
 			// Set flags based on folder and message characteristics

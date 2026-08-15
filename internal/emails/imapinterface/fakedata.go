@@ -18,6 +18,9 @@ import (
 type fakeEmail struct {
 	Subject string `json:"subject"`
 	Content string `json:"content"`
+	// Newsletter/promo emails set this to get a List-Unsubscribe header, so
+	// the reader shows its unsubscribe link against fake data.
+	Unsubscribe bool `json:"unsubscribe"`
 }
 
 var companyDomains = []string{

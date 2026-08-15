@@ -86,13 +86,15 @@
   [
     {
       "subject": "🚀 Exclusive 50% Off Summer Sale - Limited Time!",
-      "content": "Don't miss out on our biggest sale of the year! Get 50% off everything in our store. Use code SUMMER50 at checkout. Hurry - offer expires in 48 hours!\n\nShop now at www.dealstore.com"
+      "content": "Don't miss out on our biggest sale of the year! Get 50% off everything in our store. Use code SUMMER50 at checkout. Hurry - offer expires in 48 hours!\n\nShop now at www.dealstore.com",
+      "unsubscribe": true
     }
   ],
   [
     {
       "subject": "Weekly Newsletter - Tech Updates",
-      "content": "Here are this week's top tech stories:\n\n• AI breakthrough in medical research\n• New smartphone launches\n• Cryptocurrency market updates\n\nStay informed with TechDaily!"
+      "content": "Here are this week's top tech stories:\n\n• AI breakthrough in medical research\n• New smartphone launches\n• Cryptocurrency market updates\n\nStay informed with TechDaily!",
+      "unsubscribe": true
     }
   ],
   [
@@ -114,7 +116,8 @@
   [
     {
       "subject": "💎 VIP Member Exclusive - Early Access Sale",
-      "content": "As a valued VIP member, you get exclusive early access to our flash sale! 30% off premium products before anyone else.\n\nUse code: VIP30\nValid for the next 24 hours only!\n\nLuxury Fashion Boutique"
+      "content": "As a valued VIP member, you get exclusive early access to our flash sale! 30% off premium products before anyone else.\n\nUse code: VIP30\nValid for the next 24 hours only!\n\nLuxury Fashion Boutique",
+      "unsubscribe": true
     }
   ],
   [
@@ -138,7 +141,8 @@
   [
     {
       "subject": "📚 Learn Python in 30 Days - Free Course!",
-      "content": "Master Python programming with our comprehensive free course!\n\n✓ 30 days of structured lessons\n✓ Hands-on projects\n✓ Certificate upon completion\n\nEnroll now at CodeAcademy.com"
+      "content": "Master Python programming with our comprehensive free course!\n\n✓ 30 days of structured lessons\n✓ Hands-on projects\n✓ Certificate upon completion\n\nEnroll now at CodeAcademy.com",
+      "unsubscribe": true
     }
   ],
   [
@@ -164,7 +168,8 @@
   [
     {
       "subject": "🎯 Investment Opportunity - Act Fast!",
-      "content": "Limited time investment opportunity with guaranteed 15% returns!\n\nMinimum investment: $1,000\nExpected returns: 15% annually\nRisk level: Low\n\nContact our investment advisor today!\n\nWealth Management Inc."
+      "content": "Limited time investment opportunity with guaranteed 15% returns!\n\nMinimum investment: $1,000\nExpected returns: 15% annually\nRisk level: Low\n\nContact our investment advisor today!\n\nWealth Management Inc.",
+      "unsubscribe": true
     }
   ],
   [
@@ -194,7 +199,8 @@
   [
     {
       "subject": "🎉 Black Friday Mega Sale - 70% Off Everything!",
-      "content": "Our biggest sale event of the year is here!\n\n🔥 70% off all products\n🚚 Free shipping worldwide\n💳 No minimum purchase required\n\nShop now before everything sells out!\n\nMegaStore Online"
+      "content": "Our biggest sale event of the year is here!\n\n🔥 70% off all products\n🚚 Free shipping worldwide\n💳 No minimum purchase required\n\nShop now before everything sells out!\n\nMegaStore Online",
+      "unsubscribe": true
     }
   ],
   [
@@ -210,7 +216,8 @@
   [
     {
       "subject": "💰 Claim Your $500 Gift Card Now!",
-      "content": "Congratulations! You've been selected to receive a $500 Amazon gift card!\n\nTo claim your prize:\n1. Click the link below\n2. Complete our short survey\n3. Provide your mailing address\n\nClaim now: giftcard-promo.com/claim\n\nPromo Team"
+      "content": "Congratulations! You've been selected to receive a $500 Amazon gift card!\n\nTo claim your prize:\n1. Click the link below\n2. Complete our short survey\n3. Provide your mailing address\n\nClaim now: giftcard-promo.com/claim\n\nPromo Team",
+      "unsubscribe": true
     }
   ],
   [
@@ -228,7 +235,8 @@
   [
     {
       "subject": "🏠 Mortgage Rates at Historic Lows - Apply Today!",
-      "content": "Don't miss out on record-low mortgage rates!\n\n✓ Rates as low as 2.9% APR\n✓ No application fees\n✓ Quick approval process\n✓ Refinancing available\n\nApply online at BestMortgage.com\n\nFirst National Bank"
+      "content": "Don't miss out on record-low mortgage rates!\n\n✓ Rates as low as 2.9% APR\n✓ No application fees\n✓ Quick approval process\n✓ Refinancing available\n\nApply online at BestMortgage.com\n\nFirst National Bank",
+      "unsubscribe": true
     }
   ],
   [
@@ -254,7 +262,8 @@
   [
     {
       "subject": "🎓 MBA Program - Transform Your Career!",
-      "content": "Take your career to the next level with our Executive MBA program!\n\n🎯 Weekend classes available\n🎯 Industry-leading faculty\n🎯 Networking opportunities\n🎯 Financial aid available\n\nSchedule a consultation today!\n\nBusiness School Admissions"
+      "content": "Take your career to the next level with our Executive MBA program!\n\n🎯 Weekend classes available\n🎯 Industry-leading faculty\n🎯 Networking opportunities\n🎯 Financial aid available\n\nSchedule a consultation today!\n\nBusiness School Admissions",
+      "unsubscribe": true
     }
   ],
   [
@@ -272,7 +281,8 @@
   [
     {
       "subject": "⚡ Flash Sale - 24 Hours Only!",
-      "content": "Lightning deal alert! ⚡\n\n24-hour flash sale on electronics:\n📱 Smartphones - 40% off\n💻 Laptops - 35% off\n🎧 Headphones - 50% off\n\nHurry - limited quantities!\n\nElectronics Warehouse"
+      "content": "Lightning deal alert! ⚡\n\n24-hour flash sale on electronics:\n📱 Smartphones - 40% off\n💻 Laptops - 35% off\n🎧 Headphones - 50% off\n\nHurry - limited quantities!\n\nElectronics Warehouse",
+      "unsubscribe": true
     }
   ],
   [
@@ -310,7 +320,8 @@
   [
     {
       "subject": "🎈 Kids Birthday Party Supplies - 50% Off!",
-      "content": "Make your child's birthday magical! 🎉\n\n50% off all party supplies:\n🎈 Balloons and decorations\n🎂 Party favors\n🎪 Themed party kits\n\nFree same-day delivery available!\n\nParty Central"
+      "content": "Make your child's birthday magical! 🎉\n\n50% off all party supplies:\n🎈 Balloons and decorations\n🎂 Party favors\n🎪 Themed party kits\n\nFree same-day delivery available!\n\nParty Central",
+      "unsubscribe": true
     }
   ],
   [
@@ -328,7 +339,8 @@
   [
     {
       "subject": "🏆 Win a Free Vacation - Enter Now!",
-      "content": "Enter our contest for a chance to win a free 7-day Caribbean vacation!\n\n🏝️ All-inclusive resort\n✈️ Flights included\n🍹 Food and drinks covered\n\nEnter at: vacation-contest.com\nDeadline: March 31st\n\nTravel Adventures Inc."
+      "content": "Enter our contest for a chance to win a free 7-day Caribbean vacation!\n\n🏝️ All-inclusive resort\n✈️ Flights included\n🍹 Food and drinks covered\n\nEnter at: vacation-contest.com\nDeadline: March 31st\n\nTravel Adventures Inc.",
+      "unsubscribe": true
     }
   ],
   [
@@ -346,7 +358,8 @@
   [
     {
       "subject": "💻 Learn Web Development - Free Bootcamp!",
-      "content": "Join our 12-week intensive web development bootcamp!\n\n✅ HTML, CSS, JavaScript\n✅ React and Node.js\n✅ Job placement assistance\n✅ 100% online or in-person\n\nLimited spots available!\n\nTech Bootcamp Academy"
+      "content": "Join our 12-week intensive web development bootcamp!\n\n✅ HTML, CSS, JavaScript\n✅ React and Node.js\n✅ Job placement assistance\n✅ 100% online or in-person\n\nLimited spots available!\n\nTech Bootcamp Academy",
+      "unsubscribe": true
     }
   ],
   [
@@ -358,7 +371,8 @@
   [
     {
       "subject": "🎵 Music Streaming - 3 Months Free!",
-      "content": "Experience premium music streaming at no cost!\n\n🎶 50 million songs ad-free\n🎶 Offline downloads\n🎶 High-quality audio\n🎶 Multiple device support\n\nStart your free trial: MusicStream.com\n\nMusicStream Premium"
+      "content": "Experience premium music streaming at no cost!\n\n🎶 50 million songs ad-free\n🎶 Offline downloads\n🎶 High-quality audio\n🎶 Multiple device support\n\nStart your free trial: MusicStream.com\n\nMusicStream Premium",
+      "unsubscribe": true
     }
   ],
   [
@@ -376,7 +390,8 @@
   [
     {
       "subject": "🏋️ Gym Membership - Join Today & Save 40%!",
-      "content": "Transform your fitness journey with our state-of-the-art facilities!\n\n💪 Modern equipment\n💪 Personal training available\n💪 Group fitness classes\n💪 Swimming pool and sauna\n\n40% off first year membership!\n\nFitness First Gym"
+      "content": "Transform your fitness journey with our state-of-the-art facilities!\n\n💪 Modern equipment\n💪 Personal training available\n💪 Group fitness classes\n💪 Swimming pool and sauna\n\n40% off first year membership!\n\nFitness First Gym",
+      "unsubscribe": true
     }
   ],
   [
@@ -388,7 +403,8 @@
   [
     {
       "subject": "🛒 Online Shopping Deals - Up to 60% Off!",
-      "content": "Massive savings on thousands of products!\n\n🛍️ Fashion - 60% off\n🛍️ Electronics - 45% off  \n🛍️ Home & Garden - 50% off\n🛍️ Sports & Outdoors - 40% off\n\nFree shipping on orders over $50!\n\nShopMart Online"
+      "content": "Massive savings on thousands of products!\n\n🛍️ Fashion - 60% off\n🛍️ Electronics - 45% off  \n🛍️ Home & Garden - 50% off\n🛍️ Sports & Outdoors - 40% off\n\nFree shipping on orders over $50!\n\nShopMart Online",
+      "unsubscribe": true
     }
   ],
   [
@@ -400,7 +416,8 @@
   [
     {
       "subject": "🎨 Art Supplies Sale - Creative Minds Rejoice!",
-      "content": "Unleash your creativity with our art supply sale!\n\n🎨 Paints and brushes - 30% off\n🎨 Canvases and papers - 25% off\n🎨 Drawing supplies - 35% off\n🎨 Craft materials - 40% off\n\nInspire your artistic side today!\n\nArtistic Supplies Co."
+      "content": "Unleash your creativity with our art supply sale!\n\n🎨 Paints and brushes - 30% off\n🎨 Canvases and papers - 25% off\n🎨 Drawing supplies - 35% off\n🎨 Craft materials - 40% off\n\nInspire your artistic side today!\n\nArtistic Supplies Co.",
+      "unsubscribe": true
     }
   ],
   [
@@ -418,7 +435,8 @@
   [
     {
       "subject": "📱 New iPhone 15 - Pre-order Now!",
-      "content": "The revolutionary iPhone 15 is here!\n\n📱 Advanced camera system\n📱 All-day battery life  \n📱 Lightning-fast A17 chip\n📱 Available in 5 colors\n\nPre-order today, ships September 22nd\nTrade-in your old phone for up to $800 credit!\n\nMobile Store Express"
+      "content": "The revolutionary iPhone 15 is here!\n\n📱 Advanced camera system\n📱 All-day battery life  \n📱 Lightning-fast A17 chip\n📱 Available in 5 colors\n\nPre-order today, ships September 22nd\nTrade-in your old phone for up to $800 credit!\n\nMobile Store Express",
+      "unsubscribe": true
     }
   ],
   [
@@ -436,7 +454,8 @@
   [
     {
       "subject": "☕ Coffee Shop Grand Opening - Free Coffee!",
-      "content": "New coffee shop opening next to our office!\n\n☕ Grand opening special: Free coffee all day Monday\n☕ 20% employee discount ongoing  \n☕ Fresh pastries and sandwiches\n☕ Loyalty program available\n\nJoin us for the ribbon cutting at 8 AM!\n\nBrewmaster Coffee House"
+      "content": "New coffee shop opening next to our office!\n\n☕ Grand opening special: Free coffee all day Monday\n☕ 20% employee discount ongoing  \n☕ Fresh pastries and sandwiches\n☕ Loyalty program available\n\nJoin us for the ribbon cutting at 8 AM!\n\nBrewmaster Coffee House",
+      "unsubscribe": true
     }
   ],
   [
@@ -458,7 +477,8 @@
   [
     {
       "subject": "🏠 Home Insurance - Protect What Matters!",
-      "content": "Comprehensive home insurance at competitive rates!\n\n🏠 Property damage coverage\n🏠 Personal belongings protection\n🏠 Liability coverage included\n🏠 24/7 claim support\n\nGet a free quote in 5 minutes!\n\nSecure Home Insurance"
+      "content": "Comprehensive home insurance at competitive rates!\n\n🏠 Property damage coverage\n🏠 Personal belongings protection\n🏠 Liability coverage included\n🏠 24/7 claim support\n\nGet a free quote in 5 minutes!\n\nSecure Home Insurance",
+      "unsubscribe": true
     }
   ],
   [
@@ -476,7 +496,8 @@
   [
     {
       "subject": "📚 Online Learning Platform - Unlimited Courses!",
-      "content": "Expand your skills with unlimited access to online courses!\n\n📚 10,000+ courses available\n📚 Expert instructors\n📚 Certificates of completion\n📚 Mobile app included\n\nFirst month free - start learning today!\n\nLearnHub Platform"
+      "content": "Expand your skills with unlimited access to online courses!\n\n📚 10,000+ courses available\n📚 Expert instructors\n📚 Certificates of completion\n📚 Mobile app included\n\nFirst month free - start learning today!\n\nLearnHub Platform",
+      "unsubscribe": true
     }
   ],
   [
@@ -502,7 +523,8 @@
   [
     {
       "subject": "🎁 Holiday Gift Guide - Perfect Presents Await!",
-      "content": "Find the perfect gift for everyone on your list!\n\n🎁 Electronics and gadgets\n🎁 Fashion and accessories\n🎁 Home and kitchen items\n🎁 Books and games\n\nFree gift wrapping with purchase!\n\nHoliday Gift Central"
+      "content": "Find the perfect gift for everyone on your list!\n\n🎁 Electronics and gadgets\n🎁 Fashion and accessories\n🎁 Home and kitchen items\n🎁 Books and games\n\nFree gift wrapping with purchase!\n\nHoliday Gift Central",
+      "unsubscribe": true
     }
   ],
   [
@@ -520,7 +542,8 @@
   [
     {
       "subject": "🌟 Premium Car Wash - Make Your Car Shine!",
-      "content": "Professional car detailing services at your workplace!\n\n🚗 Exterior wash and wax\n🚗 Interior cleaning and vacuum\n🚗 Tire shine and wheel cleaning\n🚗 Rain protection coating\n\nBooking available Tuesdays and Thursdays\nEmployee discount: 25% off\n\nMobile Car Wash Pro"
+      "content": "Professional car detailing services at your workplace!\n\n🚗 Exterior wash and wax\n🚗 Interior cleaning and vacuum\n🚗 Tire shine and wheel cleaning\n🚗 Rain protection coating\n\nBooking available Tuesdays and Thursdays\nEmployee discount: 25% off\n\nMobile Car Wash Pro",
+      "unsubscribe": true
     }
   ],
   [
@@ -538,7 +561,8 @@
   [
     {
       "subject": "🍕 Pizza Making Class - Learn from the Pros!",
-      "content": "Master the art of authentic Italian pizza making!\n\n🍕 Hands-on cooking experience\n🍕 Professional chef instructor\n🍕 All ingredients provided\n🍕 Take home your creations\n\nClasses every Saturday at 2 PM\nBook now: CulinaryArts.com\n\nItalian Cooking Academy"
+      "content": "Master the art of authentic Italian pizza making!\n\n🍕 Hands-on cooking experience\n🍕 Professional chef instructor\n🍕 All ingredients provided\n🍕 Take home your creations\n\nClasses every Saturday at 2 PM\nBook now: CulinaryArts.com\n\nItalian Cooking Academy",
+      "unsubscribe": true
     }
   ],
   [
@@ -564,7 +588,8 @@
   [
     {
       "subject": "📱 Smart Watch Fitness Challenge - Join Now!",
-      "content": "Get fit with our latest smartwatch!\n\n⌚ 30-day fitness tracking\n⌚ Heart rate monitoring\n⌚ Sleep analysis\n⌚ Waterproof design\n\nSpecial launch price: $199 (reg. $299)\nFree fitness app subscription included!\n\nTech Fitness Store"
+      "content": "Get fit with our latest smartwatch!\n\n⌚ 30-day fitness tracking\n⌚ Heart rate monitoring\n⌚ Sleep analysis\n⌚ Waterproof design\n\nSpecial launch price: $199 (reg. $299)\nFree fitness app subscription included!\n\nTech Fitness Store",
+      "unsubscribe": true
     }
   ],
   [
@@ -582,7 +607,8 @@
   [
     {
       "subject": "🏖️ Summer Vacation Deals - Book Early & Save!",
-      "content": "Early bird summer vacation specials!\n\n🏖️ Caribbean cruises from $599\n🏖️ European tours from $1,299  \n🏖️ All-inclusive resorts from $899\n🏖️ Family packages available\n\nBook by March 31st for best prices!\n\nSummer Travel Agency"
+      "content": "Early bird summer vacation specials!\n\n🏖️ Caribbean cruises from $599\n🏖️ European tours from $1,299  \n🏖️ All-inclusive resorts from $899\n🏖️ Family packages available\n\nBook by March 31st for best prices!\n\nSummer Travel Agency",
+      "unsubscribe": true
     }
   ],
   [
@@ -604,7 +630,8 @@
   [
     {
       "subject": "🎮 Gaming Console Bundle - Ultimate Entertainment!",
-      "content": "Complete gaming experience in one package!\n\n🎮 Latest gaming console\n🎮 2 wireless controllers\n🎮 5 popular game titles\n🎮 Premium headset included\n\nLimited time bundle price: $499\nFree setup and installation!\n\nGameZone Electronics"
+      "content": "Complete gaming experience in one package!\n\n🎮 Latest gaming console\n🎮 2 wireless controllers\n🎮 5 popular game titles\n🎮 Premium headset included\n\nLimited time bundle price: $499\nFree setup and installation!\n\nGameZone Electronics",
+      "unsubscribe": true
     }
   ],
   [
@@ -700,13 +727,15 @@
   [
     {
       "subject": "Flash Sale - 40% Off Everything",
-      "content": "⚡ 48 hours only! ⚡\n\nEverything in store is 40% off. Use code FLASH40 at checkout.\n\nDon't miss out - sale ends Sunday midnight!\n\nUrbanThreads"
+      "content": "⚡ 48 hours only! ⚡\n\nEverything in store is 40% off. Use code FLASH40 at checkout.\n\nDon't miss out - sale ends Sunday midnight!\n\nUrbanThreads",
+      "unsubscribe": true
     }
   ],
   [
     {
       "subject": "Your Subscription Is About to Renew",
-      "content": "Hi there,\n\nYour annual subscription renews on the 15th. No action needed - we'll charge your card on file.\n\nWant to change your plan? Visit your account settings.\n\nCloudNotes Team"
+      "content": "Hi there,\n\nYour annual subscription renews on the 15th. No action needed - we'll charge your card on file.\n\nWant to change your plan? Visit your account settings.\n\nCloudNotes Team",
+      "unsubscribe": true
     }
   ],
   [

@@ -637,6 +637,21 @@ func containsFold(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
+// fakeMessageHeaderBytes synthesizes the header body section for a message -
+// just the headers the app parses out of it, which the plain text content the
+// other sections serve doesn't contain.
+func fakeMessageHeaderBytes(msg *fakeMessage) []byte {
+	var b strings.Builder
+	b.WriteString("Subject: " + msg.envelope.Subject + "\r\n")
+	b.WriteString("Message-Id: " + msg.envelope.MessageID + "\r\n")
+	if msg.unsubscribe {
+		b.WriteString("List-Unsubscribe: <https://lists.example.com/unsubscribe>\r\n")
+		b.WriteString("List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n")
+	}
+	b.WriteString("\r\n")
+	return []byte(b.String())
+}
+
 func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) FetchCommand {
 	if c.getCurrentFolder() == "" {
 		cmd := &FakeFetchCommand{
@@ -714,9 +729,13 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 		if options.BodySection != nil {
 			fetchMsg.BodySection = make([]imapclient.FetchBodySectionBuffer, len(options.BodySection))
 			for i, section := range options.BodySection {
+				bytes := []byte(msg.content)
+				if section.Specifier == imap.PartSpecifierHeader {
+					bytes = fakeMessageHeaderBytes(msg)
+				}
 				fetchMsg.BodySection[i] = imapclient.FetchBodySectionBuffer{
 					Section: section,
-					Bytes:   []byte(msg.content),
+					Bytes:   bytes,
 				}
 			}
 		}
