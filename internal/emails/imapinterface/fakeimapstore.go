@@ -72,6 +72,9 @@ type fakeMessage struct {
 	date        time.Time
 	content     string
 	unsubscribe bool
+	// The thread so far, oldest first, as a real References header would carry
+	// it - the envelope's InReplyTo alone only ever names the direct parent
+	references []string
 }
 
 // cloneFakeMessage copies a message for insertion into another folder under a new
@@ -211,7 +214,9 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 
 		// Generate messages from thread
 		for emailIdx, email := range thread {
-			messageID := fmt.Sprintf("<thread%d.email%d@kanmail>", threadIdx, emailIdx)
+			// No angle brackets: a real client's envelope parse strips them,
+			// keeping only the bare msgid
+			messageID := fmt.Sprintf("thread%d.email%d@kanmail", threadIdx, emailIdx)
 			threadMessageIDs = append(threadMessageIDs, messageID)
 
 			targetFolder := folderPattern[emailIdx%len(folderPattern)]
@@ -259,6 +264,7 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 				envelope:    envelope,
 				content:     email.Content,
 				unsubscribe: email.Unsubscribe,
+				references:  slices.Clone(threadMessageIDs[:emailIdx]),
 			}
 
 			// Set flags based on folder and message characteristics

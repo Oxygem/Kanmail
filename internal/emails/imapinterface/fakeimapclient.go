@@ -250,9 +250,15 @@ func parseAppendedMessage(raw []byte) *fakeMessage {
 
 	header := parsed.Header
 	msg.envelope.Subject = header.Get("Subject")
-	msg.envelope.MessageID = header.Get("Message-Id")
-	if inReplyTo := header.Get("In-Reply-To"); inReplyTo != "" {
+	// Envelope msgids are bare - a real client's parse strips the brackets
+	msg.envelope.MessageID = strings.Trim(header.Get("Message-Id"), "<>")
+	if inReplyTo := strings.Trim(header.Get("In-Reply-To"), "<>"); inReplyTo != "" {
 		msg.envelope.InReplyTo = []string{inReplyTo}
+	}
+	for _, ref := range strings.Fields(header.Get("References")) {
+		if ref = strings.Trim(ref, "<>"); ref != "" {
+			msg.references = append(msg.references, ref)
+		}
 	}
 	if date, err := header.Date(); err == nil {
 		msg.date = date
@@ -599,11 +605,19 @@ func matchesCriteria(uid imap.UID, msg *fakeMessage, criteria *imap.SearchCriter
 
 func matchesHeader(msg *fakeMessage, field imap.SearchCriteriaHeaderField) bool {
 	switch strings.ToLower(field.Key) {
+	// Real servers substring-match the raw bracketed msgid headers, where the
+	// envelope holds bare msgids - so match the msgid fields bracket-blind
 	case "message-id":
-		return containsFold(msg.envelope.MessageID, field.Value)
+		return containsFold(msg.envelope.MessageID, strings.Trim(field.Value, "<>"))
 	case "in-reply-to":
+		value := strings.Trim(field.Value, "<>")
 		return slices.ContainsFunc(msg.envelope.InReplyTo, func(id string) bool {
-			return containsFold(id, field.Value)
+			return containsFold(id, value)
+		})
+	case "references":
+		value := strings.Trim(field.Value, "<>")
+		return slices.ContainsFunc(msg.references, func(id string) bool {
+			return containsFold(id, value)
 		})
 	case "subject":
 		return containsFold(msg.envelope.Subject, field.Value)
@@ -643,7 +657,10 @@ func containsFold(s, substr string) bool {
 func fakeMessageHeaderBytes(msg *fakeMessage) []byte {
 	var b strings.Builder
 	b.WriteString("Subject: " + msg.envelope.Subject + "\r\n")
-	b.WriteString("Message-Id: " + msg.envelope.MessageID + "\r\n")
+	b.WriteString("Message-Id: <" + msg.envelope.MessageID + ">\r\n")
+	if len(msg.references) > 0 {
+		b.WriteString("References: <" + strings.Join(msg.references, "> <") + ">\r\n")
+	}
 	if msg.unsubscribe {
 		b.WriteString("List-Unsubscribe: <https://lists.example.com/unsubscribe>\r\n")
 		b.WriteString("List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n")

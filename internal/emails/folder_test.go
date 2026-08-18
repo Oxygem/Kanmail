@@ -304,12 +304,14 @@ func TestSearchMissingFolderReturnsEmpty(t *testing.T) {
 // are only searched when the account maps them to a real mailbox - probing the
 // literal names is what surfaced "Mailbox doesn't exist: archive".
 func TestFindMessageIDsOnlySearchesMappedFolders(t *testing.T) {
-	const messageID = "<found@kanmail>"
+	// The header carries the msgid bracketed; envelopes (and so searches and
+	// results) carry it bare, the way a real client parses it
+	const messageID = "found@kanmail"
 
 	setup := func(t *testing.T) (*Account, context.Context) {
 		account, _, ctx := newTestAccount(t)
 		imapinterface.SetFakeBareStatusResponses(t.Name(), true)
-		appendFakeMessageWithID(t, t.Name(), "archive", messageID)
+		appendFakeMessageWithID(t, t.Name(), "archive", "<"+messageID+">")
 		return account, ctx
 	}
 
