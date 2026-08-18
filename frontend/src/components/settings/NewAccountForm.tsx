@@ -13,7 +13,7 @@ import {
 	SETUP_OUTLOOK_DOC_LINK,
 } from "../../constants.ts";
 import settingsStore from "../../stores/settings.ts";
-import { getNextAccentColor } from "../../util/accounts.ts";
+import { getAccountEventProps, getNextAccentColor } from "../../util/accounts.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { normalizeError } from "../../util/error.ts";
 import { openLink } from "../../window.ts";
@@ -124,6 +124,24 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 		return "";
 	}
 
+	getOauthProvider(): string {
+		return "";
+	}
+
+	// Whatever this form knows about the account so far - which grows as the
+	// user moves through it, so every event carries as much as was known when
+	// it fired
+	getEventProps(extra: Parameters<typeof getAccountEventProps>[0] = {}) {
+		return getAccountEventProps({
+			accountType: this.props.accountType,
+			provider: this.getOauthProvider(),
+			email: this.state.newAccountUsername,
+			imapSettings: this.state.newAccountSettings?.imapSettings,
+			smtpSettings: this.state.newAccountSettings?.smtpSettings,
+			...extra,
+		});
+	}
+
 	handleAddAccount = (ev) => {
 		ev.preventDefault();
 
@@ -170,7 +188,10 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 				newAccountName: data.imapSettings.username,
 				newAccountSettings: data,
 			});
-			trackEvent("AddAccountAutoconfigSuccess", { accountType: this.props.accountType });
+			trackEvent("AddAccountAutoconfigSuccess", this.getEventProps({
+				imapSettings: data.imapSettings,
+				smtpSettings: data.smtpSettings,
+			}));
 
 			return;
 		};
@@ -190,7 +211,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 			this.props.handleAddAccountError(settings, error.message);
 		}
 		this.setState({ isLoadingNewAccount: true });
-		trackEvent("AddAccountAutoconfigAttempt", { accountType: this.props.accountType });
+		trackEvent("AddAccountAutoconfigAttempt", this.getEventProps());
 
 		AccountsService.AutoconfigureNewAccount(
 			this.state.newAccountUsername,
@@ -451,7 +472,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 				oauthRequestUrl: v.url,
 			});
 			this.oauthRequestCheck = setInterval(this.checkForOauthRequest, 100);
-			trackEvent("AddAccountOAuthStarted", { accountType: this.props.accountType });
+			trackEvent("AddAccountOAuthStarted", this.getEventProps());
 		}).catch((e) => {
 			e = normalizeError(e);
 			this.setState({
@@ -484,13 +505,14 @@ class OauthAccountFormMixin extends GenericAccountForm {
 					oauthRequestId: null,
 					isLoadingNewAccount: false,
 				});
-				trackEvent(resp.cancelled ? "AddAccountOAuthCancelled" : "AddAccountOAuthFailed", {
-					accountType: this.props.accountType,
-				});
+				trackEvent(
+					resp.cancelled ? "AddAccountOAuthCancelled" : "AddAccountOAuthFailed",
+					this.getEventProps({ email: resp.email, error: resp.error }),
+				);
 				return;
 			}
 
-			trackEvent("AddAccountOAuthResponse", { accountType: this.props.accountType });
+			trackEvent("AddAccountOAuthResponse", this.getEventProps({ email: resp.email }));
 			this.setState({ isLoadingNewAccount: true });
 
 			const data = {
@@ -532,14 +554,6 @@ class OauthAccountFormMixin extends GenericAccountForm {
 			this.oauthCheckInFlight = false;
 		});
 	};
-
-	getOauthProvider(): string {
-		return ""
-	}
-
-	getAutoconfDomain(): string {
-		return "";
-	}
 
 	renderTitle() {
 		return (
@@ -718,6 +732,18 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		this.setState(getInitialState());
 	};
 
+	// Everything known about the account being added, for whichever settings are
+	// to hand - the error recovery screen has whatever autoconfigure worked out,
+	// the completion path has the finished account
+	getEventProps(settings?: AccountSettings | null, error?: any) {
+		return getAccountEventProps({
+			accountType: this.state.accountType,
+			imapSettings: settings?.imapSettings,
+			smtpSettings: settings?.smtpSettings,
+			error,
+		});
+	}
+
 	handleAddAccountError = (settings: AccountSettings, error: string) => {
 		this.setState({
 			isLoadingNewAccount: false,
@@ -725,14 +751,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			newAccountSettings: settings,
 			autoconfigError: error,
 		});
-		const imapUsernameBits = settings.imapSettings.username.split("@");
-		trackEvent("AddAccountError", {
-			accountType: this.state.accountType,
-			// Server errors quote the address they failed to log in with, so
-			// strip any of those out before this leaves the device
-			error: error.replace(/[^\s@]+@[^\s@]+/g, "<address>"),
-			domain: imapUsernameBits[imapUsernameBits.length - 1], // domain only, no PII
-		});
+		trackEvent("AddAccountError", this.getEventProps(settings, error));
 	};
 
 	// Whatever autoconfigure did work out (hosts, ports, credentials) carries
@@ -760,22 +779,18 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 
 	handleClickManualAddAccount = () => {
 		this.startManualConfig(getEmptyAccountSettings());
-		trackEvent("AddAccountManual");
+		trackEvent("AddAccountManual", this.getEventProps(this.state.newAccountSettings));
 	};
 
 	completeAddNewAccount = (accountSettings: AccountSettings) => {
 		this.props.addItem(accountSettings);
 		this.resetState();
-		trackEvent("AddAccountComplete", {
-			accountType: this.state.accountType,
-		});
+		trackEvent("AddAccountComplete", this.getEventProps(accountSettings));
 	};
 
 	setAccountType = (accountType: string) => {
 		this.setState({ accountType });
-		trackEvent("AddAccountStart", {
-			accountType: accountType,
-		});
+		trackEvent("AddAccountStart", getAccountEventProps({ accountType }));
 	};
 
 	renderErrorRecovery() {
@@ -858,6 +873,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 								className="submit main-button"
 								onClick={() => {
 									trackEvent("AddAccountErrorOAuth", {
+										...this.getEventProps(settings, error),
 										accountType: oauthProvider.accountType,
 									});
 									this.setState({
@@ -872,7 +888,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 							<button
 								className="submit main-button"
 								onClick={() => {
-									trackEvent("AddAccountErrorRetry", { accountType: this.state.accountType });
+									trackEvent("AddAccountErrorRetry", this.getEventProps(settings, error));
 									this.setState({
 										showErrorRecovery: false,
 										newAccountSettings: null,
@@ -886,7 +902,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 						<button
 							className="submit"
 							onClick={() => {
-								trackEvent("AddAccountErrorManual", { accountType: this.state.accountType });
+								trackEvent("AddAccountErrorManual", this.getEventProps(settings, error));
 								this.startManualConfig(settings || getEmptyAccountSettings());
 							}}
 						>
@@ -895,7 +911,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 						<button
 							className="cancel"
 							onClick={() => {
-								trackEvent("AddAccountErrorCancel", { accountType: this.state.accountType });
+								trackEvent("AddAccountErrorCancel", this.getEventProps(settings, error));
 								this.resetState();
 							}}
 						>

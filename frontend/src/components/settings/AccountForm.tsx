@@ -4,6 +4,7 @@ import React from "react";
 import ColorPicker from "../../components/ColorPicker.tsx";
 import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, SETUP_IMAP_DOC_LINK } from "../../constants.ts";
 import requestStore from "../../stores/request.ts";
+import { getAccountEventProps, getEmailDomain } from "../../util/accounts.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { openLink } from "../../window.ts";
 
@@ -59,6 +60,9 @@ interface IAccountFormProps {
   // Opens the form straight onto a tab, so a reconnect prompt can land on the
   // one holding the sign-in details rather than on Appearance
   initialTab?: string;
+  // Counts clicks on the account list reconnect button which is used to auto
+  // start the reconnect flow once the account is opened (if oauth).
+  autoReconnect?: number;
 
   itemIndex: number;
   updateItem: (n: number, s: AccountSettings) => void;
@@ -140,9 +144,26 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     this.state = getInitialState(props);
   }
 
+  componentDidMount() {
+    this.maybeStartAutoReconnect();
+  }
+
+  componentDidUpdate(prevProps: IAccountFormProps) {
+    if (this.props.autoReconnect && this.props.autoReconnect !== prevProps.autoReconnect) {
+      this.maybeStartAutoReconnect();
+    }
+  }
+
   componentWillUnmount() {
     this.stopOauthPoll();
   }
+
+  maybeStartAutoReconnect = () => {
+    if (this.props.autoReconnect && this.getOauthProvider()) {
+      this.setState({ editingTab: "imap" });
+      this.handleReconnectOAuth();
+    }
+  };
 
   resetState = () => {
     this.stopOauthPoll();
@@ -169,11 +190,20 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       || "";
   }
 
+  getEventProps(extra: Parameters<typeof getAccountEventProps>[0] = {}) {
+    return getAccountEventProps({
+      provider: this.getOauthProvider(),
+      imapSettings: this.state.imapSettings,
+      smtpSettings: this.state.smtpSettings,
+      ...extra,
+    });
+  }
+
   // Re-runs the provider's sign-in flow for an account already set up, swapping
   // in the refresh token it returns. This is the only way back from a grant
   // revoked or expired at the provider's end - the stored one can't be repaired.
-  handleReconnectOAuth = (ev) => {
-    ev.preventDefault();
+  handleReconnectOAuth = (ev?) => {
+    ev?.preventDefault();
 
     if (this.state.isReconnecting) {
       return;
@@ -185,7 +215,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     }
 
     this.setState({ isReconnecting: true, error: "" });
-    trackEvent("ReconnectAccountStarted", { provider });
+    trackEvent("ReconnectAccountStarted", this.getEventProps());
 
     AccountsService.StartOAuthRequest(provider).then((request) => {
       if (!request) {
@@ -224,9 +254,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
             ? "Sign in was cancelled."
             : `Sign in failed: ${resp.error}`,
         });
-        trackEvent(resp.cancelled ? "ReconnectAccountCancelled" : "ReconnectAccountFailed", {
-          provider: this.getOauthProvider(),
-        });
+        trackEvent(
+          resp.cancelled ? "ReconnectAccountCancelled" : "ReconnectAccountFailed",
+          this.getEventProps({ error: resp.error }),
+        );
         return;
       }
 
@@ -239,7 +270,12 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
           error: `Signed in as ${resp.email}, but this account is ${username} - `
             + "please sign in with the same address.",
         });
-        trackEvent("ReconnectAccountWrongAddress", { provider: this.getOauthProvider() });
+        // Which domain they landed on separates a slip (personal Gmail instead
+        // of the work account) from a provider handing back the wrong identity
+        trackEvent("ReconnectAccountWrongAddress", {
+          ...this.getEventProps(),
+          signedInDomain: getEmailDomain(resp.email),
+        });
         return;
       }
 

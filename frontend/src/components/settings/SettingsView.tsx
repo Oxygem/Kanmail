@@ -102,16 +102,17 @@ interface IAccountProps extends AccountSettings {
   deleteAccount: (n: number) => void;
   moveAccount: (i: number, p: number) => void;
   // Injected by the store subscription below
-  authErrors?: Map<string, RuntimeError>;
+  accountAuthErrors?: Map<string, RuntimeError>;
 }
 
 interface IAccountState {
   isEditing: boolean;
   isDeleting: boolean;
   editTab?: string;
+  autoReconnect?: number;
 }
 
-@subscribe([requestStore, ["authErrors"]])
+@subscribe([requestStore, ["accountAuthErrors"]])
 class Account extends React.Component<IAccountProps, IAccountState> {
   constructor(props: IAccountProps) {
     super(props);
@@ -137,7 +138,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
       && hasConnectionCredentials(this.props.smtpSettings);
     // Credentials we still hold but the provider has since disowned - present
     // and well-formed, so hasValidCredentials can't see it
-    const needsReconnect = Boolean(this.props.authErrors?.has(this.props.id));
+    const needsReconnect = Boolean(this.props.accountAuthErrors?.has(this.props.id));
 
     const deleteButton = (
       <button
@@ -174,6 +175,8 @@ class Account extends React.Component<IAccountProps, IAccountState> {
               isEditing: true,
               isDeleting: false,
               editTab: this.props.imapSettings?.oauthProvider ? "imap" : "appearance",
+              // Open the form and immediately start the reconnect flow
+              autoReconnect: (this.state.autoReconnect || 0) + 1,
             })}
           >Reconnect</button>}
           {hasValidCredentials && <button
@@ -188,7 +191,11 @@ class Account extends React.Component<IAccountProps, IAccountState> {
           ><i className="fa fa-arrow-down" /></button>}
           {hasValidCredentials && <button
             className={this.state.isEditing ? "btn-soft active" : "btn-soft"}
-            onClick={() => this.setState({ isEditing: !this.state.isEditing, isDeleting: false })}
+            onClick={() => this.setState({
+              isEditing: !this.state.isEditing,
+              isDeleting: false,
+              autoReconnect: 0,
+            })}
           >Edit</button>}
           {deleteButton}
         </div>
@@ -198,7 +205,12 @@ class Account extends React.Component<IAccountProps, IAccountState> {
             itemIndex={this.props.accountIndex}
             updateItem={this.props.updateAccount}
             initialTab={this.state.editTab}
-            closeForm={() => this.setState({ isEditing: false, editTab: undefined })}
+            autoReconnect={this.state.autoReconnect}
+            closeForm={() => this.setState({
+              isEditing: false,
+              editTab: undefined,
+              autoReconnect: 0,
+            })}
           />
         </div>}
       </div>

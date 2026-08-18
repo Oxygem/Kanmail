@@ -6,12 +6,21 @@ interface params {
 
 const recentErrors = new Set<string>();
 
+// Server errors quote the address they failed to log in with, so strip any of
+// those out before an error message leaves the device
+export function redactAddresses(message: string): string {
+    return message.replace(/[^\s@]+@[^\s@]+/g, "<address>");
+}
+
 export async function trackError(
     type: string,
     message: string,
     stack?: string,
     extra?: params,
 ): Promise<void> {
+    // Every error report passes through here, whatever its source quoted
+    message = redactAddresses(message);
+
     // Include extra (e.g. accountID/folderName) in the dedup key so the same
     // message on different accounts isn't collapsed into a single report.
     const key = `${type}:${message}:${extra ? JSON.stringify(extra) : ""}`;
