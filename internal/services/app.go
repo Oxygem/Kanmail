@@ -168,6 +168,17 @@ func (a *AppService) GetCacheStats(ctx context.Context) (types.CacheStats, error
 	return a.caches.GetStats(ctx)
 }
 
+func (a *AppService) VacuumCache(ctx context.Context) (types.CacheStats, error) {
+	if err := a.caches.Vacuum(ctx); err != nil {
+		return types.CacheStats{}, err
+	}
+	return a.caches.GetStats(ctx)
+}
+
+func (a *AppService) CheckCacheIntegrity(ctx context.Context) (types.CacheIntegrityResult, error) {
+	return a.caches.QuickCheck(ctx)
+}
+
 func (a *AppService) GetExecutable() (string, error) {
 	return os.Executable()
 }

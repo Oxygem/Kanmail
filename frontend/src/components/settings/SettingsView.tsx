@@ -2,7 +2,7 @@ import _ from "lodash";
 import React from "react";
 
 import { AccountsService, AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, Address, CacheStats, EventName, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, Address, CacheIntegrityResult, CacheStats, EventName, Settings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { Events } from "../../../wails/runtime.js";
 import Avatar from "../../components/Avatar.jsx";
 import ColorPicker from "../../components/ColorPicker.tsx";
@@ -14,6 +14,7 @@ import systemStore from "../../stores/system.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { arrayMove } from "../../util/array.ts";
 import { openFeedbackWindow } from "../../util/feedback.ts";
+import { formatBytes } from "../../util/string.ts";
 import { openLink } from "../../window.ts";
 import AccountForm from "../settings/AccountForm.tsx";
 import KeyboardShortcutsTab from "../settings/KeyboardShortcutsTab.tsx";
@@ -223,10 +224,15 @@ interface ISettingsViewProps extends Settings {
   isWelcomeSettings?: boolean;
 }
 
+type CacheAction = "vacuum" | "check";
+
 interface ISettingsViewState {
   tab: string;
   showAccountForm: boolean;
   cacheStats?: CacheStats;
+  cacheAction?: CacheAction;
+  cacheActionError?: string;
+  integrityResult?: CacheIntegrityResult;
   openColorPicker: string | null;
   showSenderColorForm: boolean;
 }
@@ -258,13 +264,16 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       }
     });
 
-    setTimeout(async () => {
-      const stats: CacheStats = await AppService.GetCacheStats();
-      this.setState({
-        cacheStats: stats,
-      });
-    })
+    setTimeout(() => this.loadCacheStats());
   }
+
+  loadCacheStats = async () => {
+    try {
+      this.setState({ cacheStats: await AppService.GetCacheStats() });
+    } catch (e) {
+      console.error("Failed to load cache stats", e);
+    }
+  };
 
   componentWillUnmount() {
     this.releaseKeyboard();
@@ -611,10 +620,78 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
     );
   }
 
+  runCacheAction = async (action: CacheAction) => {
+    this.setState({ cacheAction: action, cacheActionError: undefined });
+
+    try {
+      if (action === "vacuum") {
+        this.setState({ cacheStats: await AppService.VacuumCache() });
+      } else {
+        this.setState({ integrityResult: await AppService.CheckCacheIntegrity() });
+      }
+    } catch (e) {
+      this.setState({ cacheActionError: `${e}` });
+    } finally {
+      this.setState({ cacheAction: undefined });
+    }
+  };
+
+  renderDebugOnly(children: React.ReactNode) {
+    if (!systemStore.props.isDebug) {
+      return null;
+    }
+
+    return (
+      <div className="debug-only">
+        <div className="debug-only-label">🐛 Debug only</div>
+        {children}
+      </div>
+    );
+  }
+
+  renderCacheActions() {
+    const { cacheAction, cacheActionError, integrityResult } = this.state;
+
+    return <>
+      <div className="cache-actions">
+        <button
+          className="btn-soft"
+          disabled={!!cacheAction}
+          onClick={() => this.runCacheAction("vacuum")}
+        >
+          <i className={`fa ${cacheAction === "vacuum" ? "fa-spinner fa-spin" : "fa-compress"}`} />
+          {" "}Vacuum &amp; optimise
+        </button>
+        <button
+          className="btn-soft"
+          disabled={!!cacheAction}
+          onClick={() => this.runCacheAction("check")}
+        >
+          <i className={`fa ${cacheAction === "check" ? "fa-spinner fa-spin" : "fa-stethoscope"}`} />
+          {" "}Integrity check
+        </button>
+      </div>
+      {cacheActionError && <div className="cache-result bad">{cacheActionError}</div>}
+      {integrityResult && (
+        <div className={`cache-result ${integrityResult.OK ? "good" : "bad"}`}>
+          {integrityResult.OK
+            ? `No problems found (${integrityResult.DurationMS}ms)`
+            : integrityResult.Messages.join("\n")}
+        </div>
+      )}
+    </>;
+  }
+
   renderSystemSettings() {
     const { cacheStats } = this.state;
     const cacheStat = (k: string, v: React.ReactNode) => (
       <div className="cache-stat"><span className="k">{k}</span><span className="v">{v}</span></div>
+    );
+    const cacheGroup = (title: string, stats: React.ReactNode) => (
+      <div className="cache-card">
+        <div className="cache-group-title">{title}</div>
+        <div className="cache-grid">{stats}</div>
+      </div>
     );
 
     const body = <>
@@ -629,18 +706,58 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       </div>
 
       <h3 className="sub sp">Cache</h3>
-      {cacheStats && <div className="cache-card">
-        <div className="cache-grid">
-          {cacheStat("Database size", cacheStats.DatabaseSizeFormatted)}
-          {systemStore.props.isDebug && cacheStat("Schema version", cacheStats.SchemaVersion)}
-          {systemStore.props.isDebug && cacheStat("Page size", cacheStats.PageSize)}
-          {systemStore.props.isDebug && cacheStat("Page count", cacheStats.PageCount)}
-          {systemStore.props.isDebug && cacheStat("Free pages", cacheStats.FreelistPages)}
-        </div>
-      </div>}
-      <button className="btn-danger" onClick={AppService.ClearCacheAndRestart}>
-        <i className="fa fa-trash" /> Clear cache &amp; restart
-      </button>
+      {cacheStats && this.renderDebugOnly(<>
+        {cacheGroup("Storage", <>
+          {cacheStat("Total on disk", formatBytes(cacheStats.TotalOnDiskSize))}
+          {cacheStat("Database file", formatBytes(cacheStats.FileSize))}
+          {cacheStat("Write-ahead log", formatBytes(cacheStats.WALSize))}
+          {cacheStat("Shared memory", formatBytes(cacheStats.SHMSize))}
+          {cacheStat("Logical size", formatBytes(cacheStats.LogicalSize))}
+          {cacheStat("Maximum size", formatBytes(cacheStats.MaxSize))}
+          {cacheStat("Page size", `${cacheStats.PageSize} (${formatBytes(cacheStats.PageSize)})`)}
+          {cacheStat("Page count", cacheStats.PageCount.toLocaleString())}
+          {cacheStat("Free pages", cacheStats.FreelistPages.toLocaleString())}
+          {cacheStat("Free space", <>
+            {formatBytes(cacheStats.FreelistSize)} ({cacheStats.FreelistPercent.toFixed(1)}%)
+            <span className="cache-bar">
+              <span style={{ width: `${Math.min(cacheStats.FreelistPercent, 100)}%` }} />
+            </span>
+          </>)}
+        </>)}
+
+        {cacheGroup("Configuration", <>
+          {cacheStat("Journal mode", cacheStats.JournalMode)}
+          {cacheStat("Synchronous", cacheStats.Synchronous)}
+          {cacheStat("Auto-vacuum", cacheStats.AutoVacuum)}
+          {cacheStat("Locking mode", cacheStats.LockingMode)}
+          {cacheStat("Temp store", cacheStats.TempStore)}
+          {cacheStat("Encoding", cacheStats.Encoding)}
+          {cacheStat("Foreign keys", cacheStats.ForeignKeys ? "on" : "off")}
+          {cacheStat("Busy timeout", `${cacheStats.BusyTimeout}ms`)}
+          {/* SQLite reports cache_size as pages, or as kibibytes when negative */}
+          {cacheStat("Page cache", cacheStats.CacheSize < 0
+            ? formatBytes(-cacheStats.CacheSize * 1024)
+            : `${cacheStats.CacheSize.toLocaleString()} pages`)}
+          {cacheStat("WAL autocheckpoint", `${cacheStats.WALAutocheckpoint} pages`)}
+          {cacheStat("Cache writes", cacheStats.CachesDisabled ? "disabled" : "enabled")}
+        </>)}
+
+        {cacheGroup("Versions", <>
+          {cacheStat("SQLite version", cacheStats.SQLiteVersion)}
+          {cacheStat("Schema version", cacheStats.SchemaVersion)}
+          {cacheStat("User version", cacheStats.UserVersion)}
+          {cacheStat("Application ID", cacheStats.ApplicationID)}
+          {cacheStat("Migrations", `${cacheStats.MigrationCount} (${cacheStats.LatestMigration})`)}
+          {cacheStat("Upgrades", cacheStats.UpgradeCount
+            ? `${cacheStats.UpgradeCount} (${cacheStats.LatestUpgrade})`
+            : "0")}
+          {cacheStat("Tables", cacheStats.TableCount)}
+          {cacheStat("Indexes", cacheStats.IndexCount)}
+          {cacheStat("Triggers", cacheStats.TriggerCount)}
+          {cacheStat("Views", cacheStats.ViewCount)}
+        </>)}
+      </>)}
+      {this.renderDebugOnly(this.renderCacheActions())}
 
       <h3 className="sub sp">Debug</h3>
       {cacheStats && <div className="debug-row">
@@ -658,6 +775,9 @@ export default class SettingsView extends React.Component<ISettingsViewProps, IS
       <div className="debug-actions">
         <button className="btn-soft" onClick={AppService.RestartApp}>
           <i className="fa fa-refresh" /> Restart Kanmail
+        </button>
+        <button className="btn-danger" onClick={AppService.ClearCacheAndRestart}>
+          <i className="fa fa-trash" /> Clear cache &amp; restart
         </button>
         <button className="btn-soft" onClick={() => AppService.OpenFile(systemStore.props.logFilename)}>
           <i className="fa fa-file-text-o" /> Open log file
