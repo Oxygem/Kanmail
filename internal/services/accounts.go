@@ -20,6 +20,7 @@ type AccountsService struct {
 	log          zerolog.Logger
 	settings     *SettingsService
 	caches       *caches.Caches
+	app          *AppService
 	accountsLock sync.Mutex
 	accounts     map[types.AccountID]*emails.Account
 
@@ -27,11 +28,17 @@ type AccountsService struct {
 	generation uint64
 }
 
-func NewAccountsService(log zerolog.Logger, settings *SettingsService, caches *caches.Caches) *AccountsService {
+func NewAccountsService(
+	log zerolog.Logger,
+	settings *SettingsService,
+	caches *caches.Caches,
+	app *AppService,
+) *AccountsService {
 	accountsService := &AccountsService{
 		log:      log.With().Str("component", "accounts").Logger(),
 		settings: settings,
 		caches:   caches,
+		app:      app,
 		accounts: make(map[types.AccountID]*emails.Account),
 	}
 
@@ -96,6 +103,16 @@ func (a *AccountsService) CloseAccount(ctx context.Context, accountID types.Acco
 	}
 }
 
+// clearAuthError drops any reconnect prompt for an account that has just
+// authenticated. Nothing else retracts the prompt, so without this a failure
+// raised by work still in flight when the user reconnected pins it forever.
+func (a *AccountsService) clearAuthError(accountID types.AccountID) {
+	if a.app == nil || accountID == "" {
+		return
+	}
+	a.app.ClearAccountAuthError(accountID)
+}
+
 func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountID types.AccountID) *emails.Account {
 	// We can't hold accountsLock for the entire function because it deadlocks w/settings writes:
 	// GetOrCreateAccount -> accountsLock -> settingsLock via getSettingsWithSecrets
@@ -137,7 +154,9 @@ func (a *AccountsService) GetOrCreateAccount(ctx context.Context, accountID type
 			a.accountsLock.Unlock()
 			continue
 		}
-		account := emails.NewAccount(*accountSettings, a.caches)
+		account := emails.NewAccount(*accountSettings, a.caches, func() {
+			a.clearAuthError(accountID)
+		})
 		a.accounts[accountID] = account
 		a.accountsLock.Unlock()
 		return account
@@ -163,7 +182,9 @@ func (a *AccountsService) TestAccountSettings(
 		return settings, types.WrapAccountSettingsError(settings, err)
 	}
 
-	tmpAccount := emails.NewAccount(testSettings, a.caches)
+	tmpAccount := emails.NewAccount(testSettings, a.caches, func() {
+		a.clearAuthError(settings.ID)
+	})
 	// The test account opens real IMAP/SMTP sessions - close them regardless of
 	// outcome, it's thrown away either way
 	defer tmpAccount.CloseConnections(ctx)

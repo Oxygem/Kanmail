@@ -31,7 +31,7 @@ func TestResetAccountsCacheIgnoresPresentationalChanges(t *testing.T) {
 
 	service := &AccountsService{
 		log:      zerolog.Nop(),
-		accounts: map[types.AccountID]*emails.Account{"one-id": emails.NewAccount(one, nil)},
+		accounts: map[types.AccountID]*emails.Account{"one-id": emails.NewAccount(one, nil, nil)},
 	}
 	accountOne := service.accounts["one-id"]
 
@@ -70,8 +70,8 @@ func TestResetAccountsCacheKeepsUnchangedAccounts(t *testing.T) {
 	service := &AccountsService{
 		log: zerolog.Nop(),
 		accounts: map[types.AccountID]*emails.Account{
-			"one-id": emails.NewAccount(one, nil),
-			"two-id": emails.NewAccount(two, nil),
+			"one-id": emails.NewAccount(one, nil, nil),
+			"two-id": emails.NewAccount(two, nil, nil),
 		},
 	}
 	accountOne := service.accounts["one-id"]

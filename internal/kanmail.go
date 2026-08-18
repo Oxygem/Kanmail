@@ -47,7 +47,7 @@ func NewKanmailApp(assets fs.FS, log zerolog.Logger, version int, logFilename st
 
 	caches := caches.NewCaches(log, path.Join(settingsService.CacheDir, "caches.db"))
 
-	accountsService := services.NewAccountsService(log, settingsService, caches)
+	accountsService := services.NewAccountsService(log, settingsService, caches, appService)
 	emailsService := services.NewEmailsService(log, accountsService, appService)
 	contactsService := services.NewContactsService(log, caches)
 	dockService := dock.New()

@@ -243,7 +243,7 @@ func TestAccountWatchFolderClosedConnections(t *testing.T) {
 	account := NewAccount(types.AccountSettings{
 		Name:         types.AccountName(t.Name()),
 		IMAPSettings: types.ConnectionSettings{Username: t.Name()},
-	}, nil)
+	}, nil, nil)
 
 	results := make(chan *WatchResp, 1)
 	go func() {

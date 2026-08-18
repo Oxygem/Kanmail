@@ -36,7 +36,7 @@ func newTestAccount(t *testing.T) (*Account, *caches.Caches, context.Context) {
 		ID:           types.AccountID(t.Name()),
 		Name:         types.AccountName(t.Name()),
 		IMAPSettings: types.ConnectionSettings{Username: t.Name()},
-	}, testCaches)
+	}, testCaches, nil)
 	t.Cleanup(func() { account.CloseConnections(ctx) })
 
 	return account, testCaches, ctx

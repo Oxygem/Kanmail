@@ -22,7 +22,7 @@ func TestFolderSearchCachedEmails(t *testing.T) {
 		ID:      types.AccountID(t.Name()),
 		Name:    types.AccountName(t.Name()),
 		Folders: types.FolderSettings{Inbox: "INBOX"},
-	}, testCaches)
+	}, testCaches, nil)
 	t.Cleanup(func() { account.CloseConnections(ctx) })
 
 	for _, email := range []*types.Email{

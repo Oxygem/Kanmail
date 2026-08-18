@@ -18,6 +18,7 @@ type FolderSync struct {
 }
 
 const AccountAuthErrorEvent EventName = "AccountAuthErrorEvent"
+const AccountAuthClearedEvent EventName = "AccountAuthClearedEvent"
 
 type AccountAuthError struct {
 	AccountID string `json:"accountID"`

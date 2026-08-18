@@ -150,6 +150,16 @@ class RequestStore extends BaseStore {
     }
   };
 
+  // Retracts a single account's prompt, on word from the backend that it has
+  // authenticated again.
+  clearAuthError = (accountID: string) => {
+    if (!this.props.accountAuthErrors.delete(accountID)) {
+      return;
+    }
+    console.debug("[requestStore] Account reconnected, clearing auth error", accountID);
+    this.triggerUpdate();
+  };
+
   clearAuthErrors = () => {
     if (!this.props.accountAuthErrors.size) {
       return;
@@ -274,6 +284,12 @@ AppService.GetAccountAuthErrors().then((errors) => {
   });
 }).catch((e) => {
   console.error("[requestStore] Failed to load account auth errors", e);
+});
+
+// An account that authenticates is proof its credentials work now, whatever a
+// request still in flight from before the reconnect goes on to report.
+Events.On(EventName.AccountAuthClearedEvent, (ev) => {
+  requestStore.clearAuthError(ev.data as string);
 });
 
 // Any settings save may be the reconnect that fixes an account - and it's the

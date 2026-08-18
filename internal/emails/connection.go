@@ -72,6 +72,11 @@ type ConnectionPoolOptions struct {
 	PriorityConnections,
 	BackgroundConnections,
 	NetworkErrRetries int
+
+	// Called every time the pool hands out a connection it has confirmed is
+	// authenticated. It is the only positive signal we get that an account's
+	// credentials are currently good.
+	OnAuthenticated func()
 }
 
 func NewConnectionPool[T connection](

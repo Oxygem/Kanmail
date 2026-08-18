@@ -71,16 +71,28 @@ func smtpPoolOptions(name types.AccountName, n int) ConnectionPoolOptions {
 	}
 }
 
-func NewAccount(accountSettings types.AccountSettings, caches *caches.Caches) *Account {
+// NewAccount builds an account and its connection pools. onAuthenticated, if
+// set, is called every time one of those pools hands out an authenticated
+// connection - the only positive signal that the credentials still work.
+func NewAccount(
+	accountSettings types.AccountSettings,
+	caches *caches.Caches,
+	onAuthenticated func(),
+) *Account {
+	imapOptions := imapPoolOptions(accountSettings.Name, accountSettings.IMAPSettings.Connections)
+	imapOptions.OnAuthenticated = onAuthenticated
+	smtpOptions := smtpPoolOptions(accountSettings.Name, accountSettings.SMTPSettings.Connections)
+	smtpOptions.OnAuthenticated = onAuthenticated
+
 	return &Account{
 		AccountSettings: accountSettings,
 		caches:          caches,
 		imap: NewIMAPConnectionPool(
-			imapPoolOptions(accountSettings.Name, accountSettings.IMAPSettings.Connections),
+			imapOptions,
 			accountSettings.IMAPSettings,
 		),
 		smtp: NewSMTPConnectionPool(
-			smtpPoolOptions(accountSettings.Name, accountSettings.SMTPSettings.Connections),
+			smtpOptions,
 			accountSettings.SMTPSettings,
 		),
 		folders:  make(map[types.FolderName]*Folder),

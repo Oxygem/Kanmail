@@ -24,8 +24,9 @@ func NewIMAPConnectionPool(options ConnectionPoolOptions, conf types.ConnectionS
 	return &IMAPConnectionPool{
 		ConnectionPool: NewConnectionPool(options, func() *IMAPConnectionWrapper {
 			return &IMAPConnectionWrapper{
-				conf:     conf,
-				notifyCh: make(chan struct{}, 1),
+				conf:            conf,
+				onAuthenticated: options.OnAuthenticated,
+				notifyCh:        make(chan struct{}, 1),
 			}
 		}),
 	}
@@ -194,6 +195,8 @@ type IMAPConnectionWrapper struct {
 	client imapinterface.IMAPClient
 	conf   types.ConnectionSettings
 
+	onAuthenticated func()
+
 	// notifyCh receives a coalesced ping whenever the server pushes unilateral
 	// data on this connection; consumed (and drained) by WithIdleConnection.
 	notifyCh chan struct{}
@@ -235,6 +238,17 @@ func (c *IMAPConnectionWrapper) Close() error {
 }
 
 func (c *IMAPConnectionWrapper) Get(ctx context.Context) (imapinterface.IMAPClient, error) {
+	client, err := c.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if c.onAuthenticated != nil {
+		c.onAuthenticated()
+	}
+	return client, nil
+}
+
+func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAPClient, error) {
 	log := zerolog.Ctx(ctx)
 
 	// Check if fake IMAP mode is enabled

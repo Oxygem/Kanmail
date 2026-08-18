@@ -24,7 +24,8 @@ func NewSMTPConnectionPool(options ConnectionPoolOptions, conf types.ConnectionS
 	return &SMTPConnectionPool{
 		ConnectionPool: NewConnectionPool(options, func() *SMTPConnectionWrapper {
 			return &SMTPConnectionWrapper{
-				conf: conf,
+				conf:            conf,
+				onAuthenticated: options.OnAuthenticated,
 			}
 		}),
 	}
@@ -63,6 +64,9 @@ func (c *SMTPConnectionPool) WithConnectionOnce(
 type SMTPConnectionWrapper struct {
 	client smtpinterface.SMTPClient
 	conf   types.ConnectionSettings
+
+	// See ConnectionPoolOptions.OnAuthenticated
+	onAuthenticated func()
 }
 
 func (c *SMTPConnectionWrapper) Close() error {
@@ -73,6 +77,18 @@ func (c *SMTPConnectionWrapper) Close() error {
 }
 
 func (c *SMTPConnectionWrapper) Get(ctx context.Context) (smtpinterface.SMTPClient, error) {
+	client, err := c.connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// See IMAPConnectionWrapper.Get
+	if c.onAuthenticated != nil {
+		c.onAuthenticated()
+	}
+	return client, nil
+}
+
+func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTPClient, error) {
 	log := zerolog.Ctx(ctx)
 
 	// Check if fake IMAP??? mode is enabled

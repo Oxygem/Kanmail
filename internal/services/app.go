@@ -389,6 +389,8 @@ func (a *AppService) EmitAccountAuthError(account types.AccountID, message strin
 		return
 	}
 	a.accountsNeedingReauth[account] = message
+	a.log.Warn().Str("accountID", string(account)).Str("error", message).
+		Msg("Account needs re-authenticating, prompting for a reconnect")
 
 	if a.app == nil {
 		return
@@ -397,6 +399,25 @@ func (a *AppService) EmitAccountAuthError(account types.AccountID, message strin
 		AccountID: string(account),
 		Message:   message,
 	})
+}
+
+// ClearAccountAuthError drops an account's reconnect prompt and tells every
+// window to do the same.
+func (a *AppService) ClearAccountAuthError(account types.AccountID) {
+	a.lock.Lock()
+	defer a.lock.Unlock()
+
+	if _, known := a.accountsNeedingReauth[account]; !known {
+		return
+	}
+	delete(a.accountsNeedingReauth, account)
+	a.log.Info().Str("accountID", string(account)).
+		Msg("Account authenticated, clearing reconnect prompt")
+
+	if a.app == nil {
+		return
+	}
+	a.app.Event.Emit(string(types.AccountAuthClearedEvent), string(account))
 }
 
 // GetAccountAuthErrors returns the accounts currently needing a reconnect,
