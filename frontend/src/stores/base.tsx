@@ -8,6 +8,17 @@ const getStorePropNames = (store) => {
 
   if (_.isArray(store)) {
     [store, propNames] = store;
+
+    // A name the store doesn't have subscribes to nothing and injects
+    // undefined - the component renders as if the value were empty and never
+    // updates, with nothing to say why
+    const unknown = _.difference(propNames, _.keys(store.props));
+    if (unknown.length) {
+      console.error(
+        `[store] ${store.constructor.storeKey || store.constructor.name}`
+        + ` has no prop(s): ${unknown.join(", ")}`,
+      );
+    }
   }
 
   return [store, propNames];
