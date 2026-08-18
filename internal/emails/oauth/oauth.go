@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,8 +31,11 @@ type oauthService struct {
 	profileEndpoint string
 	scope           string
 	emailTokenScope string
-	clientID        string
-	clientSecret    string
+	// The subset of scope without which the mailbox cannot be opened, checked
+	// against what the user actually granted - see missingEmailScopes
+	emailScopes  []string
+	clientID     string
+	clientSecret string
 
 	includeClientSecret bool
 	useFormBody         bool
@@ -108,22 +112,60 @@ var oauthServices = map[string]oauthService{
 		tokenEndpoint:       "https://accounts.google.com/o/oauth2/token",
 		profileEndpoint:     "https://www.googleapis.com/userinfo/v2/me",
 		scope:               "https://mail.google.com/ https://www.googleapis.com/auth/userinfo.email",
+		emailScopes:         []string{"https://mail.google.com/"},
 		clientID:            constants.OAUTH_GMAIL_CLIENT_ID,
 		clientSecret:        constants.OAUTH_GMAIL_CLIENT_SECRET,
 		includeClientSecret: true,
 		UseLegacyXOAuth2:    true, // Seems to work better?
 	},
 	"outlook": {
-		authEndpoint:     "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-		tokenEndpoint:    "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-		profileEndpoint:  "https://graph.microsoft.com/v1.0/me",
-		scope:            "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/IMAP.AccessAsUser.All https://graph.microsoft.com/SMTP.Send",
-		emailTokenScope:  "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send",
+		authEndpoint:    "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+		tokenEndpoint:   "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+		profileEndpoint: "https://graph.microsoft.com/v1.0/me",
+		scope:           "offline_access https://graph.microsoft.com/User.Read https://graph.microsoft.com/IMAP.AccessAsUser.All https://graph.microsoft.com/SMTP.Send",
+		emailTokenScope: "https://outlook.office.com/IMAP.AccessAsUser.All https://outlook.office.com/SMTP.Send",
+		emailScopes: []string{
+			"https://graph.microsoft.com/IMAP.AccessAsUser.All",
+			"https://graph.microsoft.com/SMTP.Send",
+		},
 		clientID:         constants.OAUTH_OUTLOOK_CLIENT_ID,
 		clientSecret:     constants.OAUTH_OUTLOOK_CLIENT_SECRET,
 		useFormBody:      true,
 		UseLegacyXOAuth2: true, // Microsoft didn't get the OAUTHBEARER memo
 	},
+}
+
+// scopeSuffix reduces a scope to the part providers agree on. Microsoft hands
+// back Graph scopes bare ("IMAP.AccessAsUser.All") where it was asked for them
+// prefixed - in whatever casing, since it treats scope names case-insensitively
+// - and Google's mail scope appears with and without its trailing slash.
+// Comparing whole strings would write off a perfectly good grant.
+func scopeSuffix(scope string) string {
+	trimmed := strings.TrimSuffix(scope, "/")
+	if i := strings.LastIndex(trimmed, "/"); i >= 0 {
+		trimmed = trimmed[i+1:]
+	}
+	return strings.ToLower(trimmed)
+}
+
+// missingEmailScopes lists the mail scopes a grant did not include. Google and
+// Microsoft both put a checkbox against each permission they ask for, so a sign
+// in can complete with a valid token that cannot open a mailbox - and the only
+// symptom is an authentication failure at IMAP time, long after the screen that
+// caused it.
+func (s oauthService) missingEmailScopes(granted string) []string {
+	have := map[string]bool{}
+	for _, scope := range strings.Fields(granted) {
+		have[scopeSuffix(scope)] = true
+	}
+
+	var missing []string
+	for _, scope := range s.emailScopes {
+		if !have[scopeSuffix(scope)] {
+			missing = append(missing, scope)
+		}
+	}
+	return missing
 }
 
 func MakeSASLClient(conf types.ConnectionSettings, accessToken string) sasl.Client {
@@ -425,6 +467,22 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Catching a partial grant here is the difference between telling the user
+	// what to do about it and storing an account that can never connect. A
+	// provider that doesn't report the granted scope leaves nothing to check.
+	if resp.Scope == "" {
+		log.Warn().Msg("OAuth token response did not report the granted scope")
+	} else if missing := service.missingEmailScopes(resp.Scope); len(missing) > 0 {
+		log.Error().Str("granted", resp.Scope).Strs("missing", missing).
+			Msg("OAuth grant is missing the scopes needed to access email")
+		failOAuthRequest(w, http.StatusOK, fmt.Sprintf(
+			"Kanmail was not given access to your email (missing %s) - "+
+				"please sign in again and accept every permission requested",
+			strings.Join(missing, ", "),
+		))
+		return
+	}
+
 	headers := http.Header{"Authorization": []string{"Bearer " + resp.AccessToken}}
 	profileData, err := util.MakeHTTPRequestJSON(
 		r.Context(),
@@ -460,6 +518,7 @@ func handleOAuthResponse(w http.ResponseWriter, r *http.Request) {
 	log.Info().
 		Str("provider", currentOAuthRequest.provider).
 		Str("email", resp.Email).
+		Str("scope", resp.Scope).
 		Msg("Completed oauth response")
 
 	completeOAuthRequest(w, http.StatusOK, &resp,
@@ -619,4 +678,6 @@ func ClearOAuthAccessTokens() {
 	clear(oauthTokens)
 	clear(invalidRefreshTokens)
 	oauthTokenLock.Unlock()
+
+	clearTokenDiagnoses()
 }

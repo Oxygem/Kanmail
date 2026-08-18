@@ -161,9 +161,10 @@ func (c *SMTPConnectionWrapper) doOAuthLogin(ctx context.Context, client *smtp.C
 		return fmt.Errorf("failed to get access token: %w", err)
 	}
 
-	if err := client.Auth(oauth.MakeSASLClient(c.conf, accessToken)); err != nil {
+	saslClient := oauth.MakeSASLClient(c.conf, accessToken)
+	if err := client.Auth(saslClient); err != nil {
 		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
-		return err
+		return oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err)
 	}
 
 	return nil

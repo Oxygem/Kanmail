@@ -4,7 +4,6 @@ go 1.26.1
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.14.1
-	github.com/dustin/go-humanize v1.0.1
 	github.com/emersion/go-appdir v1.1.2
 	github.com/emersion/go-imap/v2 v2.0.0-beta.8
 	github.com/emersion/go-message v0.18.2
@@ -44,7 +43,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/emersion/go-imap/v2 => github.com/oxygem/go-imap/v2 v2.0.0-20260712210554-6a90c9be8ebe
+replace github.com/emersion/go-imap/v2 => github.com/oxygem/go-imap/v2 v2.0.0-20260818092905-fda530fcf62f
 
 // replace github.com/wailsapp/wails/v3 => ../wails/v3
 // replace github.com/emersion/go-imap/v2 => ../go-imap

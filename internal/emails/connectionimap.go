@@ -338,9 +338,10 @@ func (c *IMAPConnectionWrapper) doOAuthLogin(ctx context.Context, client *imapcl
 		return fmt.Errorf("failed to get access token: %w", err)
 	}
 
-	if err := client.Authenticate(oauth.MakeSASLClient(c.conf, accessToken)); err != nil {
+	saslClient := oauth.MakeSASLClient(c.conf, accessToken)
+	if err := client.Authenticate(saslClient); err != nil {
 		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
-		return err
+		return oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err)
 	}
 
 	return nil

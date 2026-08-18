@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -127,6 +128,88 @@ func TestHandleOAuthResponseRecordsTokenFailure(t *testing.T) {
 	want := "gmail oauth token error: invalid_request: Missing required parameter: code"
 	if resp.Error != want {
 		t.Fatalf("Error = %q, want %q", resp.Error, want)
+	}
+}
+
+// A grant the user trimmed on the consent screen otherwise only shows up as an
+// authentication failure at IMAP time, with nothing to connect it back to the
+// checkbox that caused it.
+func TestHandleOAuthResponseRejectsPartialGrant(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{
+			"access_token": "at-1",
+			"refresh_token": "rt-1",
+			"scope": "https://www.googleapis.com/auth/userinfo.email"
+		}`))
+	}))
+	defer server.Close()
+	withTokenEndpoint(t, "gmail", server.URL)
+	withOAuthRequest(t, "gmail")
+
+	w := httptest.NewRecorder()
+	handleOAuthResponse(w, httptest.NewRequest(http.MethodGet, "/?code=some-code", nil))
+
+	resp, err := GetOAuthResponse(context.Background(), "uid")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp == nil {
+		t.Fatal("no response recorded - the app would wait forever")
+	}
+	if !strings.Contains(resp.Error, "https://mail.google.com/") {
+		t.Fatalf("Error = %q, want the missing scope named", resp.Error)
+	}
+	if resp.RefreshToken != "" {
+		t.Fatal("a grant that cannot open a mailbox must not be stored")
+	}
+}
+
+func TestMissingEmailScopes(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		provider string
+		granted  string
+		want     []string
+	}{
+		{
+			name:     "google grant with everything asked for",
+			provider: "gmail",
+			granted:  "https://www.googleapis.com/auth/userinfo.email https://mail.google.com/",
+		},
+		{
+			name:     "google mail permission unticked",
+			provider: "gmail",
+			granted:  "https://www.googleapis.com/auth/userinfo.email openid",
+			want:     []string{"https://mail.google.com/"},
+		},
+		{
+			// Microsoft answers with bare Graph scopes where it was asked for
+			// them prefixed - the same grant, spelled differently
+			name:     "microsoft grant reported unprefixed",
+			provider: "outlook",
+			granted:  "openid profile User.Read IMAP.AccessAsUser.All SMTP.Send",
+		},
+		{
+			// Microsoft treats scope names case-insensitively, so the echoed
+			// casing carries no meaning
+			name:     "microsoft grant reported in different casing",
+			provider: "outlook",
+			granted:  "openid imap.accessasuser.all smtp.send",
+		},
+		{
+			name:     "microsoft send permission withheld",
+			provider: "outlook",
+			granted:  "https://graph.microsoft.com/User.Read https://graph.microsoft.com/IMAP.AccessAsUser.All",
+			want:     []string{"https://graph.microsoft.com/SMTP.Send"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := oauthServices[tc.provider].missingEmailScopes(tc.granted)
+			if strings.Join(got, " ") != strings.Join(tc.want, " ") {
+				t.Fatalf("missingEmailScopes(%q) = %v, want %v", tc.granted, got, tc.want)
+			}
+		})
 	}
 }
 
