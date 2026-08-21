@@ -14,10 +14,12 @@ import (
 
 	"github.com/emersion/go-imap/v2"
 	"github.com/emersion/go-imap/v2/imapclient"
+	"github.com/emersion/go-imap/v2/imapserver"
 	"github.com/emersion/go-sasl"
 	"github.com/rs/zerolog"
 
 	"github.com/oxygem/kanmail/internal/constants"
+	"github.com/oxygem/kanmail/internal/types"
 )
 
 // Our fake imap client implements IMAPClient
@@ -205,7 +207,7 @@ func (c *FakeAppendCommand) Wait() (*imap.AppendData, error) {
 		return c.data, nil
 	}
 
-	folder, exists := c.store.folders.Get(c.folder)
+	folder, exists := c.store.getFolder(c.folder)
 	if !exists {
 		return nil, missingMailboxErr(c.folder)
 	}
@@ -315,6 +317,9 @@ func NewFakeIMAPClientWithHandler(accountKey string, handler *imapclient.Unilate
 		log:     log,
 		handler: handler,
 	}
+	if client.store.namespaceUnsupported.Load() {
+		delete(client.caps, imap.CapNamespace)
+	}
 
 	return client
 }
@@ -369,10 +374,9 @@ func (c *FakeIMAPClient) Caps() imap.CapSet {
 }
 
 func (c *FakeIMAPClient) Namespace() NamespaceCommand {
-	data := &imap.NamespaceData{
-		Personal: []imap.NamespaceDescriptor{{
-			Prefix: "",
-		}},
+	data := c.store.namespaces.Load()
+	if data == nil {
+		data = &imap.NamespaceData{Personal: []imap.NamespaceDescriptor{{}}}
 	}
 	return &FakeNamespaceCommand{
 		FakeCommand: &FakeCommand{err: nil},
@@ -391,7 +395,11 @@ func missingMailboxErr(name string) *imap.Error {
 }
 
 func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) SelectCommand {
-	folder, exists := c.store.folders.Get(name)
+	if err := c.outsideNamespaceErr(name); err != nil {
+		return &FakeSelectCommand{FakeCommand: &FakeCommand{err: err}}
+	}
+
+	folder, exists := c.store.getFolder(name)
 	if !exists {
 		// Match the real client: a failed SELECT surfaces as a NO status response,
 		// carrying a response code only when the server bothers to send one
@@ -408,7 +416,8 @@ func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) Select
 
 	c.unsubscribeCurrentFolder()
 	c.mu.Lock()
-	c.currentFolder = name
+	// Track however the store spells it, not however the client asked for it
+	c.currentFolder = folder.name
 	c.mu.Unlock()
 	folder.subscribe(c)
 	folder.mu.Lock()
@@ -462,25 +471,94 @@ func (c *FakeIMAPClient) Idle() (IdleCommand, error) {
 	return &FakeIdleCommand{done: make(chan struct{})}, nil
 }
 
-func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptions) ListCommand {
-	var data []*imap.ListData
+// outsideNamespaceErr rejects a mailbox name that isn't the INBOX and doesn't
+// sit inside any namespace, matching Courier's refusal - a bare NO rather than
+// a TRYCREATE inviting the client to create it.
+func (c *FakeIMAPClient) outsideNamespaceErr(name string) error {
+	ns := c.store.namespaces.Load()
+	if namespacesContain(ns, name) {
+		return nil
+	}
+	return &imap.Error{
+		Type: imap.StatusResponseTypeNo,
+		Text: fmt.Sprintf(
+			"Client tried to access nonexistent namespace. (Mailbox name should probably be prefixed with: %s)",
+			types.NamespacesFromIMAP(ns).PersonalRoot(),
+		),
+	}
+}
 
-	for name := range c.store.folders.CopyData() {
-		data = append(data, &imap.ListData{
-			Attrs:   []imap.MailboxAttr{},
-			Mailbox: name,
-		})
+func (c *FakeIMAPClient) List(reference, pattern string, options *imap.ListOptions) ListCommand {
+	ns := c.store.namespaces.Load()
+	delim := c.store.delim()
+
+	// LIST "" "" asks for the hierarchy delimiter alone (RFC 3501 6.3.8)
+	if reference == "" && pattern == "" {
+		return &FakeListCommand{
+			FakeCommand: &FakeCommand{err: nil},
+			data:        []*imap.ListData{{Attrs: []imap.MailboxAttr{imap.MailboxAttrNoSelect}, Delim: delim}},
+		}
 	}
 
-	cmd := &FakeListCommand{
+	// Candidates are every mailbox in the namespaces plus, when the pattern ends
+	// in "%" (RFC 3501 6.3.8), the hierarchy levels above them - reported as
+	// \Noselect where no mailbox exists at that level
+	selectable := map[string]bool{}
+	// Over a copy: getFolder below reads the same map, and exsync.Map holds its
+	// read lock for the whole of an Iter, so nesting the two deadlocks
+	for name := range c.store.folders.CopyData() {
+		if !namespacesContain(ns, name) {
+			continue
+		}
+		selectable[name] = true
+		if delim == 0 || !strings.HasSuffix(pattern, "%") {
+			continue
+		}
+		for i, r := range name {
+			if r != delim || i == 0 {
+				continue
+			}
+			// A level that is the INBOX under another spelling is that mailbox,
+			// not a phantom beside it
+			parent := name[:i]
+			if folder, exists := c.store.getFolder(parent); exists {
+				parent = folder.name
+			}
+			if _, seen := selectable[parent]; !seen {
+				selectable[parent] = false
+			}
+		}
+	}
+
+	var data []*imap.ListData
+	for name, isSelectable := range selectable {
+		if !imapserver.MatchList(name, delim, reference, pattern) &&
+			// The INBOX matches case insensitively (RFC 9051)
+			!(strings.EqualFold(reference+pattern, "INBOX") && strings.EqualFold(name, "INBOX")) {
+			continue
+		}
+		attrs := []imap.MailboxAttr{}
+		if !isSelectable {
+			attrs = append(attrs, imap.MailboxAttrNoSelect)
+		}
+		data = append(data, &imap.ListData{Attrs: attrs, Mailbox: name, Delim: delim})
+	}
+	slices.SortFunc(data, func(a, b *imap.ListData) int {
+		return strings.Compare(a.Mailbox, b.Mailbox)
+	})
+
+	return &FakeListCommand{
 		FakeCommand: &FakeCommand{err: nil},
 		data:        data,
 	}
-	return cmd
 }
 
 func (c *FakeIMAPClient) Create(name string, options *imap.CreateOptions) Command {
-	if _, exists := c.store.folders.Get(name); exists {
+	if err := c.outsideNamespaceErr(name); err != nil {
+		return &FakeCommand{err: err}
+	}
+
+	if _, exists := c.store.getFolder(name); exists {
 		return &FakeCommand{err: &imap.Error{
 			Type: imap.StatusResponseTypeNo,
 			Code: imap.ResponseCodeAlreadyExists,
@@ -881,7 +959,10 @@ func (c *FakeIMAPClient) moveOrCopyFolders(numSet imap.NumSet, dest string) (*fa
 	if !exists {
 		panic("folder does not exist but is current")
 	}
-	destFolder, exists := c.store.folders.Get(dest)
+	if err := c.outsideNamespaceErr(dest); err != nil {
+		return nil, nil, nil, err
+	}
+	destFolder, exists := c.store.getFolder(dest)
 	if !exists {
 		return nil, nil, nil, missingMailboxErr(dest)
 	}
@@ -925,12 +1006,11 @@ func (c *FakeIMAPClient) Copy(numSet imap.NumSet, dest string) CopyCommand {
 }
 
 func (c *FakeIMAPClient) Append(name string, size int64, options *imap.AppendOptions) AppendCommand {
-	cmd := &FakeAppendCommand{
-		FakeCommand: &FakeCommand{err: nil},
+	return &FakeAppendCommand{
+		FakeCommand: &FakeCommand{err: c.outsideNamespaceErr(name)},
 		store:       c.store,
 		folder:      name,
 	}
-	return cmd
 }
 
 // AddCap advertises an extra capability, for tests exercising cap-dependent paths

@@ -129,7 +129,6 @@ type Folder struct {
 	caches  *caches.Caches
 
 	Name      types.FolderName
-	AliasName types.FolderName
 	AccountID types.AccountID
 
 	lock sync.Mutex
@@ -149,7 +148,7 @@ type Folder struct {
 	missing bool
 }
 
-func NewFolder(account *Account, name types.FolderName, aliasName types.FolderName) *Folder {
+func NewFolder(account *Account, name types.FolderName) *Folder {
 	return &Folder{
 		account: account,
 		imap:    account.imap,
@@ -157,7 +156,6 @@ func NewFolder(account *Account, name types.FolderName, aliasName types.FolderNa
 
 		AccountID: account.ID,
 		Name:      name,
-		AliasName: aliasName,
 
 		// Matches reset() - a future date means nothing has been sent yet
 		lastSentDate: time.Now().Add(24 * time.Hour),
@@ -1053,13 +1051,12 @@ func (f *Folder) getOrFetchEmails(
 						Msg("Failed to fetch or parse email header")
 					// Create a fake email to show in UI (and allow deleting/moving it)
 					fetchedEmails = append(fetchedEmails, &types.Email{
-						FolderName:      "", // must be "" to skip caching below
-						AccountID:       f.AccountID,
-						FolderAliasName: f.AliasName,
-						UID:             uid,
-						Date:            time.Now(),
-						Subject:         "Failed to parse email header",
-						Excerpt:         makeErrorExcerpt(err),
+						FolderName: "", // must be "" to skip caching below
+						AccountID:  f.AccountID,
+						UID:        uid,
+						Date:       time.Now(),
+						Subject:    "Failed to parse email header",
+						Excerpt:    makeErrorExcerpt(err),
 					})
 				} else if len(singleEmail) == 0 {
 					log.Error().

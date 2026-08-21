@@ -53,12 +53,11 @@ func imapAddrsToAddrs(imapAddrs []imap.Address) []types.Address {
 
 func (f *Folder) imapMessageToEmail(ctx context.Context, msg *imapclient.FetchMessageBuffer) *types.Email {
 	email := types.Email{
-		AccountID:       f.AccountID,
-		FolderName:      f.Name,
-		FolderAliasName: f.AliasName,
-		UID:             msg.UID,
-		Flags:           msg.Flags,
-		Size:            msg.RFC822Size,
+		AccountID:  f.AccountID,
+		FolderName: f.Name,
+		UID:        msg.UID,
+		Flags:      msg.Flags,
+		Size:       msg.RFC822Size,
 	}
 
 	if msg.Envelope != nil {

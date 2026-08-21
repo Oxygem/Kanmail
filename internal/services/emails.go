@@ -22,6 +22,20 @@ import (
 var ErrNoAccount = errors.New("no account found")
 var ErrNoEmail = errors.New("no email found")
 
+func labelEmails(emails []*types.Email, folderName types.FolderName) {
+	for _, email := range emails {
+		email.FolderAliasName = folderName
+	}
+}
+
+// labelEmailsByFolder stamps emails gathered across an account's folders with
+// the logical name of the mailbox each came from.
+func labelEmailsByFolder(account *emails.Account, emails []*types.Email) {
+	for _, email := range emails {
+		email.FolderAliasName = account.DisplayFolderName(email.FolderName)
+	}
+}
+
 type EmailsService struct {
 	log      zerolog.Logger
 	app      *AppService
@@ -95,6 +109,7 @@ func (e *EmailsService) SendEmail(
 	if err != nil {
 		return nil, types.WrapAccountError(accountID, err)
 	}
+	email.FolderAliasName = "sent"
 
 	// Forwarded attachments were staged into temp dirs - sent now, so clean up
 	for _, attachment := range options.Attachments {
@@ -143,6 +158,7 @@ func (e *EmailsService) FindAccountMessageIDs(
 	}
 
 	emails, err := account.FindMessageIDs(ctx, messageIDs)
+	labelEmailsByFolder(account, emails)
 	return emails, types.WrapAccountError(accountID, err)
 }
 
@@ -164,6 +180,7 @@ func (e *EmailsService) SearchAccountReferences(
 	}
 
 	emails, err := account.SearchReferences(ctx, references)
+	labelEmailsByFolder(account, emails)
 	return emails, types.WrapAccountError(accountID, err)
 }
 
@@ -189,6 +206,7 @@ func (e *EmailsService) SearchAccountFolderEmails(
 
 	folder := account.GetFolder(folderName)
 	emails, err := folder.SearchEmails(ctx, search, 100)
+	labelEmails(emails, folderName)
 	return emails, types.WrapAccountError(accountID, err)
 }
 
@@ -212,6 +230,7 @@ func (e *EmailsService) SearchCachedAccountFolderEmails(
 
 	folder := account.GetFolder(folderName)
 	emails, err := folder.SearchCachedEmails(ctx, search, 100)
+	labelEmails(emails, folderName)
 	return emails, types.WrapAccountError(accountID, err)
 }
 
@@ -238,6 +257,9 @@ func (e *EmailsService) SyncAccountFolderEmails(
 
 	folder := account.GetFolder(folderName)
 	data, err := folder.SyncEmails(ctx)
+	if data != nil {
+		labelEmails(data.Emails, folderName)
+	}
 	return data, types.WrapFolderError(accountID, folderName, err)
 }
 
@@ -265,6 +287,9 @@ func (e *EmailsService) GetAccountFolderEmails(
 
 	folder := account.GetFolder(folderName)
 	data, err := folder.PaginateEmails(ctx, options)
+	if data != nil {
+		labelEmails(data.Emails, folderName)
+	}
 	return data, types.WrapFolderError(accountID, folderName, err)
 }
 
@@ -348,6 +373,9 @@ func (e *EmailsService) GetAccountFolderEmailAndContent(
 
 	folder := account.GetFolder(folderName)
 	email, data, err := folder.FetchEmailAndContent(ctx, uid)
+	if email != nil {
+		email.FolderAliasName = folderName
+	}
 	return email, data, types.WrapFolderError(accountID, folderName, err)
 }
 

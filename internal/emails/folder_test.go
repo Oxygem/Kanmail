@@ -87,6 +87,10 @@ func TestFolderErrorClassifiers(t *testing.T) {
 		{"dovecot bare no", noText("Mailbox doesn't exist: Kanmail/Done"), true},
 		{"cyrus bare no", noText("Mailbox does not exist"), true},
 		{"courier bare no", noText("Mailbox does not exist, or must be subscribed to."), true},
+		// A name outside the namespace is a resolver bug, not a missing mailbox - surface it
+		{"courier outside namespace", noText(
+			"Client tried to access nonexistent namespace. (Mailbox name should probably be prefixed with: INBOX.)",
+		), false},
 		{"uw bare no", noText("Can't open mailbox Archive: no such mailbox"), true},
 		{"old gmail bare no", noText("Unknown Mailbox: [Gmail]/Trash (Failure)"), true},
 		{"wrapped bare no", fmt.Errorf("select: %w", noText("Mailbox does not exist")), true},
@@ -164,12 +168,12 @@ func TestSyncFolderDeletedRemotely(t *testing.T) {
 	assert.Equal(t, 0, resp.Meta.Count)
 
 	// The cached UID list must go, else we'd skip the select probe next launch
-	_, _, cachedUIDs, err := testCaches.FolderUIDCache.Get(ctx, account.ID, "inbox")
+	_, _, cachedUIDs, err := testCaches.FolderUIDCache.Get(ctx, account.ID, folder.Name)
 	assert.NoError(t, err)
 	assert.Empty(t, cachedUIDs)
 
 	// ...but the cached emails stay, ready for the folder coming back
-	email, err := testCaches.FolderEmailCache.Get(ctx, account.ID, "inbox", uids[0])
+	email, err := testCaches.FolderEmailCache.Get(ctx, account.ID, folder.Name, uids[0])
 	assert.NoError(t, err)
 	assert.NotNil(t, email)
 

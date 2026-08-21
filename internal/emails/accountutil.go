@@ -3,6 +3,7 @@ package emails
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/emersion/go-imap/v2"
@@ -12,187 +13,124 @@ import (
 	"github.com/oxygem/kanmail/internal/types"
 )
 
-// listMailboxesRecursive recursively lists all mailboxes starting from the given prefix.
-// It descends into subfolders unless the mailbox has the HasNoChildren attribute.
 func listMailboxesRecursive(
 	ctx context.Context,
 	conn imapinterface.IMAPClient,
-	prefix string,
-	separator string,
+	ns types.Namespaces,
 ) ([]*imap.ListData, error) {
 	var allMailboxes []*imap.ListData
-	seenMailboxes := make(map[string]bool)
+	listed := make(map[string]bool)
 
-	var getMailboxes func(folder string) error
-	getMailboxes = func(folder string) error {
-		seenMailboxes[folder] = true
-
-		// List the direct children of folder (LIST "<folder><sep>" "%"). The
-		// namespace prefix already includes its trailing separator on some
-		// servers (e.g. Courier reports "INBOX."), so only append when missing -
-		// otherwise we'd query a bogus "INBOX.." reference and list nothing.
-		pattern := folder
-		if pattern != "" && !strings.HasSuffix(pattern, separator) {
-			pattern = pattern + separator
-		}
-		mailboxes, err := conn.List(pattern, "%", &imap.ListOptions{}).Collect()
+	var listChildren func(root, delim string) error
+	listChildren = func(root, delim string) error {
+		mailboxes, err := conn.List(root, "%", &imap.ListOptions{}).Collect()
 		if err != nil {
-			return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", folder, err)
+			return fmt.Errorf("failed to fetch IMAP folders in dir: %s: %w", root, err)
 		}
 		zerolog.Ctx(ctx).Debug().
-			Str("folder", folder).
+			Str("root", root).
 			Any("mailboxes", mailboxes).
 			Msg("Listed mailboxes")
 
 		for _, mailbox := range mailboxes {
+			if listed[mailbox.Mailbox] {
+				continue
+			}
+			listed[mailbox.Mailbox] = true
 			allMailboxes = append(allMailboxes, mailbox)
 
-			// Unless explicitly flagged w/no children attribute we search for nested folders
-			var noChildren bool
-			for _, attr := range mailbox.Attrs {
-				if attr == imap.MailboxAttrHasNoChildren {
-					noChildren = true
-					break
-				}
+			if delim == "" || slices.Contains(mailbox.Attrs, imap.MailboxAttrHasNoChildren) {
+				continue
 			}
-			if !noChildren && mailbox.Mailbox != folder && !seenMailboxes[mailbox.Mailbox] {
-				if err := getMailboxes(mailbox.Mailbox); err != nil {
-					return err
-				}
+			if err := listChildren(mailbox.Mailbox+delim, delim); err != nil {
+				return err
 			}
 		}
-
 		return nil
 	}
 
-	if err := getMailboxes(prefix); err != nil {
-		return nil, err
+	inbox, err := conn.List("", "INBOX", &imap.ListOptions{}).Collect()
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch INBOX: %w", err)
+	}
+	for _, mailbox := range inbox {
+		listed[mailbox.Mailbox] = true
+		allMailboxes = append(allMailboxes, mailbox)
+
+		// Servers with an empty personal prefix nest folders under the INBOX
+		// (Office365 "INBOX/Receipts", Dovecot Maildir++), where no namespace
+		// root reaches them
+		if mailbox.Delim == 0 || slices.Contains(mailbox.Attrs, imap.MailboxAttrHasNoChildren) {
+			continue
+		}
+		delim := string(mailbox.Delim)
+		if ns.PersonalRoot() == mailbox.Mailbox+delim {
+			continue // Courier style, the namespace root below lists these
+		}
+		if err := listChildren(mailbox.Mailbox+delim, delim); err != nil {
+			return nil, err
+		}
+	}
+
+	personal := ns.Personal
+	if len(personal) == 0 {
+		personal = []types.Namespace{{Delim: ns.Delim()}}
+	}
+	// TODO: handle other namespaces?
+	for _, space := range personal {
+		if err := listChildren(space.Root(), space.Delim); err != nil {
+			return nil, err
+		}
 	}
 
 	return allMailboxes, nil
 }
 
-var popularSpecialFolders = struct {
-	Inbox, Flagged, Important, Sent, Drafts, Archive, Trash, Junk []types.FolderName
-}{
-	Inbox:     []types.FolderName{"INBOX", "Inbox", "inbox", "posteingang"},
-	Flagged:   []types.FolderName{"Starred", "Flagged"},
-	Important: []types.FolderName{"Important"},
-	Sent:      []types.FolderName{"Sent Mail", "Sent", "Sent Items", "Sent items"},
-	Drafts:    []types.FolderName{"Drafts"},
-	Archive:   []types.FolderName{"All Mail", "Archive"},
-	Trash:     []types.FolderName{"Trash", "Deleted Items", "Deleted Messages", "Deleted"},
-	Junk:      []types.FolderName{"Junk", "Spam"},
+func matchesAnyFolderName(name types.FolderName, candidates []types.FolderName) bool {
+	return slices.ContainsFunc(candidates, func(candidate types.FolderName) bool {
+		return strings.EqualFold(string(name), string(candidate))
+	})
 }
 
-func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, folder string, mailbox *imap.ListData) {
+// apply any matching SPECIAL-USE folders on the FolderSettings object
+func setFolderForMailbox(ctx context.Context, folders *types.FolderSettings, root string, mailbox *imap.ListData) {
 	log := zerolog.Ctx(ctx)
 
 	fullName := types.FolderName(mailbox.Mailbox)
-	mboxName := types.FolderName(strings.TrimPrefix(mailbox.Mailbox, folder))
+	if fullName.IsInbox() {
+		fullName = "INBOX"
+	}
+	mboxName := types.FolderName(strings.TrimPrefix(mailbox.Mailbox, root))
 
 	var changed bool
-
-	// First try searching attrs (imap SPECIAL-USE extension)
-	for _, attr := range mailbox.Attrs {
-		switch attr {
-		case imap.MailboxAttrArchive, imap.MailboxAttrAll:
-			if folders.Archive != "" && folders.Archive != mboxName {
+	for _, special := range types.SpecialFolders {
+		folder := special.Field(folders)
+		switch {
+		// The SPECIAL-USE attrs so warn log + override any current setting
+		case hasAnyAttr(mailbox, special.Attrs):
+			if *folder != "" && *folder != fullName {
 				log.Warn().
-					Str("folder_current", string(folders.Archive)).
-					Str("folder_new", string(mboxName)).
-					Msg("Different all/archive folder")
+					Str("alias", string(special.Alias)).
+					Str("folder_current", string(*folder)).
+					Str("folder_new", string(fullName)).
+					Msg("Different special folder")
 			}
-			folders.Archive = fullName
-			changed = true
-		case imap.MailboxAttrFlagged:
-			folders.Flagged = fullName
-			changed = true
-		case imap.MailboxAttrImportant:
-			folders.Important = fullName
-			changed = true
-		case imap.MailboxAttrSent:
-			folders.Sent = fullName
-			changed = true
-		case imap.MailboxAttrDrafts:
-			folders.Drafts = fullName
-			changed = true
-		case imap.MailboxAttrTrash:
-			folders.Trash = fullName
-			changed = true
-		case imap.MailboxAttrJunk:
-			folders.Junk = fullName
-			changed = true
+		// string matching fallback for servers w/o SPECIAL-USE
+		case *folder == "" && matchesAnyFolderName(mboxName, special.Popular):
+		default:
+			continue
 		}
-	}
-
-	// Now search for the inbox (no inbox attr)
-	for _, name := range popularSpecialFolders.Inbox {
-		if mboxName == name {
-			folders.Inbox = fullName
-			changed = true
-		}
-	}
-
-	// And now search for any missing
-	if folders.Flagged == "" {
-		for _, name := range popularSpecialFolders.Flagged {
-			if mboxName == name {
-				folders.Flagged = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Important == "" {
-		for _, name := range popularSpecialFolders.Important {
-			if mboxName == name {
-				folders.Important = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Sent == "" {
-		for _, name := range popularSpecialFolders.Sent {
-			if mboxName == name {
-				folders.Sent = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Drafts == "" {
-		for _, name := range popularSpecialFolders.Drafts {
-			if mboxName == name {
-				folders.Drafts = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Archive == "" {
-		for _, name := range popularSpecialFolders.Archive {
-			if mboxName == name {
-				folders.Archive = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Trash == "" {
-		for _, name := range popularSpecialFolders.Trash {
-			if mboxName == name {
-				folders.Trash = fullName
-				changed = true
-			}
-		}
-	}
-	if folders.Junk == "" {
-		for _, name := range popularSpecialFolders.Junk {
-			if mboxName == name {
-				folders.Junk = fullName
-				changed = true
-			}
-		}
+		*folder = fullName
+		changed = true
 	}
 
 	if changed {
 		log.Info().Any("settings", folders).Msg("Updated folder settings")
 	}
+}
+
+func hasAnyAttr(mailbox *imap.ListData, attrs []imap.MailboxAttr) bool {
+	return slices.ContainsFunc(attrs, func(attr imap.MailboxAttr) bool {
+		return slices.Contains(mailbox.Attrs, attr)
+	})
 }

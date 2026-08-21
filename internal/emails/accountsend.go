@@ -180,27 +180,26 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 	}
 
 	messageID, _ := header.MessageID()
-	sentFolder := a.Folders.GetFromName("sent")
+	sentFolder := a.resolveFolderName("sent")
 
 	sentEmail := &types.Email{
-		AccountID:       a.ID,
-		FolderName:      sentFolder,
-		FolderAliasName: "sent",
-		UID:             0,
-		Flags:           []imap.Flag{imap.FlagSeen},
-		Size:            int64(b.Len()),
-		Date:            sentAt,
-		Subject:         options.Subject,
-		Excerpt:         makeSentExcerpt(options.Text, options.HTML),
-		From:            []types.Address{options.From},
-		To:              options.To,
-		CC:              options.Cc,
-		ReplyTo:         []types.Address{options.From},
-		MessageID:       messageID,
-		Parts:           parts,
-		PartText:        textPart,
-		PartHTML:        htmlPart,
-		PartDisplay:     displayPart,
+		AccountID:   a.ID,
+		FolderName:  sentFolder,
+		UID:         0,
+		Flags:       []imap.Flag{imap.FlagSeen},
+		Size:        int64(b.Len()),
+		Date:        sentAt,
+		Subject:     options.Subject,
+		Excerpt:     makeSentExcerpt(options.Text, options.HTML),
+		From:        []types.Address{options.From},
+		To:          options.To,
+		CC:          options.Cc,
+		ReplyTo:     []types.Address{options.From},
+		MessageID:   messageID,
+		Parts:       parts,
+		PartText:    textPart,
+		PartHTML:    htmlPart,
+		PartDisplay: displayPart,
 	}
 	if options.ReplyingTo != nil {
 		sentEmail.References = append(sentEmail.References, options.ReplyingTo.References...)

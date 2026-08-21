@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -115,28 +117,54 @@ func (a *Account) CloseConnections(ctx context.Context) {
 	a.smtp.CloseConnections(ctx)
 }
 
-// resolveFolderName maps special folder names (inbox, sent, ...) to the
-// account's configured mailbox for them.
+// resolveFolderName turns the name the frontend uses into the mailbox name for
+// use with the server.
 func (a *Account) resolveFolderName(name types.FolderName) types.FolderName {
-	if otherName := a.Folders.GetFromName(name); otherName != "" {
-		return otherName
+	if mapped := a.Folders.Lookup(name); mapped != "" {
+		name = mapped
 	}
-	return name
+	ns := a.Settings.Namespaces
+	n := name.Canonical(ns.Delim())
+	switch {
+	case n.IsInbox():
+		return "INBOX"
+	case ns.Contains(n):
+		return n
+	default:
+		return types.FolderName(ns.PersonalRoot()) + n
+	}
 }
 
+// DisplayFolderName is the inverse of resolveFolderName
+func (a *Account) DisplayFolderName(name types.FolderName) types.FolderName {
+	if alias, isMapped := a.Folders.AliasFor(name, a.Settings.Namespaces.Delim()); isMapped {
+		return alias
+	}
+	if name.IsInbox() {
+		if a.Folders.Inbox != "" {
+			return "INBOX"
+		}
+		return "inbox"
+	}
+	logical := types.FolderName(strings.TrimPrefix(string(name), a.Settings.Namespaces.PersonalRoot()))
+	if a.resolveFolderName(logical) != name {
+		return name
+	}
+	return logical
+}
+
+// GetFolder returns the one Folder for the mailbox a name resolves to, however
+// that mailbox is asked for.
 func (a *Account) GetFolder(name types.FolderName) *Folder {
 	a.foldersLock.Lock()
 	defer a.foldersLock.Unlock()
 
-	aliasName := name
 	name = a.resolveFolderName(name)
-
 	if f, ok := a.folders[name]; ok {
 		return f
-	} else {
-		a.folders[name] = NewFolder(a, name, aliasName)
-		return a.folders[name]
 	}
+	a.folders[name] = NewFolder(a, name)
+	return a.folders[name]
 }
 
 // WatchFolder blocks until the folder changes on the server, the context is
@@ -189,7 +217,7 @@ func (a *Account) FetchNamespace(ctx context.Context) (data *imap.NamespaceData,
 
 func (a *Account) FetchMailboxList(ctx context.Context) (data []*imap.ListData, err error) {
 	err = a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
-		data, err = listMailboxesRecursive(ctx, conn, a.Settings.FolderPrefix, a.Settings.FolderSeparator)
+		data, err = listMailboxesRecursive(ctx, conn, a.Settings.Namespaces)
 		return err
 	})
 	return
@@ -201,40 +229,62 @@ func (a *Account) FetchFolderNames(ctx context.Context) ([]types.FolderName, err
 		return nil, err
 	}
 
-	var folders []types.FolderName
-	for _, i := range list {
-		folders = append(folders, types.FolderName(i.Mailbox))
+	folders := make([]types.FolderName, 0, len(list))
+	for _, mailbox := range list {
+		name := types.FolderName(mailbox.Mailbox)
+		if _, isMapped := a.Folders.AliasFor(name, a.Settings.Namespaces.Delim()); isMapped || name.IsInbox() ||
+			slices.Contains(mailbox.Attrs, imap.MailboxAttrNoSelect) {
+			continue
+		}
+		folders = append(folders, a.DisplayFolderName(name))
 	}
-	return folders, err
+	return folders, nil
+}
+
+func fetchNamespaces(ctx context.Context, conn imapinterface.IMAPClient) (types.Namespaces, error) {
+	if conn.Caps().Has(imap.CapNamespace) {
+		data, err := conn.Namespace().Wait()
+		if err != nil {
+			return types.Namespaces{}, fmt.Errorf("failed to fetch IMAP namespace: %w", err)
+		}
+		if namespaces := types.NamespacesFromIMAP(data); len(namespaces.Personal) > 0 {
+			return namespaces, nil
+		}
+	}
+	return types.Namespaces{Personal: []types.Namespace{{Delim: fetchRootDelimiter(ctx, conn)}}}, nil
+}
+
+func fetchRootDelimiter(ctx context.Context, conn imapinterface.IMAPClient) string {
+	for _, pattern := range []string{"", "%"} {
+		mailboxes, err := conn.List("", pattern, &imap.ListOptions{}).Collect()
+		if err != nil {
+			zerolog.Ctx(ctx).Warn().Err(err).Str("pattern", pattern).Msg("Failed to list for hierarchy delimiter")
+			continue
+		}
+		for _, mailbox := range mailboxes {
+			if mailbox.Delim != 0 {
+				return string(mailbox.Delim)
+			}
+		}
+	}
+	return ""
 }
 
 func (a *Account) FetchAndUpdateSettings(ctx context.Context) error {
 	return a.imap.WithPriorityConnection(ctx, func(conn imapinterface.IMAPClient) error {
-		// Fetch any namespace information
-		caps := conn.Caps()
-		if caps.Has(imap.CapNamespace) {
-			namespace, err := conn.Namespace().Wait()
-			if err != nil {
-				return fmt.Errorf("failed to fetch IMAP namespace: %w", err)
-			} else if len(namespace.Personal) > 0 {
-				a.Settings.FolderPrefix = namespace.Personal[0].Prefix
-				a.Settings.FolderSeparator = string(namespace.Personal[0].Delim)
-			}
+		namespaces, err := fetchNamespaces(ctx, conn)
+		if err != nil {
+			return err
 		}
-		if a.Settings.FolderSeparator == "" {
-			a.Settings.FolderSeparator = "/"
-		}
+		a.Settings.Namespaces = namespaces
 
-		// Now find the special folder mappings
-		// TODO: fallback to mailbox names
-		// TODO: handle duplicate attributes (use first?)
-		mailboxes, err := listMailboxesRecursive(ctx, conn, a.Settings.FolderPrefix, a.Settings.FolderSeparator)
+		mailboxes, err := listMailboxesRecursive(ctx, conn, namespaces)
 		if err != nil {
 			return err
 		}
 
 		for _, mailbox := range mailboxes {
-			setFolderForMailbox(ctx, &a.Folders, a.Settings.FolderPrefix, mailbox)
+			setFolderForMailbox(ctx, &a.Folders, namespaces.PersonalRoot(), mailbox)
 		}
 
 		// Gmail is the only provider (known at this time) that automatically saves emails sent via SMTP
@@ -291,7 +341,7 @@ func (a *Account) FindMessageIDs(ctx context.Context, messageIDs []string) ([]*t
 		if len(missing) == 0 {
 			break
 		}
-		if a.Folders.GetFromName(folder) == "" {
+		if a.Folders.Lookup(folder) == "" {
 			zerolog.Ctx(ctx).Debug().
 				Str("folder", string(folder)).
 				Msg("Skip messageID search in unmapped folder")

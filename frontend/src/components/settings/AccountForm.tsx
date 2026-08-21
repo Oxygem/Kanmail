@@ -9,7 +9,7 @@ import { trackEvent } from "../../util/analytics.ts";
 import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
-import { AccountSettings, Address, ConnectionSettings, FolderSettings } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import { AccountSettings, Address, ConnectionSettings, FolderSettings, Namespace, Namespaces } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 
 
 interface IAccountAddressProps {
@@ -428,6 +428,49 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     ));
   }
 
+  // The namespaces discovered when the connection was tested, read only: they
+  // decide where a column name that isn't a full mailbox name ends up
+  renderNamespaces() {
+    const namespaces: Namespaces | undefined = this.state.settings.namespaces;
+    if (!namespaces?.personal?.length) {
+      return null;
+    }
+
+    const describe = (ns: Namespace) => (
+      <>
+        {ns.prefix ? <code>{ns.prefix}</code> : "no prefix"}
+        {ns.delim ? <>, delimiter <code>{ns.delim}</code></> : ", flat"}
+      </>
+    );
+    const lists: [string, Namespace[] | undefined][] = [
+      ["Personal", namespaces.personal],
+      ["Other users", namespaces.other],
+      ["Shared", namespaces.shared],
+    ];
+
+    return (
+      <p className="meta">
+        Mailbox namespaces reported by the server &mdash;{" "}
+        {lists
+          .filter(([, list]) => list?.length)
+          .map(([label, list], i) => (
+            <span key={label}>
+              {i > 0 && "; "}
+              {label}:{" "}
+              {list!.map((ns, j) => (
+                <span key={j}>
+                  {j > 0 && ", "}
+                  {describe(ns)}
+                </span>
+              ))}
+            </span>
+          ))}
+        . Column names that aren&apos;t full mailbox names are created inside the
+        personal namespace.
+      </p>
+    );
+  }
+
   renderAddresses() {
     if (!this.state.contacts || !this.state.contacts.length) {
       return "No addresses!";
@@ -639,14 +682,10 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
         </div>
 
         <div className={this.state.editingTab == "mailbox" ? "wide" : "hidden"}>
-          <div className="flex wide">
-            <div className="half">
-              <label htmlFor="settings-folderPrefix">Folder prefix</label>
-              {this.renderInput("settings", "folderPrefix")}
-            </div>
-          </div>
-
           <div className="flex wide">{this.renderFolderSettings()}</div>
+          <div className="flex wide">
+            <div className="wide">{this.renderNamespaces()}</div>
+          </div>
 
           <div className="flex wide">
             <div className="wide">

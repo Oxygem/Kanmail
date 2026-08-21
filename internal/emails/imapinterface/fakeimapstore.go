@@ -15,6 +15,7 @@ import (
 	"go.mau.fi/util/exsync"
 
 	"github.com/oxygem/kanmail/internal/constants"
+	"github.com/oxygem/kanmail/internal/types"
 )
 
 type fakeFolderData struct {
@@ -93,6 +94,57 @@ type fakeIMAPStore struct {
 	// Answer a select of a missing mailbox with a bare NO, no response code, as
 	// plenty of real servers do
 	bareStatusResponses atomic.Bool
+	// Namespaces the server reports and enforces, nil being a flat prefix-less
+	// server that accepts any name
+	namespaces atomic.Pointer[imap.NamespaceData]
+	// Withhold the NAMESPACE capability, as some older servers do
+	namespaceUnsupported atomic.Bool
+}
+
+// delim is the personal hierarchy delimiter, 0 on a flat server.
+func (s *fakeIMAPStore) delim() rune {
+	if ns := s.namespaces.Load(); ns != nil && len(ns.Personal) > 0 {
+		return ns.Personal[0].Delim
+	}
+	return 0
+}
+
+// namespacesContain reports whether a name is reachable on a server with these
+// namespaces: the INBOX always is, anything else must sit inside one of them.
+func namespacesContain(ns *imap.NamespaceData, name string) bool {
+	return ns == nil || strings.EqualFold(name, "INBOX") ||
+		types.NamespacesFromIMAP(ns).Contains(types.FolderName(name))
+}
+
+// getFolder looks a mailbox up by name, matching its INBOX segment case
+// insensitively as real servers must (RFC 9051) - clients are free to spell the
+// INBOX, and so anything under it, any way they like.
+func (s *fakeIMAPStore) getFolder(name string) (*fakeFolderData, bool) {
+	if folder, exists := s.folders.Get(name); exists {
+		return folder, true
+	}
+
+	delim := ""
+	if d := s.delim(); d != 0 {
+		delim = string(d)
+	}
+	head := name
+	if delim != "" {
+		head, _, _ = strings.Cut(name, delim)
+	}
+	if !types.FolderName(head).IsInbox() {
+		return nil, false
+	}
+
+	// Should more than one spelling be stored, pick the same one every time
+	canonical := types.FolderName(name).Canonical(delim)
+	var match *fakeFolderData
+	for stored, folder := range s.folders.CopyData() {
+		if types.FolderName(stored).Canonical(delim) == canonical && (match == nil || stored < match.name) {
+			match = folder
+		}
+	}
+	return match, match != nil
 }
 
 var (
@@ -136,7 +188,10 @@ func CreateFakeFolder(accountKey, name string) {
 // DeleteFakeFolder removes a folder from an account's fake store, simulating a
 // mailbox deleted by another client.
 func DeleteFakeFolder(accountKey, name string) {
-	getOrCreateFakeStore(accountKey).folders.Delete(name)
+	store := getOrCreateFakeStore(accountKey)
+	if folder, exists := store.getFolder(name); exists {
+		store.folders.Delete(folder.name)
+	}
 }
 
 // SetFakeBareStatusResponses makes an account's fake server reject a select of a
@@ -144,6 +199,25 @@ func DeleteFakeFolder(accountKey, name string) {
 // servers whose absent mailboxes are only identifiable via LIST.
 func SetFakeBareStatusResponses(accountKey string, bare bool) {
 	getOrCreateFakeStore(accountKey).bareStatusResponses.Store(bare)
+}
+
+// SetFakeNamespaces shapes an account's fake server's namespaces: what it
+// reports via NAMESPACE, where LIST finds mailboxes and which names it accepts
+// at all - anything outside them is rejected outright, the way Courier does.
+// No personal namespace restores the default flat, prefix-less server.
+func SetFakeNamespaces(accountKey string, data imap.NamespaceData) {
+	store := getOrCreateFakeStore(accountKey)
+	if len(data.Personal) == 0 {
+		store.namespaces.Store(nil)
+		return
+	}
+	store.namespaces.Store(&data)
+}
+
+// SetFakeNamespaceSupported toggles whether an account's fake server advertises
+// the NAMESPACE capability at all.
+func SetFakeNamespaceSupported(accountKey string, supported bool) {
+	getOrCreateFakeStore(accountKey).namespaceUnsupported.Store(!supported)
 }
 
 var standardFakeFolders = []string{"inbox", "sent", "drafts", "archive", "trash"}
@@ -181,8 +255,24 @@ func newFakeFolderData(folderName string) *fakeFolderData {
 	}
 }
 
+// createEmptyFolderData (re)creates an empty mailbox. The INBOX is one mailbox
+// however it's spelt, so any other spelling already stored gives way to it and
+// the clients sitting in it follow it to the new spelling.
 func (s *fakeIMAPStore) createEmptyFolderData(folderName string) {
-	s.folders.Set(folderName, newFakeFolderData(folderName))
+	folder := newFakeFolderData(folderName)
+	if existing, exists := s.getFolder(folderName); exists && existing.name != folderName {
+		s.folders.Delete(existing.name)
+		existing.mu.Lock()
+		folder.subs = existing.subs
+		existing.subs = nil
+		existing.mu.Unlock()
+		for c := range folder.subs {
+			c.mu.Lock()
+			c.currentFolder = folderName
+			c.mu.Unlock()
+		}
+	}
+	s.folders.Set(folderName, folder)
 }
 
 // createAllFoldersFromThreads uses the realistic fake email threads to populate all folders

@@ -132,7 +132,7 @@ func (s *SettingsService) getSettingsWithSecrets(ctx context.Context) types.Sett
 				if err := s.writeFileAtomic(migrated); err != nil {
 					s.log.Err(err).Msg("Failed to persist migrated settings file")
 				} else {
-					s.log.Info().Msg("Migrated columnGroups settings to ordered list")
+					s.log.Info().Msg("Migrated legacy settings file")
 				}
 			}
 			if err := json.Unmarshal(b, &settings); err != nil {

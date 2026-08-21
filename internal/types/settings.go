@@ -12,41 +12,6 @@ import (
 // invariant for its lifetime. AccountName is display-only and need not be unique.
 type AccountID string
 type AccountName string
-type FolderName string
-
-type FolderSettings struct {
-	Inbox     FolderName `json:"inbox"`
-	Flagged   FolderName `json:"flagged"`   // starred in gmail
-	Important FolderName `json:"important"` // RFC 8457
-	Sent      FolderName `json:"sent"`
-	Drafts    FolderName `json:"drafts"`
-	Archive   FolderName `json:"archive"`
-	Trash     FolderName `json:"trash"`
-	Junk      FolderName `json:"junk"`
-}
-
-func (f FolderSettings) GetFromName(name FolderName) FolderName {
-	switch name {
-	case "inbox":
-		return f.Inbox
-	case "flagged":
-		return f.Flagged
-	case "important":
-		return f.Important
-	case "sent":
-		return f.Sent
-	case "drafts":
-		return f.Drafts
-	case "archive":
-		return f.Archive
-	case "trash":
-		return f.Trash
-	case "junk":
-		return f.Junk
-	default:
-		return ""
-	}
-}
 
 type AccountSettings struct {
 	ID   AccountID   `json:"id"`
@@ -56,12 +21,13 @@ type AccountSettings struct {
 	SMTPSettings ConnectionSettings `json:"smtpSettings"`
 
 	Settings struct {
-		FolderPrefix    string `json:"folderPrefix"`
-		FolderSeparator string `json:"folderSeparator"`
-		SaveSentCopies  bool   `json:"saveSentCopies"`
-		DeleteOnTrash   bool   `json:"deleteOnTrash"`
-		CopyFromInbox   bool   `json:"copyFromInbox"`
-		AccentColor     string `json:"accentColor"`
+		// Discovered when the account is tested; legacy folderPrefix and
+		// folderSeparator keys are migrated into it by MigrateSettingsJSON
+		Namespaces     Namespaces `json:"namespaces"`
+		SaveSentCopies bool       `json:"saveSentCopies"`
+		DeleteOnTrash  bool       `json:"deleteOnTrash"`
+		CopyFromInbox  bool       `json:"copyFromInbox"`
+		AccentColor    string     `json:"accentColor"`
 
 		// nil = never set (so apply default), blank = user intentionally set blank
 		Signature *string `json:"signature"`
@@ -218,23 +184,46 @@ func (s *Settings) ApplyDefaults() {
 	}
 }
 
-// MigrateSettingsJSON upgrades a legacy settings file where columnGroups was a
-// name -> columns map (with "" as the default group) and currentColumnGroup was
-// a name. Returns the rewritten JSON and whether a migration was performed.
+// MigrateSettingsJSON upgrades a legacy settings file in place, before it is
+// decoded: columnGroups from a name -> columns map to an ordered list, and
+// each account's folderPrefix/folderSeparator into namespaces. Returns the
+// rewritten JSON and whether a migration was performed.
 func MigrateSettingsJSON(b []byte) ([]byte, bool, error) {
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return b, false, err
 	}
 
+	migratedGroups, err := migrateColumnGroups(raw)
+	if err != nil {
+		return b, false, err
+	}
+	migratedNamespaces, err := migrateAccountNamespaces(raw)
+	if err != nil {
+		return b, false, err
+	}
+	if !migratedGroups && !migratedNamespaces {
+		return b, false, nil
+	}
+
+	out, err := json.Marshal(raw)
+	if err != nil {
+		return b, false, err
+	}
+	return out, true, nil
+}
+
+// migrateColumnGroups rewrites columnGroups from a name -> columns map (with ""
+// as the default group) and currentColumnGroup from a name to an index.
+func migrateColumnGroups(raw map[string]json.RawMessage) (bool, error) {
 	groupsRaw := bytes.TrimSpace(raw["columnGroups"])
 	if len(groupsRaw) == 0 || groupsRaw[0] != '{' {
-		return b, false, nil
+		return false, nil
 	}
 
 	var oldGroups map[string][]FolderName
 	if err := json.Unmarshal(groupsRaw, &oldGroups); err != nil {
-		return b, false, err
+		return false, err
 	}
 
 	// Go always marshalled the map with sorted keys, so sorted order is the
@@ -264,15 +253,81 @@ func MigrateSettingsJSON(b []byte) ([]byte, bool, error) {
 
 	var err error
 	if raw["columnGroups"], err = json.Marshal(newGroups); err != nil {
-		return b, false, err
+		return false, err
 	}
 	if raw["currentColumnGroupIndex"], err = json.Marshal(currentIndex); err != nil {
-		return b, false, err
+		return false, err
+	}
+	return true, nil
+}
+
+// migrateAccountNamespaces turns each account's folderPrefix and
+// folderSeparator into its personal namespace, so an account working today
+// keeps its delimiter (and so its nested folder listing) without being
+// re-tested. A NUL separator was only ever stored for servers reporting NIL.
+// Accounts that already have namespaces are left alone.
+func migrateAccountNamespaces(raw map[string]json.RawMessage) (bool, error) {
+	accountsRaw := bytes.TrimSpace(raw["accounts"])
+	if len(accountsRaw) == 0 || accountsRaw[0] != '[' {
+		return false, nil
+	}
+	var accounts []map[string]json.RawMessage
+	if err := json.Unmarshal(accountsRaw, &accounts); err != nil {
+		return false, err
 	}
 
-	out, err := json.Marshal(raw)
-	if err != nil {
-		return b, false, err
+	var migrated bool
+	for _, account := range accounts {
+		settingsRaw := bytes.TrimSpace(account["settings"])
+		if len(settingsRaw) == 0 || settingsRaw[0] != '{' {
+			continue
+		}
+		var settings map[string]json.RawMessage
+		if err := json.Unmarshal(settingsRaw, &settings); err != nil {
+			return false, err
+		}
+		if _, ok := settings["namespaces"]; ok {
+			continue
+		}
+		prefixRaw, hasPrefix := settings["folderPrefix"]
+		separatorRaw, hasSeparator := settings["folderSeparator"]
+		if !hasPrefix && !hasSeparator {
+			continue
+		}
+
+		var namespace Namespace
+		if hasPrefix {
+			if err := json.Unmarshal(prefixRaw, &namespace.Prefix); err != nil {
+				return false, err
+			}
+		}
+		if hasSeparator {
+			if err := json.Unmarshal(separatorRaw, &namespace.Delim); err != nil {
+				return false, err
+			}
+		}
+		if namespace.Delim == "\x00" {
+			namespace.Delim = ""
+		}
+
+		var err error
+		if settings["namespaces"], err = json.Marshal(Namespaces{Personal: []Namespace{namespace}}); err != nil {
+			return false, err
+		}
+		delete(settings, "folderPrefix")
+		delete(settings, "folderSeparator")
+		if account["settings"], err = json.Marshal(settings); err != nil {
+			return false, err
+		}
+		migrated = true
 	}
-	return out, true, nil
+
+	if !migrated {
+		return false, nil
+	}
+	var err error
+	if raw["accounts"], err = json.Marshal(accounts); err != nil {
+		return false, err
+	}
+	return true, nil
 }

@@ -9,16 +9,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Replays the schema as it stood before 006 (account_name keyed), inserts rows
-// under the old scheme, then opens Caches to run 006 - asserting the wipe, the
-// column renames and that the FK cascade still works afterwards.
-func TestMigration006WipesAndRenamesAccountColumns(t *testing.T) {
-	dbPath := path.Join(t.TempDir(), "caches.db")
+// replayMigrationsBefore builds a database as it stood before the migration
+// whose filename starts with before shipped, recording the replayed migrations
+// so opening Caches on it runs only the rest.
+func replayMigrationsBefore(t *testing.T, dbPath, before string) *sql.DB {
+	t.Helper()
+
 	db, err := sql.Open("sqlite3", dbPath+"?_foreign_keys=true")
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	migrations, err := MigrationsFS.ReadDir("migrations")
 	if err != nil {
 		t.Fatal(err)
@@ -27,8 +27,8 @@ func TestMigration006WipesAndRenamesAccountColumns(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, file := range migrations {
-		if strings.HasPrefix(file.Name(), "006-") {
-			continue
+		if file.Name() >= before {
+			break
 		}
 		data, err := MigrationsFS.ReadFile(path.Join("migrations", file.Name()))
 		if err != nil {
@@ -46,6 +46,15 @@ func TestMigration006WipesAndRenamesAccountColumns(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	return db
+}
+
+// Replays the schema as it stood before 006 (account_name keyed), inserts rows
+// under the old scheme, then opens Caches to run 006 - asserting the wipe, the
+// column renames and that the FK cascade still works afterwards.
+func TestMigration006WipesAndRenamesAccountColumns(t *testing.T) {
+	dbPath := path.Join(t.TempDir(), "caches.db")
+	db := replayMigrationsBefore(t, dbPath, "006-")
 
 	if _, err := db.Exec(
 		`INSERT INTO folder_emails (account_name, folder_name, uid, message_id, data) VALUES ('acct', 'INBOX', 1, '<1@test>', x'')`,
