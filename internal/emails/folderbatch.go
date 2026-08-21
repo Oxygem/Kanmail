@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"errors"
 
 	"github.com/emersion/go-imap/v2"
 
@@ -9,9 +10,14 @@ import (
 	"github.com/oxygem/kanmail/internal/types"
 )
 
+var errSameFolder = errors.New("source and destination are the same mailbox")
+
 func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
 	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
+	if otherFolder == f {
+		return errSameFolder
+	}
 
 	return f.imap.WithFolderConnectionNoReplay(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
@@ -24,6 +30,9 @@ func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderNam
 func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
 	// Translate any alias folder name -> real name
 	otherFolder := f.account.GetFolder(otherFolderName)
+	if otherFolder == f {
+		return errSameFolder
+	}
 
 	return f.imap.WithFolderConnectionNoReplay(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
