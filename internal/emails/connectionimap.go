@@ -288,6 +288,7 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 
 		options := &imapclient.Options{
 			UnilateralDataHandler: c.unilateralHandler(),
+			TLSConfig:             debugTLSConfig(),
 		}
 		if constants.ENV_DEBUG_IMAP_IO != "" {
 			options.DebugWriter = os.Stdout

@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"sync"
 	"time"
@@ -26,6 +27,16 @@ var errPoolClosed = errors.New("connection pool closed")
 var errInsecurePasswordAuth = errors.New(
 	"refusing to send credentials over an unencrypted connection, enable SSL/TLS or STARTTLS",
 )
+
+// debugTLSConfig skips certificate verification when KANMAIL_DEBUG_TLS_INSECURE
+// is set, to connect to local test servers with self-signed certificates. The
+// flag is compiled out of production builds.
+func debugTLSConfig() *tls.Config {
+	if constants.ENV_DEBUG_TLS_INSECURE == "" {
+		return nil
+	}
+	return &tls.Config{InsecureSkipVerify: true}
+}
 
 // A pool of lazily loaded connections that can be retrieved for exclusive access within the current
 // goroutine. Safe to call the pool from multiple goroutines.

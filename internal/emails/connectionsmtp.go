@@ -126,7 +126,8 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 		}
 
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
-		client, err := dialFn(addr, nil)
+		tlsConfig := debugTLSConfig()
+		client, err := dialFn(addr, tlsConfig)
 		if err != nil {
 			return nil, fmt.Errorf("failed smtp dial: %w", err)
 		} else {
@@ -148,7 +149,7 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 				}
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
 				client.Close()
-				client, err = dialFn(addr, nil)
+				client, err = dialFn(addr, tlsConfig)
 				if err != nil {
 					return nil, fmt.Errorf("failed smtp redial: %w", err)
 				} else {

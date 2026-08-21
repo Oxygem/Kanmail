@@ -19,6 +19,7 @@ var (
 	ENV_DEBUG_FAKE_KEYRING      = ""
 	ENV_DEBUG_FAKE_LICENSED     = ""
 	ENV_DEBUG_IMAP_IO           = ""
+	ENV_DEBUG_TLS_INSECURE      = ""
 	ENV_DEBUG_WINDOW_WIDTH      int
 	ENV_DEBUG_WINDOW_HEIGHT     int
 )
