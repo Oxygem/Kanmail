@@ -1,0 +1,162 @@
+# Real IMAP servers for Kanmail's integration tests - see ../doc.go.
+#
+# Every server gets the same eight users, user1..user8, password "password", and
+# serves implicit TLS on 993 and STARTTLS on 143 with the shared self-signed
+# certificate the certs service writes. Host ports are unique per service.
+
+name: kanmail-imaptest
+
+x-certs: &certs
+  depends_on:
+    certs:
+      condition: service_completed_successfully
+  volumes:
+    - certs:/certs:ro
+
+services:
+  certs:
+    image: alpine/openssl
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        set -e
+        if [ ! -f /certs/combined.pem ]; then
+          openssl req -x509 -newkey rsa:2048 -nodes -days 36500 -subj /CN=localhost \
+            -addext subjectAltName=DNS:localhost,IP:127.0.0.1 \
+            -keyout /certs/key.pem -out /certs/cert.pem
+          cat /certs/cert.pem /certs/key.pem > /certs/combined.pem
+          openssl dhparam -out /certs/dhparams.pem 2048
+          chmod 644 /certs/*.pem
+        fi
+        ls -l /certs
+    volumes:
+      - certs:/certs
+
+  # Dovecot, Maildir++: "." delimiter and no prefix, the common self-hosted shape
+  dovecot:
+    <<: *certs
+    image: dovecot/dovecot:2.3.21
+    platform: linux/amd64
+    volumes:
+      - certs:/certs:ro
+      - ./dovecot/maildir.conf:/etc/dovecot/dovecot.conf:ro
+      - ./dovecot/common.conf.inc:/etc/dovecot/common.conf.inc:ro
+      - ./dovecot/mailboxes.conf.inc:/etc/dovecot/mailboxes.conf.inc:ro
+    ports:
+      - "11143:143"
+      - "11993:993"
+    healthcheck: &imap-healthcheck
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/143 && </dev/tcp/127.0.0.1/993'"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  # Dovecot, Maildir with LAYOUT=fs: "/" delimiter and no prefix, the Gmail /
+  # Fastmail / Outlook shape
+  dovecot-fs:
+    <<: *certs
+    image: dovecot/dovecot:2.3.21
+    platform: linux/amd64
+    volumes:
+      - certs:/certs:ro
+      - ./dovecot/fs.conf:/etc/dovecot/dovecot.conf:ro
+      - ./dovecot/common.conf.inc:/etc/dovecot/common.conf.inc:ro
+      - ./dovecot/mailboxes.conf.inc:/etc/dovecot/mailboxes.conf.inc:ro
+    ports:
+      - "12143:143"
+      - "12993:993"
+    healthcheck: *imap-healthcheck
+
+  # Dovecot, Maildir++ with the personal namespace under "INBOX.", as a server
+  # migrated from Courier is commonly configured
+  dovecot-prefix:
+    <<: *certs
+    image: dovecot/dovecot:2.3.21
+    platform: linux/amd64
+    volumes:
+      - certs:/certs:ro
+      - ./dovecot/prefix.conf:/etc/dovecot/dovecot.conf:ro
+      - ./dovecot/common.conf.inc:/etc/dovecot/common.conf.inc:ro
+      - ./dovecot/mailboxes.conf.inc:/etc/dovecot/mailboxes.conf.inc:ro
+    ports:
+      - "13143:143"
+      - "13993:993"
+    healthcheck: *imap-healthcheck
+
+  # Dovecot as above but without NAMESPACE advertised, so the delimiter has to
+  # be learnt from LIST
+  dovecot-nonamespace:
+    <<: *certs
+    image: dovecot/dovecot:2.3.21
+    platform: linux/amd64
+    volumes:
+      - certs:/certs:ro
+      - ./dovecot/nonamespace.conf:/etc/dovecot/dovecot.conf:ro
+      - ./dovecot/common.conf.inc:/etc/dovecot/common.conf.inc:ro
+      - ./dovecot/mailboxes.conf.inc:/etc/dovecot/mailboxes.conf.inc:ro
+    ports:
+      - "14143:143"
+      - "14993:993"
+    healthcheck: *imap-healthcheck
+
+  # Courier IMAP 5.0 (Debian bookworm), Maildir++: "." delimiter with the
+  # personal namespace under "INBOX.", no MOVE / SPECIAL-USE, and the
+  # "nonexistent namespace" refusal the resolver exists for
+  courier:
+    <<: *certs
+    build: ./courier
+    ports:
+      - "15143:143"
+      - "15993:993"
+    healthcheck: *imap-healthcheck
+
+  # Cyrus IMAP 3.6 with its default namespace: personal folders beside INBOX
+  # with the "/" delimiter, "Other Users/" and "Shared Folders/" for the rest
+  cyrus:
+    <<: *certs
+    build: ./cyrus
+    ports:
+      - "16143:143"
+      - "16993:993"
+    healthcheck: *imap-healthcheck
+
+  # Cyrus IMAP 3.6 with the pre-3.0 namespace: personal folders under "INBOX."
+  # with the "." delimiter, "user." for other users and "" for shared
+  cyrus-legacy:
+    <<: *certs
+    build: ./cyrus
+    environment:
+      CYRUS_CONFIG: legacy
+    ports:
+      - "17143:143"
+      - "17993:993"
+    healthcheck: *imap-healthcheck
+
+  # Stalwart 0.16: "/" delimiter, no prefix, Outlook-style special folder
+  # names. The entrypoint provisions the domain and users over its management
+  # API on first start (see stalwart/entrypoint.sh)
+  stalwart:
+    <<: *certs
+    image: stalwartlabs/stalwart:v0.16
+    entrypoint: /entrypoint.sh
+    environment:
+      STALWART_RECOVERY_ADMIN: admin:password
+    volumes:
+      - certs:/certs:ro
+      - ./stalwart/config.json:/etc/stalwart/config.json:ro
+      - ./stalwart/entrypoint.sh:/entrypoint.sh:ro
+      - stalwart-data:/var/lib/stalwart
+    ports:
+      - "18143:143"
+      - "18993:993"
+      - "18080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/kanmail-ready && bash -c '</dev/tcp/127.0.0.1/143 && </dev/tcp/127.0.0.1/993'"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+volumes:
+  certs:
+  stalwart-data:

@@ -1,0 +1,7 @@
+# Courier authdaemon: users come from /etc/courier/userdb (see provision-users.sh)
+authmodulelist="authuserdb"
+daemons=5
+authdaemonvar=/run/courier/authdaemon
+DEBUG_LOGIN=0
+DEFAULTOPTIONS=""
+LOGGEROPTS=""

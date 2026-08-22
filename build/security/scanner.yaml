@@ -9,6 +9,8 @@ sast:
     - frontend/public/iframe/darkreader.min.js
     # Uses unpinned docker images (builds them, CI only)
     - build/security/scan.sh
+    # Testing code, not compiled in
+    - internal/tests/
 sca:
   include:
     - .

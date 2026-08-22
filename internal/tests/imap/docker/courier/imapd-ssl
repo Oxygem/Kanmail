@@ -1,0 +1,13 @@
+# Courier IMAP TLS (port 993 implicit, STARTTLS on 143) using the certificate
+# the compose certs service writes into the shared /certs volume.
+SSLPORT=993
+SSLADDRESS=0
+IMAPDSSLSTART=YES
+IMAPDSTARTTLS=YES
+IMAP_TLS_REQUIRED=0
+COURIERTLS=/usr/bin/couriertls
+TLS_CERTFILE=/certs/combined.pem
+TLS_DHPARAMS=/certs/dhparams.pem
+TLS_CACHEFILE=/var/lib/courier/couriersslcache
+TLS_CACHESIZE=524288
+MAILDIRPATH=Maildir
