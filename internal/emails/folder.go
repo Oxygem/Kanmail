@@ -206,10 +206,12 @@ func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) (imap.UID, err
 
 func appendMessage(conn imapinterface.IMAPClient, mailbox string, raw []byte) (imap.UID, error) {
 	appendCmd := conn.Append(mailbox, int64(len(raw)), nil)
-	if _, err := appendCmd.Write(raw); err != nil {
-		return 0, fmt.Errorf("failed to write message: %w", err)
-	} else if err := appendCmd.Close(); err != nil {
-		return 0, fmt.Errorf("failed to close message: %w", err)
+	_, writeErr := appendCmd.Write(raw)
+	closeErr := appendCmd.Close()
+	if writeErr != nil {
+		return 0, fmt.Errorf("failed to write message: %w", writeErr)
+	} else if closeErr != nil {
+		return 0, fmt.Errorf("failed to close message: %w", closeErr)
 	}
 	data, err := appendCmd.Wait()
 	if err != nil {
