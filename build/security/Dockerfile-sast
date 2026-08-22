@@ -2,3 +2,6 @@ FROM fluidattacks/sast:latest
 
 WORKDIR /opt/kanmail
 COPY . /opt/kanmail
+
+# The scanner only looks for exclusions at the working_dir root
+COPY build/security/fluidattacks.yaml /opt/kanmail/.fluidattacks.yaml

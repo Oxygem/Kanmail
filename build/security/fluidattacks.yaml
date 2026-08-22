@@ -1,0 +1,14 @@
+# Line level SAST exclusions. The scanner only reads this from the working_dir
+# root, so Dockerfile-sast copies it there. Paths are exact and relative to that
+# root, lines must match the reported line exactly, so these need bumping if the
+# code moves.
+sast:
+  exclusions:
+    # Certificate verification is only skipped when KANMAIL_DEBUG_TLS_INSECURE is
+    # set, which is compiled out of production builds.
+    - path: internal/emails/connection.go
+      lines: [38]
+    # Serves the oauth callback on localhost:0, local only so there's no need for
+    # TLS.
+    - path: internal/emails/oauth/oauth.go
+      lines: [329]
