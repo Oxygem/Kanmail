@@ -28,6 +28,10 @@ func (w *IMAPClientWrapper) Select(name string, options *imap.SelectOptions) Sel
 	return w.Client.Select(name, options)
 }
 
+func (w *IMAPClientWrapper) Status(name string, options *imap.StatusOptions) StatusCommand {
+	return w.Client.Status(name, options)
+}
+
 func (w *IMAPClientWrapper) Unselect() Command {
 	return w.Client.Unselect()
 }

@@ -304,6 +304,20 @@ func isMissingMailboxErr(err error) bool {
 	})
 }
 
+// statusUIDNext asks the server for a mailbox's UIDNEXT, for when SELECT didn't
+// report it - RFC 3501 says SHOULD, and Courier doesn't. Returns 0 when the
+// server won't say either way, leaving the caller to fall back.
+func statusUIDNext(ctx context.Context, conn imapinterface.IMAPClient, name types.FolderName) imap.UID {
+	data, err := conn.Status(string(name), &imap.StatusOptions{UIDNext: true}).Wait()
+	if err != nil {
+		zerolog.Ctx(ctx).Warn().Err(err).
+			Str("folder", string(name)).
+			Msg("Failed to get UIDNEXT from status")
+		return 0
+	}
+	return data.UIDNext
+}
+
 func selectFolder(
 	ctx context.Context,
 	conn imapinterface.IMAPClient,

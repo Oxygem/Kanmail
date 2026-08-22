@@ -848,8 +848,15 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 
 		f.missing = false
 		f.uidValidity = selectData.UIDValidity
+
+		// UIDNEXT is only a SHOULD on SELECT, get it via STATUS if not provided
+		uidNext := selectData.UIDNext
+		if uidNext == 0 {
+			uidNext = statusUIDNext(ctx, conn, f.Name)
+		}
+
 		log.Info().
-			Uint32("uidnext", uint32(selectData.UIDNext)).
+			Uint32("uidnext", uint32(uidNext)).
 			Uint32("uidevalidity", selectData.UIDValidity).
 			Uint32("size", selectData.NumMessages).
 			Msg("Initialized from select")
@@ -862,8 +869,8 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 
 		// The UIDNext guard prevents an underflow wrapping the start to ~4 billion
 		// when a hostile/buggy server reports more messages than it has UIDs
-		if selectData.NumMessages > uidSearchPaginateThreshold && selectData.UIDNext > uidSearchPaginateThreshold {
-			uidsStartAt = selectData.UIDNext - uidSearchPaginateThreshold
+		if selectData.NumMessages > uidSearchPaginateThreshold && uidNext > uidSearchPaginateThreshold {
+			uidsStartAt = uidNext - uidSearchPaginateThreshold
 			uidSearchSet.AddRange(uidsStartAt, 0)
 			searchCriteria.UID = []imap.UIDSet{uidSearchSet}
 		}
@@ -882,7 +889,7 @@ func (f *Folder) ensureInitialized(ctx context.Context) error {
 		f.uids = NewUIDList(uids...)
 		f.uidsStartAt = uidsStartAt
 		if len(uids) == 0 {
-			f.lastSentUID = selectData.UIDNext
+			f.lastSentUID = max(uidNext, 1) // UIDs are always >0
 		} else {
 			f.lastSentUID = f.uids.Max() + 1 // not sent anything yet, so +1 the head of the UID list
 		}

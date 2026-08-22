@@ -128,6 +128,18 @@ func (c *FakeSelectCommand) Wait() (*imap.SelectData, error) {
 	return c.data, nil
 }
 
+type FakeStatusCommand struct {
+	*FakeCommand
+	data *imap.StatusData
+}
+
+func (c *FakeStatusCommand) Wait() (*imap.StatusData, error) {
+	if err := c.FakeCommand.Wait(); err != nil {
+		return nil, err
+	}
+	return c.data, nil
+}
+
 // FakeListCommand implements ListCommand interface
 var _ ListCommand = (*FakeListCommand)(nil)
 
@@ -435,6 +447,33 @@ func (c *FakeIMAPClient) Select(name string, options *imap.SelectOptions) Select
 	}
 
 	return cmd
+}
+
+func (c *FakeIMAPClient) Status(name string, options *imap.StatusOptions) StatusCommand {
+	if err := c.outsideNamespaceErr(name); err != nil {
+		return &FakeStatusCommand{FakeCommand: &FakeCommand{err: err}}
+	}
+
+	folder, exists := c.store.getFolder(name)
+	if !exists {
+		return &FakeStatusCommand{FakeCommand: &FakeCommand{err: &imap.Error{
+			Type: imap.StatusResponseTypeNo,
+			Code: imap.ResponseCodeNonExistent,
+			Text: fmt.Sprintf("folder %s does not exist", name),
+		}}}
+	}
+
+	folder.mu.Lock()
+	numMessages := folder.exists
+	data := &imap.StatusData{
+		Mailbox:     folder.name,
+		UIDValidity: folder.uidValidity,
+		UIDNext:     folder.uidNext,
+		NumMessages: &numMessages,
+	}
+	folder.mu.Unlock()
+
+	return &FakeStatusCommand{FakeCommand: &FakeCommand{err: nil}, data: data}
 }
 
 func (c *FakeIMAPClient) Unselect() Command {

@@ -16,6 +16,7 @@ var _ SearchCommand = (*imapclient.SearchCommand)(nil)
 var _ ExpungeCommand = (*imapclient.ExpungeCommand)(nil)
 var _ FetchCommand = (*imapclient.FetchCommand)(nil)
 var _ SelectCommand = (*imapclient.SelectCommand)(nil)
+var _ StatusCommand = (*imapclient.StatusCommand)(nil)
 var _ AppendCommand = (*imapclient.AppendCommand)(nil)
 
 // Command interfaces for operations that return commands
@@ -37,6 +38,10 @@ type ExpungeCommand interface {
 
 type SelectCommand interface {
 	Wait() (*imap.SelectData, error)
+}
+
+type StatusCommand interface {
+	Wait() (*imap.StatusData, error)
 }
 
 type ListCommand interface {
@@ -84,6 +89,7 @@ type IMAPClient interface {
 
 	// Folder operations
 	Select(name string, options *imap.SelectOptions) SelectCommand
+	Status(name string, options *imap.StatusOptions) StatusCommand
 	Unselect() Command
 	Idle() (IdleCommand, error)
 	List(reference, pattern string, options *imap.ListOptions) ListCommand
