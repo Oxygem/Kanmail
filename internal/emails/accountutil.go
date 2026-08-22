@@ -76,8 +76,16 @@ func listMailboxesRecursive(
 	if len(personal) == 0 {
 		personal = []types.Namespace{{Delim: ns.Delim()}}
 	}
-	// TODO: handle other namespaces?
 	for _, space := range personal {
+		if err := listChildren(space.Root(), space.Delim); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, space := range slices.Concat(ns.Other, ns.Shared) {
+		if space.Prefix == "" {
+			continue
+		}
 		if err := listChildren(space.Root(), space.Delim); err != nil {
 			return nil, err
 		}
