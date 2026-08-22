@@ -232,8 +232,11 @@ func (a *Account) FetchFolderNames(ctx context.Context) ([]types.FolderName, err
 	folders := make([]types.FolderName, 0, len(list))
 	for _, mailbox := range list {
 		name := types.FolderName(mailbox.Mailbox)
-		if _, isMapped := a.Folders.AliasFor(name, a.Settings.Namespaces.Delim()); isMapped || name.IsInbox() ||
-			slices.Contains(mailbox.Attrs, imap.MailboxAttrNoSelect) {
+		if name.IsInbox() {
+			continue
+		} else if slices.Contains(mailbox.Attrs, imap.MailboxAttrNoSelect) {
+			continue
+		} else if _, isMapped := a.Folders.AliasFor(name, a.Settings.Namespaces.Delim()); isMapped {
 			continue
 		}
 		folders = append(folders, a.DisplayFolderName(name))
