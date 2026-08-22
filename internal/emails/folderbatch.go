@@ -21,10 +21,21 @@ func (f *Folder) MoveEmails(ctx context.Context, otherFolderName types.FolderNam
 
 	return f.imap.WithFolderConnectionNoReplay(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
 		return f.createDestinationAndRetry(ctx, conn, otherFolder, func() error {
-			_, err := conn.Move(imap.UIDSetNum(uids...), string(otherFolder.Name)).Wait()
-			return err
+			return moveEmails(conn, imap.UIDSetNum(uids...), otherFolder.Name)
 		})
 	})
+}
+
+func moveEmails(conn imapinterface.IMAPClient, uids imap.UIDSet, dest types.FolderName) error {
+	if conn.Caps().Has(imap.CapMove) {
+		_, err := conn.Move(uids, string(dest)).Wait()
+		return err
+	}
+
+	if _, err := conn.Copy(uids, string(dest)).Wait(); err != nil {
+		return err
+	}
+	return deleteEmails(conn, uids)
 }
 
 func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderName, uids []imap.UID) error {
@@ -44,26 +55,29 @@ func (f *Folder) CopyEmails(ctx context.Context, otherFolderName types.FolderNam
 
 func (f *Folder) DeleteEmails(ctx context.Context, uids []imap.UID) error {
 	return f.imap.WithFolderConnection(ctx, f.Name, func(conn imapinterface.IMAPClient) error {
-		uidSet := imap.UIDSetNum(uids...)
-		storeFlags := imap.StoreFlags{
-			Op:     imap.StoreFlagsAdd,
-			Flags:  []imap.Flag{imap.FlagDeleted},
-			Silent: true,
-		}
-		if _, err := conn.Store(uidSet, &storeFlags, nil).Collect(); err != nil {
-			return err
-		}
-
-		// If supported, use UID EXPUNGE to delete only the target messages
-		var expunge imapinterface.ExpungeCommand
-		if conn.Caps().Has(imap.CapUIDPlus) {
-			expunge = conn.UIDExpunge(uidSet)
-		} else {
-			expunge = conn.Expunge()
-		}
-		_, err := expunge.Collect()
-		return err
+		return deleteEmails(conn, imap.UIDSetNum(uids...))
 	})
+}
+
+func deleteEmails(conn imapinterface.IMAPClient, uids imap.UIDSet) error {
+	storeFlags := imap.StoreFlags{
+		Op:     imap.StoreFlagsAdd,
+		Flags:  []imap.Flag{imap.FlagDeleted},
+		Silent: true,
+	}
+	if _, err := conn.Store(uids, &storeFlags, nil).Collect(); err != nil {
+		return err
+	}
+
+	// If supported, use UID EXPUNGE to delete only the target messages
+	var expunge imapinterface.ExpungeCommand
+	if conn.Caps().Has(imap.CapUIDPlus) {
+		expunge = conn.UIDExpunge(uids)
+	} else {
+		expunge = conn.Expunge()
+	}
+	_, err := expunge.Collect()
+	return err
 }
 
 func (f *Folder) FlagEmails(ctx context.Context, uids []imap.UID) error {
