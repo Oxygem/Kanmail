@@ -195,6 +195,13 @@ func (f *Folder) AppendEmail(ctx context.Context, b bytes.Buffer) (imap.UID, err
 	// No replay on network errors: a timeout after the server committed the
 	// APPEND would write the message again.
 	err := f.imap.WithPriorityConnectionNoReplay(ctx, func(conn imapinterface.IMAPClient) error {
+		// Without LITERAL+ when the server errors before the entire command is
+		// written go-imap drops the connection since it has pending data to send.
+		if !conn.Caps().Has(imap.CapLiteralPlus) {
+			if err := ensureMailboxExists(ctx, conn, f.Name); err != nil {
+				return err
+			}
+		}
 		return f.createDestinationAndRetry(ctx, conn, f, func() error {
 			uid, err := appendMessage(conn, string(f.Name), b.Bytes())
 			assignedUID = uid
@@ -221,6 +228,23 @@ func appendMessage(conn imapinterface.IMAPClient, mailbox string, raw []byte) (i
 		return data.UID, nil
 	}
 	return 0, nil
+}
+
+func ensureMailboxExists(ctx context.Context, conn imapinterface.IMAPClient, name types.FolderName) error {
+	mailboxes, err := conn.List("", string(name), nil).Collect()
+	if err != nil {
+		return fmt.Errorf("failed to list folder: %s: %w", name, err)
+	}
+	if len(mailboxes) > 0 {
+		return nil
+	}
+
+	log := zerolog.Ctx(ctx)
+	log.Info().Str("folder", string(name)).Msg("Creating missing destination folder")
+	if err := conn.Create(string(name), nil).Wait(); err != nil {
+		log.Warn().Err(err).Str("folder", string(name)).Msg("Failed to create folder")
+	}
+	return nil
 }
 
 // createDestinationAndRetry runs fn, creating the destination mailbox and
