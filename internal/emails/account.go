@@ -239,7 +239,12 @@ func (a *Account) FetchFolderNames(ctx context.Context) ([]types.FolderName, err
 		} else if _, isMapped := a.Folders.AliasFor(name, a.Settings.Namespaces.Delim()); isMapped {
 			continue
 		}
-		folders = append(folders, a.DisplayFolderName(name))
+		// Skip mailboxes with a display name (alias) that maps back to a different folder
+		logical := a.DisplayFolderName(name)
+		if a.resolveFolderName(logical) != name {
+			continue
+		}
+		folders = append(folders, logical)
 	}
 	return folders, nil
 }
