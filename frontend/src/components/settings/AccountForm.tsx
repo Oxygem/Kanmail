@@ -63,6 +63,9 @@ interface IAccountFormProps {
   // Counts clicks on the account list reconnect button which is used to auto
   // start the reconnect flow once the account is opened (if oauth).
   autoReconnect?: number;
+  // The provider has disowned this account's stored grant - only then is there
+  // anything to reconnect, so the button stays hidden while it's still working.
+  needsReconnect?: boolean;
 
   itemIndex: number;
   updateItem: (n: number, s: AccountSettings) => void;
@@ -533,7 +536,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 <pre className="wrap">{this.state.oauthRequestUrl}</pre>
               </>}
             </p>
-            : <>
+            : this.props.needsReconnect && <>
               <button
                 type="button"
                 className="submit"

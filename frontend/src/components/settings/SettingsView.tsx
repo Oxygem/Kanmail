@@ -207,6 +207,7 @@ class Account extends React.Component<IAccountProps, IAccountState> {
             updateItem={this.props.updateAccount}
             initialTab={this.state.editTab}
             autoReconnect={this.state.autoReconnect}
+            needsReconnect={needsReconnect}
             closeForm={() => this.setState({
               isEditing: false,
               editTab: undefined,
