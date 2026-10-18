@@ -18,7 +18,7 @@
         <key>CFBundleIconFile</key>
         <string>icons</string>
         <key>LSMinimumSystemVersion</key>
-        <string>10.13.0</string>
+        <string>12.0</string>
         <key>LSFileQuarantineEnabled</key>
         <true/>
         <key>NSHighResolutionCapable</key>
