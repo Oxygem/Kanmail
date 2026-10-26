@@ -6,6 +6,9 @@ Unicode true
 !define INFO_PRODUCTVERSION "KANMAIL_APP_VERSION"
 !define INFO_COPYRIGHT "© 2025, Oxygem LLP"
 
+# Per-user so the app can replace its own exe when auto-updating
+!define WAILS_INSTALL_SCOPE "user"
+
 ## Include the wails tools
 ####
 !include "wails_tools.nsh"
@@ -48,8 +51,28 @@ ManifestDPIAware true
 
 Name "${INFO_PRODUCTNAME}"
 OutFile "..\..\..\bin\${INFO_PROJECTNAME}-installer.exe" # Name of the installer's file.
-InstallDir "$PROGRAMFILES64\${INFO_PRODUCTNAME}" # Default installing folder ($PROGRAMFILES is Program Files folder).
+InstallDir "$LOCALAPPDATA\Programs\${INFO_PRODUCTNAME}" # Default installing folder.
 ShowInstDetails show # This will always show the installation details.
+
+# Older installers were per-machine, leaving Kanmail in Program Files where it can't update itself
+Function .onInit
+    SetRegView 64
+    ReadRegStr $0 HKLM "${UNINST_KEY}" "UninstallString"
+    ${If} $0 == ""
+        Return
+    ${EndIf}
+
+    MessageBox MB_OKCANCEL|MB_ICONINFORMATION "Kanmail is currently installed for all users of this PC, which stops it updating itself. This installer will remove that copy and install Kanmail just for you. Your accounts and settings are kept.$\n$\nPlease close Kanmail, then click OK. Windows will ask for permission to remove the old copy." /SD IDOK IDOK removeMachineInstall
+    Abort
+
+    removeMachineInstall:
+    StrCpy $0 $0 -1 1
+    ClearErrors
+    ExecShellWait "" "$0" "/S"
+    ${If} ${Errors}
+        MessageBox MB_OK|MB_ICONEXCLAMATION "The all-users copy of Kanmail wasn't removed. You can remove it later from Settings > Apps." /SD IDOK
+    ${EndIf}
+FunctionEnd
 
 Section
     !insertmacro wails.setShellContext
@@ -58,7 +81,13 @@ Section
 
     SetOutPath $INSTDIR
 
+    # A running exe can't be overwritten but can be renamed, as the app's own updater does
+    Delete "$INSTDIR\${PRODUCT_EXECUTABLE}.old"
+    Rename "$INSTDIR\${PRODUCT_EXECUTABLE}" "$INSTDIR\${PRODUCT_EXECUTABLE}.old"
+
     !insertmacro wails.files
+
+    Delete "$INSTDIR\${PRODUCT_EXECUTABLE}.old"
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
     CreateShortCut "$DESKTOP\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
