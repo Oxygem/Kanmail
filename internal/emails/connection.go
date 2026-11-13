@@ -4,6 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
+	"io"
+	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,14 +32,66 @@ var errInsecurePasswordAuth = errors.New(
 	"refusing to send credentials over an unencrypted connection, enable SSL/TLS or STARTTLS",
 )
 
-// debugTLSConfig skips certificate verification when KANMAIL_DEBUG_TLS_INSECURE
+// LegacyTLSError is returned when a server rejects our minimum TLS version (1.2)
+// and the connection hasn't opted into legacy TLS. Version is the version the
+// server negotiated when retried with legacy TLS allowed, zero if that failed.
+type LegacyTLSError struct {
+	Version uint16
+}
+
+func (e *LegacyTLSError) Error() string {
+	version := "an outdated TLS version"
+	if e.Version != 0 {
+		version = tls.VersionName(e.Version)
+	}
+	return fmt.Sprintf(
+		"server only supports %s (Kanmail requires TLS 1.2 or newer), enable \"Legacy TLS\" to connect anyway",
+		version,
+	)
+}
+
+// newTLSConfig skips certificate verification when KANMAIL_DEBUG_TLS_INSECURE
 // is set, to connect to local test servers with self-signed certificates. The
 // flag is compiled out of production builds.
-func debugTLSConfig() *tls.Config {
-	if constants.ENV_DEBUG_TLS_INSECURE == "" {
+func newTLSConfig(allowLegacyTLS bool) *tls.Config {
+	config := &tls.Config{}
+	if allowLegacyTLS {
+		config.MinVersion = tls.VersionTLS10
+	}
+	if constants.ENV_DEBUG_TLS_INSECURE != "" {
+		config.InsecureSkipVerify = true
+	}
+	return config
+}
+
+// isTLSVersionError matches both ways a handshake fails on version: the server
+// rejecting our ClientHello, or the server picking a version below our minimum.
+func isTLSVersionError(err error) bool {
+	var opErr *net.OpError
+	if errors.As(err, &opErr) && opErr.Op == "remote error" && opErr.Err.Error() == "tls: protocol version not supported" {
+		return true
+	}
+	return strings.Contains(err.Error(), "tls: server selected unsupported protocol version")
+}
+
+// dialWithTLSCheck dials and, when the server rejects our TLS version, redials
+// allowing legacy TLS so the error can name the version the server supports.
+func dialWithTLSCheck[C io.Closer](allowLegacyTLS bool, dial func(*tls.Config) (C, error)) (C, error) {
+	client, err := dial(newTLSConfig(allowLegacyTLS))
+	if err == nil || allowLegacyTLS || !isTLSVersionError(err) {
+		return client, err
+	}
+
+	legacyErr := &LegacyTLSError{}
+	probeConfig := newTLSConfig(true)
+	probeConfig.VerifyConnection = func(state tls.ConnectionState) error {
+		legacyErr.Version = state.Version
 		return nil
 	}
-	return &tls.Config{InsecureSkipVerify: true}
+	if probe, probeErr := dial(probeConfig); probeErr == nil {
+		probe.Close()
+	}
+	return client, legacyErr
 }
 
 // A pool of lazily loaded connections that can be retrieved for exclusive access within the current

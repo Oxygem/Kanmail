@@ -122,12 +122,14 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 		if c.conf.SSL {
 			dialFn = smtp.DialTLS
 		} else if c.conf.StartTLS {
-			dialFn = smtp.DialStartTLS
+			dialFn = dialSMTPStartTLS
 		}
 
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
-		tlsConfig := debugTLSConfig()
-		client, err := dialFn(addr, tlsConfig)
+		dial := func(tlsConfig *tls.Config) (*smtp.Client, error) {
+			return dialFn(addr, tlsConfig)
+		}
+		client, err := dialWithTLSCheck(c.conf.AllowLegacyTLS, dial)
 		if err != nil {
 			return nil, fmt.Errorf("failed smtp dial: %w", err)
 		} else {
@@ -149,7 +151,7 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 				}
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
 				client.Close()
-				client, err = dialFn(addr, tlsConfig)
+				client, err = dialWithTLSCheck(c.conf.AllowLegacyTLS, dial)
 				if err != nil {
 					return nil, fmt.Errorf("failed smtp redial: %w", err)
 				} else {
@@ -170,6 +172,20 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 	}
 
 	return c.client, nil
+}
+
+// dialSMTPStartTLS runs a command after STARTTLS because go-smtp defers the TLS
+// handshake to the next command, this way handshake errors surface from the dial.
+func dialSMTPStartTLS(addr string, tlsConfig *tls.Config) (*smtp.Client, error) {
+	client, err := smtp.DialStartTLS(addr, tlsConfig)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Noop(); err != nil {
+		client.Close()
+		return nil, err
+	}
+	return client, nil
 }
 
 func (c *SMTPConnectionWrapper) doOAuthLogin(ctx context.Context, client *smtp.Client) error {

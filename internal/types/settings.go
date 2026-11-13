@@ -63,6 +63,8 @@ type ConnectionSettings struct {
 	SSL bool `json:"ssl"`
 	// Start TLS
 	StartTLS bool `json:"startTls"`
+	// Accept TLS 1.0/1.1 for servers that don't support 1.2+
+	AllowLegacyTLS bool `json:"allowLegacyTls"`
 
 	// Total connection pool budget (IMAP: partitioned across
 	// regular/priority/background; SMTP: regular pool size). Zero uses the default.

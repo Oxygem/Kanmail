@@ -772,6 +772,14 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
               })}
             </div>
             <div className="quarter">
+              <label className="checkbox" htmlFor="imapSettings-allowLegacyTls">
+                Legacy TLS?
+              </label>
+              {this.renderInput("imapSettings", "allowLegacyTls", {
+                type: "checkbox",
+              })}
+            </div>
+            <div className="quarter">
               <label htmlFor="imapSettings-connections">Connections</label>
               {this.renderInput("imapSettings", "connections", {
                 type: "number",
@@ -807,6 +815,14 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
                 Use STARTTLS?
               </label>
               {this.renderInput("smtpSettings", "startTls", {
+                type: "checkbox",
+              })}
+            </div>
+            <div className="quarter">
+              <label className="checkbox" htmlFor="smtpSettings-allowLegacyTls">
+                Legacy TLS?
+              </label>
+              {this.renderInput("smtpSettings", "allowLegacyTls", {
                 type: "checkbox",
               })}
             </div>

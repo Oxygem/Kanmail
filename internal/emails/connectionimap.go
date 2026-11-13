@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"os"
 
@@ -286,14 +287,6 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 			return nil, errInsecurePasswordAuth
 		}
 
-		options := &imapclient.Options{
-			UnilateralDataHandler: c.unilateralHandler(),
-			TLSConfig:             debugTLSConfig(),
-		}
-		if constants.ENV_DEBUG_IMAP_IO != "" {
-			options.DebugWriter = os.Stdout
-		}
-
 		dialFn := imapclient.DialInsecure
 		if c.conf.SSL {
 			dialFn = imapclient.DialTLS
@@ -302,8 +295,19 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 		}
 
 		addr := fmt.Sprintf("%s:%d", c.conf.Host, c.conf.Port)
+		dial := func(tlsConfig *tls.Config) (*imapclient.Client, error) {
+			options := &imapclient.Options{
+				UnilateralDataHandler: c.unilateralHandler(),
+				TLSConfig:             tlsConfig,
+			}
+			if constants.ENV_DEBUG_IMAP_IO != "" {
+				options.DebugWriter = os.Stdout
+			}
+			return dialFn(addr, options)
+		}
+
 		log.Trace().Str("address", addr).Msg("Connecting")
-		client, err := dialFn(addr, options)
+		client, err := dialWithTLSCheck(c.conf.AllowLegacyTLS, dial)
 		if err != nil {
 			return nil, fmt.Errorf("failed imap dial: %w", err)
 		} else {
@@ -324,7 +328,7 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 				}
 				log.Warn().Err(err).Msg("OAuth login failed, recreating client")
 				client.Close()
-				client, err = dialFn(addr, options)
+				client, err = dialWithTLSCheck(c.conf.AllowLegacyTLS, dial)
 				if err != nil {
 					return nil, fmt.Errorf("failed imap redial: %w", err)
 				} else {
