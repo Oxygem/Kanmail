@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"context"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -113,6 +114,36 @@ func RunDebugger(log zerolog.Logger) {
 			folder := account.GetFolder(types.FolderName(tokens[2]))
 			email, err := folder.FetchEmail(ctx, imap.UID(uid))
 			log.Debug().Err(err).Any("email", email).Msg("")
+
+		case "fetch-part":
+			if len(tokens) != 6 {
+				log.Error().Msg("Usage: fetch-part <account> <folder> <uid> <part> <outfile>")
+				continue
+			}
+			uid, _ := strconv.Atoi(tokens[3])
+			account := kanmail.AccountsService.GetOrCreateAccount(ctx, types.AccountID(tokens[1]))
+			if account == nil {
+				log.Error().Msg("Unknown account")
+				continue
+			}
+			folder := account.GetFolder(types.FolderName(tokens[2]))
+			email, err := folder.FetchEmail(ctx, imap.UID(uid))
+			if err != nil || email == nil {
+				log.Error().Err(err).Msg("Failed to fetch email")
+				continue
+			}
+			partIndex := slices.IndexFunc(email.Parts, func(p types.BodyPart) bool { return p.PartStr == tokens[4] })
+			if partIndex < 0 {
+				log.Error().Msg("Unknown part")
+				continue
+			}
+			resp, err := folder.FetchEmailPartData(ctx, emails.FetchPartsMap{imap.UID(uid): email.Parts[partIndex]})
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to fetch part")
+				continue
+			}
+			err = os.WriteFile(tokens[5], resp[imap.UID(uid)].Bytes, 0o644)
+			log.Debug().Err(err).Any("part", email.Parts[partIndex]).Str("file", tokens[5]).Msg("Wrote part data")
 
 		default:
 			log.Error().Msgf("Unknown command: %s", cmd)
