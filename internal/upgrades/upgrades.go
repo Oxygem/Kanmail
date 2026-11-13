@@ -39,6 +39,7 @@ var All = []Upgrade{
 	// tables for the account name -> ID migration.
 	{Name: "001-backfill-attachments", Run: noopUpgrade},
 	{Name: "002-backfill-search-rows", Run: noopUpgrade},
+	{Name: "003-refetch-ambiguous-body-parts", Run: refetchAmbiguousBodyParts},
 	// future upgrades...
 }
 

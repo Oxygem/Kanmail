@@ -1,6 +1,7 @@
 package types
 
 import (
+	"strings"
 	"time"
 
 	"github.com/emersion/go-imap/v2"
@@ -66,9 +67,12 @@ func NewBodyPartFromStructure(id []int, bs *imap.BodyStructureSinglePart) BodyPa
 }
 
 // ExtractBodyParts walks an IMAP BodyStructure and produces the flat Parts
-// list plus the preferred text, HTML, and display parts. The display heuristic
-// picks the text part over HTML when their sizes are within 3x (an email with
-// only <p>-wrapped plaintext is treated as plain).
+// list plus the preferred text, HTML, and display parts. The first non
+// attachment text and HTML parts win: clients like Apple Mail interleave inline
+// images with filler text parts (text, image, text, image, text) where only the
+// first holds the body. The display heuristic picks the text part over HTML when
+// their sizes are within 3x (an email with only <p>-wrapped plaintext is treated
+// as plain).
 func ExtractBodyParts(bs imap.BodyStructure) (parts []BodyPart, textPart, htmlPart, displayPart *BodyPart) {
 	if bs == nil {
 		return nil, nil, nil, nil
@@ -81,10 +85,13 @@ func ExtractBodyParts(bs imap.BodyStructure) (parts []BodyPart, textPart, htmlPa
 		}
 		bPart := NewBodyPartFromStructure(path, bstruct)
 		parts = append(parts, bPart)
-		switch body.MediaType() {
-		case "text/plain":
+		if isAttachment(bstruct) {
+			return true
+		}
+		switch {
+		case textPart == nil && bPart.Type == "text/plain":
 			textPart = &bPart
-		case "text/html":
+		case htmlPart == nil && bPart.Type == "text/html":
 			htmlPart = &bPart
 		}
 		return true
@@ -101,6 +108,11 @@ func ExtractBodyParts(bs imap.BodyStructure) (parts []BodyPart, textPart, htmlPa
 		displayPart = htmlPart
 	}
 	return
+}
+
+func isAttachment(bs *imap.BodyStructureSinglePart) bool {
+	disposition := bs.Disposition()
+	return disposition != nil && strings.EqualFold(disposition.Value, "attachment")
 }
 
 type Email struct {
