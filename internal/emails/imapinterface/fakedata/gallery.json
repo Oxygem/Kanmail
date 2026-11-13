@@ -1,0 +1,376 @@
+{
+  "owner": "Sam Carter",
+  "accounts": {
+    "hello@oxygem.com": [
+      [
+        {
+          "folder": "inbox",
+          "ago": "2h",
+          "subject": "Quote for a new website?",
+          "content": "Hi Sam,\n\nWe're a small architecture practice and our website hasn't changed since 2019. A friend of ours recommended you. Could you give us a rough quote for a redesign, ideally live before spring?\n\nHappy to jump on a call this week."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "20h",
+          "from": "Tillpay <receipts@tillpay.io>",
+          "subject": "Payment received for invoice #1038",
+          "content": "You've been paid $2,400.00 for invoice #1038 (Brand refresh, phase 1).\n\nThe funds will reach your bank account in 1 to 2 business days."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "50h",
+          "subject": "Coffee next week?",
+          "content": "Are you around next week? I'd love to pick your brain about our rebrand before we brief anyone."
+        },
+        {
+          "folder": "sent",
+          "ago": "44h",
+          "subject": "Re: Coffee next week?",
+          "content": "Sure! Tuesday or Wednesday morning works for me. The usual place?\n\nSam"
+        },
+        {
+          "folder": "inbox",
+          "ago": "34h",
+          "subject": "Re: Coffee next week?",
+          "content": "Wednesday at 9 it is. I'll bring the old brand book so you can laugh at it."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "74h",
+          "from": "Sketchboard <notify@sketchboardapp.com>",
+          "subject": "3 new comments on Homepage v2",
+          "content": "3 new comments on Homepage v2:\n\n\"Can the hero image feel warmer?\"\n\"Love the new navigation.\"\n\"Pricing table feels cramped on mobile.\"\n\nOpen the file to reply."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "78h",
+          "subject": "Homepage feedback, round two",
+          "content": "Hi Sam,\n\nThanks for v2, it's a big step up. Three things from the team:\n\n1. Can the hero image feel warmer?\n2. The pricing table is cramped on mobile.\n3. Could we try the testimonials higher up the page?\n\nOtherwise we love it."
+        },
+        {
+          "folder": "sent",
+          "ago": "70h",
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Thanks, all doable. I'll send a warmer hero option and fix the pricing table today.\n\nOn testimonials: moving them up pushes the signup button below the fold, so I'd suggest we test both versions. Sound OK?\n\nSam"
+        },
+        {
+          "folder": "Needs Reply",
+          "ago": "30h",
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Testing both sounds smart. The warmer hero is perfect.\n\nOne more thing: our CEO wants to see it on her phone before she signs off. Can you share a preview link?"
+        },
+        {
+          "folder": "Needs Reply",
+          "ago": "26h",
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Also, could we see the final copy before Friday? Our launch email goes out Monday and I'd like them to match."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "51h",
+          "subject": "Can we move Thursday's call?",
+          "content": "Something's come up on our side. Could we push Thursday's call to Friday, same time? If not, Monday morning works too."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "120h",
+          "subject": "Question about invoice #1036",
+          "content": "Quick one on invoice #1036: is the hosting line monthly or for the whole year? Our finance team needs to code it before they can pay."
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "73h",
+          "subject": "Proposal for a Q1 retainer",
+          "content": "Could you send over a proposal for a monthly retainer starting in January? We're thinking roughly three days a month of design support."
+        },
+        {
+          "folder": "sent",
+          "ago": "29h",
+          "subject": "Re: Proposal for a Q1 retainer",
+          "content": "Proposal attached: three days a month at $4,800, with a three month minimum. Happy to adjust the scope. Could you let me know by Friday so I can hold the dates?\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "80h",
+          "subject": "October invoice",
+          "content": "Can you send October's invoice to our accounts team? They pay on the 15th."
+        },
+        {
+          "folder": "sent",
+          "ago": "72h",
+          "subject": "Re: October invoice",
+          "content": "Invoice #1042 for October is attached: $3,150, due in 14 days. Thanks!\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "152h",
+          "subject": "Contract for the brand refresh",
+          "content": "Contract attached for the brand refresh. Let us know if anything needs changing."
+        },
+        {
+          "folder": "sent",
+          "ago": "144h",
+          "subject": "Re: Contract for the brand refresh",
+          "content": "All looks good. Signed and returned, so it's over to you for the countersignature.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "25h",
+          "subject": "Speaker applications close November 20",
+          "content": "Our spring design conference is looking for speakers. Talks are 20 minutes, travel is covered, and first-time speakers are very welcome."
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "96h",
+          "subject": "Thought you'd like this: how studios price retainers",
+          "content": "Saw this and thought of you. The part about pricing outcomes instead of hours is worth a read before your January proposals."
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "216h",
+          "subject": "Year-end tax checklist",
+          "content": "Before the end of the year, please send over:\n\n- All sales invoices from January to December\n- Receipts for any equipment over $500\n- The square footage of your home office\n\nNo rush, but by December 15 makes life easier for both of us."
+        }
+      ]
+    ],
+    "sunday.sourdough@outlook.com": [
+      [
+        {
+          "folder": "inbox",
+          "ago": "5h",
+          "from": "Crumb & Co <hello@crumbandco.com>",
+          "unsubscribe": true,
+          "subject": "Fall sale: 30% off all bakeware",
+          "content": "Our biggest sale of the season is here. Take 30% off Dutch ovens, proofing baskets and bread lames, this weekend only.\n\nFree shipping on orders over $50."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "27h",
+          "from": "Boxtrail <tracking@boxtrail.com>",
+          "subject": "Your package is out for delivery",
+          "content": "Good news! Your order of 2 x Banneton proofing basket is out for delivery and should arrive today by 8pm."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "52h",
+          "subject": "Book club: November pick",
+          "content": "This month we're reading Piranesi. We'll meet at mine on the 22nd. Bring snacks, and opinions."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "48h",
+          "subject": "Dinner at ours on Saturday?",
+          "content": "Are you free on Saturday? We're making a huge pot of chili, around 7."
+        },
+        {
+          "folder": "sent",
+          "ago": "44h",
+          "subject": "Re: Dinner at ours on Saturday?",
+          "content": "Yes please! What can I bring?\n\nSam"
+        },
+        {
+          "folder": "Needs Reply",
+          "ago": "32h",
+          "subject": "Re: Dinner at ours on Saturday?",
+          "content": "Just yourself. Well, and a loaf of that sourdough if you're baking this week? Also, any allergies we should know about?"
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "97h",
+          "subject": "Plumber's invoice for the kitchen leak",
+          "content": "The plumber has sent his invoice for fixing the leak under the sink. Can you confirm he came on the 12th and that everything's working now? Then I'll pay him directly."
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "54h",
+          "from": "Coastline Rail <help@coastlinerail.com>",
+          "subject": "Refund for your canceled train",
+          "content": "We're sorry your train on October 27 was canceled. Reply with your booking reference and we'll refund the full fare."
+        },
+        {
+          "folder": "sent",
+          "ago": "48h",
+          "subject": "Re: Refund for your canceled train",
+          "content": "Thanks, the booking reference is KX4-2291 and the fare was $64.50.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "102h",
+          "subject": "Bike service quote",
+          "content": "A full service plus new brake pads comes to $85. We can fit you in on Tuesday or Thursday."
+        },
+        {
+          "folder": "sent",
+          "ago": "96h",
+          "subject": "Re: Bike service quote",
+          "content": "Tuesday is perfect. I'll drop it off before work.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "196h",
+          "subject": "Is the couch still for sale?",
+          "content": "Hi, is the green couch still available? I could pick it up on Sunday with a friend's van."
+        },
+        {
+          "folder": "sent",
+          "ago": "192h",
+          "subject": "Re: Is the couch still for sale?",
+          "content": "It is! Sunday afternoon works. Let me know a time and I'll send the address.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "48h",
+          "from": "The Weekly Crumb <letters@weeklycrumb.com>",
+          "unsubscribe": true,
+          "subject": "Why your crumb is tight, and three fixes",
+          "content": "This week: why your crumb comes out tight, and three small changes that open it up. Plus a reader's rye recipe that's worth the mess."
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "120h",
+          "subject": "Photos from Lisbon",
+          "content": "Finally sorted the photos from the trip! There's a great one of you on the tram. Album link below, no rush."
+        }
+      ]
+    ],
+    "weekendmaker@icloud.com": [
+      [
+        {
+          "folder": "inbox",
+          "ago": "40m",
+          "from": "Makerstall <orders@makerstall.com>",
+          "subject": "New order #2291: Walnut desk tray",
+          "content": "You have a new order!\n\n1 x Walnut desk tray (large)\nShip to: Portland, OR\nTotal: $68.00\n\nA copy of the invoice is attached. Ship by Wednesday to keep your on-time rating."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "30h",
+          "from": "Makerstall <payouts@makerstall.com>",
+          "subject": "Your payout of $1,284.50 is on its way",
+          "content": "Your weekly payout of $1,284.50 has been sent to your bank account ending in 4417. It should arrive in 2 to 3 business days."
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "55h",
+          "from": "Makerstall <news@makerstall.com>",
+          "subject": "Shipping rates change on January 1",
+          "content": "From January 1, rates for packages over 2 lb go up by about 6%. Your saved shipping profiles will update automatically."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "6h",
+          "subject": "Wholesale inquiry: 40 trays for our store",
+          "content": "Hi! We run a home goods store in Seattle and love your walnut trays. Could you do 40 units at a wholesale price, delivered by mid-December?\n\nIf the numbers work, send over a pro forma invoice and I'll get it approved."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "72h",
+          "subject": "Custom engraving on order #2287?",
+          "content": "I just ordered the small tray as a wedding gift. Could you engrave initials and a date on the underside? Happy to pay extra."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "144h",
+          "subject": "Podcast interview?",
+          "content": "I host a small podcast about makers who sell online. Would you be up for a 30-minute chat about how you started the shop? We'd record in December."
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "72h",
+          "subject": "Walnut boards restock",
+          "content": "We can do 30 walnut boards at $18 each, ready in about two weeks."
+        },
+        {
+          "folder": "sent",
+          "ago": "56h",
+          "subject": "Re: Walnut boards restock",
+          "content": "Great, please go ahead with all 30. Could you confirm the ship date once you have it?\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "126h",
+          "subject": "Return for order #2263",
+          "content": "The tray arrived with a scratch across the top. Can I swap it for a new one?"
+        },
+        {
+          "folder": "sent",
+          "ago": "120h",
+          "subject": "Re: Return for order #2263",
+          "content": "So sorry about that! I've emailed you a return label. As soon as it's on its way back, I'll ship a new one.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "72h",
+          "subject": "Craft fair stall applications are open",
+          "content": "Applications for the spring craft fair are open until January 31. Stalls are $120 for the weekend, and returning makers get first pick of spots."
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "168h",
+          "subject": "Ideas for the spring collection",
+          "content": "Sketched a few ideas over the weekend: a smaller key tray, a phone stand, and a set of coasters from the offcuts. Thoughts when you get a minute?"
+        }
+      ]
+    ]
+  }
+}

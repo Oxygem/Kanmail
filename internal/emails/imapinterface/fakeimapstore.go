@@ -153,7 +153,11 @@ var (
 )
 
 func init() {
-	if constants.ENV_DEBUG_FAKE_IMAP != "" {
+	switch constants.ENV_DEBUG_FAKE_IMAP {
+	case "":
+	case "gallery":
+		loadFakeData("gallery", &fakeGalleryData)
+	default:
 		// Load the thread pool once up front; per-account stores draw from it.
 		fakeThreadPool = buildFakeThreadPool()
 	}
@@ -173,6 +177,10 @@ func getOrCreateFakeStore(accountKey string) *fakeIMAPStore {
 		folders:      exsync.NewMap[string, *fakeFolderData](),
 		fakeThreads:  allocateAccountThreads(),
 		localAddress: makeIMAPAddress(),
+	}
+	if threads, staged := fakeGalleryData.Accounts[accountKey]; staged {
+		store.fakeThreads = threads
+		store.localAddress = fakeGalleryData.ownerAddress(accountKey)
 	}
 	store.createAllFoldersFromThreads()
 	fakeStores[accountKey] = store
@@ -301,6 +309,7 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 
 		// Track message IDs for InReplyTo references
 		var threadMessageIDs []string
+		correspondent := makeIMAPAddress()
 
 		// Generate messages from thread
 		for emailIdx, email := range thread {
@@ -310,20 +319,26 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 			threadMessageIDs = append(threadMessageIDs, messageID)
 
 			targetFolder := folderPattern[emailIdx%len(folderPattern)]
+			if _, seeded := folderData[email.Folder]; seeded {
+				targetFolder = email.Folder
+			}
 			folder := folderData[targetFolder]
 
 			uid := uidCounter
 			uidCounter++
 
-			// Create realistic sender names and addresses
+			if email.From != "" {
+				correspondent = parseFakeAddress(email.From)
+			}
+
 			var from, to []imap.Address
 
 			if targetFolder == "sent" || targetFolder == "drafts" {
 				// For sent items and drafts, we are the sender
 				from = []imap.Address{s.localAddress}
-				to = []imap.Address{makeIMAPAddress()}
+				to = []imap.Address{correspondent}
 			} else {
-				from = []imap.Address{makeIMAPAddress()}
+				from = []imap.Address{correspondent}
 				to = []imap.Address{s.localAddress}
 			}
 
@@ -331,6 +346,10 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 			baseDaysAgo := (threadIdx * 3) + len(thread)
 			emailDaysAgo := baseDaysAgo - emailIdx
 			msgDate := time.Now().AddDate(0, 0, -emailDaysAgo)
+			if ago, err := time.ParseDuration(email.Ago); err == nil {
+				msgDate = time.Now().Add(-ago)
+				emailDaysAgo = int(ago.Hours() / 24)
+			}
 
 			// Create envelope with InReplyTo for reply messages
 			envelope := &imap.Envelope{

@@ -3,12 +3,15 @@ package imapinterface
 
 import (
 	"encoding/json"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
 	"sync"
+
+	"github.com/emersion/go-imap/v2"
 
 	"github.com/oxygem/kanmail/internal/constants"
 )
@@ -21,6 +24,41 @@ type fakeEmail struct {
 	// Newsletter/promo emails set this to get a List-Unsubscribe header, so
 	// the reader shows its unsubscribe link against fake data.
 	Unsubscribe bool `json:"unsubscribe"`
+	// Folder and Ago pin an email to a mailbox and an age (a Go duration),
+	// overriding the spread and dating the shared pool gets. From names the
+	// other side of the thread ("Name <user@host>") in place of a random one.
+	Folder string `json:"folder"`
+	Ago    string `json:"ago"`
+	From   string `json:"from"`
+}
+
+func fakeAddress(name, email string) imap.Address {
+	mailbox, host, _ := strings.Cut(email, "@")
+	return imap.Address{Name: name, Mailbox: mailbox, Host: host}
+}
+
+func parseFakeAddress(value string) imap.Address {
+	addr, err := mail.ParseAddress(value)
+	if err != nil {
+		panic("bad fake sender " + value + ": " + err.Error())
+	}
+	return fakeAddress(addr.Name, addr.Address)
+}
+
+// fakeGallery is the staged mail the marketing screenshots are shot against
+// (KANMAIL_DEBUG_FAKE_IMAP=gallery): one owner across several accounts, each
+// account's threads keyed by its username.
+type fakeGallery struct {
+	Owner    string                   `json:"owner"`
+	Accounts map[string][][]fakeEmail `json:"accounts"`
+}
+
+var fakeGalleryData fakeGallery
+
+// ownerAddress is the gallery owner at an account's own address, so every
+// account's sent mail and To lines read as one person's.
+func (g fakeGallery) ownerAddress(accountKey string) imap.Address {
+	return fakeAddress(g.Owner, accountKey)
 }
 
 var companyDomains = []string{
@@ -57,9 +95,9 @@ var (
 	fakeThreadLock   sync.Mutex
 )
 
-// loadFakeThreads reads a single thread file from the fakedata directory sitting
+// loadFakeData reads a single file from the fakedata directory sitting
 // alongside this source file (resolved at runtime, dev-only).
-func loadFakeThreads(name string) [][]fakeEmail {
+func loadFakeData(name string, into any) {
 	_, thisFile, _, _ := runtime.Caller(0)
 	path := filepath.Join(filepath.Dir(thisFile), "fakedata", name+".json")
 
@@ -68,10 +106,14 @@ func loadFakeThreads(name string) [][]fakeEmail {
 		panic("failed to read fake thread data: " + err.Error())
 	}
 
-	var threads [][]fakeEmail
-	if err := json.Unmarshal(data, &threads); err != nil {
+	if err := json.Unmarshal(data, into); err != nil {
 		panic("failed to parse fake thread data: " + err.Error())
 	}
+}
+
+func loadFakeThreads(name string) [][]fakeEmail {
+	var threads [][]fakeEmail
+	loadFakeData(name, &threads)
 	return threads
 }
 
