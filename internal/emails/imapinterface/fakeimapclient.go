@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"html"
 	"io"
 	"math/rand"
 	"net/mail"
@@ -768,6 +769,18 @@ func containsFold(s, substr string) bool {
 	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
 }
 
+// fakeMessageHTML is the text/html alternative a real sender would pair with
+// the plain content: escaped, with its paragraphs and line breaks kept.
+func fakeMessageHTML(content string) []byte {
+	var b strings.Builder
+	for _, paragraph := range strings.Split(content, "\n\n") {
+		b.WriteString("<p>")
+		b.WriteString(strings.ReplaceAll(html.EscapeString(paragraph), "\n", "<br>"))
+		b.WriteString("</p>")
+	}
+	return []byte(b.String())
+}
+
 // fakeMessageHeaderBytes synthesizes the header body section for a message -
 // just the headers the app parses out of it, which the plain text content the
 // other sections serve doesn't contain.
@@ -864,8 +877,11 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 			fetchMsg.BodySection = make([]imapclient.FetchBodySectionBuffer, len(options.BodySection))
 			for i, section := range options.BodySection {
 				bytes := []byte(msg.content)
-				if section.Specifier == imap.PartSpecifierHeader {
+				switch {
+				case section.Specifier == imap.PartSpecifierHeader:
 					bytes = fakeMessageHeaderBytes(msg)
+				case slices.Equal(section.Part, []int{2}):
+					bytes = fakeMessageHTML(msg.content)
 				}
 				fetchMsg.BodySection[i] = imapclient.FetchBodySectionBuffer{
 					Section: section,
