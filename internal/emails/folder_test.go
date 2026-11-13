@@ -109,6 +109,20 @@ func TestFolderErrorClassifiers(t *testing.T) {
 	}
 }
 
+func TestMakeExcerpt(t *testing.T) {
+	for _, tc := range []struct {
+		desc, in, want string
+	}{
+		{"currency symbols", "Total: $68.00, or €60 or £52", "Total: $68.00, or €60 or £52"},
+		{"line breaks become sentences", "Hi Sam\nThanks for v2", "Hi Sam. Thanks for v2"},
+		{"line break after punctuation", "Hi Sam,\n\nThanks", "Hi Sam, Thanks"},
+		{"markup symbols dropped", "a < b > c + d = e", "a b c d e"},
+		{"leading whitespace trimmed", "\n\n  Hello", "Hello"},
+	} {
+		assert.Equal(t, tc.want, makeExcerpt(tc.in), tc.desc)
+	}
+}
+
 func TestPaginateMissingFolderIsEmpty(t *testing.T) {
 	account, _, ctx := newTestAccount(t)
 

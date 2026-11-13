@@ -105,6 +105,39 @@ func isSentenceEnd(r rune) bool {
 	return strings.ContainsRune(".!?:;,…-–—", r)
 }
 
+// makeExcerpt reduces plain text to letters, numbers, punctuation, currency
+// symbols and single spaces, with line breaks read as sentence breaks, cut to
+// 256 bytes.
+func makeExcerpt(s string) string {
+	var out strings.Builder
+	out.Grow(len(s))
+	var lastWasSpace bool
+	var lastRune rune
+
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) || unicode.IsPunct(r) || unicode.Is(unicode.Sc, r) {
+			out.WriteRune(r)
+			lastWasSpace = false
+			lastRune = r
+		} else if unicode.IsSpace(r) && !lastWasSpace && out.Len() > 0 {
+			if r == '\n' && !isSentenceEnd(lastRune) {
+				out.WriteString(". ")
+				lastRune = '.'
+			} else {
+				out.WriteString(" ")
+			}
+			lastWasSpace = true
+		}
+	}
+	s = out.String()
+
+	if len(s) > 256 {
+		s = s[:256]
+	}
+	// Drop any invalid UTF8 characters the cut left behind
+	return strings.ToValidUTF8(s, "")
+}
+
 // Convert text/plain -> safe markdown HTML
 var markdownConverter = goldmark.New(
 	goldmark.WithExtensions(extension.Linkify, extension.TaskList),
@@ -1218,41 +1251,7 @@ func (f *Folder) fetchEmailHeadersWithConnection(
 		}
 
 		// Strip all HTML (whatever the content type)
-		b := htmlStripper.SanitizeBytes(f.decodePart(ctx, partResp))
-		s := string(b)
-
-		// Now iterate through the string to make a clean excerpt by removing anything that isn't
-		// a letter/number/punctuation or single spaces.
-		var out strings.Builder
-		out.Grow(len(s))
-		var lastWasSpace bool
-		var lastRune rune
-
-		for _, r := range s {
-			if unicode.IsLetter(r) || unicode.IsNumber(r) || unicode.IsPunct(r) {
-				out.WriteRune(r)
-				lastWasSpace = false
-				lastRune = r
-			} else if unicode.IsSpace(r) && !lastWasSpace && out.Len() > 0 {
-				if r == '\n' && !isSentenceEnd(lastRune) {
-					out.WriteString(". ")
-					lastRune = '.'
-				} else {
-					out.WriteString(" ")
-				}
-				lastWasSpace = true
-			}
-		}
-		s = out.String()
-
-		// Trim it down, we don't need >256 characters
-		if len(s) > 256 {
-			s = s[:256]
-		}
-		// Finally, drop any invalid UTF8 characters we might have cut
-		s = strings.ToValidUTF8(s, "")
-
-		email.Excerpt = s
+		email.Excerpt = makeExcerpt(string(htmlStripper.SanitizeBytes(f.decodePart(ctx, partResp))))
 	}
 
 	return emails, nil
