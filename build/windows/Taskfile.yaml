@@ -37,21 +37,29 @@ tasks:
       - task: create:nsis:installer
 
   create:nsis:installer:
-    summary: Creates an NSIS installer
-    dir: build/windows/nsis
+    summary: Builds the application and creates an NSIS installer
     deps:
       - task: build
         vars:
           PRODUCTION: '{{.PRODUCTION | default "true"}}'
     cmds:
+      - task: create:nsis:installer:prebuilt
+
+  create:nsis:installer:prebuilt:
+    summary: Creates an NSIS installer from the existing exe without rebuilding it, so a signed exe stays signed
+    dir: build/windows/nsis
+    cmds:
       # Create the Microsoft WebView2 bootstrapper if it doesn't exist
       - wails3 generate webview2bootstrapper -dir "{{.ROOT_DIR}}/build/windows/nsis"
-      - sed -e s/KANMAIL_APP_VERSION/{{.KANMAIL_APP_VERSION}}/ project.nsi.tpl > project.nsi
+      - sed -e s/KANMAIL_APP_VERSION/{{.KANMAIL_APP_VERSION}}/ -e s/KANMAIL_NSIS_VERSION/{{.NSIS_VERSION}}/ project.nsi.tpl > project.nsi
       - makensis -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
       KANMAIL_APP_VERSION: '{{.KANMAIL_APP_VERSION | default 0}}'
+      # NSIS needs X.X.X.X with 16-bit parts: 2.YYMMDDHHMMSS becomes 2.YYMM.DDHH.MMSS, anything else 0.0.0.0
+      NSIS_VERSION:
+        sh: echo "{{.KANMAIL_APP_VERSION}}" | sed -nE 's/^([0-9]+)\.([0-9]{4})([0-9]{4})([0-9]{4})$/\1.\2.\3.\4/p' | grep . || echo 0.0.0.0
 
   run:
     cmds:

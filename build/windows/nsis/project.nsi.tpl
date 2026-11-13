@@ -4,6 +4,7 @@ Unicode true
 !define INFO_COMPANYNAME "Oxygem LLP"
 !define INFO_PRODUCTNAME "Kanmail"
 !define INFO_PRODUCTVERSION "KANMAIL_APP_VERSION"
+!define INFO_NUMERICVERSION "KANMAIL_NSIS_VERSION"
 !define INFO_COPYRIGHT "© 2025, Oxygem LLP"
 
 # Per-user so the app can replace its own exe when auto-updating
@@ -14,8 +15,8 @@ Unicode true
 !include "wails_tools.nsh"
 
 # The version information for this two must consist of 4 parts
-VIProductVersion "${INFO_PRODUCTVERSION}.0.0"
-VIFileVersion    "${INFO_PRODUCTVERSION}.0.0"
+VIProductVersion "${INFO_NUMERICVERSION}"
+VIFileVersion    "${INFO_NUMERICVERSION}"
 
 VIAddVersionKey "CompanyName"     "${INFO_COMPANYNAME}"
 VIAddVersionKey "FileDescription" "${INFO_PRODUCTNAME} Installer"
