@@ -6,6 +6,7 @@ import { ACCOUNT_ACCENT_COLORS, ALIAS_FOLDERS, SETUP_IMAP_DOC_LINK } from "../..
 import requestStore from "../../stores/request.ts";
 import { getAccountEventProps, getEmailDomain } from "../../util/accounts.ts";
 import { trackEvent } from "../../util/analytics.ts";
+import { normalizeError } from "../../util/error.ts";
 import { openLink } from "../../window.ts";
 
 import { AccountsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
@@ -231,7 +232,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       this.stopOauthPoll();
       this.oauthPoll = setInterval(this.checkOauthResponse, 250);
     }).catch((error) => {
-      this.setState({ isReconnecting: false, error: error.message });
+      this.setState({ isReconnecting: false, error: normalizeError(error).message });
       requestStore.addError("Failed to start OAuth request", error, { silent: true });
     });
   };
@@ -294,7 +295,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       }, this.submitSettings);
     }).catch((error) => {
       this.stopOauthPoll();
-      this.setState({ isReconnecting: false, error: error.message });
+      this.setState({ isReconnecting: false, error: normalizeError(error).message });
       requestStore.addError("Failed to check OAuth response", error, { silent: true });
     }).finally(() => {
       this.oauthPollInFlight = false;
@@ -378,7 +379,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
       // saving/adding an account whose connection just failed loses the user's
       // previous settings. The form keeps what was entered so it can be fixed.
       this.setState({
-        error: error.message,
+        error: normalizeError(error).message,
         isSaving: false,
       });
       requestStore.addError("Failed to test account settings", error, { silent: true });
