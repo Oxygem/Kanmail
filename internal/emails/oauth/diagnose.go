@@ -68,7 +68,28 @@ func DiagnoseAuthError(
 	if diagnosis := diagnoseToken(ctx, conf, accessToken); diagnosis != "" {
 		err = fmt.Errorf("%w: %s", err, diagnosis)
 	}
+	if explanation := explainServerResponse(conf, err); explanation != "" {
+		err = fmt.Errorf("%w: %s", err, explanation)
+	}
 	return err
+}
+
+// explainServerResponse spells out what a provider's terse refusal means and
+// what to do about it.
+func explainServerResponse(conf types.ConnectionSettings, err error) string {
+	// Microsoft accepted the sign in but found no mailbox for it to open: the
+	// account has none (a Microsoft account made with another provider's
+	// email address), or IMAP is switched off for it
+	if conf.OAuthProvider == "outlook" && strings.Contains(err.Error(), "User is authenticated but not connected") {
+		return fmt.Sprintf(
+			"Microsoft signed in %s but won't open a mailbox for it over IMAP. Check the account you signed in "+
+				"with has an Outlook mailbox (Microsoft accounts made with another provider's email address "+
+				"don't), and that IMAP is turned on for it: Settings > Mail > Forwarding and IMAP on "+
+				"Outlook.com, or ask your administrator for Microsoft 365",
+			conf.Username,
+		)
+	}
+	return ""
 }
 
 func diagnoseToken(ctx context.Context, conf types.ConnectionSettings, accessToken string) string {

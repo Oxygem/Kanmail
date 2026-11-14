@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -153,5 +154,25 @@ func TestDiagnoseTokenDoesNotCacheTokenSpecificAnswers(t *testing.T) {
 	diagnoseToken(context.Background(), conf, "at-2")
 	if got := probes.Load(); got != 2 {
 		t.Fatalf("probes = %d, want each token inspected for itself", got)
+	}
+}
+
+func TestDiagnoseExplainsOutlookMailboxRefusal(t *testing.T) {
+	conf := types.ConnectionSettings{OAuthProvider: "outlook", Username: "someone@example.com"}
+	refusal := errors.New("imap: NO User is authenticated but not connected.")
+
+	err := DiagnoseAuthError(t.Context(), conf, "token", nil, refusal)
+	if !errors.Is(err, refusal) {
+		t.Fatalf("diagnosis lost the original error: %v", err)
+	}
+	for _, want := range []string{"someone@example.com", "Forwarding and IMAP"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("explanation missing %q: %v", want, err)
+		}
+	}
+
+	other := errors.New("imap: NO Login failed.")
+	if err := DiagnoseAuthError(t.Context(), conf, "token", nil, other); err.Error() != other.Error() {
+		t.Errorf("other refusals should pass through unchanged, got: %v", err)
 	}
 }

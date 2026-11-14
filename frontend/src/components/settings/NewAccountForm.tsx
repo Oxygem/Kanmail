@@ -801,11 +801,11 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 
 		// Accounts that arrived here via the provider's own sign-in flow have
 		// already tried OAuth, so there's nothing to redirect them to
-		const cameFromOauth = _.some(
+		const signedInWith = _.find(
 			OAUTH_PROVIDERS,
 			(provider) => provider.accountType === this.state.accountType,
 		);
-		const oauthProvider = cameFromOauth ? null : getOauthProviderForSettings(settings);
+		const oauthProvider = signedInWith ? null : getOauthProviderForSettings(settings);
 
 		const isAuthError = lowerError.includes("auth")
 			|| lowerError.includes("login")
@@ -828,6 +828,13 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 						className="manual"
 						onClick={() => openLink(oauthProvider.docLink)}
 					>Learn more</button>
+				</p>
+			);
+		} else if (isAuthError && signedInWith) {
+			message = (
+				<p>
+					Signing in with {signedInWith.name} worked, but {signedInWith.name} wouldn't
+					open the mailbox. The details below say why.
 				</p>
 			);
 		} else if (isAuthError) {
