@@ -42,43 +42,56 @@ interface messagePartsMap {
 
 type folderUids = Map<string, { [_: string]: messagePartsMap }>;
 
-// For a thread collect a mapping of folder -> []uid to fetch email content, will ideally re-use
-// folders where possible to minimize fetches required.
-function getFolderUidsForThread(thread: Thread): folderUids {
+interface messageLocation {
+  folderName: string;
+  uid: number;
+}
+
+// For a thread pick the folder/UID to fetch each message from, re-using folders where possible to
+// minimize fetches required. Messages removed from every folder since the thread was built have
+// no location.
+function getThreadMessageLocations(thread: Thread): Map<string, messageLocation> {
   const haveFolders: Set<string> = new Set();
+  const locations: Map<string, messageLocation> = new Map();
+
+  _.each(thread, message => {
+    // The app-generated welcome message renders as a component, there's no
+    // body content to fetch
+    if (message.welcome) {
+      return;
+    }
+
+    const folderNames = _.keys(message.folderUids);
+    if (folderNames.length === 0) {
+      return;
+    }
+
+    const folderName = _.find(folderNames, f => haveFolders.has(f)) || folderNames[0];
+    haveFolders.add(folderName);
+    locations.set(message.accountMessageId, {
+      folderName: folderName,
+      uid: message.folderUids[folderName],
+    });
+  });
+
+  return locations;
+}
+
+// For a thread collect a mapping of folder -> []uid to fetch email content
+function getFolderUidsForThread(thread: Thread, locations: Map<string, messageLocation>): folderUids {
   return _.reduce(
     thread,
     (memo: folderUids, message) => {
-      // The app-generated welcome message renders as a component, there's no
-      // body content to fetch
-      if (message.welcome) {
+      const location = locations.get(message.accountMessageId);
+      if (!location) {
         return memo;
       }
 
-      let uid: number = 0;
-      let folderName: string = "";
-
-      // First look for a UID in a folder we're already fetching from
-      if (haveFolders.size > 0) {
-        _.each(message.folderUids, (fUid: number, fName: string) => {
-          if (haveFolders.has(fName)) {
-            uid = fUid;
-            folderName = fName;
-          }
-        })
-      }
-
-      // Fallback to the first folder/UID
-      if (folderName === "") {
-        folderName = _.keys(message.folderUids)[0];
-        uid = message.folderUids[folderName];
-      }
-
-      if (!memo.has(folderName)) {
-        memo.set(folderName, {});
+      if (!memo.has(location.folderName)) {
+        memo.set(location.folderName, {});
       }
       const part = message.partHTML || message.partDisplay || new BodyPart();
-      memo.get(folderName)![uid] = {
+      memo.get(location.folderName)![location.uid] = {
         part: part,
         accountMessageId: message.accountMessageId,
       }
@@ -183,12 +196,20 @@ class ThreadStore extends BaseStore {
   loadThread(thread: Thread, knownBodies?: Map<string, string>) {
     const currentLoadId = ++this.loadId;
 
+    const locations = getThreadMessageLocations(thread);
+    // Thread snapshots (the open thread, column threads awaiting re-threading) keep messages
+    // that have since been removed from every folder, there's nothing left to fetch or show
+    const messages = _.filter(
+      thread,
+      message => message.welcome || locations.has(message.accountMessageId),
+    );
+
     // First split thread up into one per account
     const accountToThread = new Map<string, Thread>();
     // Track set of all senders we need to check
     const threadSenders = new Set<Address>;
 
-    thread.forEach(email => {
+    messages.forEach(email => {
       _.each(email.from, a => { threadSenders.add(a) })
 
       const accountID = email.accountID
@@ -225,7 +246,7 @@ class ThreadStore extends BaseStore {
 
     // For each account get folder/parts pairs and for each of those create the fetch requests
     accountToThread.forEach((aThread, accountID) => {
-      const folderUids = getFolderUidsForThread(aThread);
+      const folderUids = getFolderUidsForThread(aThread, locations);
       folderUids.forEach((messageParts, folderName) => {
         const parts: FetchPartsMap = {};
         const uidToAccountMessageId: { [_: string]: string } = {};
@@ -278,7 +299,7 @@ class ThreadStore extends BaseStore {
         return;
       }
 
-      const messagesWithBody: IThreadMessage[] = _.map(thread, (message) => {
+      const messagesWithBody: IThreadMessage[] = _.map(messages, (message) => {
         // Only show images if allowed from all senders
         const allShow: boolean[] = [];
         _.each(message.from, a => {
@@ -291,6 +312,9 @@ class ThreadStore extends BaseStore {
           trusted: part?.trusted || false,
           showImages: showImages,
           ...message,
+          // The email's own folderName/uid are from when it was first seen and go stale once it
+          // moves, use the live location the body was fetched from for any follow-up requests
+          ...locations.get(message.accountMessageId),
         }
       });
 
