@@ -11,6 +11,7 @@ sast:
     - build/security/scan.sh
     # Testing code, not compiled in
     - internal/tests/
+    - internal/emails/connection_test.go
 sca:
   include:
     - .
