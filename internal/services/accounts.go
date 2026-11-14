@@ -182,26 +182,81 @@ func (a *AccountsService) TestAccountSettings(
 		return settings, types.WrapAccountSettingsError(settings, err)
 	}
 
-	tmpAccount := emails.NewAccount(testSettings, a.caches, func() {
-		a.clearAuthError(settings.ID)
+	newTestAccount := func(imap, smtp types.ConnectionSettings, authenticated func()) *emails.Account {
+		accountSettings := testSettings
+		accountSettings.IMAPSettings, accountSettings.SMTPSettings = imap, smtp
+		return emails.NewAccount(accountSettings, a.caches, func() {
+			authenticated()
+			a.clearAuthError(settings.ID)
+		})
+	}
+
+	// SMTP waits for IMAP to log in, so a wrong password only fails once, then
+	// the two run alongside each other, each moving to other ports or security
+	// modes when its own don't work
+	imapLoggedIn := make(chan struct{})
+	imapDone := make(chan struct{})
+	signalIMAPLoggedIn := sync.OnceFunc(func() { close(imapLoggedIn) })
+	imapConf, smtpConf := testSettings.IMAPSettings, testSettings.SMTPSettings
+	var imapAccount, smtpAccount *emails.Account
+	var imapErr, smtpErr error
+	var connecting sync.WaitGroup
+	connecting.Go(func() {
+		defer close(imapDone)
+		imapConf, imapAccount, imapErr = emails.ConnectIMAPServer(ctx, testSettings.IMAPSettings,
+			func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (account *emails.Account, err error) {
+				account = newTestAccount(conf, testSettings.SMTPSettings, func() {
+					authenticated()
+					signalIMAPLoggedIn()
+				})
+				defer util.RecoverError(ctx, &err)
+				err = account.FetchAndUpdateSettings(ctx)
+				return account, err
+			})
 	})
-	// The test account opens real IMAP/SMTP sessions - close them regardless of
-	// outcome, it's thrown away either way
-	defer tmpAccount.CloseConnections(ctx)
+	connecting.Go(func() {
+		select {
+		case <-imapLoggedIn:
+		case <-imapDone:
+			if imapErr != nil {
+				return
+			}
+		}
+		smtpConf, smtpAccount, smtpErr = emails.ConnectSMTPServer(ctx, testSettings.SMTPSettings,
+			func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (account *emails.Account, err error) {
+				account = newTestAccount(testSettings.IMAPSettings, conf, authenticated)
+				defer util.RecoverError(ctx, &err)
+				err = account.TestSMTPConnection(ctx)
+				return account, err
+			})
+	})
+	connecting.Wait()
+	// The test accounts open real IMAP/SMTP sessions - close them regardless of
+	// outcome, they're thrown away either way
+	defer imapAccount.CloseConnections(ctx)
+	if smtpAccount != nil {
+		defer smtpAccount.CloseConnections(ctx)
+	}
 
-	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
+	// Hand back the servers used even if the test fails, a manual fix should
+	// start from them
+	emails.CopyServer(&settings.IMAPSettings, imapConf)
+	emails.CopyServer(&settings.SMTPSettings, smtpConf)
+
+	if imapErr != nil {
 		return settings, wrapConnectionTestError(settings, types.AccountSettingsStepIMAPLogin,
-			fmt.Errorf("failed to check IMAP connection: %w", err))
+			fmt.Errorf("failed to check IMAP connection: %w", imapErr))
 	}
 
-	if err := tmpAccount.TestSMTPConnection(ctx); err != nil {
+	if smtpErr != nil {
 		return settings, wrapConnectionTestError(settings, types.AccountSettingsStepSMTPLogin,
-			fmt.Errorf("failed to check SMTP connection: %w", err))
+			fmt.Errorf("failed to check SMTP connection: %w", smtpErr))
 	}
 
-	a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
+	a.log.Info().Any("folders", imapAccount.Folders).Msg("Configured account folders")
 
-	updatedSettings := tmpAccount.AccountSettings
+	updatedSettings := imapAccount.AccountSettings
+	emails.CopyServer(&updatedSettings.SMTPSettings, smtpConf)
 	updatedSettings.IMAPSettings.Password = settings.IMAPSettings.Password
 	updatedSettings.IMAPSettings.OAuthRefreshToken = settings.IMAPSettings.OAuthRefreshToken
 	updatedSettings.SMTPSettings.Password = settings.SMTPSettings.Password
@@ -216,7 +271,7 @@ func wrapConnectionTestError(settings types.AccountSettings, login types.Account
 	} else if errors.As(err, new(emails.LoginError)) {
 		step = login
 	}
-	return types.WrapAccountSettingsStepError(settings, step, err)
+	return types.WrapAccountSettingsStepError(settings, step, emails.WithCertificateHostHint(err))
 }
 
 func (a *AccountsService) fillConnectionSecretsIfEmpty(
