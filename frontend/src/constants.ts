@@ -33,6 +33,10 @@ export const THEME_NAMES = ["default", "default-dark", "default-light"];
 
 export const APPLE_APP_PASSWORD_LINK =
   "https://support.apple.com/en-gb/HT204397";
+export const YAHOO_APP_PASSWORD_LINK =
+  "https://help.yahoo.com/kb/SLN15241.html";
+export const AOL_APP_PASSWORD_LINK =
+  "https://help.aol.com/articles/create-and-manage-app-password";
 
 export const ACCOUNT_ACCENT_COLORS = [
   "#2196f3", "#4caf50", "#9c27b0", "#ff9800",

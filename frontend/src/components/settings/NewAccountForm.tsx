@@ -7,13 +7,15 @@ import { AccountSettings, Address } from "../../../bindings/github.com/oxygem/ka
 import ColorPicker from "../../components/ColorPicker.tsx";
 import {
 	ACCOUNT_ACCENT_COLORS,
+	AOL_APP_PASSWORD_LINK,
 	APPLE_APP_PASSWORD_LINK,
 	SETUP_GMAIL_DOC_LINK,
 	SETUP_IMAP_DOC_LINK,
 	SETUP_OUTLOOK_DOC_LINK,
+	YAHOO_APP_PASSWORD_LINK,
 } from "../../constants.ts";
 import settingsStore from "../../stores/settings.ts";
-import { getAccountEventProps, getNextAccentColor } from "../../util/accounts.ts";
+import { getAccountEventProps, getEmailDomain, getNextAccentColor } from "../../util/accounts.ts";
 import { trackEvent } from "../../util/analytics.ts";
 import { normalizeError } from "../../util/error.ts";
 import { openLink } from "../../window.ts";
@@ -47,6 +49,10 @@ const OAUTH_PROVIDERS = [
 
 type OauthProvider = (typeof OAUTH_PROVIDERS)[number];
 
+function isDomainOrSubdomain(host: string, domains: string[]): boolean {
+	return _.some(domains, (domain) => host === domain || host.endsWith(`.${domain}`));
+}
+
 // Matches on the autoconfigured hosts as well as the email domain, so accounts
 // on a custom domain (Google Workspace, Microsoft 365) are caught too.
 function getOauthProviderForSettings(settings: AccountSettings | null): OauthProvider | null {
@@ -57,14 +63,51 @@ function getOauthProviderForSettings(settings: AccountSettings | null): OauthPro
 	const hosts = _.filter([
 		settings.imapSettings?.host,
 		settings.smtpSettings?.host,
-		(settings.imapSettings?.username || "").split("@")[1],
+		getEmailDomain(settings.imapSettings?.username || ""),
 	]).map((host) => host.toLowerCase());
 
 	return _.find(OAUTH_PROVIDERS, (provider) =>
-		_.some(hosts, (host) =>
-			_.some(provider.domains, (domain) => host === domain || host.endsWith(`.${domain}`)),
-		),
+		_.some(hosts, (host) => isDomainOrSubdomain(host, provider.domains)),
 	) || null;
+}
+
+// Providers that only accept an app-specific password over IMAP/SMTP, not the
+// account's own - and whose errors rarely say so.
+const APP_PASSWORD_PROVIDERS = [
+	{
+		name: "iCloud",
+		link: APPLE_APP_PASSWORD_LINK,
+		matches: (host: string) => isDomainOrSubdomain(host, ["icloud.com", "me.com", "mac.com"]),
+	},
+	{
+		name: "Yahoo",
+		link: YAHOO_APP_PASSWORD_LINK,
+		// Yahoo has an address domain per country (yahoo.co.uk, yahoo.com.au, yahoo.fr...)
+		matches: (host: string) =>
+			/(^|\.)(yahoo\.(com|((co|com)\.)?[a-z]{2})|ymail\.com|rocketmail\.com)$/.test(host),
+	},
+	{
+		name: "AOL",
+		link: AOL_APP_PASSWORD_LINK,
+		matches: (host: string) => isDomainOrSubdomain(host, ["aol.com", "aim.com", "verizon.net"]),
+	},
+];
+
+type AppPasswordProvider = (typeof APP_PASSWORD_PROVIDERS)[number];
+
+function getAppPasswordProvider(hosts: (string | undefined)[]): AppPasswordProvider | null {
+	const lowerHosts = _.map(_.compact(hosts), (host) => host.toLowerCase());
+	return _.find(APP_PASSWORD_PROVIDERS, (provider) => _.some(lowerHosts, provider.matches)) || null;
+}
+
+function renderAppPasswordNote(provider: AppPasswordProvider) {
+	return (
+		<>
+			{provider.name} needs an{" "}
+			<a onClick={() => openLink(provider.link)}>app-specific password</a>
+			{" "}here, your normal {provider.name} password won't work.
+		</>
+	);
 }
 
 interface GenericAccountFormProps {
@@ -278,6 +321,15 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 		</p>;
 	}
 
+	renderAppPasswordHint(): React.ReactNode | null {
+		// Provider specific forms explain this in their own words
+		if (this.getAutoconfDomain()) {
+			return null;
+		}
+		const provider = getAppPasswordProvider([getEmailDomain(this.state.newAccountUsername)]);
+		return provider && <p>{renderAppPasswordNote(provider)}</p>;
+	}
+
 	renderNewAccountForm() {
 		return (
 			<div className="new-account">
@@ -303,6 +355,8 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 						/>
 					</div>
 				</div>
+
+				{this.renderAppPasswordHint()}
 
 				<div className="account-control-buttons">
 					<button
@@ -806,6 +860,10 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			(provider) => provider.accountType === this.state.accountType,
 		);
 		const oauthProvider = signedInWith ? null : getOauthProviderForSettings(settings);
+		const appPasswordProvider = getAppPasswordProvider([
+			settings?.imapSettings?.host,
+			getEmailDomain(settings?.imapSettings?.username || ""),
+		]);
 
 		const isAuthError = lowerError.includes("auth")
 			|| lowerError.includes("login")
@@ -837,6 +895,8 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 					open the mailbox. The details below say why.
 				</p>
 			);
+		} else if (isAuthError && appPasswordProvider) {
+			message = <p>{renderAppPasswordNote(appPasswordProvider)}</p>;
 		} else if (isAuthError) {
 			message = (
 				<p>
