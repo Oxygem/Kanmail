@@ -215,7 +215,12 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
           EmailsService.GetAccountFolderEmailsContentParts(this.props.accountID, this.props.folderName, {
             [this.props.uid]: matchingPart,
           }).then(r => {
-            img.setAttribute("src", `data:${matchingPart.type};base64,${r[this.props.uid]!.data}`);
+            const data = r[this.props.uid]?.data;
+            if (!data) {
+              console.warn(`No data for inline image ${contentID} in ${this.props.folderName}/${this.props.uid}`);
+              return;
+            }
+            img.setAttribute("src", `data:${matchingPart.type};base64,${data}`);
             console.log(`data:${matchingPart.type};base64,BLAH`, img)
           })
         }
