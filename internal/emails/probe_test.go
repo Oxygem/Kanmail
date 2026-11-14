@@ -465,7 +465,7 @@ func TestConnectDoesNotProbeSettingsThatLogIn(t *testing.T) {
 
 	conf := imapSettings("mail.example.com", 993, true, false)
 	var made []*testConnection
-	connected, connection, err := connectServer(t.Context(), protocolIMAP, conf, connectTo(conf, false, &made))
+	connected, connection, err := connectServer(t.Context(), protocolIMAP, conf, true, connectTo(conf, false, &made))
 	require.NoError(t, err)
 	assert.Equal(t, conf, connected)
 	assert.Equal(t, conf, connection.conf)
@@ -481,7 +481,7 @@ func TestConnectSwitchesToSettingsThatWork(t *testing.T) {
 	working := imapSettings("mail.example.com", 993, true, false)
 	var made []*testConnection
 	connected, connection, err := connectServer(t.Context(), protocolIMAP,
-		imapSettings("mail.example.com", 993, false, true), connectTo(working, false, &made))
+		imapSettings("mail.example.com", 993, false, true), true, connectTo(working, false, &made))
 	require.NoError(t, err)
 	assert.Equal(t, working, connected)
 	assert.Equal(t, working, connection.conf)
@@ -498,7 +498,7 @@ func TestConnectGivesUpOnConnectionThatHangs(t *testing.T) {
 	working := imapSettings("mail.example.com", 993, true, false)
 	var made []*testConnection
 	connected, _, err := connectServer(t.Context(), protocolIMAP,
-		imapSettings("mail.example.com", 993, false, true), connectTo(working, true, &made))
+		imapSettings("mail.example.com", 993, false, true), true, connectTo(working, true, &made))
 	require.NoError(t, err)
 	assert.Equal(t, working, connected)
 	assert.Eventually(t, made[0].closed.Load, time.Second, 10*time.Millisecond)
@@ -512,7 +512,7 @@ func TestConnectKeepsSettingsThatLoggedIn(t *testing.T) {
 
 	conf := imapSettings("mail.example.com", 993, false, true)
 	listErr := errors.New("failed listing folders")
-	connected, _, err := connectServer(t.Context(), protocolIMAP, conf,
+	connected, _, err := connectServer(t.Context(), protocolIMAP, conf, true,
 		func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (*testConnection, error) {
 			authenticated()
 			time.Sleep(50 * time.Millisecond)
@@ -522,13 +522,28 @@ func TestConnectKeepsSettingsThatLoggedIn(t *testing.T) {
 	assert.Equal(t, conf, connected)
 }
 
+func TestConnectWithoutResolvingOnlyConnects(t *testing.T) {
+	useTestNetwork(t, newTestCA(t), map[string]string{})
+	probes := countProbes(t)
+	useProbeStagger(t, 0)
+
+	conf := imapSettings("mail.example.com", 993, true, false)
+	var made []*testConnection
+	connected, _, err := connectServer(t.Context(), protocolIMAP, conf, false,
+		connectTo(imapSettings("mail.example.com", 143, false, true), false, &made))
+	require.Error(t, err)
+	assert.Equal(t, conf, connected)
+	assert.Len(t, made, 1)
+	assert.Zero(t, probes.Load())
+}
+
 func TestConnectReportsLoginFailureWithoutProbing(t *testing.T) {
 	useTestNetwork(t, newTestCA(t), map[string]string{})
 	probes := countProbes(t)
 
 	conf := imapSettings("mail.example.com", 993, true, false)
 	loginErr := LoginError{errors.New("bad password")}
-	connected, _, err := connectServer(t.Context(), protocolIMAP, conf,
+	connected, _, err := connectServer(t.Context(), protocolIMAP, conf, true,
 		func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (*testConnection, error) {
 			return &testConnection{conf: conf}, loginErr
 		})
