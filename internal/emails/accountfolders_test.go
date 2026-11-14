@@ -3,6 +3,7 @@ package emails
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"testing"
 
 	"github.com/emersion/go-imap/v2"
@@ -581,4 +582,95 @@ func TestMailboxShadowedByMappingIsNotListed(t *testing.T) {
 		resolved := account.resolveFolderName(name)
 		assert.True(t, fakeFolderExists(key, string(resolved)), "%s resolves to %s which should exist", name, resolved)
 	}
+}
+
+// refusingListClient fails LISTs under one reference, as UW-IMAP does for its
+// "/home/" other users namespace ("NO LIST failed: wildcards not permitted in
+// username").
+type refusingListClient struct {
+	imapinterface.IMAPClient
+	refuse string
+	err    error
+}
+
+type failedListCommand struct{ err error }
+
+func (c failedListCommand) Collect() ([]*imap.ListData, error) { return nil, c.err }
+
+func (c *refusingListClient) List(reference, pattern string, options *imap.ListOptions) imapinterface.ListCommand {
+	if reference != c.refuse {
+		return c.IMAPClient.List(reference, pattern, options)
+	}
+	if c.err != nil {
+		return failedListCommand{c.err}
+	}
+	return failedListCommand{&imap.Error{
+		Type: imap.StatusResponseTypeNo,
+		Text: "LIST failed: wildcards not permitted in username",
+	}}
+}
+
+func TestListMailboxesSkipsUnlistableOtherNamespace(t *testing.T) {
+	imapinterface.CreateFakeFolder(t.Name(), "Projects")
+	conn := &refusingListClient{
+		IMAPClient: imapinterface.NewFakeIMAPClient(t.Name()),
+		refuse:     "/home/",
+	}
+
+	mailboxes, err := listMailboxesRecursive(t.Context(), conn, types.Namespaces{
+		Personal: []types.Namespace{{Prefix: "", Delim: "/"}},
+		Other:    []types.Namespace{{Prefix: "/home/", Delim: "/"}},
+	})
+	require.NoError(t, err)
+
+	names := make([]string, 0, len(mailboxes))
+	for _, mailbox := range mailboxes {
+		names = append(names, mailbox.Mailbox)
+	}
+	assert.Contains(t, names, "Projects")
+}
+
+func TestListMailboxesFailsOnUnlistablePersonalNamespace(t *testing.T) {
+	conn := &refusingListClient{
+		IMAPClient: imapinterface.NewFakeIMAPClient(t.Name()),
+		refuse:     "INBOX.",
+	}
+
+	_, err := listMailboxesRecursive(t.Context(), conn, types.Namespaces{
+		Personal: []types.Namespace{{Prefix: "INBOX.", Delim: "."}},
+	})
+	assert.Error(t, err)
+}
+
+func TestListMailboxesFailsOnBrokenConnectionListingOtherNamespace(t *testing.T) {
+	conn := &refusingListClient{
+		IMAPClient: imapinterface.NewFakeIMAPClient(t.Name()),
+		refuse:     "/home/",
+		err:        io.ErrUnexpectedEOF,
+	}
+
+	_, err := listMailboxesRecursive(t.Context(), conn, types.Namespaces{
+		Personal: []types.Namespace{{Prefix: "", Delim: "/"}},
+		Other:    []types.Namespace{{Prefix: "/home/", Delim: "/"}},
+	})
+	assert.ErrorIs(t, err, io.ErrUnexpectedEOF)
+}
+
+func TestListMailboxesFailsOnTemporaryRefusalListingOtherNamespace(t *testing.T) {
+	unavailable := &imap.Error{
+		Type: imap.StatusResponseTypeNo,
+		Code: imap.ResponseCodeUnavailable,
+		Text: "try again later",
+	}
+	conn := &refusingListClient{
+		IMAPClient: imapinterface.NewFakeIMAPClient(t.Name()),
+		refuse:     "/home/",
+		err:        unavailable,
+	}
+
+	_, err := listMailboxesRecursive(t.Context(), conn, types.Namespaces{
+		Personal: []types.Namespace{{Prefix: "", Delim: "/"}},
+		Other:    []types.Namespace{{Prefix: "/home/", Delim: "/"}},
+	})
+	assert.ErrorIs(t, err, unavailable)
 }

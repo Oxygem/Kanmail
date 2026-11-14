@@ -2,6 +2,7 @@ package emails
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/oxygem/kanmail/internal/emails/imapinterface"
 	"github.com/oxygem/kanmail/internal/types"
+	"github.com/oxygem/kanmail/internal/util"
 )
 
 func listMailboxesRecursive(
@@ -82,11 +84,17 @@ func listMailboxesRecursive(
 		}
 	}
 
+	// Other users' and shared mailboxes are extras - servers advertise these
+	// namespaces and then refuse to list them (UW-IMAP's "/home/" rejects any
+	// wildcard), which must not stop the account's own folders from loading
 	for _, space := range slices.Concat(ns.Other, ns.Shared) {
 		if space.Prefix == "" {
 			continue
 		}
-		if err := listChildren(space.Root(), space.Delim); err != nil {
+		err := listChildren(space.Root(), space.Delim)
+		if errors.As(err, new(*imap.Error)) && !util.IsRetryableIMAPError(err) {
+			zerolog.Ctx(ctx).Warn().Err(err).Str("namespace", space.Prefix).Msg("Server refused to list namespace, skipping")
+		} else if err != nil {
 			return nil, err
 		}
 	}
