@@ -285,17 +285,19 @@ type ServerConnect func(
 func ConnectIMAPServer(
 	ctx context.Context,
 	conf types.ConnectionSettings,
+	resolve bool,
 	connect ServerConnect,
 ) (types.ConnectionSettings, *Account, error) {
-	return connectServer(ctx, protocolIMAP, conf, connect)
+	return connectServer(ctx, protocolIMAP, conf, resolve, connect)
 }
 
 func ConnectSMTPServer(
 	ctx context.Context,
 	conf types.ConnectionSettings,
+	resolve bool,
 	connect ServerConnect,
 ) (types.ConnectionSettings, *Account, error) {
-	return connectServer(ctx, protocolSMTP, conf, connect)
+	return connectServer(ctx, protocolSMTP, conf, resolve, connect)
 }
 
 // isLoginFailure means the server was reached, so its settings work
@@ -316,8 +318,14 @@ func connectServer[C serverConnection](
 	ctx context.Context,
 	proto serverProtocol,
 	conf types.ConnectionSettings,
+	resolve bool,
 	connect func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (C, error),
 ) (types.ConnectionSettings, C, error) {
+	if !resolve {
+		connection, err := connect(ctx, conf, func() {})
+		return conf, connection, err
+	}
+
 	type attempt struct {
 		connection C
 		err        error

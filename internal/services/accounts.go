@@ -171,6 +171,14 @@ func (a *AccountsService) TestAccountSettings(
 	ctx = a.log.WithContext(ctx)
 	defer util.LogAndPanic(ctx)
 
+	return a.testAccountSettings(ctx, settings, true)
+}
+
+func (a *AccountsService) testAccountSettings(
+	ctx context.Context,
+	settings types.AccountSettings,
+	resolveServers bool,
+) (types.AccountSettings, error) {
 	// The frontend never holds existing secrets, so an unchanged password/token arrives
 	// empty - fill from the keyring for the test, restoring the as-sent values in the
 	// returned settings so secrets stay out of the frontend
@@ -203,7 +211,7 @@ func (a *AccountsService) TestAccountSettings(
 	var connecting sync.WaitGroup
 	connecting.Go(func() {
 		defer close(imapDone)
-		imapConf, imapAccount, imapErr = emails.ConnectIMAPServer(ctx, testSettings.IMAPSettings,
+		imapConf, imapAccount, imapErr = emails.ConnectIMAPServer(ctx, testSettings.IMAPSettings, resolveServers,
 			func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (account *emails.Account, err error) {
 				account = newTestAccount(conf, testSettings.SMTPSettings, func() {
 					authenticated()
@@ -222,7 +230,7 @@ func (a *AccountsService) TestAccountSettings(
 				return
 			}
 		}
-		smtpConf, smtpAccount, smtpErr = emails.ConnectSMTPServer(ctx, testSettings.SMTPSettings,
+		smtpConf, smtpAccount, smtpErr = emails.ConnectSMTPServer(ctx, testSettings.SMTPSettings, resolveServers,
 			func(ctx context.Context, conf types.ConnectionSettings, authenticated func()) (account *emails.Account, err error) {
 				account = newTestAccount(testSettings.IMAPSettings, conf, authenticated)
 				defer util.RecoverError(ctx, &err)
@@ -310,7 +318,7 @@ func (a *AccountsService) AutoconfigureNewAccount(
 		options.Domain = bits[len(bits)-1]
 	}
 
-	settings, err := emails.GetAutoconfigSettingsForDomain(ctx, username, options.Domain)
+	settings, probed, err := emails.GetAutoconfigSettingsForDomain(ctx, username, options.Domain)
 	if err != nil {
 		return settings, types.WrapAccountSettingsError(settings, err)
 	}
@@ -333,7 +341,7 @@ func (a *AccountsService) AutoconfigureNewAccount(
 		settings.SMTPSettings.OAuthRefreshToken = options.OAuthRefreshToken
 	}
 
-	return a.TestAccountSettings(ctx, settings)
+	return a.testAccountSettings(ctx, settings, !probed)
 }
 
 type OAuthRequest struct {
