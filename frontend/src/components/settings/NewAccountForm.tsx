@@ -113,7 +113,7 @@ function renderAppPasswordNote(provider: AppPasswordProvider) {
 interface GenericAccountFormProps {
 	accountType: string;
 	closeForm: () => void;
-	handleAddAccountError: (s: AccountSettings, e: string) => void;
+	handleAddAccountError: (s: AccountSettings, e: string, failedStep?: string) => void;
 	completeAddNewAccount: (s: AccountSettings) => void;
 	handleClickManualAddAccount: () => void;
 }
@@ -251,7 +251,7 @@ class GenericAccountForm extends React.Component<GenericAccountFormProps, Generi
 				connection.password = connection.password || this.state.newAccountPassword;
 			});
 
-			this.props.handleAddAccountError(settings, error.message);
+			this.props.handleAddAccountError(settings, error.message, error.cause?.failedStep);
 		}
 		this.setState({ isLoadingNewAccount: true });
 		trackEvent("AddAccountAutoconfigAttempt", this.getEventProps());
@@ -596,7 +596,7 @@ class OauthAccountFormMixin extends GenericAccountForm {
 					settings = AccountSettings.createFrom(e.cause.settings);
 				}
 
-				this.props.handleAddAccountError(settings, e.message);
+				this.props.handleAddAccountError(settings, e.message, e.cause?.failedStep);
 			})
 		}).catch((e) => {
 			// Keeping the interval running would repeat whatever just failed
@@ -753,6 +753,7 @@ const getInitialState = (): NewAccountFormState => ({
 	manuallyConfiguringAccount: false,
 	showErrorRecovery: false,
 	autoconfigError: "",
+	autoconfigFailedStep: "",
 	newAccountSettings: null,
 });
 
@@ -772,6 +773,7 @@ interface NewAccountFormState {
 	manuallyConfiguringAccount: boolean;
 	showErrorRecovery: boolean;
 	autoconfigError: string;
+	autoconfigFailedStep: string;
 
 	newAccountSettings: AccountSettings | null;
 }
@@ -798,12 +800,13 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 		});
 	}
 
-	handleAddAccountError = (settings: AccountSettings, error: string) => {
+	handleAddAccountError = (settings: AccountSettings, error: string, failedStep?: string) => {
 		this.setState({
 			isLoadingNewAccount: false,
 			showErrorRecovery: true,
 			newAccountSettings: settings,
 			autoconfigError: error,
+			autoconfigFailedStep: failedStep || "",
 		});
 		trackEvent("AddAccountError", this.getEventProps(settings, error));
 	};
@@ -865,10 +868,10 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 			getEmailDomain(settings?.imapSettings?.username || ""),
 		]);
 
-		const isAuthError = lowerError.includes("auth")
-			|| lowerError.includes("login")
-			|| lowerError.includes("password")
-			|| lowerError.includes("credentials");
+		const failedStep = this.state.autoconfigFailedStep;
+		const isTokenError = failedStep === "accessToken";
+		const isIMAPError = failedStep === "imapLogin";
+		const isSMTPError = failedStep === "smtpLogin";
 		const isConnectionError = lowerError.includes("connect")
 			|| lowerError.includes("timeout")
 			|| lowerError.includes("network")
@@ -888,16 +891,37 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 					>Learn more</button>
 				</p>
 			);
-		} else if (isAuthError && signedInWith) {
+		} else if (signedInWith && isTokenError) {
+			message = (
+				<p>
+					Signing in with {signedInWith.name} worked, but Kanmail couldn't then get
+					access to the account from {signedInWith.name}. The details below say why.
+				</p>
+			);
+		} else if (signedInWith && isSMTPError) {
+			message = (
+				<p>
+					Signing in with {signedInWith.name} worked and the mailbox opened,
+					but {signedInWith.name} won't let Kanmail send email. The details below say why.
+				</p>
+			);
+		} else if (signedInWith && isIMAPError) {
 			message = (
 				<p>
 					Signing in with {signedInWith.name} worked, but {signedInWith.name} wouldn't
 					open the mailbox. The details below say why.
 				</p>
 			);
-		} else if (isAuthError && appPasswordProvider) {
+		} else if (isSMTPError) {
+			message = (
+				<p>
+					Your password opened the mailbox, but the outgoing (SMTP) server
+					wouldn't accept it for sending email. The details below say why.
+				</p>
+			);
+		} else if (isIMAPError && appPasswordProvider) {
 			message = <p>{renderAppPasswordNote(appPasswordProvider)}</p>;
-		} else if (isAuthError) {
+		} else if (isIMAPError) {
 			message = (
 				<p>
 					The email or password appears to be incorrect.
@@ -960,6 +984,7 @@ export default class NewAccountForm extends React.Component<NewAccountFormProps,
 										showErrorRecovery: false,
 										newAccountSettings: null,
 										autoconfigError: "",
+										autoconfigFailedStep: "",
 									});
 								}}
 							>

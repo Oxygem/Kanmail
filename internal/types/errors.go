@@ -77,17 +77,33 @@ func WrapFolderError(accountID AccountID, folderName FolderName, err error) erro
 	}
 }
 
+// AccountSettingsStep is the step of logging in that testing settings failed
+// at, for the frontend to explain
+type AccountSettingsStep string
+
+const (
+	AccountSettingsStepAccessToken AccountSettingsStep = "accessToken"
+	AccountSettingsStepIMAPLogin   AccountSettingsStep = "imapLogin"
+	AccountSettingsStepSMTPLogin   AccountSettingsStep = "smtpLogin"
+)
+
 type AccountSettingsError struct {
 	InternalError `json:",inline"`
-	Settings      AccountSettings `json:"settings"`
+	Settings      AccountSettings     `json:"settings"`
+	FailedStep    AccountSettingsStep `json:"failedStep,omitempty"`
 }
 
 func WrapAccountSettingsError(settings AccountSettings, err error) error {
+	return WrapAccountSettingsStepError(settings, "", err)
+}
+
+func WrapAccountSettingsStepError(settings AccountSettings, step AccountSettingsStep, err error) error {
 	if err == nil {
 		return nil
 	}
 	return AccountSettingsError{
 		InternalError: makeInternalError(err),
 		Settings:      settings,
+		FailedStep:    step,
 	}
 }

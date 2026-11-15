@@ -190,11 +190,13 @@ func (a *AccountsService) TestAccountSettings(
 	defer tmpAccount.CloseConnections(ctx)
 
 	if err := tmpAccount.FetchAndUpdateSettings(ctx); err != nil {
-		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check IMAP connection: %w", err))
+		return settings, wrapConnectionTestError(settings, types.AccountSettingsStepIMAPLogin,
+			fmt.Errorf("failed to check IMAP connection: %w", err))
 	}
 
 	if err := tmpAccount.TestSMTPConnection(ctx); err != nil {
-		return settings, types.WrapAccountSettingsError(settings, fmt.Errorf("failed to check SMTP connection: %w", err))
+		return settings, wrapConnectionTestError(settings, types.AccountSettingsStepSMTPLogin,
+			fmt.Errorf("failed to check SMTP connection: %w", err))
 	}
 
 	a.log.Info().Any("folders", tmpAccount.Folders).Msg("Configured account folders")
@@ -205,6 +207,16 @@ func (a *AccountsService) TestAccountSettings(
 	updatedSettings.SMTPSettings.Password = settings.SMTPSettings.Password
 	updatedSettings.SMTPSettings.OAuthRefreshToken = settings.SMTPSettings.OAuthRefreshToken
 	return updatedSettings, nil
+}
+
+func wrapConnectionTestError(settings types.AccountSettings, login types.AccountSettingsStep, err error) error {
+	var step types.AccountSettingsStep
+	if errors.As(err, new(emails.AccessTokenError)) {
+		step = types.AccountSettingsStepAccessToken
+	} else if errors.As(err, new(emails.LoginError)) {
+		step = login
+	}
+	return types.WrapAccountSettingsStepError(settings, step, err)
 }
 
 func (a *AccountsService) fillConnectionSecretsIfEmpty(

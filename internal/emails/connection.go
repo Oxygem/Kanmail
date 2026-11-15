@@ -32,6 +32,27 @@ var errInsecurePasswordAuth = errors.New(
 	"refusing to send credentials over an unencrypted connection, enable SSL/TLS or STARTTLS",
 )
 
+// AccessTokenError is failing to get an OAuth access token, before the server
+// is involved
+type AccessTokenError struct{ Err error }
+
+func (e AccessTokenError) Error() string { return "failed to get access token: " + e.Err.Error() }
+func (e AccessTokenError) Unwrap() error { return e.Err }
+
+type LoginError struct{ Err error }
+
+func (e LoginError) Error() string { return e.Err.Error() }
+func (e LoginError) Unwrap() error { return e.Err }
+
+// newLoginError leaves out losing the connection mid-login, which says nothing
+// about the credentials
+func newLoginError(err error) error {
+	if util.IsRetryableNetworkError(err) {
+		return err
+	}
+	return LoginError{err}
+}
+
 // LegacyTLSError is returned when a server rejects our minimum TLS version (1.2)
 // and the connection hasn't opted into legacy TLS. Version is the version the
 // server negotiated when retried with legacy TLS allowed, zero if that failed.

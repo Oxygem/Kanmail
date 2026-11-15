@@ -172,3 +172,8 @@ func TestLegacyTLSErrorWithoutVersion(t *testing.T) {
 		(&LegacyTLSError{}).Error(),
 	)
 }
+
+func TestLoginErrorLeavesOutLostConnections(t *testing.T) {
+	assert.Equal(t, io.ErrUnexpectedEOF, newLoginError(io.ErrUnexpectedEOF))
+	assert.ErrorAs(t, newLoginError(errors.New("bad password")), new(LoginError))
+}

@@ -140,7 +140,7 @@ func (c *SMTPConnectionWrapper) connect(ctx context.Context) (smtpinterface.SMTP
 			auth := sasl.NewPlainClient("", c.conf.Username, c.conf.Password)
 			if err := client.Auth(auth); err != nil {
 				client.Close()
-				return nil, fmt.Errorf("failed smtp password login: %w", err)
+				return nil, newLoginError(fmt.Errorf("failed smtp password login: %w", err))
 			}
 		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
@@ -191,13 +191,13 @@ func dialSMTPStartTLS(addr string, tlsConfig *tls.Config) (*smtp.Client, error) 
 func (c *SMTPConnectionWrapper) doOAuthLogin(ctx context.Context, client *smtp.Client) error {
 	accessToken, err := oauth.GetOAuthAccessToken(ctx, c.conf.OAuthProvider, c.conf.OAuthRefreshToken)
 	if err != nil {
-		return fmt.Errorf("failed to get access token: %w", err)
+		return AccessTokenError{err}
 	}
 
 	saslClient := oauth.MakeSASLClient(c.conf, accessToken)
 	if err := client.Auth(saslClient); err != nil {
 		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
-		return oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err)
+		return newLoginError(oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err))
 	}
 
 	return nil

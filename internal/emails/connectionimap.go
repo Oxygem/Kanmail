@@ -317,7 +317,9 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 		if c.conf.Password != "" {
 			if err := client.Login(c.conf.Username, c.conf.Password).Wait(); err != nil {
 				client.Close()
-				return nil, fmt.Errorf("failed imap password login: %w %s@%s:%d", err, c.conf.Username, c.conf.Host, c.conf.Port)
+				return nil, newLoginError(fmt.Errorf(
+					"failed imap password login: %w %s@%s:%d", err, c.conf.Username, c.conf.Host, c.conf.Port,
+				))
 			}
 		} else if c.conf.OAuthProvider != "" && c.conf.OAuthRefreshToken != "" {
 			// Attempt OAuth logins twice, allowing for any expired token to be updated
@@ -354,13 +356,13 @@ func (c *IMAPConnectionWrapper) connect(ctx context.Context) (imapinterface.IMAP
 func (c *IMAPConnectionWrapper) doOAuthLogin(ctx context.Context, client *imapclient.Client) error {
 	accessToken, err := oauth.GetOAuthAccessToken(ctx, c.conf.OAuthProvider, c.conf.OAuthRefreshToken)
 	if err != nil {
-		return fmt.Errorf("failed to get access token: %w", err)
+		return AccessTokenError{err}
 	}
 
 	saslClient := oauth.MakeSASLClient(c.conf, accessToken)
 	if err := client.Authenticate(saslClient); err != nil {
 		oauth.ClearOAuthAccessToken(c.conf.OAuthRefreshToken, accessToken)
-		return oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err)
+		return newLoginError(oauth.DiagnoseAuthError(ctx, c.conf, accessToken, saslClient, err))
 	}
 
 	return nil
