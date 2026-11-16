@@ -25,6 +25,13 @@ var autoconfHTTPClient = &http.Client{
 }
 
 func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string) (types.AccountSettings, error) {
+	settings, err := autoconfigureDomain(ctx, username, domain)
+	// After autoconfig so the servers it found can identify the provider too
+	applyProviderDefaults(&settings, domain)
+	return settings, err
+}
+
+func autoconfigureDomain(ctx context.Context, username, domain string) (types.AccountSettings, error) {
 	// Make some sensible defaults, the client will fallback to these if we fail to autoconf
 	defaultSettings := types.AccountSettings{
 		Name: types.AccountName(username),
@@ -40,11 +47,6 @@ func GetAutoconfigSettingsForDomain(ctx context.Context, username, domain string
 			Port:     465,
 			SSL:      true,
 		},
-	}
-
-	// Apply any domain specific defaults
-	if fn, ok := domainDefaultSettingHandlers[domain]; ok {
-		fn(&defaultSettings)
 	}
 
 	// First try the domain directly
