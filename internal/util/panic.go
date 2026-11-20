@@ -44,6 +44,16 @@ func LogAndPanic(ctx context.Context) {
 	}
 }
 
+// RecoverError reports a panic and returns it as the error instead, for
+// goroutines whose panics nothing else would catch.
+func RecoverError(ctx context.Context, err *error) {
+	if recovered := recover(); recovered != nil {
+		ReportPanic(ctx, recovered)
+		debug.PrintStack()
+		*err = fmt.Errorf("panic: %v", recovered)
+	}
+}
+
 // ReportPanic logs and reports an already-recovered panic without re-raising it,
 // for long-lived goroutines that recover and carry on rather than crash the app.
 func ReportPanic(ctx context.Context, err any) {

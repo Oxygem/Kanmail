@@ -364,6 +364,7 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     }
 
     this.setState({ isSaving: true });
+    const testedConnections = _.cloneDeep([accountSettings.imapSettings, accountSettings.smtpSettings]);
 
     AccountsService.TestAccountSettings(accountSettings).then(updatedSettings => {
       this.props.updateItem(this.props.itemIndex, updatedSettings);
@@ -377,10 +378,16 @@ export default class AccountForm extends React.Component<IAccountFormProps, IAcc
     }).catch(error => {
       // Never hand the settings back to the parent here - they're untested and
       // saving/adding an account whose connection just failed loses the user's
-      // previous settings. The form keeps what was entered so it can be fixed.
+      // previous settings. The form keeps what was entered so it can be fixed,
+      // moved onto any servers testing found that do answer unless it was
+      // edited during the test.
+      const { message, cause } = normalizeError(error);
+      const unedited = _.isEqual(testedConnections, [this.state.imapSettings, this.state.smtpSettings]);
+      const tested = unedited && cause?.settings && AccountSettings.createFrom(cause.settings);
       this.setState({
-        error: normalizeError(error).message,
+        error: message,
         isSaving: false,
+        ...(tested && { imapSettings: tested.imapSettings, smtpSettings: tested.smtpSettings }),
       });
       requestStore.addError("Failed to test account settings", error, { silent: true });
     })
