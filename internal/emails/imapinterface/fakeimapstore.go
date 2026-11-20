@@ -73,6 +73,7 @@ type fakeMessage struct {
 	date        time.Time
 	content     string
 	unsubscribe bool
+	attachments []fakeAttachment
 	// The thread so far, oldest first, as a real References header would carry
 	// it - the envelope's InReplyTo alone only ever names the direct parent
 	references []string
@@ -155,8 +156,8 @@ var (
 func init() {
 	switch constants.ENV_DEBUG_FAKE_IMAP {
 	case "":
-	case "gallery":
-		loadFakeData("gallery", &fakeGalleryData)
+	case "gallery", "threads":
+		loadFakeData(constants.ENV_DEBUG_FAKE_IMAP, &fakeGalleryData)
 	default:
 		// Load the thread pool once up front; per-account stores draw from it.
 		fakeThreadPool = buildFakeThreadPool()
@@ -352,11 +353,17 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 			}
 
 			// Create envelope with InReplyTo for reply messages
+			var cc []imap.Address
+			for _, value := range email.Cc {
+				cc = append(cc, parseFakeAddress(value))
+			}
+
 			envelope := &imap.Envelope{
 				Subject:   email.Subject,
 				MessageID: messageID,
 				From:      from,
 				To:        to,
+				Cc:        cc,
 				Date:      msgDate,
 			}
 
@@ -373,6 +380,7 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 				envelope:    envelope,
 				content:     email.Content,
 				unsubscribe: email.Unsubscribe,
+				attachments: email.Attachments,
 				references:  slices.Clone(threadMessageIDs[:emailIdx]),
 			}
 
@@ -384,7 +392,11 @@ func (s *fakeIMAPStore) createAllFoldersFromThreads() {
 				msg.flags = append(msg.flags, imap.FlagSeen) // Sent items are always seen
 			default:
 				// Mark some messages as read (older ones more likely)
-				if emailDaysAgo > 7 || rand.Intn(3) == 0 {
+				if email.Unread != nil {
+					if !*email.Unread {
+						msg.flags = append(msg.flags, imap.FlagSeen)
+					}
+				} else if emailDaysAgo > 7 || rand.Intn(3) == 0 {
 					msg.flags = append(msg.flags, imap.FlagSeen)
 				}
 

@@ -1,0 +1,238 @@
+{
+  "owner": "Sam Carter",
+  "accounts": {
+    "hello@oxygem.com": [
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "78h",
+          "unread": false,
+          "from": "Gloria Swift <gloriaswift@sqlite.org>",
+          "cc": [
+            "Priya Nair <priya@sqlite.org>",
+            "Tom Becker <tom@sqlite.org>"
+          ],
+          "subject": "Homepage feedback, round two",
+          "content": "Hi Sam,\n\nThanks for v2, it's a big step up. Three things from the team:\n\n1. Can the hero image feel warmer?\n2. The pricing table is cramped on mobile.\n3. Could we try the testimonials higher up the page?\n\nOtherwise we love it."
+        },
+        {
+          "folder": "sent",
+          "ago": "70h",
+          "cc": [
+            "Priya Nair <priya@sqlite.org>",
+            "Tom Becker <tom@sqlite.org>"
+          ],
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Thanks Gloria, glad it's landing better. All three are doable, I'll send an updated version over this week.\n\nThe final copy is in the PDF as well.\n\nSam\n\nOn Mon, Gloria Swift wrote:\n\n> Thanks for v2, it's a big step up. Three things from the team.\n> Otherwise we love it.",
+          "attachments": [
+            {
+              "filename": "homepage-v3.pdf",
+              "type": "application/pdf"
+            }
+          ]
+        },
+        {
+          "folder": "Needs Reply",
+          "ago": "4h",
+          "unread": true,
+          "from": "Priya Nair <priya@sqlite.org>",
+          "cc": [
+            "Gloria Swift <gloriaswift@sqlite.org>",
+            "Tom Becker <tom@sqlite.org>"
+          ],
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Hi Sam,\n\nThanks for the quick turnaround. I went through v3 on desktop and on my phone. Most of it is there, with a few things to fix before we sign off.\n\nThe warmer photo works. On narrow screens the headline wraps to four lines and pushes the button below the fold (first screenshot).\n\nThe \"Most popular\" badge overlaps the plan name at 375px (second screenshot). Could the annual toggle default to on?\n\nTwo small edits are marked up in the attached PDF. Nothing structural.\n\nIf these make it in, I'm happy for it to go live with the launch email.\n\nPriya",
+          "attachments": [
+            {
+              "filename": "hero-mobile.png",
+              "type": "image/png"
+            },
+            {
+              "filename": "pricing-badge.png",
+              "type": "image/png"
+            },
+            {
+              "filename": "homepage-v3-copy-edits.pdf",
+              "type": "application/pdf"
+            }
+          ]
+        },
+        {
+          "folder": "Needs Reply",
+          "ago": "3h",
+          "unread": true,
+          "from": "Tom Becker <tom@sqlite.org>",
+          "cc": [
+            "Gloria Swift <gloriaswift@sqlite.org>",
+            "Priya Nair <priya@sqlite.org>"
+          ],
+          "subject": "Re: Homepage feedback, round two",
+          "content": "Agree with Priya on the badge. Otherwise it's good to go from marketing.\n\n> Two small edits are marked up in the attached PDF. Nothing structural.\n> If these make it in, I'm happy for it to go live with the launch email."
+        }
+      ],
+      [
+        {
+          "folder": "Needs Reply",
+          "ago": "50h",
+          "unread": false,
+          "from": "Malcolm Reyes <malcolm@lodash.com>",
+          "subject": "Can we move Thursday's call?",
+          "content": "Something's come up on our side. Could we push Thursday's call to Friday, same time? If not, Monday morning works too."
+        },
+        {
+          "folder": "sent",
+          "ago": "30h",
+          "subject": "Re: Can we move Thursday's call?",
+          "content": "Friday works, same time. I'll move the invite.\n\nSam"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "300h",
+          "unread": false,
+          "from": "Jasmin Ortiz <jasmin@vite.dev>",
+          "subject": "Brand refresh planning",
+          "content": "Kicking off the brand refresh. Can you share a rough timeline?"
+        },
+        {
+          "folder": "sent",
+          "ago": "290h",
+          "subject": "Re: Brand refresh planning",
+          "content": "Four weeks: discovery, two rounds of concepts, then final files."
+        },
+        {
+          "folder": "Waiting",
+          "ago": "240h",
+          "unread": false,
+          "from": "Jasmin Ortiz <jasmin@vite.dev>",
+          "subject": "Re: Brand refresh planning",
+          "content": "Sounds good. Discovery call on Tuesday?"
+        },
+        {
+          "folder": "sent",
+          "ago": "230h",
+          "subject": "Re: Brand refresh planning",
+          "content": "Tuesday at 10 works."
+        },
+        {
+          "folder": "Waiting",
+          "ago": "170h",
+          "unread": false,
+          "from": "Jasmin Ortiz <jasmin@vite.dev>",
+          "subject": "Re: Brand refresh planning",
+          "content": "Notes from the call attached. Main theme: calmer, fewer colours.",
+          "attachments": [
+            {
+              "filename": "discovery-notes.pdf",
+              "type": "application/pdf"
+            }
+          ]
+        },
+        {
+          "folder": "sent",
+          "ago": "150h",
+          "subject": "Re: Brand refresh planning",
+          "content": "Thanks! First concepts by Friday."
+        },
+        {
+          "folder": "Waiting",
+          "ago": "100h",
+          "unread": false,
+          "from": "Jasmin Ortiz <jasmin@vite.dev>",
+          "subject": "Re: Brand refresh planning",
+          "content": "Concept B is the one. Can we push it further?"
+        },
+        {
+          "folder": "sent",
+          "ago": "28h",
+          "subject": "Re: Brand refresh planning",
+          "content": "Round two attached, three takes on concept B.",
+          "attachments": [
+            {
+              "filename": "concept-b-round-two.png",
+              "type": "image/png"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "folder": "inbox",
+          "ago": "6h",
+          "unread": true,
+          "from": "Crumb & Co <hello@crumbandco.com>",
+          "subject": "Fall sale: 30% off all bakeware",
+          "unsubscribe": true,
+          "content": "<!DOCTYPE html><html><body style=\"margin:0;background:#f4efe6\"><table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr><td align=\"center\"><table width=\"560\" cellpadding=\"24\" style=\"background:#ffffff;font-family:Georgia,serif;color:#3b2f22\"><tr><td><h1 style=\"margin:0 0 12px\">Fall sale</h1><p>Our biggest sale of the season is here. Take 30% off Dutch ovens, proofing baskets and bread lames, this weekend only.</p><p>Free shipping on orders over $50.</p></td></tr></table></td></tr></table></body></html>"
+        }
+      ],
+      [
+        {
+          "folder": "Later",
+          "ago": "9h",
+          "unread": false,
+          "from": "Ana Lima <ana@gmail.example>",
+          "subject": "Quote styles",
+          "content": "Checking how quotes collapse from each client."
+        },
+        {
+          "folder": "Later",
+          "ago": "8h",
+          "unread": true,
+          "from": "Ana Lima <ana@gmail.example>",
+          "subject": "Re: Quote styles",
+          "content": "<div dir=\"ltr\">Sounds good, Thursday works for me.</div><br><div class=\"gmail_quote\"><div dir=\"ltr\" class=\"gmail_attr\">On Wed, 18 Nov 2026 at 10:02, Sam Carter &lt;hello@oxygem.com&gt; wrote:<br></div><blockquote class=\"gmail_quote\" style=\"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-left:1ex\">Could we meet on Thursday?</blockquote></div>"
+        },
+        {
+          "folder": "Later",
+          "ago": "7h",
+          "unread": true,
+          "from": "Malcolm Reyes <malcolm@outlook.example>",
+          "subject": "Re: Quote styles",
+          "content": "<div class=\"WordSection1\"><p class=\"MsoNormal\">Invoice attached, thanks for the quick turnaround.</p><p class=\"MsoNormal\">&nbsp;</p><div style=\"border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in 0in 0in\"><p class=\"MsoNormal\"><b>From:</b> Sam Carter &lt;hello@oxygem.com&gt;<br><b>Sent:</b> Wednesday, November 18, 2026 10:02 AM<br><b>To:</b> Malcolm Reyes<br><b>Subject:</b> Quote styles</p></div><p class=\"MsoNormal\">&nbsp;</p><p class=\"MsoNormal\">Could you send over the invoice?</p></div>"
+        },
+        {
+          "folder": "Later",
+          "ago": "6h",
+          "unread": true,
+          "from": "Priya Nair <priya@owa.example>",
+          "subject": "Re: Quote styles",
+          "content": "<div>Yes, Friday is fine.</div><div id=\"appendonsend\"></div><hr style=\"display:inline-block;width:98%\" tabindex=\"-1\"><div id=\"divRplyFwdMsg\" dir=\"ltr\"><b>From:</b> Sam Carter &lt;hello@oxygem.com&gt;<br><b>Sent:</b> Wednesday, November 18, 2026 10:02<br><b>Subject:</b> Re: Quote styles</div><div>Does Friday still work?</div>"
+        },
+        {
+          "folder": "Later",
+          "ago": "5h",
+          "unread": true,
+          "from": "Jo Park <jo@yahoo.example>",
+          "subject": "Re: Quote styles",
+          "content": "<div>See you then!</div><div class=\"yahoo_quoted\"><div style=\"font-family:Helvetica\"><div>On Wednesday, 18 November 2026, 10:02:11 GMT, Sam Carter &lt;hello@oxygem.com&gt; wrote:</div><div><br></div><div><div>Lunch on Friday?</div></div></div></div>"
+        },
+        {
+          "folder": "Later",
+          "ago": "4h",
+          "unread": true,
+          "from": "Ana Lima <ana@gmail.example>",
+          "subject": "Re: Quote styles",
+          "content": "<div dir=\"ltr\">FYI, the brief from the client.</div><br><div class=\"gmail_quote\"><div dir=\"ltr\" class=\"gmail_attr\">---------- Forwarded message ---------<br>From: <b>Client</b> &lt;client@example.com&gt;<br>Date: Tue, 17 Nov 2026 at 09:00<br>Subject: Brief<br></div><br><div>The brief content stays visible.</div></div>"
+        }
+      ],
+      [
+        {
+          "folder": "Waiting",
+          "ago": "30h",
+          "unread": false,
+          "from": "Ana Lima <ana@gmail.example>",
+          "subject": "Follow-up on the homepage redesign, pricing table changes, testimonials placement, the launch email copy and the timeline for the second phase of the project",
+          "content": "Long subject check."
+        },
+        {
+          "folder": "sent",
+          "ago": "20h",
+          "subject": "Re: Follow-up on the homepage redesign, pricing table changes, testimonials placement, the launch email copy and the timeline for the second phase of the project",
+          "content": "All noted, I'll send a timeline tomorrow."
+        }
+      ]
+    ]
+  }
+}
