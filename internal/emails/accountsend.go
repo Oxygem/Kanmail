@@ -36,6 +36,7 @@ type SendOptions struct {
 
 	To   types.Addresses `json:"to,omitempty"`
 	Cc   types.Addresses `json:"cc,omitempty"`
+	Bcc  types.Addresses `json:"bcc,omitempty"`
 	From types.Address   `json:"from,omitempty"`
 
 	Attachments []SendAttachment `json:"attachments,omitempty"`
@@ -68,79 +69,20 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 		header.SetMsgIDList("References", append(options.ReplyingTo.References, options.ReplyingTo.MessageID))
 	}
 
-	var b bytes.Buffer
-
-	// Create top level multipart/mixed writer from header for inline + attachments
-	mw, err := mail.CreateWriter(&b, header)
+	b, err := writeMessage(header, options)
 	if err != nil {
 		return nil, err
 	}
 
-	// Create inline (text) writer for plain and html texts
-	iw, err := mw.CreateInline()
-	if err != nil {
-		return nil, err
-	}
-
-	if options.Text != "" {
-		var h mail.InlineHeader
-		h.SetContentType("text/plain", nil)
-		w, err := iw.CreatePart(h)
-		if err != nil {
+	// Bcc recipients must never appear in the transmitted headers, but the saved
+	// copy keeps them so the sender can still see who was blind copied
+	savedCopy := b
+	if len(options.Bcc) > 0 {
+		savedHeader := header.Copy()
+		savedHeader.SetAddressList("Bcc", options.Bcc.MailAddresses())
+		if savedCopy, err = writeMessage(savedHeader, options); err != nil {
 			return nil, err
 		}
-		if _, err := w.Write([]byte(options.Text)); err != nil {
-			return nil, err
-		} else if err := w.Close(); err != nil {
-			return nil, err
-		}
-	}
-
-	if options.HTML != "" {
-		var h mail.InlineHeader
-		h.SetContentType("text/html", nil)
-		w, err := iw.CreatePart(h)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := w.Write([]byte(options.HTML)); err != nil {
-			return nil, err
-		} else if err := w.Close(); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := iw.Close(); err != nil {
-		return nil, err
-	}
-
-	for _, attachment := range options.Attachments {
-		var h mail.AttachmentHeader
-		h.SetContentType(attachment.ContentType, nil)
-		h.SetFilename(filepath.Base(attachment.Path))
-		w, err := mw.CreateAttachment(h)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create attachment: %w", err)
-		}
-		f, err := os.Open(attachment.Path)
-		if err != nil {
-			return nil, fmt.Errorf("failed to open attachment file: %s: %w", attachment.Path, err)
-		}
-		_, copyErr := io.Copy(w, f)
-		closeErr := f.Close()
-		if copyErr != nil {
-			return nil, fmt.Errorf("failed to copy attachment: %w", copyErr)
-		}
-		if closeErr != nil {
-			return nil, closeErr
-		}
-		if err := w.Close(); err != nil {
-			return nil, fmt.Errorf("failed to close attachment writer: %w", err)
-		}
-	}
-
-	if err := mw.Close(); err != nil {
-		return nil, fmt.Errorf("failed to close multiwriter: %w", err)
 	}
 
 	// Derive an imap.BodyStructure from the bytes we just wrote, then reuse the
@@ -152,16 +94,13 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 	}
 	parts, textPart, htmlPart, displayPart := types.ExtractBodyParts(bodyStructure)
 
-	uniqueAddrs := make(map[string]struct{}, len(options.To)+len(options.Cc))
-	for _, addr := range append(options.To, options.Cc...) {
-		uniqueAddrs[addr.Email] = struct{}{}
-	}
-	toAddrs := slices.Collect(maps.Keys(uniqueAddrs))
+	toAddrs := smtpRecipients(options)
 
 	log := zerolog.Ctx(ctx).With().
 		Any("from", options.From).
 		Any("to", options.To).
 		Any("cc", options.Cc).
+		Any("bcc", options.Bcc).
 		Int("text_bytes", len([]byte(options.Text))).
 		Int("html_bytes", len([]byte(options.HTML))).
 		Int("attachments", len(options.Attachments)).
@@ -194,6 +133,7 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 		From:        []types.Address{options.From},
 		To:          options.To,
 		CC:          options.Cc,
+		BCC:         options.Bcc,
 		ReplyTo:     []types.Address{options.From},
 		MessageID:   messageID,
 		Parts:       parts,
@@ -208,7 +148,7 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 
 	if a.Settings.SaveSentCopies && sentFolder != "" {
 		log.Debug().Msg("Saving email")
-		if uid, err := a.GetFolder("sent").AppendEmail(ctx, b); err != nil {
+		if uid, err := a.GetFolder("sent").AppendEmail(ctx, savedCopy); err != nil {
 			// Log, but don't return an error here,  we don't want the user to re-try as it'll be
 			// a double-send which is worse.
 			zerolog.Ctx(ctx).Err(err).Msg("Failed to save email after sending")
@@ -218,6 +158,94 @@ func (a *Account) SendEmail(ctx context.Context, options SendOptions) (*types.Em
 	}
 
 	return sentEmail, nil
+}
+
+// smtpRecipients is everyone the message is delivered to, Bcc included
+func smtpRecipients(options SendOptions) []string {
+	uniqueAddrs := make(map[string]struct{}, len(options.To)+len(options.Cc)+len(options.Bcc))
+	for _, addr := range slices.Concat(options.To, options.Cc, options.Bcc) {
+		uniqueAddrs[addr.Email] = struct{}{}
+	}
+	return slices.Sorted(maps.Keys(uniqueAddrs))
+}
+
+func writeMessage(header mail.Header, options SendOptions) (bytes.Buffer, error) {
+	var b bytes.Buffer
+
+	// Create top level multipart/mixed writer from header for inline + attachments
+	mw, err := mail.CreateWriter(&b, header)
+	if err != nil {
+		return b, err
+	}
+
+	// Create inline (text) writer for plain and html texts
+	iw, err := mw.CreateInline()
+	if err != nil {
+		return b, err
+	}
+
+	if options.Text != "" {
+		var h mail.InlineHeader
+		h.SetContentType("text/plain", nil)
+		w, err := iw.CreatePart(h)
+		if err != nil {
+			return b, err
+		}
+		if _, err := w.Write([]byte(options.Text)); err != nil {
+			return b, err
+		} else if err := w.Close(); err != nil {
+			return b, err
+		}
+	}
+
+	if options.HTML != "" {
+		var h mail.InlineHeader
+		h.SetContentType("text/html", nil)
+		w, err := iw.CreatePart(h)
+		if err != nil {
+			return b, err
+		}
+		if _, err := w.Write([]byte(options.HTML)); err != nil {
+			return b, err
+		} else if err := w.Close(); err != nil {
+			return b, err
+		}
+	}
+
+	if err := iw.Close(); err != nil {
+		return b, err
+	}
+
+	for _, attachment := range options.Attachments {
+		var h mail.AttachmentHeader
+		h.SetContentType(attachment.ContentType, nil)
+		h.SetFilename(filepath.Base(attachment.Path))
+		w, err := mw.CreateAttachment(h)
+		if err != nil {
+			return b, fmt.Errorf("failed to create attachment: %w", err)
+		}
+		f, err := os.Open(attachment.Path)
+		if err != nil {
+			return b, fmt.Errorf("failed to open attachment file: %s: %w", attachment.Path, err)
+		}
+		_, copyErr := io.Copy(w, f)
+		closeErr := f.Close()
+		if copyErr != nil {
+			return b, fmt.Errorf("failed to copy attachment: %w", copyErr)
+		}
+		if closeErr != nil {
+			return b, closeErr
+		}
+		if err := w.Close(); err != nil {
+			return b, fmt.Errorf("failed to close attachment writer: %w", err)
+		}
+	}
+
+	if err := mw.Close(); err != nil {
+		return b, fmt.Errorf("failed to close multiwriter: %w", err)
+	}
+
+	return b, nil
 }
 
 // makeSentExcerpt produces a short plain-text excerpt for the sent-email list view.

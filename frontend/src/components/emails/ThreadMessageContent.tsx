@@ -7,6 +7,21 @@ import keyboard from "../../keyboard.ts";
 import { documentFromHtml } from "../../util/html.js";
 import { openLink } from "../../window.ts";
 
+const OUTLOOK_REPLY_HEADERS = [
+  "#appendonsend",
+  "#divRplyFwdMsg",
+  "div[style*='border-top:solid #E1E1E1']",
+  "div[style*='border-top: solid #E1E1E1']",
+  "div[style*='border-top:solid #B5C4DF']",
+  "div[style*='border-top: solid #B5C4DF']",
+].join(",");
+const QUOTE_ATTRIBUTION = /(wrote|écrit|schrieb|escribió|scrisse|schreef|skrev|napisał)\s*:?\s*$/i;
+const ORIGINAL_MESSAGE = /^-{2,}\s*original message\s*-{2,}/i;
+const REPLY_HEADER = /^from:[\s\S]*subject:/i;
+const FORWARDED_MESSAGE = /(forwarded message|begin forwarded message)/i;
+const MAX_MARKER_TEXT = 1000;
+const MAX_ATTRIBUTION_TEXT = 300;
+
 interface IThreadMessageContentProps {
   body: string;
   parts: BodyPart[];
@@ -59,6 +74,15 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
       this.setState({ showImages: this.props.showImages });
     }
     this.postRender()
+  }
+
+  shouldComponentUpdate(nextProps: IThreadMessageContentProps, nextState: IThreadMessageContentState) {
+    return nextProps.body !== this.props.body
+      || nextProps.trusted !== this.props.trusted
+      || nextProps.showImages !== this.props.showImages
+      || nextProps.showTrackers !== this.props.showTrackers
+      || nextState.hasImages !== this.state.hasImages
+      || nextState.showImages !== this.state.showImages;
   }
 
   componentDidMount() {
@@ -155,6 +179,146 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
     return tempDocument.body;
   }
 
+  // Hide quoted replies behind a toggle. Sanitizing strips class attributes, so
+  // beyond blockquotes (with the "On ... wrote:" line before them) the quoted
+  // tail of a reply is found by the reply header ids and text clients write:
+  // Outlook's "From: ... Subject:" block, "-----Original Message-----" and a
+  // dated "On ... wrote:" line with no blockquote after it.
+  collapseQuotes(doc: HTMLDocument | HTMLElement) {
+    const ownerDocument = doc.ownerDocument || (doc as HTMLDocument);
+    const root: Node = doc instanceof HTMLElement ? doc : (doc as HTMLDocument).body;
+    if (!root) {
+      return;
+    }
+
+    const totalText = (root.textContent || "").trim().length;
+    let hiddenText = 0;
+    const groups: HTMLElement[][] = [];
+
+    // Iframe nodes belong to the frame's realm, so element checks go by nodeType
+    const isElement = (node: Node): node is HTMLElement => node.nodeType === Node.ELEMENT_NODE;
+    const isHidden = (node: Node) => Boolean(
+      (isElement(node) ? node : node.parentElement)?.closest("[data-kanmail-quote]"),
+    );
+
+    const hide = (nodes: Node[]) => {
+      const text = _.sumBy(nodes, node => (node.textContent || "").trim().length);
+      const quoteText = _.map(nodes, node => node.textContent || "").join(" ");
+      if (totalText - hiddenText - text < 1 || FORWARDED_MESSAGE.test(quoteText)) {
+        return;
+      }
+      hiddenText += text;
+
+      const elements: HTMLElement[] = [];
+      _.each(nodes, node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (!(node.textContent || "").trim()) {
+            return;
+          }
+          const span = ownerDocument.createElement("span");
+          node.parentNode!.insertBefore(span, node);
+          span.appendChild(node);
+          node = span;
+        }
+        if (isElement(node)) {
+          node.setAttribute("data-kanmail-quote", "");
+          elements.push(node);
+        }
+      });
+      if (elements.length > 0) {
+        groups.push(elements);
+      }
+    };
+
+    const previousContent = (node: Node): Node | null => {
+      let sibling = node.previousSibling;
+      while (sibling && (sibling.nodeName === "BR" || !(sibling.textContent || "").trim())) {
+        sibling = sibling.previousSibling;
+      }
+      return sibling;
+    };
+
+    const isAttribution = (node: Node | null) => {
+      const text = (node?.textContent || "").trim();
+      return text.length < MAX_ATTRIBUTION_TEXT && QUOTE_ATTRIBUTION.test(text);
+    };
+
+    const findReplyHeader = (): Element | null => {
+      const byMarkup = (doc as HTMLElement).querySelector(OUTLOOK_REPLY_HEADERS);
+      if (byMarkup) {
+        return byMarkup;
+      }
+      if (FORWARDED_MESSAGE.test(root.textContent || "")) {
+        return null;
+      }
+      return _.find((doc as HTMLElement).querySelectorAll("div, p"), (block) => {
+        const text = (block.textContent || "").trim();
+        if (text.length > MAX_MARKER_TEXT) {
+          return false;
+        }
+        if (ORIGINAL_MESSAGE.test(text) || REPLY_HEADER.test(text)) {
+          return true;
+        }
+        const next = block.nextElementSibling;
+        return isAttribution(block) && /\d/.test(text) && next?.nodeName !== "BLOCKQUOTE";
+      }) || null;
+    };
+
+    const replyHeader = findReplyHeader();
+    if (replyHeader) {
+      const nodes: Node[] = [];
+      const rule = previousContent(replyHeader) || replyHeader.previousElementSibling;
+      if (rule?.nodeName === "HR") {
+        nodes.push(rule);
+      }
+      nodes.push(replyHeader);
+      let current: Node = replyHeader;
+      while (current !== root && current.parentNode) {
+        for (let sibling = current.nextSibling; sibling; sibling = sibling.nextSibling) {
+          nodes.push(sibling);
+        }
+        current = current.parentNode;
+      }
+      hide(nodes);
+    }
+
+    _.each((doc as HTMLElement).querySelectorAll("blockquote"), (quote) => {
+      if (isHidden(quote)) {
+        return;
+      }
+      const nodes: Node[] = [quote];
+      const attribution = previousContent(quote);
+      if (attribution && !isHidden(attribution) && isAttribution(attribution)) {
+        nodes.unshift(attribution);
+      }
+      hide(nodes);
+    });
+
+    _.each(groups, (elements) => {
+      const toggle = ownerDocument.createElement("button");
+      toggle.className = "kanmail-quote-toggle";
+      toggle.textContent = "•••";
+      toggle.title = "Show quoted text";
+
+      toggle.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+
+        const show = elements[0].style.display === "none";
+        _.each(elements, element => {
+          element.style.display = show ? "" : "none";
+        });
+        toggle.title = show ? "Hide quoted text" : "Show quoted text";
+        this.setFrameHeight();
+      });
+
+      _.each(elements, element => {
+        element.style.display = "none";
+      });
+      elements[0].parentNode!.insertBefore(toggle, elements[0]);
+    });
+  }
+
   // Insert a live doc/element target using the attributes added in generateDoc
   processDoc(doc: HTMLDocument | HTMLElement) {
     let trackers: number = 0;
@@ -173,32 +337,7 @@ export default class ThreadMessageContent extends React.Component<IThreadMessage
       });
     });
 
-    // Replace blockquotes with show/hide buttons
-    _.each(doc.querySelectorAll("blockquote"), (blockquote) => {
-      const showButton = document.createElement("button");
-      showButton.textContent = "Show quote";
-
-      showButton.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        ev.preventDefault();
-
-        if (blockquote.style.display == "none") {
-          blockquote.style.display = "block";
-          showButton.textContent = "Hide quote";
-        } else {
-          blockquote.style.display = "none";
-          showButton.textContent = "Show quote";
-        }
-
-        this.setFrameHeight();
-      });
-
-      // Hide the quote
-      blockquote.style.display = "none";
-
-      // Insert the button before the blockquote
-      blockquote.parentNode!.insertBefore(showButton, blockquote);
-    });
+    this.collapseQuotes(doc);
 
     // Replace imgs with show/hide buttons
     _.each(doc.querySelectorAll("img"), (img) => {

@@ -102,6 +102,8 @@ const bootSendApp = async (
         completeContent: completeContent || undefined,
         attachments: payload.attachments || undefined,
         to: payload.to || [],
+        cc: payload.cc || [],
+        bcc: payload.bcc || [],
         subject: payload.subject || undefined,
         mode: payload.mode,
     };

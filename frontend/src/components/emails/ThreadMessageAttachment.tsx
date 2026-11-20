@@ -3,118 +3,162 @@ import React from "react";
 import { AppService, EmailsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { BodyPart } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import requestStore from "../../stores/request.ts";
-import settingsStore from "../../stores/settings.ts";
 import { IThreadMessage } from "../../stores/thread.ts";
 import { formatBytes } from "../../util/string.js";
+import Icon from "../Icon.tsx";
+
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
+
+export function isImageAttachment(part: BodyPart): boolean {
+  return part.type.startsWith("image/");
+}
+
+function attachmentTypeLabel(part: BodyPart): string {
+  const extension = part.description.includes(".") ? part.description.split(".").pop() : "";
+  const subtype = part.type.split("/")[1] || "";
+  const label = extension || subtype.replace(/^(x-|vnd\.)/, "");
+  return label.toUpperCase();
+}
 
 interface IThreadMessageAttachmentProps {
-  partId: string;
   part: BodyPart;
   message: IThreadMessage;
 }
 
 interface IThreadMessageAttachmentState {
   downloading: boolean;
-  downloaded: boolean;
   downloadError: string | null;
   downloadedFilename: string | null;
-
+  thumbnail: string | null;
 }
+
 export default class ThreadMessageAttachment extends React.Component<
   IThreadMessageAttachmentProps,
   IThreadMessageAttachmentState
 > {
-  constructor(props) {
-    super(props);
+  private mounted = false;
 
-    this.state = {
-      downloading: false,
-      downloaded: false,
-      downloadError: null,
-      downloadedFilename: null,
-    };
+  state: IThreadMessageAttachmentState = {
+    downloading: false,
+    downloadError: null,
+    downloadedFilename: null,
+    thumbnail: null,
+  };
+
+  componentDidMount() {
+    this.mounted = true;
+    this.fetchThumbnail();
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
+  fetchThumbnail() {
+    const { part, message } = this.props;
+    if (!isImageAttachment(part) || part.size > MAX_THUMBNAIL_BYTES || !message.uid) {
+      return;
+    }
+
+    EmailsService.GetAccountFolderEmailsContentParts(message.accountID, message.folderName, {
+      [message.uid]: part,
+    }).then(resp => {
+      const data = resp[message.uid]?.data;
+      if (data && this.mounted) {
+        this.setState({ thumbnail: `data:${part.type};base64,${data}` });
+      }
+    }).catch(e => {
+      console.debug("Failed to load attachment thumbnail", part.description, e);
+    });
   }
 
   handleClick = () => {
-    if (this.state.downloaded) {
-      AppService.OpenFile(this.state.downloadedFilename!).catch((ev) => {
+    if (this.state.downloadedFilename) {
+      AppService.OpenFile(this.state.downloadedFilename).catch((ev) => {
         requestStore.addError("Failed to open attachment", ev, { silent: true });
       });
       return;
     }
 
-    const { part, partId } = this.props;
+    const { part } = this.props;
     const { accountID, folderName, uid } = this.props.message;
 
-    this.setState({
-      downloading: true,
-      downloaded: false, // reset if re-downloading
-    });
+    this.setState({ downloading: true, downloadError: null });
 
     requestStore.doFetchRequest(
       `Fetch message part in ${accountID}/${folderName}: ${uid}/${part}`,
       EmailsService.DownloadAccountFolderEmailPartData(accountID, folderName, uid, part),
-    ).then((filename: string) => (this.setState({
+    ).then((filename: string) => this.setState({
       downloading: false,
-      downloaded: filename != "",
       downloadedFilename: filename || null,
-    }))).catch((ev) => {
+    })).catch((ev) => {
       this.setState({
         downloading: false,
-        downloaded: false,
         downloadError: ev?.message ?? String(ev),
       });
       requestStore.addError("Failed to download attachment", ev, { silent: true });
     });
   };
 
-  renderName() {
+  renderStatus() {
     const { part } = this.props;
-    const name = part.description;
 
-    let nameOrIcon: string | React.JSX.Element = name;
-    let topMeta: string | React.JSX.Element = part.type;
-    let bottomMeta: string | React.JSX.Element = formatBytes(part.size);
-
-    if (this.state.downloaded) {
-      nameOrIcon = "File saved, click to open";
-      topMeta = part.type + ", " + formatBytes(part.size);
-      bottomMeta = this.state.downloadedFilename!;
-    } else if (this.state.downloading) {
-      nameOrIcon = <i className="fa fa-cog fa-spin"></i>;
-      topMeta = "Downloading...";
-      bottomMeta = <span>&nbsp;</span>;
+    if (this.state.downloading) {
+      return "Downloading…";
     } else if (this.state.downloadError) {
-      nameOrIcon = "Error downloading, click to retry";
-      topMeta = this.state.downloadError;
-      bottomMeta = <span>&nbsp;</span>;
+      return "Failed, click to retry";
+    } else if (this.state.downloadedFilename) {
+      return "Saved, click to open";
     }
+    return `${attachmentTypeLabel(part)} · ${formatBytes(part.size, 0)}`;
+  }
+
+  renderImage() {
+    const { part } = this.props;
 
     return (
-      <div className="attach-detail">
-        <div className="nm">{nameOrIcon}</div>
-        <div className="mt">
-          {topMeta}
-          {bottomMeta && bottomMeta !== "" ? <> · {bottomMeta}</> : null}
-        </div>
-      </div>
+      <button
+        type="button"
+        className="attach-image"
+        title={part.description}
+        onClick={this.handleClick}
+      >
+        <span className="thumb">
+          {this.state.thumbnail
+            ? <img src={this.state.thumbnail} alt="" />
+            : <Icon name="image" size={22} />}
+          {this.state.downloading && <span className="thumb-busy"><Icon name="loader" className="spin" /></span>}
+        </span>
+        <span className="nm">{part.description}</span>
+        {(this.state.downloadError || this.state.downloadedFilename) && (
+          <span className="mt">{this.renderStatus()}</span>
+        )}
+      </button>
+    );
+  }
+
+  renderFile() {
+    const { part } = this.props;
+
+    return (
+      <button
+        type="button"
+        className="attach-file"
+        title={this.state.downloadedFilename || part.description}
+        onClick={this.handleClick}
+      >
+        <span className="ic">
+          <Icon name={this.state.downloading ? "loader" : "file"} size={16} className={this.state.downloading ? "spin" : ""} />
+        </span>
+        <span className="attach-detail">
+          <span className="nm">{part.description || part.type}</span>
+          <span className="mt">{this.renderStatus()}</span>
+        </span>
+      </button>
     );
   }
 
   render() {
-    if (!this.props.part.description && !settingsStore.props.system.showHiddenAttachments) {
-      return null;
-    }
-
-    return (
-      <div
-        key={this.props.partId}
-        className="attach attachment-link"
-        onClick={this.handleClick}
-      >
-        <span className="ic"><i className="fa fa-paperclip"></i></span>
-        {this.renderName()}
-      </div>
-    );
+    return isImageAttachment(this.props.part) ? this.renderImage() : this.renderFile();
   }
 }

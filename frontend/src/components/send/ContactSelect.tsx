@@ -4,6 +4,7 @@ import AsyncCreatableSelect from "react-select/async-creatable";
 
 import { ContactsService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
+import Avatar from "../Avatar.tsx";
 import { AddressOption, avatarInitial, stringToColor } from "../../util/send.ts";
 import { formatAddress } from "../../util/string.ts";
 
@@ -11,6 +12,8 @@ interface IContactSelectProps {
   id: string;
   value: AddressOption[];
   onChange: (value: AddressOption[]) => void;
+  // Selected recipients show as an avatar and name only, the email on hover
+  compact?: boolean;
 }
 
 const loadOptions = async (inputValue: string): Promise<AddressOption[]> => {
@@ -19,6 +22,16 @@ const loadOptions = async (inputValue: string): Promise<AddressOption[]> => {
     value: addr,
     label: formatAddress(addr),
   }));
+};
+
+const formatCompactValueLabel = (option: AddressOption) => {
+  const email = option.value?.email || option.label || "";
+  return (
+    <span className="recip-chip" title={email}>
+      <Avatar address={option.value} />
+      <span className="nm">{option.value?.name || email}</span>
+    </span>
+  );
 };
 
 const formatOptionLabel = (option: AddressOption) => {
@@ -34,7 +47,7 @@ const formatOptionLabel = (option: AddressOption) => {
   );
 };
 
-export default function ContactSelect({ id, value, onChange }: IContactSelectProps) {
+export default function ContactSelect({ id, value, onChange, compact }: IContactSelectProps) {
   return (
     <AsyncCreatableSelect
       isMulti
@@ -44,7 +57,9 @@ export default function ContactSelect({ id, value, onChange }: IContactSelectPro
       id={id}
       classNamePrefix="react-select"
       placeholder=""
-      formatOptionLabel={formatOptionLabel}
+      formatOptionLabel={(option, { context }) => (
+        compact && context === "value" ? formatCompactValueLabel(option) : formatOptionLabel(option)
+      )}
       value={value}
       onChange={(selected) => onChange((selected || []) as AddressOption[])}
       onCreateOption={(created: string) => {

@@ -3,9 +3,15 @@ package imapinterface
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
+	"hash/fnv"
 	"html"
+	"image"
+	"image/color"
+	"image/png"
 	"io"
+	"math"
 	"math/rand"
 	"net/mail"
 	"slices"
@@ -770,15 +776,117 @@ func containsFold(s, substr string) bool {
 }
 
 // fakeMessageHTML is the text/html alternative a real sender would pair with
-// the plain content: escaped, with its paragraphs and line breaks kept.
+// the plain content: escaped, with its paragraphs and line breaks kept, and
+// "> " quoted paragraphs in a blockquote as a mail client would write them.
+// Content that is already HTML is served as-is.
 func fakeMessageHTML(content string) []byte {
+	if strings.HasPrefix(content, "<") {
+		return []byte(content)
+	}
+
 	var b strings.Builder
 	for _, paragraph := range strings.Split(content, "\n\n") {
+		lines := strings.Split(paragraph, "\n")
+		quoted := !slices.ContainsFunc(lines, func(line string) bool {
+			return !strings.HasPrefix(line, ">")
+		})
+		if quoted {
+			for i, line := range lines {
+				lines[i] = strings.TrimSpace(strings.TrimPrefix(line, ">"))
+			}
+			b.WriteString("<blockquote><p>")
+			b.WriteString(html.EscapeString(strings.Join(lines, "\n")))
+			b.WriteString("</p></blockquote>")
+			continue
+		}
 		b.WriteString("<p>")
 		b.WriteString(strings.ReplaceAll(html.EscapeString(paragraph), "\n", "<br>"))
 		b.WriteString("</p>")
 	}
 	return []byte(b.String())
+}
+
+// fakeMessageAttachments is a message's own attachments, or for 1/10 emails
+// without any a generic image so attachments show up across the fake mailbox
+func fakeMessageAttachments(msg *fakeMessage) []fakeAttachment {
+	if len(msg.attachments) > 0 {
+		return msg.attachments
+	}
+	if msg.uid%10 == 0 {
+		return []fakeAttachment{{Filename: fmt.Sprintf("image-%d.png", msg.uid), Type: "image/png"}}
+	}
+	return nil
+}
+
+var (
+	fakeAttachmentCache = map[string][]byte{}
+	fakeAttachmentLock  sync.Mutex
+)
+
+// fakeAttachmentBytes is the base64 body section for an attachment: a
+// gradient PNG coloured by the filename for images, placeholder text otherwise
+func fakeAttachmentBytes(attachment fakeAttachment) []byte {
+	fakeAttachmentLock.Lock()
+	defer fakeAttachmentLock.Unlock()
+
+	if data, ok := fakeAttachmentCache[attachment.Filename]; ok {
+		return data
+	}
+
+	raw := []byte("Kanmail fake attachment: " + attachment.Filename)
+	if strings.HasPrefix(attachment.Type, "image/") {
+		raw = fakeGradientPNG(attachment.Filename)
+	}
+
+	data := []byte(base64.StdEncoding.EncodeToString(raw))
+	fakeAttachmentCache[attachment.Filename] = data
+	return data
+}
+
+func fakeGradientPNG(seed string) []byte {
+	hash := fnv.New32a()
+	hash.Write([]byte(seed))
+	hue := float64(hash.Sum32() % 360)
+
+	const width, height = 480, 300
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for y := range height {
+		for x := range width {
+			shift := (float64(x)/width + float64(y)/height) * 30
+			img.Set(x, y, hslColor(hue+shift, 0.55, 0.62+float64(y)/height*0.2))
+		}
+	}
+
+	var b bytes.Buffer
+	if err := png.Encode(&b, img); err != nil {
+		panic(err)
+	}
+	return b.Bytes()
+}
+
+func hslColor(hue, saturation, lightness float64) color.RGBA {
+	hue = math.Mod(hue, 360) / 360
+	channel := func(t float64) uint8 {
+		q := lightness + saturation - lightness*saturation
+		if lightness < 0.5 {
+			q = lightness * (1 + saturation)
+		}
+		p := 2*lightness - q
+		t = math.Mod(t+1, 1)
+		var v float64
+		switch {
+		case t < 1.0/6:
+			v = p + (q-p)*6*t
+		case t < 0.5:
+			v = q
+		case t < 2.0/3:
+			v = p + (q-p)*(2.0/3-t)*6
+		default:
+			v = p
+		}
+		return uint8(math.Round(v * 255))
+	}
+	return color.RGBA{channel(hue + 1.0/3), channel(hue), channel(hue - 1.0/3), 255}
 }
 
 // fakeMessageHeaderBytes synthesizes the header body section for a message -
@@ -851,14 +959,14 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 				Size:     uint32(msg.size),
 			},
 		}
-		if msg.uid%10 == 0 {
-			// Add a fake attachment to 1/10 emails, sized deterministically so
-			// the same email renders the same across fetches
+		for _, attachment := range fakeMessageAttachments(msg) {
+			mediaType, subtype, _ := strings.Cut(attachment.Type, "/")
 			parts = append(parts, &imap.BodyStructureSinglePart{
-				Type:        "image",
-				Subtype:     "png",
-				Description: "animage.png",
-				Size:        16384 + uint32(msg.uid)*7919%16384000,
+				Type:        mediaType,
+				Subtype:     subtype,
+				Encoding:    "BASE64",
+				Description: attachment.Filename,
+				Size:        uint32(len(fakeAttachmentBytes(attachment))),
 			})
 		}
 
@@ -882,6 +990,10 @@ func (c *FakeIMAPClient) Fetch(numSet imap.NumSet, options *imap.FetchOptions) F
 					bytes = fakeMessageHeaderBytes(msg)
 				case slices.Equal(section.Part, []int{2}):
 					bytes = fakeMessageHTML(msg.content)
+				case len(section.Part) == 1 && section.Part[0] > 2:
+					if attachments := fakeMessageAttachments(msg); section.Part[0]-3 < len(attachments) {
+						bytes = fakeAttachmentBytes(attachments[section.Part[0]-3])
+					}
 				}
 				fetchMsg.BodySection[i] = imapclient.FetchBodySectionBuffer{
 					Section: section,
