@@ -47,6 +47,52 @@ export function formatDate(date) {
   return formatted;
 }
 
+const SUBJECT_PREFIXES = /^\s*((re|fwd?|aw|sv|antw|wg|tr|rif|vs)(\[\d+\])?\s*:\s*)+/i;
+
+export function stripSubjectPrefixes(subject: string): string {
+  return (subject || "").replace(SUBJECT_PREFIXES, "");
+}
+
+export function formatTime(date): string {
+  return moment(date).format("HH:mm");
+}
+
+export function dayKey(date): string {
+  return moment(date).format("YYYY-MM-DD");
+}
+
+export function formatDay(date): string {
+  return moment(date).calendar(null, {
+    sameDay: "[Today]",
+    lastDay: "[Yesterday]",
+    lastWeek: "dddd",
+    nextDay: "[Tomorrow]",
+    nextWeek: "dddd",
+    sameElse: function (now) {
+      return this.isSame(now, "year") ? "ddd D MMM" : "D MMM YYYY";
+    },
+  });
+}
+
+export function formatDayTime(date): string {
+  if (dayKey(date) === dayKey(new Date())) {
+    return formatTime(date);
+  }
+  return `${formatDay(date)}, ${formatTime(date)}`;
+}
+
+// "Tom", "Tom and Priya", "Tom, Priya and Gloria", "Tom, Priya and 3 others"
+export function joinNames(names: string[], max = 3): string {
+  if (names.length <= 1) {
+    return names.join("");
+  }
+  if (names.length > max) {
+    const others = names.length - (max - 1);
+    return `${names.slice(0, max - 1).join(", ")} and ${others} others`;
+  }
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 // Absolute date for text that outlives the current session, ie the quote
 // header in a reply - unlike formatDate, "Yesterday" won't do.
 export function formatLongDate(date): string {

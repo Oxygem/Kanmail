@@ -17,3 +17,22 @@ body {
 p.MsoNormal {
   margin: 0;
 }
+
+button.kanmail-quote-toggle {
+  display: block;
+  margin: 10px 0 0;
+  padding: 0 12px;
+  height: 20px;
+  border: 0;
+  border-radius: 99px;
+  background: #e6e5eb;
+  color: #5c5c62;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+button.kanmail-quote-toggle:hover {
+  background: #dcdbe2;
+}
