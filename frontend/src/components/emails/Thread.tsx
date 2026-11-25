@@ -3,7 +3,6 @@ import React from "react";
 
 import { AppService } from "../../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
-import Avatar from "../../components/Avatar.tsx";
 import Icon from "../../components/Icon.tsx";
 import Tooltip from "../../components/Tooltip.tsx";
 import QuickReply from "../../components/emails/QuickReply.tsx";
@@ -15,7 +14,6 @@ import threadStore, { IThreadMessage, IThreadStoreProps } from "../../stores/thr
 import { addressKey, getAccountEmails } from "../../util/send.ts";
 import { capitalizeFirstLetter, dayKey, formatAddress, formatDay, stripSubjectPrefixes } from "../../util/string.ts";
 
-const MAX_HEADER_AVATARS = 3;
 const MAX_HEADER_NAMES = 3;
 const LATEST_MESSAGES_SHOWN = 3;
 const MIN_EARLIER_COLLAPSED = 2;
@@ -206,7 +204,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
   renderParticipants() {
     const participants = this.getParticipants();
     if (participants.length === 0) {
-      return { avatars: null, names: null };
+      return null;
     }
 
     const names = participants.length === 1
@@ -214,15 +212,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
       : _.map(participants.slice(0, MAX_HEADER_NAMES), address => formatAddress(address, true)).join(", ")
       + (participants.length > MAX_HEADER_NAMES ? ` +${participants.length - MAX_HEADER_NAMES}` : "");
 
-    const avatars = (
-      <div className={`avatar-stack count-${Math.min(participants.length, MAX_HEADER_AVATARS)}`}>
-        {_.map(participants.slice(0, MAX_HEADER_AVATARS), address => (
-          <Avatar key={addressKey(address)} address={address} />
-        ))}
-      </div>
-    );
-
-    return { avatars, names: <span className="participants">{names}</span> };
+    return <span className="participants">{names}</span>;
   }
 
   renderAccounts() {
@@ -298,11 +288,9 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
 
   renderHead() {
     const { thread } = this.props;
-    const { avatars, names } = this.renderParticipants();
 
     return (
       <div className="reader-head">
-        {avatars}
         <div className="reader-title">
           <h2 title={this.getSubject()}>
             {thread?.mergedThreads && (
@@ -313,7 +301,7 @@ class Thread extends React.Component<Partial<IThreadProps>, IThreadState> {
             {this.getSubject()}
           </h2>
           <div className="reader-meta">
-            {names}
+            {this.renderParticipants()}
             {this.renderAccounts()}
             {this.renderFolderChips()}
           </div>
