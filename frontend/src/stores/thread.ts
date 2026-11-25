@@ -4,12 +4,14 @@ import {
   BodyPartResp,
   FetchPartsMap,
 } from "../../bindings/github.com/oxygem/kanmail/internal/emails/index.ts";
+import { Flag } from "../../bindings/github.com/emersion/go-imap/v2/index.ts";
 import { EmailsService } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address, BodyPart } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import { BaseStore } from "./base.tsx";
 import { getColumnStore } from "./columns.ts";
 import contactsStore from "./contacts.ts";
 import { IEmail, Thread, makeThread } from "./emails/base.ts";
+import { getEmailStore } from "./emails/controller.ts";
 import requestStore from "./request.ts";
 import settingsStore from "./settings.ts";
 
@@ -25,13 +27,20 @@ export interface IThreadStoreProps {
   thread: Thread | null;
   messages: IThreadMessage[] | null;
   fetching: boolean;
+  // Messages that were unread when they arrived in the reader, captured before
+  // opening marks them read
+  newMessageIds: Set<string>;
+  // Bumped each time a different thread opens, so the reader can reset
+  openCount: number;
 }
 
-function makeDefaults(): IThreadStoreProps {
+function makeDefaults(openCount = 0): IThreadStoreProps {
   return {
     thread: null,
     messages: null,
     fetching: false,
+    newMessageIds: new Set(),
+    openCount,
   };
 }
 
@@ -160,7 +169,7 @@ class ThreadStore extends BaseStore {
       return;
     }
 
-    this.props = makeDefaults();
+    this.props = makeDefaults(this.props.openCount);
 
     if (isClosing) {
       this.showAllColumns();
@@ -187,14 +196,26 @@ class ThreadStore extends BaseStore {
     // Set to empty thread (loading icon)
     this.props.messages = [];
     this.props.thread = thread;
+    this.props.newMessageIds = new Set();
+    this.props.openCount++;
     this.triggerUpdate();
 
     // Now, actually load the thread!
     this.loadThread(thread, knownBodies);
+
+    // Loading captured which messages are new, from here on they're read - the
+    // server only reports it on the next sync
+    getEmailStore().setEmailsRead(_.map(thread, message => message.accountMessageId));
   }
 
   loadThread(thread: Thread, knownBodies?: Map<string, string>) {
     const currentLoadId = ++this.loadId;
+
+    _.each(thread, message => {
+      if (!message.welcome && !_.includes(message.flags, Flag.FlagSeen)) {
+        this.props.newMessageIds.add(message.accountMessageId);
+      }
+    });
 
     const locations = getThreadMessageLocations(thread);
     // Thread snapshots (the open thread, column threads awaiting re-threading) keep messages

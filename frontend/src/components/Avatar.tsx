@@ -1,25 +1,22 @@
-import randomColor from "randomcolor";
 import React from "react";
 
 import { AvatarResp } from "../../bindings/github.com/oxygem/kanmail/internal/services/index.ts";
 import { Address } from "../../bindings/github.com/oxygem/kanmail/internal/types/index.ts";
 import contactsStore from "../stores/contacts.ts";
 import settingsStore from "../stores/settings.ts";
+import { stringToHue } from "../util/send.ts";
 
-const emailToColorCache = {};
 const emailToIconCache: {
   [_: string]: { data: string; contentType: string } | null;
 } = {};
 
-function getColorForAddress(address) {
-  if (!address) {
-    return randomColor();
-  }
-  const email = address.email;
-  if (!emailToColorCache[email]) {
-    emailToColorCache[email] = randomColor();
-  }
-  return emailToColorCache[email];
+function getInitialsStyle(address: Address, border?: string): React.CSSProperties {
+  const hue = stringToHue(address?.email || "");
+  return {
+    background: `hsl(${hue}, var(--avatar-sat), var(--avatar-bg-l))`,
+    color: `hsl(${hue}, var(--avatar-sat), var(--avatar-ink-l))`,
+    border,
+  };
 }
 
 function getInitialsFromAddress(address) {
@@ -142,8 +139,8 @@ export default class Avatar extends React.Component<IAvatarProps, IAvatarState> 
 
     return (
       <div
-        className="avatar"
-        style={{ background: getColorForAddress(address), border: this.getBorder() }}
+        className="avatar initials"
+        style={getInitialsStyle(address, this.getBorder())}
       >
         {<span>{getInitialsFromAddress(address).toUpperCase()}</span>}
       </div>

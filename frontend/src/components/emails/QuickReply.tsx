@@ -19,6 +19,7 @@ import { trackEvent } from "../../util/analytics.ts";
 import { stopEventPropagation } from "../../util/element.ts";
 import { restoreRemoteImages } from "../../util/html.ts";
 import {
+  AccountAddressOption,
   AddressOption,
   ReplyRecipients,
   buildQuotedContent,
@@ -26,8 +27,11 @@ import {
   getAccountContactOptions,
   hasReplyAllRecipients,
   prependIfNotPresent,
+  toAddressOptions,
 } from "../../util/send.ts";
-import { formatAddress } from "../../util/string.ts";
+import { formatAddress, joinNames } from "../../util/string.ts";
+import Icon, { IconName } from "../Icon.tsx";
+import PopoverMenu, { MenuItem } from "../PopoverMenu.tsx";
 import Tooltip from "../Tooltip.tsx";
 import ContactSelect from "../send/ContactSelect.tsx";
 import EditorToolButtons from "../send/EditorToolButtons.tsx";
@@ -40,6 +44,12 @@ import SquireEditor, {
 
 export type Mode = "reply" | "reply-all" | "forward";
 
+const MODES: { mode: Mode, label: string, icon: IconName }[] = [
+  { mode: "reply", label: "Reply", icon: "reply" },
+  { mode: "reply-all", label: "Reply all", icon: "reply-all" },
+  { mode: "forward", label: "Forward", icon: "forward" },
+];
+
 interface IQuickReplyProps {
   latestMessage: IThreadMessage;
 }
@@ -49,10 +59,18 @@ interface IQuickReplyState {
   mode: Mode;
   html: string;
   to: AddressOption[];
+  cc: AddressOption[];
+  bcc: AddressOption[];
+  showCc: boolean;
+  showBcc: boolean;
+  recipientsEdited: boolean;
+  fromIndex: number;
   attachments: SendAttachment[];
+  forwardedAttachmentPaths: string[];
   isLoadingAttachments: boolean;
   isSending: boolean;
   isSentOrSaved?: boolean;
+  showFormatting: boolean;
   formatStates: SquireFormatStates;
 }
 
@@ -67,9 +85,17 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       mode: "reply",
       html: "",
       to: [],
+      cc: [],
+      bcc: [],
+      showCc: false,
+      showBcc: false,
+      recipientsEdited: false,
+      fromIndex: 0,
       attachments: [],
+      forwardedAttachmentPaths: [],
       isLoadingAttachments: false,
       isSending: false,
+      showFormatting: false,
       formatStates: defaultFormatStates,
     };
   }
@@ -115,12 +141,14 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     );
   }
 
-  getFromAddress(): Address | null {
+  getFromOptions(): AccountAddressOption[] {
     const account = this.getAccount();
-    if (!account) {
-      return null;
-    }
-    return getAccountContactOptions(account)[0].value[1];
+    return account ? getAccountContactOptions(account) : [];
+  }
+
+  getFromAddress(): Address | null {
+    const options = this.getFromOptions();
+    return (options[this.state.fromIndex] || options[0])?.value[1] || null;
   }
 
   // The reply/forward body the editor is mounted with: an empty line to type
@@ -134,10 +162,10 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     );
   }
 
-  getReplyRecipients(): ReplyRecipients {
+  getReplyRecipients(mode: Mode): ReplyRecipients {
     return buildReplyRecipients(
       this.props.latestMessage,
-      this.state.mode === "reply-all",
+      mode === "reply-all",
       this.getAccount(),
     );
   }
@@ -146,50 +174,72 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     return hasReplyAllRecipients(this.props.latestMessage, this.getAccount());
   }
 
-  handleExpand = (mode: Mode = "reply") => {
+  getDefaultMode(): Mode {
+    return this.canReplyAll() ? "reply-all" : "reply";
+  }
+
+  getRecipientState(mode: Mode): Pick<IQuickReplyState, "to" | "cc" | "showCc" | "recipientsEdited"> {
     if (mode === "forward") {
-      const { latestMessage } = this.props;
-      const hasParts = Boolean(latestMessage.parts && latestMessage.parts.length > 0);
+      return { to: [], cc: [], showCc: false, recipientsEdited: false };
+    }
+    const { to, cc } = this.getReplyRecipients(mode);
+    return {
+      to: toAddressOptions(to),
+      cc: toAddressOptions(cc),
+      showCc: cc.length > 0,
+      recipientsEdited: false,
+    };
+  }
 
-      this.setState({
-        expanded: true,
-        mode,
-        html: this.getInitialEditorContent(),
-        to: [],
-        attachments: [],
-        isLoadingAttachments: hasParts,
-      });
-
-      if (hasParts) {
-        EmailsService.CreateForwardAttachments(
-          latestMessage.accountID,
-          latestMessage.folderName,
-          latestMessage.uid,
-          latestMessage.parts,
-        ).then(attachments => {
-          if (this.state.expanded && this.state.mode === "forward") {
-            // Concat, not replace: the user may have attached their own files
-            // while the forwarded parts were downloading
-            this.setState({
-              attachments: _.concat(this.state.attachments, attachments),
-              isLoadingAttachments: false,
-            });
-          }
-        }).catch(e => {
-          this.setState({ isLoadingAttachments: false });
-          requestStore.addError("Failed to load forwarded attachments", e);
-        });
-      }
+  loadForwardedAttachments() {
+    const { latestMessage } = this.props;
+    if (!latestMessage.parts || latestMessage.parts.length === 0) {
       return;
     }
 
-    const canReplyAll = this.canReplyAll();
+    this.setState({ isLoadingAttachments: true });
+
+    EmailsService.CreateForwardAttachments(
+      latestMessage.accountID,
+      latestMessage.folderName,
+      latestMessage.uid,
+      latestMessage.parts,
+    ).then(attachments => {
+      if (this.state.expanded && this.state.mode === "forward") {
+        // Concat, not replace: the user may have attached their own files
+        // while the forwarded parts were downloading
+        this.setState({
+          attachments: _.concat(this.state.attachments, attachments),
+          forwardedAttachmentPaths: _.map(attachments, attachment => attachment.path),
+          isLoadingAttachments: false,
+        });
+      }
+    }).catch(e => {
+      this.setState({ isLoadingAttachments: false });
+      requestStore.addError("Failed to load forwarded attachments", e);
+    });
+  }
+
+  handleExpand = (mode: Mode = this.getDefaultMode()) => {
+    if (mode === "reply-all" && !this.canReplyAll()) {
+      mode = "reply";
+    }
+
     this.setState({
       expanded: true,
-      mode: mode === "reply-all" && !canReplyAll ? "reply" : mode,
+      mode,
       html: this.getInitialEditorContent(),
+      ...this.getRecipientState(mode),
+      bcc: [],
+      showBcc: false,
+      fromIndex: 0,
       attachments: [],
+      forwardedAttachmentPaths: [],
       isLoadingAttachments: false,
+    }, () => {
+      if (mode === "forward") {
+        this.loadForwardedAttachments();
+      }
     });
   };
 
@@ -203,15 +253,44 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
       mode: "reply",
       html: "",
       to: [],
+      cc: [],
+      bcc: [],
+      showCc: false,
+      showBcc: false,
       attachments: [],
+      forwardedAttachmentPaths: [],
       isLoadingAttachments: false,
       isSentOrSaved: undefined,
+      showFormatting: false,
     });
   };
 
   handleSetMode = (mode: Mode) => {
-    this.setState({ mode });
+    if (mode === this.state.mode) {
+      return;
+    }
+
+    const attachments = _.filter(
+      this.state.attachments,
+      attachment => !_.includes(this.state.forwardedAttachmentPaths, attachment.path),
+    );
+
+    this.setState({
+      mode,
+      ...this.getRecipientState(mode),
+      attachments,
+      forwardedAttachmentPaths: [],
+      isLoadingAttachments: false,
+    }, () => {
+      if (mode === "forward") {
+        this.loadForwardedAttachments();
+      }
+    });
   };
+
+  setRecipients(field: "to" | "cc" | "bcc", value: AddressOption[]) {
+    this.setState({ [field]: value, recipientsEdited: true } as Pick<IQuickReplyState, typeof field | "recipientsEdited">);
+  }
 
   handleKeyDown = (ev: KeyboardEvent) => {
     if (ev.key === "Escape") {
@@ -244,6 +323,9 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
   handlePopOut = () => {
     const { latestMessage } = this.props;
+    const emails = (options: AddressOption[]) => _.map(options, option => option.value.email);
+    const carryRecipients = this.state.mode === "forward" || this.state.recipientsEdited;
+
     AppService.OpenSendWindow({
       mode: this.state.mode,
       accountID: latestMessage.accountID,
@@ -254,7 +336,9 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
         this.state.mode === "forward" ? "Fwd" : "Re",
       ),
       body: this.state.html,
-      to: _.map(this.state.to, (option) => option.value.email),
+      to: carryRecipients ? emails(this.state.to) : [],
+      cc: carryRecipients ? emails(this.state.cc) : [],
+      bcc: emails(this.state.bcc),
       // While forwarded parts are still downloading pass nothing, letting the
       // full editor re-collect them itself
       attachments: this.state.isLoadingAttachments
@@ -269,8 +353,12 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     });
   };
 
+  canSend(): boolean {
+    return !this.state.isSending && !this.state.isLoadingAttachments && this.state.to.length > 0;
+  }
+
   handleSend = () => {
-    if (this.state.isSending) {
+    if (!this.canSend()) {
       return;
     }
 
@@ -285,29 +373,16 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     }
 
     const isForward = this.state.mode === "forward";
-
-    if (this.state.isLoadingAttachments) {
-      return;
-    }
-
-    let to: Address[];
-    let cc: Address[] = [];
-    if (isForward) {
-      to = _.map(this.state.to, option => option.value);
-      if (to.length === 0) {
-        return;
-      }
-    } else {
-      ({ to, cc } = this.getReplyRecipients());
-    }
+    const addresses = (options: AddressOption[]) => _.map(options, option => option.value);
 
     const sendOptions: SendOptions = {
       subject: prependIfNotPresent(latestMessage.subject, isForward ? "Fwd" : "Re"),
       html: restoreRemoteImages(this.state.html),
       text: "",
       from,
-      to,
-      cc,
+      to: addresses(this.state.to),
+      cc: addresses(this.state.cc),
+      bcc: addresses(this.state.bcc),
       attachments: this.state.attachments,
       replyingTo: latestMessage,
     };
@@ -318,16 +393,8 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
     EmailsService.SendEmail(latestMessage.accountID, sendOptions).then(sentEmail => {
       trackEvent("QuickReply");
-      this.setState({
-        isSending: false,
-        isSentOrSaved: true,
-        html: "",
-        to: [],
-        attachments: [],
-        isLoadingAttachments: false,
-        mode: "reply",
-        expanded: false,
-      });
+      this.handleCancel();
+      this.setState({ isSending: false, isSentOrSaved: true });
 
       if (sentEmail) {
         const newThread = mainEmailStore.injectSentEmail(sentEmail);
@@ -350,179 +417,127 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     });
   };
 
+  getPlaceholder(mode: Mode): string {
+    const { to, cc } = this.getReplyRecipients(mode);
+    const names = _.uniq(_.map(_.concat(to, cc), address => formatAddress(address, true)));
+    const label = mode === "reply-all" ? "Reply all" : "Reply";
+    return names.length > 0 ? `${label} to ${joinNames(names)}…` : `${label}…`;
+  }
+
   renderCollapsed() {
-    const { latestMessage } = this.props;
-    const canReplyAll = this.canReplyAll();
-    const deleteOnTrash = keyboard.currentComponent
-      ? keyboard.currentComponent.isDeleteOnTrash()
-      : Boolean(settingsStore.getAccountSettings(latestMessage.accountID)?.settings.deleteOnTrash);
+    const mode = this.getDefaultMode();
+    const shortcut = mode === "reply-all" ? "a" : "r";
 
     return (
       <div className="reply-dock" onClick={stopEventPropagation}>
-        <Tooltip position="top" text={<span>Reply (<i className="fa fa-keyboard-o" /> r)</span>}>
+        <Tooltip position="top" text={<span>{mode === "reply-all" ? "Reply all" : "Reply"} (<i className="fa fa-keyboard-o" /> {shortcut})</span>}>
           <button
             type="button"
-            className="btn-primary lg"
-            onClick={() => this.handleExpand("reply")}
+            className="reply-field"
+            onClick={() => this.handleExpand(mode)}
           >
-            <i className="fa fa-reply"></i> Reply
+            <Icon name={mode} />
+            <span>{this.getPlaceholder(mode)}</span>
           </button>
         </Tooltip>
-        {canReplyAll && (
-          <Tooltip
-            position="top"
-            text={<span>Reply all (<i className="fa fa-keyboard-o" /> a)</span>}
-          >
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() => this.handleExpand("reply-all")}
-            >
-              <i className="fa fa-reply-all"></i> Reply all
-            </button>
-          </Tooltip>
-        )}
         <Tooltip position="top" text={<span>Forward (<i className="fa fa-keyboard-o" /> f)</span>}>
           <button
             type="button"
-            className="btn-ghost"
+            className="forward-btn"
             onClick={this.handleForward}
           >
-            <i className="fa fa-share"></i> Forward
+            <Icon name="forward" />
+            Forward
           </button>
         </Tooltip>
-        <span className="spacer"></span>
-        <span className="dock-actions">
-          <Tooltip position="top" text={<span>Move (<i className="fa fa-keyboard-o" /> m)</span>}>
-            <button
-              type="button"
-              className="icon-ghost"
-              onClick={(ev) => keyboard.startMoveCurrentThread(ev)}
-            >
-              <i className="fa fa-folder-open" />
-            </button>
-          </Tooltip>
-          <Tooltip position="top" text={<span>Archive (<i className="fa fa-keyboard-o" /> enter)</span>}>
-            <button
-              type="button"
-              className="icon-ghost"
-              onClick={(ev) => keyboard.archiveCurrentThread(ev)}
-            >
-              <i className="fa fa-archive" />
-            </button>
-          </Tooltip>
-          <Tooltip
-            position="top"
-            text={<span>
-              {deleteOnTrash ? "Delete permanently" : "Trash"} (<i className="fa fa-keyboard-o" /> backspace)
-            </span>}
-          >
-            <button
-              type="button"
-              className="icon-ghost danger"
-              onClick={(ev) => keyboard.trashCurrentThread(ev)}
-            >
-              <i className="fa fa-trash" />
-            </button>
-          </Tooltip>
-        </span>
       </div>
     );
   }
 
-  renderSendButtonContent() {
-    if (this.state.isSending) {
-      return <><i className="fa fa-spin fa-refresh" /> Sending</>;
-    }
-    if (this.state.isSentOrSaved === false) {
-      return <><i className="fa fa-times" /> Error</>;
-    }
-    return <><i className="fa fa-paper-plane" /> Send</>;
+  renderModeMenu() {
+    const current = _.find(MODES, { mode: this.state.mode })!;
+    const modes = _.filter(MODES, ({ mode }) => mode !== "reply-all" || this.canReplyAll());
+
+    return (
+      <PopoverMenu
+        triggerClassName="mode-btn"
+        align="left"
+        trigger={<>
+          <Icon name={current.icon} size={16} />
+          {current.label}
+          <Icon name="chevron-down" size={14} className="chevron" />
+        </>}
+      >
+        {(close) => _.map(modes, ({ mode, label, icon }) => (
+          <MenuItem
+            key={mode}
+            icon={icon}
+            label={label}
+            active={mode === this.state.mode}
+            close={close}
+            onClick={() => this.handleSetMode(mode)}
+          />
+        ))}
+      </PopoverMenu>
+    );
   }
 
-  renderRecipientSummary() {
-    if (this.state.mode === "forward") {
-      return (
-        <div className="recipients forward-to">
-          <span className="label">To</span>
+  renderRecipientRow(field: "cc" | "bcc", label: string) {
+    return (
+      <div className="composer-row">
+        <span className="label">{label}</span>
+        <div className="recip">
+          <ContactSelect
+            id={`quick-reply-${field}`}
+            compact
+            value={this.state[field]}
+            onChange={(value) => this.setRecipients(field, value)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  renderRecipients() {
+    return (
+      <>
+        <div className="composer-row composer-top">
+          {this.renderModeMenu()}
+          <span className="label">to</span>
           <div className="recip">
             <ContactSelect
-              id="quick-forward-to"
+              id="quick-reply-to"
+              compact
               value={this.state.to}
-              onChange={(to) => this.setState({ to })}
+              onChange={(to) => this.setRecipients("to", to)}
             />
           </div>
+          {!this.state.showCc && (
+            <button type="button" className="text-btn" onClick={() => this.setState({ showCc: true })}>Cc</button>
+          )}
+          {!this.state.showBcc && (
+            <button type="button" className="text-btn" onClick={() => this.setState({ showBcc: true })}>Bcc</button>
+          )}
         </div>
-      );
-    }
-
-    const { to, cc } = this.getReplyRecipients();
-    const toLabel = to.map(a => formatAddress(a)).join(", ");
-    const ccLabel = cc.length > 0 ? cc.map(a => formatAddress(a)).join(", ") : null;
-
-    return (
-      <div className="recipients">
-        <span className="label">To</span>
-        <span className="value" title={toLabel}>{toLabel}</span>
-        {ccLabel && <>
-          <span className="label">Cc</span>
-          <span className="value" title={ccLabel}>{ccLabel}</span>
-        </>}
-      </div>
-    );
-  }
-
-  renderModeToggle() {
-    if (this.state.mode === "forward") {
-      return (
-        <div className="mode-toggle">
-          <button type="button" className="active" disabled>
-            <i className="fa fa-share"></i> Forward
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="mode-toggle">
-        <button
-          type="button"
-          className={this.state.mode === "reply" ? "active" : ""}
-          onClick={() => this.handleSetMode("reply")}
-        >
-          <i className="fa fa-reply"></i> Reply
-        </button>
-        {this.canReplyAll() && (
-          <button
-            type="button"
-            className={this.state.mode === "reply-all" ? "active" : ""}
-            onClick={() => this.handleSetMode("reply-all")}
-          >
-            <i className="fa fa-reply-all"></i> Reply all
-          </button>
-        )}
-      </div>
+        {this.state.showCc && this.renderRecipientRow("cc", "cc")}
+        {this.state.showBcc && this.renderRecipientRow("bcc", "bcc")}
+      </>
     );
   }
 
   renderAttachments() {
-    if (this.state.isLoadingAttachments) {
-      return (
-        <div className="quick-reply-attachments">
-          <div className="attachment loading">
-            <i className="fa fa-spin fa-refresh" />
-            <span>Loading attachments&hellip;</span>
-          </div>
-        </div>
-      );
-    }
-
-    if (this.state.attachments.length === 0) {
+    if (!this.state.isLoadingAttachments && this.state.attachments.length === 0) {
       return null;
     }
 
     return (
-      <div className="quick-reply-attachments">
+      <div className="composer-attachments">
+        {this.state.isLoadingAttachments && (
+          <div className="attachment loading">
+            <Icon name="loader" size={14} className="spin" />
+            <span>Loading attachments&hellip;</span>
+          </div>
+        )}
         {_.map(this.state.attachments, (attachment, i) => (
           <div
             key={attachment.path}
@@ -534,7 +549,7 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
               this.setState({ attachments });
             }}
           >
-            <i className="fa fa-file-o" />
+            <Icon name="paperclip" size={14} />
             <span>{attachment.filename}</span>
           </div>
         ))}
@@ -542,25 +557,57 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
     );
   }
 
-  renderExpanded() {
-    const isForward = this.state.mode === "forward";
-    const sendClasses = ["submit"];
-    if (this.state.isSending) sendClasses.push("disabled");
-    if (this.state.isSentOrSaved === false) sendClasses.push("error");
+  renderFrom() {
+    const options = this.getFromOptions();
+    const from = this.getFromAddress();
+    if (!from) {
+      return null;
+    }
+
+    const color = settingsStore.getAccountAccentColor(this.props.latestMessage.accountID) || "var(--faint)";
+    const label = <><i className="dot" style={{ background: color }} />{from.email}</>;
+
+    if (options.length < 2) {
+      return <span className="from">{label}</span>;
+    }
 
     return (
-      <div className="quick-reply expanded" onClick={stopEventPropagation}>
-        <div className="quick-reply-header">
-          {this.renderModeToggle()}
-          <a className="pop-out" onClick={this.handlePopOut} title="Open in full editor">
-            <i className="fa fa-external-link"></i> Pop out
-          </a>
-        </div>
+      <PopoverMenu triggerClassName="from" placement="above" trigger={label}>
+        {(close) => _.map(options, (option, i) => (
+          <MenuItem
+            key={option.label}
+            label={option.label}
+            active={i === this.state.fromIndex}
+            close={close}
+            onClick={() => this.setState({ fromIndex: i })}
+          />
+        ))}
+      </PopoverMenu>
+    );
+  }
 
-        {this.renderRecipientSummary()}
+  renderSendButtonContent() {
+    if (this.state.isSending) {
+      return <>Sending <Icon name="loader" size={16} className="spin" /></>;
+    }
+    if (this.state.isSentOrSaved === false) {
+      return <>Retry <Icon name="send" size={16} /></>;
+    }
+    return <>Send <Icon name="send" size={16} /></>;
+  }
+
+  renderExpanded() {
+    const sendClasses = ["send-btn"];
+    if (this.state.isSentOrSaved === false) {
+      sendClasses.push("error");
+    }
+
+    return (
+      <div className="composer" onClick={stopEventPropagation}>
+        {this.renderRecipients()}
 
         <SquireEditor
-          key={isForward ? "forward" : "reply"}
+          key={this.state.mode === "forward" ? "forward" : "reply"}
           initialContent={this.state.html}
           autoFocus
           onReady={(api) => { this.editorApi = api; }}
@@ -570,7 +617,50 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
 
         {this.renderAttachments()}
 
-        <div className="quick-reply-actions">
+        {this.state.showFormatting && (
+          <div className="composer-formatting">
+            <EditorToolButtons
+              formatStates={this.state.formatStates}
+              onCommand={this.handleEditorCommand}
+            />
+          </div>
+        )}
+
+        <div className="composer-actions">
+          <button type="button" className="tool-btn" title="Attach files" onClick={this.handleClickAttach}>
+            <Icon name="paperclip" />
+          </button>
+          <button
+            type="button"
+            className={`tool-btn${this.state.showFormatting ? " active" : ""}`}
+            title="Formatting"
+            onClick={() => this.setState({ showFormatting: !this.state.showFormatting })}
+          >
+            <Icon name="type" />
+          </button>
+          <PopoverMenu
+            triggerClassName="tool-btn"
+            title="More"
+            align="left"
+            placement="above"
+            trigger={<Icon name="more" />}
+          >
+            {(close) => (
+              <MenuItem icon="external-link" label="Open in full editor" close={close} onClick={this.handlePopOut} />
+            )}
+          </PopoverMenu>
+          <span className="spacer" />
+          {this.renderFrom()}
+          <Tooltip position="top" text={<span>Discard (<i className="fa fa-keyboard-o" /> esc)</span>}>
+            <button
+              type="button"
+              className="tool-btn discard"
+              onClick={this.handleCancel}
+              disabled={this.state.isSending}
+            >
+              <Icon name="trash" />
+            </button>
+          </Tooltip>
           <Tooltip
             position="top"
             text={<span>Send (<i className="fa fa-keyboard-o" /> {metaKeyLabel}+enter)</span>}
@@ -579,40 +669,9 @@ export default class QuickReply extends React.Component<IQuickReplyProps, IQuick
               type="button"
               className={sendClasses.join(" ")}
               onClick={this.handleSend}
-              disabled={
-                this.state.isSending
-                || this.state.isLoadingAttachments
-                || (isForward && this.state.to.length === 0)
-              }
+              disabled={!this.canSend()}
             >
               {this.renderSendButtonContent()}
-            </button>
-          </Tooltip>
-          <div className="vrule" />
-          <button
-            type="button"
-            className="tool-btn"
-            title="Attach"
-            onClick={this.handleClickAttach}
-          >
-            <i className="fa fa-paperclip" />
-          </button>
-          <EditorToolButtons
-            formatStates={this.state.formatStates}
-            onCommand={this.handleEditorCommand}
-          />
-          <span className="spacer" />
-          <Tooltip
-            position="top"
-            text={<span>Cancel (<i className="fa fa-keyboard-o" /> esc)</span>}
-          >
-            <button
-              type="button"
-              className="cancel"
-              onClick={this.handleCancel}
-              disabled={this.state.isSending}
-            >
-              Cancel
             </button>
           </Tooltip>
         </div>

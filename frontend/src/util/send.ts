@@ -16,14 +16,17 @@ export interface AddressOption {
 
 // Deterministic accent colour for an account / recipient, derived from a string
 // so any account name or email gets a stable, theme-agnostic colour.
-export function stringToColor(value: string): string {
+export function stringToHue(value: string): number {
   let hash = 0;
   for (let i = 0; i < value.length; i++) {
     hash = value.charCodeAt(i) + ((hash << 5) - hash);
     hash = hash & hash;
   }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 58%, 48%)`;
+  return Math.abs(hash) % 360;
+}
+
+export function stringToColor(value: string): string {
+  return `hsl(${stringToHue(value)}, 58%, 48%)`;
 }
 
 export function avatarInitial(value: string): string {
@@ -69,9 +72,9 @@ export interface ReplyRecipients {
   cc: Address[];
 }
 
-const addressKey = (address: Address): string => (address.email || "").trim().toLowerCase();
+export const addressKey = (address: Address): string => (address?.email || "").trim().toLowerCase();
 
-function getAccountEmails(account?: AccountSettings | null): Set<string> {
+export function getAccountEmails(account?: AccountSettings | null): Set<string> {
   const emails = new Set<string>();
   if (!account) {
     return emails;
@@ -115,15 +118,25 @@ export function buildReplyRecipients(
       return true;
     });
 
+  const ownEmails = getAccountEmails(account);
   const sender = message.replyTo && message.replyTo.length > 0 ? message.replyTo : message.from;
-  // Never exclude the sender, so replying to our own sent mail still has a recipient
+
+  // Replying to our own message follows up with whoever it went to
+  const isOwnMessage = sender.length > 0 && _.every(sender, address => ownEmails.has(addressKey(address)));
+  if (isOwnMessage) {
+    const to = collect(message.to, ownEmails);
+    if (to.length > 0) {
+      return { to, cc: isReplyAll ? collect(message.cc, ownEmails) : [] };
+    }
+  }
+
+  // Never exclude the sender, so mail we only sent to ourselves still has a recipient
   const to = collect(sender, new Set());
 
   if (!isReplyAll) {
     return { to, cc: [] };
   }
 
-  const ownEmails = getAccountEmails(account);
   return {
     to: to.concat(collect(message.to, ownEmails)),
     cc: collect(message.cc, ownEmails),

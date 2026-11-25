@@ -60,6 +60,7 @@ interface ISendAppProps extends ISettings, ISystem {
   // when popping out a partially-composed forward)
   to?: string[];
   cc?: string[];
+  bcc?: string[];
   subject?: string;
 }
 
@@ -68,6 +69,7 @@ interface ISendAppState {
 
   to: addressOption[];
   cc: addressOption[];
+  bcc: addressOption[];
 
   subject: string;
   html: string;
@@ -82,6 +84,7 @@ interface ISendAppState {
   showPurchaseUpsell?: boolean;
 
   showCc: boolean;
+  showBcc: boolean;
   formatStates: SquireFormatStates;
 }
 
@@ -101,6 +104,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
 
       to: [],
       cc: [],
+      bcc: [],
 
       subject: "",
 
@@ -119,6 +123,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       isSaving: false,
 
       showCc: false,
+      showBcc: false,
       formatStates: defaultFormatStates,
     };
 
@@ -140,7 +145,17 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         state.accountContact = getAccountContactOptions(account)[0];
       }
 
-      if (props.mode !== "forward") {
+      if (props.to?.length) {
+        state.to = toAddressOptions(
+          props.to.map(email => new Address({ name: "", email })),
+        );
+        if (props.cc?.length) {
+          state.cc = toAddressOptions(
+            props.cc.map(email => new Address({ name: "", email })),
+          );
+          state.showCc = true;
+        }
+      } else if (props.mode !== "forward") {
         const { to, cc } = buildReplyRecipients(
           props.message,
           props.mode === "reply-all",
@@ -151,10 +166,6 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
         if (cc.length > 0) {
           state.showCc = true;
         }
-      } else if (props.to?.length) {
-        state.to = toAddressOptions(
-          props.to.map(email => new Address({ name: "", email })),
-        );
       }
     } else {
       if (props.subject) {
@@ -173,6 +184,13 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       }
     }
 
+
+    if (props.bcc?.length) {
+      state.bcc = toAddressOptions(
+        props.bcc.map(email => new Address({ name: "", email })),
+      );
+      state.showBcc = true;
+    }
 
     if (props.attachments) {
       state.attachments = props.attachments;
@@ -261,6 +279,7 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
       from: this.state.accountContact.value[1],
       to: _.map(this.state.to, opt => opt.value),
       cc: _.map(this.state.cc, opt => opt.value),
+      bcc: _.map(this.state.bcc, opt => opt.value),
       attachments: this.state.attachments,
       replyingTo: this.props.message,
     };
@@ -442,9 +461,10 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
                   onChange={(to) => this.setState({ to })}
                 />
               </div>
-              {!this.state.showCc && (
+              {(!this.state.showCc || !this.state.showBcc) && (
                 <span className="cc">
-                  <span onClick={() => this.setState({ showCc: true })}>Cc</span>
+                  {!this.state.showCc && <span onClick={() => this.setState({ showCc: true })}>Cc</span>}
+                  {!this.state.showBcc && <span onClick={() => this.setState({ showBcc: true })}>Bcc</span>}
                 </span>
               )}
             </div>
@@ -457,6 +477,19 @@ export default class SendApp extends React.Component<ISendAppProps, ISendAppStat
                     id="cc"
                     value={this.state.cc}
                     onChange={(cc) => this.setState({ cc })}
+                  />
+                </div>
+              </div>
+            )}
+
+            {this.state.showBcc && (
+              <div className="field" id="field-bcc">
+                <span className="lbl">Bcc</span>
+                <div className="recip">
+                  <ContactSelect
+                    id="bcc"
+                    value={this.state.bcc}
+                    onChange={(bcc) => this.setState({ bcc })}
                   />
                 </div>
               </div>

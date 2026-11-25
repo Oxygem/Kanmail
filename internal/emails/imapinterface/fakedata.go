@@ -30,6 +30,18 @@ type fakeEmail struct {
 	Folder string `json:"folder"`
 	Ago    string `json:"ago"`
 	From   string `json:"from"`
+	// Cc puts other people on the thread ("Name <user@host>"), for group threads
+	Cc []string `json:"cc"`
+	// Unread pins the seen state, which is otherwise left to chance
+	Unread *bool `json:"unread"`
+	// Attachments are served as real parts: images as generated PNGs, anything
+	// else as placeholder bytes
+	Attachments []fakeAttachment `json:"attachments"`
+}
+
+type fakeAttachment struct {
+	Filename string `json:"filename"`
+	Type     string `json:"type"`
 }
 
 func fakeAddress(name, email string) imap.Address {
